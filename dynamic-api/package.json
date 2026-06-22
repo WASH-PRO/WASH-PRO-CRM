@@ -1,0 +1,38 @@
+{
+  "name": "dynamic-api-platform",
+  "version": "1.0.0",
+  "description": "Create, manage and test dynamic REST APIs without writing backend code",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "Dynamic API Platform",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dynamic-API-Platform/Dynamic-API-Platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/issues"
+  },
+  "homepage": "https://dynamic-api-platform.github.io/Dynamic-API-Platform/",
+  "keywords": [
+    "dynamic-api",
+    "rest-api",
+    "low-code",
+    "mongodb",
+    "express",
+    "react",
+    "rbac",
+    "docker",
+    "api-platform",
+    "baas"
+  ],
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

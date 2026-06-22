@@ -1,0 +1,9 @@
+# Включение Redis
+
+services:
+  redis:
+    profiles: []
+
+  message-processor:
+    environment:
+      REDIS_ENABLED: "true"

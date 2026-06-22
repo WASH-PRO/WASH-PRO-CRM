@@ -1,0 +1,38 @@
+---
+permalink: /404.html
+---
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Перенаправление…</title>
+  <script>
+    (function () {
+      var base = '/WASH-PHO-CRM';
+      var path = window.location.pathname;
+
+      if (path.indexOf(base) !== 0) {
+        window.location.replace(base + '/');
+        return;
+      }
+
+      if (/\.html$/i.test(path)) {
+        path = path.replace(/\.html$/i, '/');
+      } else if (path !== base + '/' && path.indexOf(base + '/') === 0 && !/\/$/.test(path)) {
+        path = path + '/';
+      }
+
+      if (path !== window.location.pathname) {
+        window.location.replace(path + window.location.search + window.location.hash);
+        return;
+      }
+
+      window.location.replace(base + '/');
+    })();
+  </script>
+  <meta http-equiv="refresh" content="0;url=/WASH-PHO-CRM/">
+</head>
+<body>
+  <p>Перенаправление на <a href="/WASH-PHO-CRM/">документацию</a>…</p>
+</body>
+</html>

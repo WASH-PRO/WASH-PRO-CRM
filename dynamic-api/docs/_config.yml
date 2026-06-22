@@ -1,0 +1,50 @@
+title: Dynamic API Platform
+description: Create, manage and test dynamic REST APIs without writing code
+url: https://dynamic-api-platform.github.io
+baseurl: /Dynamic-API-Platform
+
+markdown: GFM
+permalink: pretty
+
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+  - jekyll-redirect-from
+
+relative_links:
+  enabled: true
+  collections: true
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+
+nav:
+  - title: Home
+    url: /
+  - title: Getting Started
+    url: /getting-started/
+  - title: Architecture
+    url: /architecture/
+  - title: API Reference
+    url: /api-reference/
+  - title: RBAC
+    url: /rbac/
+  - title: Dynamic Engine
+    url: /dynamic-api-engine/
+  - title: Database Explorer
+    url: /database/
+  - title: Network Access
+    url: /network-access/
+  - title: Deployment
+    url: /deployment/
+  - title: Configuration
+    url: /configuration/
+  - title: Development
+    url: /development/
+  - title: Screenshots
+    url: /screenshots/
+  - title: FAQ
+    url: /faq/
+  - title: Troubleshooting
+    url: /troubleshooting/

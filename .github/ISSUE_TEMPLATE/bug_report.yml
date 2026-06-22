@@ -1,0 +1,38 @@
+name: Bug Report
+description: Сообщить об ошибке
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Опишите проблему как можно подробнее.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: "1. Запустить ./scripts/start.sh\n2. Открыть Dashboard\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Фактическое поведение
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версия (APP_VERSION)
+      placeholder: "1.0.0"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи
+      description: docker compose ps, docker logs ...
+      render: shell

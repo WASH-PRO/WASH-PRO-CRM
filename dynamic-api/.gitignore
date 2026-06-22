@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage/
+.vite/
+docker-compose.override.yml
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db

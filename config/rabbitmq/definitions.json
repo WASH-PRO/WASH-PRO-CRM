@@ -1,0 +1,77 @@
+{
+  "rabbit_version": "3.13.0",
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "wash-ttl",
+      "pattern": "wash\\.",
+      "apply-to": "queues",
+      "definition": {
+        "message-ttl": 86400000,
+        "max-length": 100000
+      },
+      "priority": 0
+    }
+  ],
+  "queues": [
+    {
+      "name": "wash.telemetry",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "wash.events",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "wash.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "wash.exchange",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "wash.exchange",
+      "vhost": "/",
+      "destination": "wash.telemetry",
+      "destination_type": "queue",
+      "routing_key": "telemetry.#",
+      "arguments": {}
+    },
+    {
+      "source": "wash.exchange",
+      "vhost": "/",
+      "destination": "wash.events",
+      "destination_type": "queue",
+      "routing_key": "events.#",
+      "arguments": {}
+    }
+  ]
+}

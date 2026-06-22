@@ -1,0 +1,9 @@
+.env
+node_modules/
+dist/
+_site/
+*.log
+.DS_Store
+data/backups/*.gz
+data/backups/*.archive
+dynamic-api/.git

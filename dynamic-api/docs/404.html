@@ -1,0 +1,39 @@
+---
+permalink: /404.html
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting…</title>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var lower = path.toLowerCase();
+
+      // Old project path (lowercase) → new path
+      if (lower.indexOf('/dynamic-api-platform') === 0) {
+        path = path.replace(/^\/dynamic-api-platform/i, '/Dynamic-API-Platform');
+      }
+
+      // .html → pretty URL with trailing slash
+      if (/\.html$/i.test(path)) {
+        path = path.replace(/\.html$/i, '/');
+      } else if (path !== '/' && !/\/$/.test(path) && path.indexOf('/Dynamic-API-Platform/') === 0) {
+        path = path + '/';
+      }
+
+      if (path !== window.location.pathname) {
+        window.location.replace(path + window.location.search + window.location.hash);
+        return;
+      }
+
+      window.location.replace('/Dynamic-API-Platform/');
+    })();
+  </script>
+  <meta http-equiv="refresh" content="0;url=/Dynamic-API-Platform/">
+</head>
+<body>
+  <p>Redirecting to <a href="/Dynamic-API-Platform/">documentation</a>…</p>
+</body>
+</html>

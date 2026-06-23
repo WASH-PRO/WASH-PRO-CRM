@@ -81,4 +81,4 @@ docker compose up -d --build dynamic-api dynamic-api-panel
 ./scripts/run-init-seed.sh   # при изменениях схемы API
 ```
 
-Патчи описаны в `patches/dynamic-api-wash.patch`. После merge апстрима в `main` можно задать `DYNAMIC_API_REF=origin/main`.
+Патчи описаны в `patches/dynamic-api-wash.patch`. База — `cursor/db-explorer-reference-fields-and-auth-fixes`, поверх накладывается тема из `cursor/fix-light-theme-and-auth-proxy`. После merge апстрима в `main`: `DYNAMIC_API_REF=origin/main`.

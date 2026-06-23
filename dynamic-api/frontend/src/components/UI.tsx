@@ -14,13 +14,13 @@ export function StatCard({ title, value, icon: Icon, color, subtitle }: StatCard
   return (
     <div className="stat-card">
       <div className="flex items-center justify-between">
-        <span className="text-dark-muted text-sm">{title}</span>
+        <span className="text-sm text-slate-500">{title}</span>
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center`} style={{ backgroundColor: `${color}20` }}>
           <Icon className="w-4 h-4" style={{ color }} />
         </div>
       </div>
       <div className="text-2xl font-bold">{value}</div>
-      {subtitle && <span className="text-xs text-dark-muted">{subtitle}</span>}
+      {subtitle && <span className="text-xs text-slate-400">{subtitle}</span>}
     </div>
   );
 }
@@ -35,10 +35,10 @@ export function MethodBadge({ method }: { method: string }) {
 
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-xl font-bold">{title}</h1>
-        {subtitle && <p className="text-sm text-dark-muted mt-1">{subtitle}</p>}
+        <h1 className="text-2xl font-bold">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -58,7 +58,7 @@ export function SearchInput({
 }) {
   return (
     <div className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-muted" />
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       <input
         className="input pl-10"
         placeholder={placeholder}
@@ -73,12 +73,14 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className={`relative bg-dark-card border border-dark-border rounded-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl ${wide ? 'max-w-4xl' : 'max-w-lg'}`}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border">
-          <h2 className="font-semibold">{title}</h2>
-          <button onClick={onClose} className="text-dark-muted hover:text-dark-text text-xl leading-none">&times;</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className={`w-full max-h-[90vh] overflow-y-auto rounded-xl bg-white p-0 shadow-xl dark:bg-slate-900 ${wide ? 'max-w-3xl' : 'max-w-lg'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">&times;</button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -89,14 +91,14 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
 export function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-12">
-      <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="text-center py-12 text-dark-muted">
+    <div className="text-center py-12 text-slate-500">
       <p>{message}</p>
     </div>
   );
@@ -133,10 +135,10 @@ export function Pagination({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-dark-border">
-      <p className="text-sm text-dark-muted">
-        Showing <span className="text-dark-text font-medium">{from}–{to}</span> of{' '}
-        <span className="text-dark-text font-medium">{total}</span>
+    <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-4 sm:flex-row dark:border-slate-800">
+      <p className="text-sm text-slate-500">
+        Showing <span className="font-medium text-slate-800 dark:text-slate-100">{from}–{to}</span> of{' '}
+        <span className="font-medium text-slate-800 dark:text-slate-100">{total}</span>
       </p>
 
       <div className="flex items-center gap-2">
@@ -162,14 +164,14 @@ export function Pagination({
 
         {pages.map((p, i) =>
           p === '...' ? (
-            <span key={`dots-${i}`} className="text-dark-muted px-1">…</span>
+            <span key={`dots-${i}`} className="px-1 text-slate-400">…</span>
           ) : (
             <button
               key={p}
-              className={`min-w-[32px] py-1.5 px-2 rounded-md text-sm font-medium transition-colors ${
+              className={`min-w-[32px] rounded-lg px-2 py-1.5 text-sm font-medium transition-colors ${
                 p === page
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-dark-hover text-dark-muted hover:text-dark-text'
+                  ? 'bg-brand-600 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
               onClick={() => onPageChange(p)}
             >

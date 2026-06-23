@@ -41,15 +41,6 @@ function EndpointRow({
         {ep.description || '—'}
       </td>
       <td className="font-mono text-xs text-dark-muted">{ep.path}</td>
-      <td className="text-center">
-        {ep.fields?.some((f) => f.type === 'reference') ? (
-          <span className="badge-purple" title="Schema contains reference (foreign key) fields">
-            {ep.fields.filter((f) => f.type === 'reference').length} link{ep.fields.filter((f) => f.type === 'reference').length === 1 ? '' : 's'}
-          </span>
-        ) : (
-          <span className="text-dark-muted text-xs">—</span>
-        )}
-      </td>
       <td className="text-center">{ep.callCount}</td>
       <td>
         <span className={ep.enabled ? 'badge-green' : 'badge-red'}>
@@ -126,7 +117,6 @@ function GroupedTable({
                     <th>Name</th>
                     <th>Description</th>
                     <th>Path</th>
-                    <th className="text-center">Links</th>
                     <th className="text-center">Calls</th>
                     <th>Status</th>
                     <th className="text-right">Actions</th>
@@ -333,7 +323,7 @@ export default function EndpointsPage() {
         <div className="flex gap-2 flex-wrap mb-5">
           <button
             onClick={() => setFilterGroup('')}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${!filterGroup ? 'bg-primary-600 text-white' : 'bg-dark-hover text-dark-muted hover:text-dark-text'}`}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${!filterGroup ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}`}
           >
             All
           </button>

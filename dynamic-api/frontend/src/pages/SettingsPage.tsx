@@ -16,7 +16,7 @@ function SettingSection({ title, icon: Icon, children }: { title: string; icon: 
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-dark-border">
-        <Icon className="w-4 h-4 text-primary-400" />
+        <Icon className="h-4 w-4 text-brand-600 dark:text-brand-300" />
         <h3 className="font-semibold text-sm">{title}</h3>
       </div>
       <div className="space-y-4">{children}</div>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
         <SettingSection title="Logs & Audit" icon={FileText}>
           <div className="flex items-center justify-between bg-dark-bg rounded-md p-3">
             <span className="text-sm text-dark-muted">Total log records</span>
-            <span className="text-lg font-bold text-primary-400">{logsCount.toLocaleString()}</span>
+            <span className="text-lg font-bold text-brand-600 dark:text-brand-300">{logsCount.toLocaleString()}</span>
           </div>
           <Field label="Log retention (days)" hint="Logs older than this are removed when cleaning">
             <input type="number" className="input" min={1} max={365}

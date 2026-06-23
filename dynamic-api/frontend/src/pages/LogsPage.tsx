@@ -62,7 +62,7 @@ export default function LogsPage() {
           <button
             key={action}
             onClick={() => handleFilter(action)}
-            className={`btn-secondary py-1.5 text-xs ${filter === action ? 'ring-2 ring-primary-500' : ''}`}
+            className={`btn-secondary py-1.5 text-xs ${filter === action ? 'ring-2 ring-brand-500' : ''}`}
           >
             {action || 'All'}
           </button>

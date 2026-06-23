@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function LoginPage() {
   const [login, setLogin] = useState('');
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login: doLogin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,25 +29,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-dark-bg">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-brand-50 p-4 dark:from-slate-950 dark:to-slate-900">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-600/20">
-            <Zap className="w-8 h-8 text-white" />
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-600/20">
+            <Zap className="h-8 w-8" />
           </div>
           <h1 className="text-2xl font-bold">Dynamic API Platform</h1>
-          <p className="text-dark-muted mt-2 text-sm">Sign in to manage your dynamic APIs</p>
+          <p className="mt-2 text-sm text-slate-500">Sign in to manage your dynamic APIs</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
+          {error && <div className="alert-error">{error}</div>}
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Login</label>
+            <label className="label">Login</label>
             <input
               type="text"
               className="input"
@@ -53,11 +51,12 @@ export default function LoginPage() {
               onChange={(e) => setLogin(e.target.value)}
               placeholder="admin"
               required
+              autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Password</label>
+            <label className="label">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -69,22 +68,32 @@ export default function LoginPage() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-dark-text"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="btn-primary w-full justify-center py-2.5" disabled={loading}>
+          <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
 
-          <p className="text-center text-xs text-dark-muted">
+          <p className="text-center text-xs text-slate-500">
             Default: admin / Admin123!
           </p>
         </form>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="text-sm text-slate-500 hover:text-brand-600 dark:hover:text-brand-300"
+          >
+            {theme === 'dark' ? 'Light theme' : 'Dark theme'}
+          </button>
+        </div>
       </div>
     </div>
   );

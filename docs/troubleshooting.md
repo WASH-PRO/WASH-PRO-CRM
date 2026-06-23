@@ -17,6 +17,17 @@ docker logs wash-init-seed
 
 **Типичная причина:** Dynamic API отвечал на `/health`, но учётная запись admin ещё не была создана в MongoDB.
 
+## RabbitMQ: `Invalid challenge reply` / зависший `wash-rabbitmq-init`
+
+Контейнер `rabbitmq-init` должен монтировать тот же volume `rabbitmq_data`, что и `rabbitmq` — иначе CLI подключается с другим Erlang cookie.
+
+```bash
+docker rm -f wash-rabbitmq-init
+docker compose up -d rabbitmq rabbitmq-init
+```
+
+Статус `wash-rabbitmq-init` **Exited (0)** — норма (одноразовая настройка пользователя).
+
 ## RabbitMQ: `PLAIN login refused: user 'wash'`
 
 Пользователь RabbitMQ мог не создаться при первом запуске.

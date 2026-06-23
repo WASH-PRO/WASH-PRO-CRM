@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { PageHeader, Table, Loading, Modal, ErrorMessage } from '../components/UI';
 import type { Wash } from '../types';
 
-const emptyForm = { name: '', description: '', address: '' };
+const emptyForm = { name: '', description: '', address: '', registeredAt: undefined as string | undefined, cloudEnabled: false };
 
 export function WashesPage() {
   const { hasPermission } = useAuth();
@@ -34,7 +34,13 @@ export function WashesPage() {
   };
 
   const openEdit = (w: Wash) => {
-    setForm({ name: w.name, description: w.description || '', address: w.address });
+    setForm({
+      name: w.name,
+      description: w.description || '',
+      address: w.address,
+      registeredAt: w.registeredAt,
+      cloudEnabled: w.cloudEnabled ?? false,
+    });
     setEditId(w.id);
     setModal(true);
   };
@@ -42,7 +48,19 @@ export function WashesPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const body = { ...form, registeredAt: new Date().toISOString(), cloudEnabled: false };
+      const body = editId
+        ? {
+            name: form.name,
+            description: form.description,
+            address: form.address,
+            registeredAt: form.registeredAt || new Date().toISOString(),
+            cloudEnabled: form.cloudEnabled ?? false,
+          }
+        : {
+            ...form,
+            registeredAt: new Date().toISOString(),
+            cloudEnabled: false,
+          };
       if (editId) {
         await api(`/crm/washes/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
       } else {

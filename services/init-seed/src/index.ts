@@ -189,19 +189,32 @@ async function removeLegacyEndpointGroup(token: string): Promise<void> {
   }
 }
 
-const SYSTEM_WRITE_GROUPS = ['Super Admin', 'Admin', 'Administrator', 'Operator', 'Service'];
+interface GroupInfo {
+  _id: string;
+  name: string;
+  permissions?: string[];
+}
+
+const SYSTEM_WRITE_GROUPS = ['Super Admin', 'Admin', 'Administrator', 'Operator', 'Service', 'Editor', 'Manager'];
 const SYSTEM_SERVICE_GROUPS = ['Super Admin', 'Admin', 'Administrator', 'Service'];
 
-function groupIdsByNames(
-  allGroups: Array<{ _id: string; name: string }>,
-  names: string[]
-): string[] {
+function groupIdsByNames(allGroups: GroupInfo[], names: string[]): string[] {
   const unique = new Set<string>();
   for (const name of names) {
     const g = allGroups.find((x) => x.name === name);
     if (g) unique.add(g._id);
   }
   return [...unique];
+}
+
+function groupsWithAnyPermission(allGroups: GroupInfo[], ...perms: string[]): string[] {
+  const ids = new Set<string>();
+  for (const g of allGroups) {
+    if (perms.some((p) => g.permissions?.includes(p))) {
+      ids.add(g._id);
+    }
+  }
+  return [...ids];
 }
 
 function sameIdSets(a: string[] = [], b: string[] = []): boolean {
@@ -212,10 +225,28 @@ function sameIdSets(a: string[] = [], b: string[] = []): boolean {
 
 function allowedGroupsForEndpoint(
   ep: (typeof CRM_ENDPOINTS)[number],
-  allGroups: Array<{ _id: string; name: string }>
+  allGroups: GroupInfo[]
 ): string[] {
   const restricted = ep.groupKey === 'telemetry' || ep.groupKey === 'backup';
-  return groupIdsByNames(allGroups, restricted ? SYSTEM_SERVICE_GROUPS : SYSTEM_WRITE_GROUPS);
+  if (restricted) {
+    return groupsWithAnyPermission(allGroups, 'manage_api', 'delete');
+  }
+  const dynamic = groupsWithAnyPermission(allGroups, 'update', 'delete', 'manage_api', 'manage_users');
+  const named = groupIdsByNames(allGroups, SYSTEM_WRITE_GROUPS);
+  return [...new Set([...named, ...dynamic])];
+}
+
+function schemaEquals(
+  a: Array<{ name: string; type: string; required?: boolean; order?: number }> | undefined,
+  b: Array<{ name: string; type: string; required?: boolean; order?: number }>
+): boolean {
+  const norm = (fields: typeof b) =>
+    JSON.stringify(
+      [...fields]
+        .map((f) => ({ name: f.name, type: f.type, required: !!f.required, order: f.order ?? 0 }))
+        .sort((x, y) => x.order - y.order || x.name.localeCompare(y.name))
+    );
+  return norm(a || []) === norm(b);
 }
 
 function normalizeGroupIds(groupIds: unknown[]): string[] {
@@ -229,10 +260,10 @@ function normalizeGroupIds(groupIds: unknown[]): string[] {
 
 async function ensureDefaultAdminMembership(
   token: string,
-  allGroups: Array<{ _id: string; name: string }>
+  allGroups: GroupInfo[]
 ): Promise<void> {
-  const adminGroup = allGroups.find((g) => g.name === 'Administrator');
-  if (!adminGroup) return;
+  const requiredIds = groupIdsByNames(allGroups, ['Super Admin', 'Admin', 'Administrator']);
+  if (requiredIds.length === 0) return;
 
   const usersPage = await api<{ data: Array<{ _id: string; login: string; groupIds: unknown[] }> }>(
     token,
@@ -244,18 +275,17 @@ async function ensureDefaultAdminMembership(
   if (!adminUser) return;
 
   const currentIds = normalizeGroupIds(adminUser.groupIds);
-  const hasAdminGroup = currentIds.includes(String(adminGroup._id));
-  if (hasAdminGroup) return;
+  const groupIds = [...new Set([...currentIds, ...requiredIds])];
+  if (groupIds.length === currentIds.length) return;
 
-  const groupIds = [...new Set([...currentIds, String(adminGroup._id)])];
   await api(token, 'PUT', `/api/users/${adminUser._id}`, { groupIds });
-  console.log(`  Added Administrator group to user: ${ADMIN_LOGIN}`);
+  console.log(`  Ensured admin groups for: ${ADMIN_LOGIN}`);
 }
 
 async function ensureEndpoints(
   token: string,
   endpointGroupIds: Record<string, string>,
-  allGroups: Array<{ _id: string; name: string }>
+  allGroups: GroupInfo[]
 ): Promise<void> {
   const existingRes = await api<{
     data: Array<{
@@ -266,6 +296,7 @@ async function ensureEndpoints(
       slug?: string;
       allowedGroupIds?: string[];
       accessType?: string;
+      fields?: Array<{ name: string; type: string; required?: boolean; order?: number }>;
     }>;
   }>(token, 'GET', '/api/endpoints?limit=200');
   const list = existingRes.data || [];
@@ -279,6 +310,7 @@ async function ensureEndpoints(
   let created = 0;
   let reorganized = 0;
   let accessFixed = 0;
+  let schemaFixed = 0;
 
   for (const ep of CRM_ENDPOINTS) {
     const groupId = endpointGroupIds[ep.groupKey];
@@ -313,6 +345,9 @@ async function ensureEndpoints(
     if (ep.accessType === 'group' && !sameIdSets(found.allowedGroupIds, allowedGroupIds)) {
       patch.allowedGroupIds = allowedGroupIds;
     }
+    if (ep.schema.length > 0 && !schemaEquals(found.fields, ep.schema)) {
+      patch.schema = ep.schema;
+    }
 
     if (Object.keys(patch).length > 0) {
       await api(token, 'PUT', `/api/endpoints/${found._id}`, patch);
@@ -322,6 +357,10 @@ async function ensureEndpoints(
       }
       if (patch.allowedGroupIds) {
         accessFixed++;
+      }
+      if (patch.schema) {
+        console.log(`  Updated schema: ${ep.method} ${ep.path}`);
+        schemaFixed++;
       }
     }
   }
@@ -352,8 +391,10 @@ async function ensureEndpoints(
     }
   }
 
-  if (created === 0 && reorganized === 0 && accessFixed === 0) {
+  if (created === 0 && reorganized === 0 && accessFixed === 0 && schemaFixed === 0) {
     console.log(`  All ${CRM_ENDPOINTS.length} CRM endpoints configured`);
+  } else if (schemaFixed > 0) {
+    console.log(`  Updated schema on ${schemaFixed} endpoint(s)`);
   } else if (accessFixed > 0) {
     console.log(`  Updated access on ${accessFixed} endpoint(s)`);
   } else if (reorganized > 0) {
@@ -414,7 +455,7 @@ async function main(): Promise<void> {
   console.log(`  Admin login OK: ${ADMIN_LOGIN}`);
 
   const rbacGroups = await ensureCrmGroups(token);
-  const allGroups = await api<Array<{ _id: string; name: string }>>(token, 'GET', '/api/groups');
+  const allGroups = await api<GroupInfo[]>(token, 'GET', '/api/groups');
   await ensureDefaultAdminMembership(token, allGroups);
   await ensureServiceUser(token, rbacGroups.Service);
   const endpointGroupIds = await ensureEndpointGroups(token);

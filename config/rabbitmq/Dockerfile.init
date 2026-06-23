@@ -1,4 +1,0 @@
-FROM rabbitmq:3.13-management-alpine
-COPY init-user.sh /init-user.sh
-RUN chmod +x /init-user.sh
-ENTRYPOINT ["/init-user.sh"]

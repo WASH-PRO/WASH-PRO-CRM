@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { apiList } from '../api/client';
 import { PageHeader, StatCard, Loading, Badge } from '../components/UI';
-import type { Wash, Post, PostState, Notification } from '../types';
+import { DashboardCharts } from '../components/DashboardCharts';
+import type { Wash, Post, PostState, Notification, UsageStat, FinanceStat } from '../types';
 
 export function DashboardPage() {
   const [washes, setWashes] = useState<Wash[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [states, setStates] = useState<PostState[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [usageStats, setUsageStats] = useState<UsageStat[]>([]);
+  const [financeStats, setFinanceStats] = useState<FinanceStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,12 +19,16 @@ export function DashboardPage() {
       apiList<Post>('/crm/posts'),
       apiList<PostState>('/crm/post-states'),
       apiList<Notification>('/crm/notifications'),
+      apiList<UsageStat>('/crm/usage-stats'),
+      apiList<FinanceStat>('/crm/finance-stats'),
     ])
-      .then(([w, p, s, n]) => {
+      .then(([w, p, s, n, usage, finance]) => {
         setWashes(w);
         setPosts(p);
         setStates(s);
         setNotifications(n.filter((x) => !x.read).slice(0, 5));
+        setUsageStats(usage);
+        setFinanceStats(finance);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -41,6 +48,8 @@ export function DashboardPage() {
         <StatCard label="Офлайн" value={offline} />
         <StatCard label="Ошибки" value={errors} />
       </div>
+
+      <DashboardCharts posts={posts} usageStats={usageStats} financeStats={financeStats} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card">

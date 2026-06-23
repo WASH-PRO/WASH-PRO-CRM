@@ -17,25 +17,59 @@ import {
   Sun,
   Menu,
   X,
+  type LucideIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-const navItems = [
-  { to: '/', label: 'Обзор', icon: LayoutDashboard },
-  { to: '/washes', label: 'Автомойки', icon: Building2 },
-  { to: '/posts', label: 'Посты', icon: Columns3 },
-  { to: '/states', label: 'Состояние', icon: Activity },
-  { to: '/cards', label: 'Карты', icon: CreditCard },
-  { to: '/usage', label: 'Статистика', icon: BarChart3 },
-  { to: '/finance', label: 'Финансы', icon: Wallet },
-  { to: '/archive', label: 'Архив', icon: Archive },
-  { to: '/backups', label: 'Резервные копии', icon: HardDrive, admin: true },
-  { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
-  { to: '/notifications', label: 'Уведомления', icon: Bell },
-  { to: '/logs', label: 'Логи', icon: FileText, admin: true },
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  admin?: boolean;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    title: 'Главное',
+    items: [{ to: '/', label: 'Обзор', icon: LayoutDashboard }],
+  },
+  {
+    title: 'Объекты',
+    items: [
+      { to: '/washes', label: 'Автомойки', icon: Building2 },
+      { to: '/posts', label: 'Посты', icon: Columns3 },
+      { to: '/states', label: 'Состояние', icon: Activity },
+    ],
+  },
+  {
+    title: 'Клиенты',
+    items: [{ to: '/cards', label: 'Карты', icon: CreditCard }],
+  },
+  {
+    title: 'Аналитика',
+    items: [
+      { to: '/usage', label: 'Статистика', icon: BarChart3 },
+      { to: '/finance', label: 'Финансы', icon: Wallet },
+      { to: '/archive', label: 'Архив', icon: Archive },
+    ],
+  },
+  {
+    title: 'Система',
+    items: [
+      { to: '/notifications', label: 'Уведомления', icon: Bell },
+      { to: '/backups', label: 'Резервные копии', icon: HardDrive, admin: true },
+      { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
+      { to: '/logs', label: 'Логи', icon: FileText, admin: true },
+    ],
+  },
 ];
 
 export function Layout() {
@@ -43,42 +77,60 @@ export function Layout() {
   const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const filteredNav = navItems.filter((item) => !item.admin || isAdmin);
+  const filteredGroups = useMemo(
+    () =>
+      navGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => !item.admin || isAdmin),
+        }))
+        .filter((group) => group.items.length > 0),
+    [isAdmin]
+  );
 
   return (
     <div className="flex min-h-screen">
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-900 lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-900 lg:static lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5 dark:border-slate-800">
+        <div className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200 px-5 dark:border-slate-800">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold">W</div>
           <div>
             <div className="font-semibold">WASH PHO CRM</div>
             <div className="text-xs text-slate-500">SCADA система</div>
           </div>
         </div>
-        <nav className="space-y-1 p-3">
-          {filteredNav.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
-                clsx(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                  isActive
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
-                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                )
-              }
-            >
-              <Icon size={18} />
-              {label}
-            </NavLink>
+        <nav className="flex-1 overflow-y-auto p-3">
+          {filteredGroups.map((group) => (
+            <div key={group.title} className="mb-4 last:mb-0">
+              <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                {group.title}
+              </div>
+              <div className="space-y-0.5">
+                {group.items.map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === '/'}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      clsx(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                        isActive
+                          ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
+                          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                      )
+                    }
+                  >
+                    <Icon size={18} />
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
       </aside>

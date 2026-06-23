@@ -66,6 +66,7 @@ async function refreshAccessToken(): Promise<string | null> {
   const json = (await res.json()) as ApiResult<{ accessToken: string; refreshToken: string }>;
   if (json.success && json.data) {
     setTokens(json.data.accessToken, json.data.refreshToken);
+    setStoredPermissions(decodeJwtPermissions(json.data.accessToken));
     return json.data.accessToken;
   }
   clearAuth();

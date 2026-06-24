@@ -4,6 +4,7 @@
 # 1. backend/src/app.ts — CORS: несколько origin через запятую (docker-compose CORS_ORIGIN)
 # 2. frontend/src/services/api.ts — понятная ошибка при 502 / не-JSON ответе nginx
 # 3. frontend/src/pages/UsersPage.tsx — Safari: type=text + noValidate для email
+# 4. patches/wash-embedded/ — WASH UI в панели (VITE_WASH_EMBEDDED): Settings, UpdateBanner
 #
 # resourcePath / DELETE по :id — в upstream (getCollectionPath), отдельный патч не нужен.
 #

@@ -6,14 +6,12 @@ description: Типичные проблемы и решения
 
 ## Обновление Dynamic API Platform
 
-В WASH-PHO-CRM платформа встроена в `dynamic-api/`. **Не используйте** кнопку «Update now» в панели (`:8080`) — in-app updater отключён.
+В панели (`:8080` → **Settings → Software Updates**) отображается блок **«WASH-PHO-CRM — встроенная платформа»** с инструкцией. In-app updater отключён намеренно.
 
 ```bash
 ./scripts/update-dynamic-api.sh
 docker compose up -d --build dynamic-api dynamic-api-panel
 ```
-
-Если после обновления сборка падает с `COPY scripts: not found` — убедитесь, что в `docker-compose.yml` для `dynamic-api` указано `context: ./dynamic-api` (не `./dynamic-api/backend`).
 
 ## init-seed: статус Exited
 

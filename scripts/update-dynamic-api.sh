@@ -38,5 +38,8 @@ if grep -q 'type="email"' "$DA/frontend/src/pages/UsersPage.tsx" 2>/dev/null; th
     "$DA/frontend/src/pages/UsersPage.tsx" || true
 fi
 
+echo "==> Apply WASH embedded panel UI"
+bash "$ROOT/patches/wash-embedded/apply-wash-embedded-ui.sh" "$DA"
+
 echo "==> Done. Rebuild: docker compose up -d --build dynamic-api dynamic-api-panel"
 echo "    Then if needed: ./scripts/run-init-seed.sh"

@@ -4,6 +4,8 @@ WORKDIR /app
 
 ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_WASH_EMBEDDED=true
+ENV VITE_WASH_EMBEDDED=$VITE_WASH_EMBEDDED
 
 COPY dynamic-api/frontend/package*.json ./
 RUN npm install

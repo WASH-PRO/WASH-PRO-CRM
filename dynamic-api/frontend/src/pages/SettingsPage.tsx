@@ -3,6 +3,9 @@ import { Save, Trash2, Shield, Gauge, FileText, Globe, RefreshCw, Download, Uplo
 import { api } from '../services/api';
 import { AppSettings, UpdateSettings, UpdateStatus } from '../types';
 import { PageHeader, LoadingSpinner } from '../components/UI';
+import WashSoftwareUpdatesSection from '../components/WashSoftwareUpdatesSection';
+
+const washEmbedded = import.meta.env.VITE_WASH_EMBEDDED === 'true';
 
 function msToMinutes(ms: number): number {
   return Math.round(ms / 60000);
@@ -353,6 +356,10 @@ export default function SettingsPage() {
         </SettingSection>
 
         <SettingSection title="Software Updates" icon={ArrowUpCircle}>
+          {washEmbedded ? (
+            <WashSoftwareUpdatesSection updateStatus={updateStatus} />
+          ) : (
+          <>
           {updateStatus && (
             <div className="bg-dark-bg rounded-md p-3 space-y-1 text-sm">
               <div className="flex justify-between">
@@ -514,6 +521,8 @@ export default function SettingsPage() {
             Works out of the box with <code className="text-xs">docker compose up -d --build</code> on a local PC or VPS.
             Deploy from a git clone or release archive — updates are applied automatically with rollback on failure.
           </p>
+          </>
+          )}
         </SettingSection>
 
         <SettingSection title="Pagination & Display" icon={Globe}>

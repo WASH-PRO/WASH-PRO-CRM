@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Быстрый старт
-description: Установка и первый запуск WASH PHO CRM
+description: Установка и первый запуск WASH PRO CRM
 ---
 
 ## Требования
@@ -14,8 +14,8 @@ description: Установка и первый запуск WASH PHO CRM
 ## Установка
 
 ```bash
-git clone https://github.com/Developer-RU/WASH-PHO-CRM.git
-cd WASH-PHO-CRM
+git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
+cd WASH-PRO-CRM
 cp .env.example .env
 ```
 

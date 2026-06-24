@@ -143,7 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Group inheritance with merged rules; enforced at runtime before JWT access-type checks
   - Admin tester can simulate client IP and `Origin` header
 - **API Schema** — read-only ER diagram of endpoints, groups, and reference links (`/api-schema`)
-- **Light theme** — slate + cyan UI aligned with WASH-PHO-CRM dashboard; toggle in header
+- **Light theme** — slate + cyan UI aligned with WASH-PRO-CRM dashboard; toggle in header
 - Documentation: [Network Access](docs/network-access.md), [Database Explorer](docs/database.md), [API Schema](docs/api-schema.md)
 - Session handling: centralized `UnauthorizedError` and auth state sync on token expiry
 - Zero-downtime API creation documented (no server restart on new routes); comparison with Strapi/Directus

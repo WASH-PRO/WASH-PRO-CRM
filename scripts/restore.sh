@@ -6,7 +6,7 @@ BACKUP_FILE="${1:-}"
 
 if [ -z "$BACKUP_FILE" ]; then
   echo "Использование: $0 <имя_файла_бэкапа>"
-  echo "Пример: $0 wash-crm-2024-01-01.archive.gz"
+  echo "Пример: $0 wash-pro-crm-2024-01-01.archive.gz"
   exit 1
 fi
 

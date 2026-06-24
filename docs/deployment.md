@@ -37,9 +37,9 @@ docker compose up -d --build dynamic-api dynamic-api-panel
 
 Актуальная версия встроенной платформы: **v1.5.6** (см. `dynamic-api/CHANGELOG.md`).
 
-> **Важно:** в панели Dynamic API (`:8080`) может отображаться раздел Software Updates. В WASH-PHO-CRM in-app updater **отключён** — он предназначен для standalone-развёртывания. Используйте `./scripts/update-dynamic-api.sh` в корне репозитория.
+> **Важно:** в панели Dynamic API (`:8080`) может отображаться раздел Software Updates. В WASH-PRO-CRM in-app updater **отключён** — он предназначен для standalone-развёртывания. Используйте `./scripts/update-dynamic-api.sh` в корне репозитория.
 
-### Весь стек WASH-PHO-CRM
+### Весь стек WASH-PRO-CRM
 
 ```bash
 docker compose up -d --build
@@ -50,7 +50,7 @@ docker compose up -d --build
 ## Восстановление из бэкапа
 
 ```bash
-./scripts/restore.sh wash-crm-2024-06-22T02-00-00.archive.gz
+./scripts/restore.sh wash-pro-crm-2024-06-22T02-00-00.archive.gz
 ```
 
 Список бэкапов доступен в Dashboard → **Резервные копии** или в volume `wash_backup_data`.
@@ -62,7 +62,7 @@ docker compose up -d --build
 1. В репозитории: **Settings → Pages → Build and deployment → GitHub Actions**
 2. В `docs/_config.yml` замените `url` и `baseurl` на ваши значения:
    - `url: https://Developer-RU.github.io`
-   - `baseurl: /WASH-PHO-CRM`
+   - `baseurl: /WASH-PRO-CRM`
 3. Push в ветку `main` — workflow `.github/workflows/pages.yml` задеплоит сайт
 
 ## Reverse proxy (опционально)

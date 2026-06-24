@@ -87,7 +87,7 @@ async function cleanupOldBackups(): Promise<void> {
 
 export async function runBackup(type: 'manual' | 'auto' = 'auto'): Promise<void> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filename = `wash-crm-${timestamp}.archive.gz`;
+  const filename = `wash-pro-crm-${timestamp}.archive.gz`;
   const filepath = join(BACKUP_DIR, filename);
   let token = '';
   let recordId: string | null = null;

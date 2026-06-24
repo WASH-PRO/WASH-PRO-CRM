@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="docs/assets/banner.png" alt="WASH PHO CRM / SCADA" width="100%">
+  <img src="docs/assets/banner.png" alt="WASH PRO CRM / SCADA" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://github.com/Developer-RU/WASH-PHO-CRM/actions/workflows/pages.yml"><img src="https://github.com/Developer-RU/WASH-PHO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
-  <a href="https://developer-ru.github.io/WASH-PHO-CRM/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
+  <a href="https://github.com/Developer-RU/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/Developer-RU/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
+  <a href="https://developer-ru.github.io/WASH-PRO-CRM/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
   <img src="https://img.shields.io/badge/version-1.0.0-0d9488?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
@@ -21,13 +21,13 @@
 </p>
 
 <p align="center">
-  <a href="https://developer-ru.github.io/WASH-PHO-CRM/"><strong>Документация</strong></a>
+  <a href="https://developer-ru.github.io/WASH-PRO-CRM/"><strong>Документация</strong></a>
   ·
   <a href="docs/getting-started.md">Быстрый старт</a>
   ·
   <a href="docs/architecture.md">Архитектура</a>
   ·
-  <a href="https://github.com/Developer-RU/WASH-PHO-CRM/issues">Issues</a>
+  <a href="https://github.com/Developer-RU/WASH-PRO-CRM/issues">Issues</a>
 </p>
 
 ---
@@ -70,8 +70,8 @@ Dashboard (React) ──────────── nginx /api proxy ──�
 ### Запуск
 
 ```bash
-git clone https://github.com/Developer-RU/WASH-PHO-CRM.git
-cd WASH-PHO-CRM
+git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
+cd WASH-PRO-CRM
 cp .env.example .env
 # Измените JWT_SECRET, пароли!
 
@@ -122,7 +122,7 @@ RABBITMQ_EXTERNAL_PORT=5672 docker compose -f docker-compose.yml -f docker-compo
 ## Структура проекта
 
 ```
-WASH-PHO-CRM/
+WASH-PRO-CRM/
 ├── docker-compose.yml
 ├── dynamic-api/              # Dynamic API Platform
 ├── dashboard/                # React CRM Dashboard
@@ -146,7 +146,7 @@ docker compose up -d --build dynamic-api dynamic-api-panel
 # Пересобрать весь стек
 docker compose up -d --build
 
-./scripts/restore.sh wash-crm-2024-06-22T02-00-00.archive.gz
+./scripts/restore.sh wash-pro-crm-2024-06-22T02-00-00.archive.gz
 ```
 
 ## Устранение неполадок
@@ -168,5 +168,5 @@ docker compose up -d --build
 
 ## Лицензия
 
-WASH PHO CRM — проприетарный проект.  
+WASH PRO CRM — проприетарный проект.  
 [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) — Apache License 2.0.

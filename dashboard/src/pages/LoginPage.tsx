@@ -32,7 +32,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-2xl font-bold text-white">W</div>
-          <h1 className="text-2xl font-bold">WASH PHO CRM</h1>
+          <h1 className="text-2xl font-bold">WASH PRO CRM</h1>
           <p className="mt-2 text-sm text-slate-500">Система управления автомойками</p>
         </div>
         <form onSubmit={handleSubmit} className="card space-y-4">

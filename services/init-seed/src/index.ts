@@ -127,7 +127,7 @@ async function ensureServiceUser(token: string, serviceGroupId: string): Promise
   if (!exists) {
     await api(token, 'POST', '/api/users', {
       login: SERVICE_LOGIN,
-      email: 'service@wash-crm.internal',
+      email: 'service@wash-pro-crm.internal',
       password: SERVICE_PASSWORD,
       name: 'Internal Service Account',
       status: 'active',
@@ -448,7 +448,7 @@ async function verifyServiceLogin(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log('WASH CRM Init Seed — starting...');
+  console.log('WASH PRO CRM Init Seed — starting...');
   await waitForApiReady();
 
   const token = await login(ADMIN_LOGIN, ADMIN_PASSWORD);
@@ -464,7 +464,7 @@ async function main(): Promise<void> {
   await ensureDefaultSettings(token);
   await verifyServiceLogin();
 
-  console.log('WASH CRM Init Seed — complete (exit 0 is normal for this one-shot container)');
+  console.log('WASH PRO CRM Init Seed — complete (exit 0 is normal for this one-shot container)');
 }
 
 main().catch((err) => {

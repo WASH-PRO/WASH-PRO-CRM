@@ -1,7 +1,7 @@
-title: WASH PHO CRM
+title: WASH PRO CRM
 description: Локальная CRM/SCADA для автомоек самообслуживания на базе Dynamic API Platform
 url: https://developer-ru.github.io
-baseurl: /WASH-PHO-CRM
+baseurl: /WASH-PRO-CRM
 
 markdown: GFM
 permalink: pretty

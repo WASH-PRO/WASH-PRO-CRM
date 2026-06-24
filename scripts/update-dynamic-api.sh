@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Обновить vendored dynamic-api/ из Dynamic API Platform и применить патчи WASH-PHO-CRM.
+# Обновить vendored dynamic-api/ из Dynamic API Platform и применить патчи WASH-PRO-CRM.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,7 +20,7 @@ rm -rf "$DA"
 mkdir -p "$DA"
 git -C "$tmpdir" archive FETCH_HEAD | tar -x -C "$DA"
 
-echo "==> Apply WASH-PHO-CRM patches (see patches/dynamic-api-wash.patch)"
+echo "==> Apply WASH-PRO-CRM patches (see patches/dynamic-api-wash.patch)"
 perl -i -0pe 's/app\.use\(cors\(\{\n    origin: env\.corsOrigin,/const corsOrigins = env.corsOrigin.split(\x27,\x27).map((o) => o.trim()).filter(Boolean);\n\n  app.use(cors({\n    origin: corsOrigins.length > 1 ? corsOrigins : corsOrigins[0] || true,/s' \
   "$DA/backend/src/app.ts" 2>/dev/null || true
 

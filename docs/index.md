@@ -3,7 +3,7 @@ layout: default
 ---
 
 <div class="hero">
-  <img class="banner" src="{{ '/assets/banner.png' | relative_url }}" alt="WASH PHO CRM / SCADA">
+  <img class="banner" src="{{ '/assets/banner.png' | relative_url }}" alt="WASH PRO CRM / SCADA">
   {% include hero-badges.html %}
   <p class="hero-lead">
     Локальная CRM/SCADA-система для автомоек самообслуживания на базе
@@ -48,8 +48,8 @@ layout: default
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/Developer-RU/WASH-PHO-CRM.git
-cd WASH-PHO-CRM
+git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
+cd WASH-PRO-CRM
 cp .env.example .env
 chmod +x scripts/*.sh
 ./scripts/start.sh
@@ -66,7 +66,7 @@ chmod +x scripts/*.sh
 ## Структура репозитория
 
 ```
-WASH-PHO-CRM/
+WASH-PRO-CRM/
 ├── dashboard/              # React CRM Dashboard
 ├── dynamic-api/            # Dynamic API Platform (submodule / clone)
 ├── services/
@@ -82,5 +82,5 @@ WASH-PHO-CRM/
 
 ## Лицензия
 
-WASH PHO CRM — проприетарный проект.  
+WASH PRO CRM — проприетарный проект.  
 [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) распространяется под Apache License 2.0.

@@ -1,4 +1,4 @@
-name: wash-pho-crm
+name: wash-pro-crm
 
 services:
   # ===========================================================================
@@ -43,7 +43,7 @@ services:
       RATE_LIMIT_WINDOW_MS: 900000
       RATE_LIMIT_MAX: 5000
       CSRF_SECRET: ${CSRF_SECRET:-dap-csrf-secret-change-in-production}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@wash-crm.local}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@wash-pro-crm.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
       ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
       APP_VERSION: ${DYNAMIC_API_VERSION:-1.5.6}

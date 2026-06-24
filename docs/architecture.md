@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Архитектура
-description: Компоненты и потоки данных WASH PHO CRM
+description: Компоненты и потоки данных WASH PRO CRM
 ---
 
 ## Общая схема
@@ -87,7 +87,7 @@ MongoDB и RabbitMQ **не публикуются** наружу по умолч
 
 Полный changelog: `dynamic-api/CHANGELOG.md` и [релизы на GitHub](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases).
 
-### Обновление в WASH-PHO-CRM
+### Обновление в WASH-PRO-CRM
 
 Встроенный **Update executor** отключён (`UPDATE_EXECUTOR_ENABLED=false`) — платформа встроена в репозиторий, а не развёрнута как отдельный clone. Обновление:
 

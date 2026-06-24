@@ -1,4 +1,4 @@
-# WASH-PHO-CRM local patches for vendored dynamic-api/
+# WASH-PRO-CRM local patches for vendored dynamic-api/
 # Re-apply after running scripts/update-dynamic-api.sh
 #
 # 1. backend/src/app.ts — CORS: несколько origin через запятую (docker-compose CORS_ORIGIN)

@@ -23,7 +23,7 @@ description: Переменные окружения .env
 | `JWT_REFRESH_SECRET` | — | Секрет refresh-токена |
 | `CSRF_SECRET` | — | CSRF-защита |
 | `ADMIN_LOGIN` | `admin` | Логин администратора |
-| `ADMIN_EMAIL` | `admin@wash-crm.local` | Email администратора |
+| `ADMIN_EMAIL` | `admin@wash-pro-crm.local` | Email администратора |
 | `ADMIN_PASSWORD` | `Admin123!` | Пароль администратора |
 
 ## Внутренние сервисы

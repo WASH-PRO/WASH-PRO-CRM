@@ -1,10 +1,10 @@
 # Участие в проекте
 
-Спасибо за интерес к WASH PHO CRM.
+Спасибо за интерес к WASH PRO CRM.
 
 ## Сообщения об ошибках
 
-Создайте [Issue](https://github.com/Developer-RU/WASH-PHO-CRM/issues) с описанием:
+Создайте [Issue](https://github.com/Developer-RU/WASH-PRO-CRM/issues) с описанием:
 
 - Шаги воспроизведения
 - Ожидаемое и фактическое поведение

@@ -99,7 +99,7 @@ export function Layout() {
         <div className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200 px-5 dark:border-slate-800">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold">W</div>
           <div>
-            <div className="font-semibold">WASH PHO CRM</div>
+            <div className="font-semibold">WASH PRO CRM</div>
             <div className="text-xs text-slate-500">SCADA система</div>
           </div>
         </div>

@@ -96,7 +96,7 @@ export const ENDPOINT_GROUPS = [
 export type EndpointGroupKey = (typeof ENDPOINT_GROUPS)[number]['key'];
 
 /** Устаревшая монолитная группа — удаляется при реорганизации */
-export const LEGACY_ENDPOINT_GROUP = 'WASH CRM';
+export const LEGACY_ENDPOINT_GROUP = 'WASH PRO CRM';
 
 export const CRM_GROUPS = [
   {

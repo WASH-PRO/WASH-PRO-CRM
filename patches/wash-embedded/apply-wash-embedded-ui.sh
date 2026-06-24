@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Re-apply WASH-PHO-CRM UI patches to vendored dynamic-api/frontend after upstream sync.
+# Re-apply WASH-PRO-CRM UI patches to vendored dynamic-api/frontend after upstream sync.
 set -euo pipefail
 
 DA="${1:?usage: apply-wash-embedded-ui.sh <dynamic-api-dir>}"

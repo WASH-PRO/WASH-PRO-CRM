@@ -20,7 +20,7 @@ fi
 docker compose $COMPOSE_FILES up -d --build "$@"
 
 echo ""
-echo "WASH PHO CRM запущен."
+echo "WASH PRO CRM запущен."
 echo "Dashboard:         http://localhost:${DASHBOARD_PORT:-80}"
 echo "Dynamic API:       http://localhost:${DYNAMIC_API_PORT:-3001}/api/health"
 echo "Dynamic API Panel: http://localhost:${DYNAMIC_API_PANEL_PORT:-8080}"

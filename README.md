@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Developer-RU/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/Developer-RU/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
+  <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
   <img src="https://img.shields.io/badge/version-1.0.0-0d9488?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
@@ -28,7 +28,7 @@
   ·
   <a href="docs/architecture.md">Архитектура</a>
   ·
-  <a href="https://github.com/Developer-RU/WASH-PRO-CRM/issues">Issues</a>
+  <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/issues">Issues</a>
 </p>
 
 ---
@@ -84,7 +84,7 @@ Dashboard (React) ──────────── nginx /api proxy ──�
 ### Запуск
 
 ```bash
-git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
+git clone https://github.com/WASH-PRO/WASH-PRO-CRM.git
 cd WASH-PRO-CRM
 cp .env.example .env
 # Измените JWT_SECRET, пароли!

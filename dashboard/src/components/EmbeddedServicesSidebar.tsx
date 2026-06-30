@@ -5,7 +5,7 @@ import { useEmbeddedServices, type EmbeddedService, type ServiceStatus } from '.
 
 const DOC_LINKS = [
   { href: 'https://wash-pro.github.io/WASH-PRO-CRM/', label: 'Документация', icon: BookOpen },
-  { href: 'https://github.com/Developer-RU/WASH-PRO-CRM', label: 'GitHub', icon: Github },
+  { href: 'https://github.com/WASH-PRO/WASH-PRO-CRM', label: 'GitHub', icon: Github },
 ] as const;
 
 const SERVICE_ICONS: Record<string, LucideIcon> = {

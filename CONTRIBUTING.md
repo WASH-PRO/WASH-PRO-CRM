@@ -4,7 +4,7 @@
 
 ## Сообщения об ошибках
 
-Создайте [Issue](https://github.com/Developer-RU/WASH-PRO-CRM/issues) с описанием:
+Создайте [Issue](https://github.com/WASH-PRO/WASH-PRO-CRM/issues) с описанием:
 
 - Шаги воспроизведения
 - Ожидаемое и фактическое поведение

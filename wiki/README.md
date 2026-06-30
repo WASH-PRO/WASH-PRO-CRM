@@ -1,6 +1,6 @@
 # Wiki WASH PRO CRM
 
-Исходники для [GitHub Wiki](https://github.com/Developer-RU/WASH-PRO-CRM/wiki).
+Исходники для [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
 **Полная документация:** https://developer-ru.github.io/WASH-PRO-CRM/
 

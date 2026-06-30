@@ -57,7 +57,7 @@ layout: default
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
+git clone https://github.com/WASH-PRO/WASH-PRO-CRM.git
 cd WASH-PRO-CRM
 cp .env.example .env
 chmod +x scripts/*.sh

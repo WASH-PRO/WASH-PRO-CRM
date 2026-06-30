@@ -13,7 +13,7 @@ description: Установка и первый запуск WASH PRO CRM
 ## Установка
 
 ```bash
-git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
+git clone https://github.com/WASH-PRO/WASH-PRO-CRM.git
 cd WASH-PRO-CRM
 cp .env.example .env
 # Измените JWT_SECRET, пароли!

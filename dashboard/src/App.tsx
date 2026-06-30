@@ -25,6 +25,7 @@ import { DiscountTypesPage } from './pages/DiscountTypesPage';
 import { LogsPage } from './pages/LogsPage';
 import { UsersPage } from './pages/UsersPage';
 import { GroupsPage } from './pages/GroupsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -71,6 +72,7 @@ function AppRoutes() {
         <Route path="telegram" element={<AdminRoute><TelegramPage /></AdminRoute>} />
         <Route path="currency" element={<AdminRoute><CurrencyPage /></AdminRoute>} />
         <Route path="discount-types" element={<AdminRoute><DiscountTypesPage /></AdminRoute>} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="logs" element={<AdminRoute><LogsPage /></AdminRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

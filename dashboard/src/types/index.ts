@@ -155,6 +155,43 @@ export interface CrmSetting {
   value: Record<string, unknown>;
 }
 
+export interface BackupSettings {
+  enabled: boolean;
+  cron: string;
+  retentionCount: number;
+  storagePath?: string;
+}
+
+export interface TelegramCrmSettings {
+  token: string;
+  adminIds: number[];
+  allowedCommands: string[];
+  enabled: boolean;
+}
+
+export interface NotificationSettings {
+  telegram: boolean;
+  web: boolean;
+  events: {
+    connectionLost: boolean;
+    equipmentError: boolean;
+    queueOverflow: boolean;
+    backupError: boolean;
+  };
+}
+
+export interface PyOrchestratorCrmSettings {
+  email: string;
+  password: string;
+  panelPort: number;
+}
+
+export interface DynamicApiCrmSettings {
+  serviceLogin: string;
+  servicePassword: string;
+  apiBaseUrl: string;
+}
+
 export interface Currency {
   id: string;
   code: string;

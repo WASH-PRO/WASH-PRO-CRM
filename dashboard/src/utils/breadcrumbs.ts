@@ -17,6 +17,7 @@ const ROUTE_LABELS: Record<string, string> = {
   telegram: 'Telegram',
   currency: 'Валюты',
   'discount-types': 'Типы скидок',
+  settings: 'Настройки',
   logs: 'Логи',
 };
 

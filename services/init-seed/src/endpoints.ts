@@ -272,7 +272,7 @@ const financeStatsFields: SchemaField[] = [
 ];
 
 const settingsFields: SchemaField[] = [
-  { name: 'key', type: 'string', required: true, order: 0, description: 'backup|archive|telegram|notifications' },
+  { name: 'key', type: 'string', required: true, order: 0, description: 'backup|archive|telegram|notifications|pyorchestrator|dynamic-api' },
   { name: 'value', type: 'json', required: true, order: 1 },
 ];
 
@@ -429,6 +429,11 @@ export const DEFAULT_SETTINGS = [
       email: 'admin@pyorchestrator.local',
       password: 'admin',
       panelPort: 8090,
+    },
+  },
+  {
+    key: 'dynamic-api',
+    value: {
       serviceLogin: 'service',
       servicePassword: 'ServiceInternal123!',
       apiBaseUrl: 'http://dynamic-api:3001',

@@ -46,6 +46,10 @@
     @apply btn border border-panel-border bg-panel-card text-panel-ink shadow-sm hover:bg-panel-canvas dark:border-panel-border-dark dark:bg-panel-card-dark dark:text-panel-ink-dark dark:hover:bg-panel-sidebar-hover;
   }
 
+  .btn-danger {
+    @apply btn border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60;
+  }
+
   .btn-ghost {
     @apply btn text-panel-muted hover:bg-black/5 hover:text-panel-ink dark:text-panel-muted-dark dark:hover:bg-white/5 dark:hover:text-white;
   }
@@ -56,6 +60,10 @@
 
   .input {
     @apply w-full rounded-lg border border-panel-border bg-panel-card px-3.5 py-2.5 text-sm text-panel-ink shadow-sm placeholder:text-panel-muted focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-panel-border-dark dark:bg-[#0d1218] dark:text-panel-ink-dark dark:placeholder:text-panel-muted-dark dark:focus:border-brand-400 dark:focus:ring-brand-400/20;
+  }
+
+  .select {
+    @apply input cursor-pointer appearance-none;
   }
 
   .label {

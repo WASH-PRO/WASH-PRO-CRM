@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Download, HardDrive, Trash2 } from 'lucide-react';
 import { api, apiList } from '../api/client';
 import { PageHeader, Loading, Badge, statusLabel } from '../components/UI';
@@ -11,28 +11,14 @@ import { createExportBulkAction } from '../utils/export';
 import { deleteBackupFile, downloadBackupFile } from '../utils/download';
 
 export function BackupsPage() {
-  const [settings, setSettings] = useState({ enabled: true, cron: '0 2 * * *', retentionCount: 7 });
-  const [settingId, setSettingId] = useState<string | null>(null);
-
   const [creating, setCreating] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const [backups, crmSettings] = await Promise.all([
-      apiList<BackupRecord>('/crm/backups'),
-      apiList<{ id: string; key: string; value: Record<string, unknown> }>('/crm/settings'),
-    ]);
-    const backupSetting = crmSettings.find((x) => x.key === 'backup');
-    return { backups, backupSetting };
+    const backups = await apiList<BackupRecord>('/crm/backups');
+    return { backups };
   }, []);
 
   const { data, loading, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
-
-  useEffect(() => {
-    if (data?.backupSetting) {
-      setSettingId(data.backupSetting.id);
-      setSettings(data.backupSetting.value as typeof settings);
-    }
-  }, [data?.backupSetting]);
 
   const createManual = async () => {
     setCreating(true);
@@ -50,15 +36,6 @@ export function BackupsPage() {
     } finally {
       setCreating(false);
     }
-  };
-
-  const saveSettings = async () => {
-    if (!settingId) return;
-    await api(`/crm/settings/${settingId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ key: 'backup', value: settings }),
-    });
-    alert('Настройки сохранены');
   };
 
   const deleteBackup = async (id: string, filename: string) => {
@@ -218,30 +195,13 @@ export function BackupsPage() {
     <div>
       <PageHeader
         title="Резервные копии"
-        subtitle="Автоматическое и ручное резервное копирование MongoDB"
+        subtitle="Автоматическое и ручное резервное копирование MongoDB. Расписание и retention — в разделе «Настройки»."
         actions={
           <button type="button" className="btn-primary" disabled={creating} onClick={createManual}>
             <HardDrive size={16} /> {creating ? 'Запуск…' : 'Создать копию'}
           </button>
         }
       />
-
-      <div className="card mb-6 max-w-lg space-y-3">
-        <h2 className="font-semibold">Настройки</h2>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={settings.enabled} onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })} />
-          Автоматическое резервное копирование
-        </label>
-        <div>
-          <label className="label">Расписание (cron)</label>
-          <input className="input" value={settings.cron} onChange={(e) => setSettings({ ...settings, cron: e.target.value })} />
-        </div>
-        <div>
-          <label className="label">Количество копий</label>
-          <input className="input" type="number" min={1} max={30} value={settings.retentionCount} onChange={(e) => setSettings({ ...settings, retentionCount: Number(e.target.value) })} />
-        </div>
-        <button type="button" className="btn-primary" onClick={saveSettings}>Сохранить настройки</button>
-      </div>
 
       <DataTable columns={columns} data={data?.backups || []} rowKey={(b) => b.id} filters={filters} searchPlaceholder="Поиск копий…" bulkActions={bulkActions} />
     </div>

@@ -22,6 +22,7 @@ import {
   PanelLeftOpen,
   Users,
   Shield,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -85,6 +86,7 @@ const navGroups: NavGroup[] = [
       { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
       { to: '/currency', label: 'Валюты', icon: Coins, admin: true },
       { to: '/discount-types', label: 'Типы скидок', icon: Tags, admin: true },
+      { to: '/settings', label: 'Настройки', icon: Settings },
       { to: '/logs', label: 'Логи', icon: FileText, admin: true },
     ],
   },

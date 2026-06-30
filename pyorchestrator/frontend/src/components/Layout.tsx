@@ -1,4 +1,5 @@
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import UpdateBanner from "@/components/UpdateBanner";
 import { IconButton } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "@/context/LocaleContext";
@@ -200,6 +201,7 @@ export default function Layout() {
         </header>
 
         <main className="animate-in flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+          <UpdateBanner />
           <Outlet />
         </main>
       </div>

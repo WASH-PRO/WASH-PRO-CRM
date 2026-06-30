@@ -7,7 +7,7 @@ description: История релизов PyOrchestrator
 ## v0.1.0 — первый публичный выпуск
 
 **Дата:** 27 июня 2026  
-**Тег:** [`v0.1.0`](https://github.com/Developer-RU/pyorchestrator/releases/tag/v0.1.0) · MIT
+**Тег:** [`v0.1.0`](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0) · Apache 2.0
 
 Первый стабильный релиз платформы PyOrchestrator — SCADA/CMS для управления тысячами изолированных Python-скриптов и ботов в фиксированном стеке Docker Compose.
 
@@ -37,8 +37,8 @@ description: История релизов PyOrchestrator
 ### Быстрый старт
 
 ```bash
-git clone https://github.com/Developer-RU/pyorchestrator.git
-cd pyorchestrator
+git clone https://github.com/PyOrchestrator/PyOrchestrator.git
+cd PyOrchestrator
 git checkout v0.1.0
 cp .env.example .env
 docker compose up --build
@@ -58,4 +58,4 @@ docker compose up --build
 
 ---
 
-Полный список изменений: [CHANGELOG.md](https://github.com/Developer-RU/pyorchestrator/blob/main/CHANGELOG.md)
+Полный список изменений: [CHANGELOG.md](https://github.com/PyOrchestrator/PyOrchestrator/blob/main/CHANGELOG.md)

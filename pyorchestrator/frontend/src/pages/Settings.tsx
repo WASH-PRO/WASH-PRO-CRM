@@ -1,18 +1,21 @@
 import { ComputerDesktopIcon, GlobeAltIcon, LanguageIcon } from "@heroicons/react/20/solid";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import PageContainer, { PageContent } from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
+import UpdatesSettingsPanel from "@/components/UpdatesSettingsPanel";
+import WashSoftwareUpdatesSection from "@/components/WashSoftwareUpdatesSection";
 import Button from "@/components/ui/Button";
 import { FieldGroup, FieldLabel, Input } from "@/components/ui/Input";
 import { LocaleOption } from "@/components/ui/LocaleOption";
 import Panel from "@/components/ui/Panel";
 import { MoonIcon, SunIcon, ThemeOption } from "@/components/ui/ThemeToggle";
-import { useLiveQuery } from "@/hooks/useLiveQuery";
-import { api, API_URL } from "@/api/client";
+import { api } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "@/context/LocaleContext";
 import { useToast } from "@/context/ToastContext";
 import { useTheme } from "@/context/ThemeContext";
+
+const washEmbedded = import.meta.env.VITE_WASH_EMBEDDED === 'true';
 
 export default function SettingsPage() {
   const { t, locale, setLocale } = useTranslation();
@@ -27,13 +30,6 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) setDisplayName(user.display_name);
   }, [user]);
-
-  const fetchInfo = useCallback(() => api<{ version: string }>("/api/v1/system/info"), []);
-  const { data: info, reload, refreshing, lastUpdated } = useLiveQuery(fetchInfo, [], {
-    intervalMs: 60_000,
-  });
-
-  const version = info?.version ?? "";
 
   const saveProfile = async () => {
     setProfileBusy(true);
@@ -61,17 +57,16 @@ export default function SettingsPage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t("settings.title")}
-        subtitle={t("settings.subtitle")}
-        onRefresh={reload}
-        refreshing={refreshing}
-        lastUpdated={lastUpdated}
-      />
+      <PageHeader title={t("settings.title")} subtitle={t("settings.subtitle")} />
 
-      <PageContent>
-        <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <Panel title={t("settings.profile.title")} subtitle={user?.email} bodyClassName="space-y-4">
+      <PageContent className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Panel
+            title={t("settings.profile.title")}
+            subtitle={user?.email}
+            className="h-full"
+            bodyClassName="flex h-full flex-1 flex-col gap-4"
+          >
             <FieldGroup>
               <FieldLabel htmlFor="profile-name">{t("settings.profile.displayName")}</FieldLabel>
               <Input
@@ -100,7 +95,7 @@ export default function SettingsPage() {
                 placeholder={t("settings.profile.passwordMin")}
               />
             </FieldGroup>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
               <Button disabled={!profileValid || profileBusy} onClick={saveProfile}>
                 {t("settings.profile.saveProfile")}
               </Button>
@@ -110,7 +105,12 @@ export default function SettingsPage() {
             </div>
           </Panel>
 
-          <Panel title={t("settings.localization.title")} subtitle={t("settings.localization.subtitle")} bodyClassName="space-y-3">
+          <Panel
+            title={t("settings.localization.title")}
+            subtitle={t("settings.localization.subtitle")}
+            className="h-full"
+            bodyClassName="flex h-full flex-1 flex-col gap-3"
+          >
             <LocaleOption
               value="en"
               label={t("settings.localization.english")}
@@ -127,7 +127,7 @@ export default function SettingsPage() {
               active={locale === "ru"}
               onSelect={setLocale}
             />
-            <p className="pt-1 text-xs text-faint">
+            <p className="mt-auto pt-2 text-xs text-faint">
               {t("settings.localization.activeNow")}:{" "}
               <span className="font-medium text-muted">
                 {locale === "ru" ? t("settings.localization.russian") : t("settings.localization.english")}
@@ -135,7 +135,12 @@ export default function SettingsPage() {
             </p>
           </Panel>
 
-          <Panel title={t("settings.appearance.title")} subtitle={t("settings.appearance.subtitle")} bodyClassName="space-y-3">
+          <Panel
+            title={t("settings.appearance.title")}
+            subtitle={t("settings.appearance.subtitle")}
+            className="h-full sm:col-span-2 lg:col-span-1"
+            bodyClassName="flex h-full flex-1 flex-col gap-3"
+          >
             <ThemeOption
               value="dark"
               label={t("settings.appearance.dark")}
@@ -160,7 +165,7 @@ export default function SettingsPage() {
               active={theme === "system"}
               onSelect={setTheme}
             />
-            <p className="pt-1 text-xs text-faint">
+            <p className="mt-auto pt-2 text-xs text-faint">
               {t("settings.appearance.activeNow")}:{" "}
               <span className="font-medium text-muted">
                 {resolved === "dark" ? t("settings.appearance.dark") : t("settings.appearance.light")}
@@ -169,39 +174,9 @@ export default function SettingsPage() {
               {t("settings.appearance.quickToggle")}
             </p>
           </Panel>
-
-          <Panel title={t("settings.system.title")} bodyClassName="space-y-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-faint">{t("settings.system.version")}</p>
-              <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{version || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-faint">{t("settings.system.apiEndpoint")}</p>
-              <p className="mt-1 break-all font-mono text-xs leading-relaxed text-foreground-secondary">{API_URL}</p>
-            </div>
-          </Panel>
-
-          {user?.role === "Administrator" && (
-            <Panel title={t("settings.updates.title")} subtitle={t("settings.updates.subtitle")} bodyClassName="flex flex-col gap-4">
-              <Button
-                variant="secondary"
-                className="w-fit"
-                onClick={async () => {
-                  const result = await api<{ update_available: boolean; latest_version: string | null }>(
-                    "/api/v1/system/updates/check",
-                  );
-                  toast.info(
-                    result.update_available
-                      ? t("settings.updates.available", { version: result.latest_version ?? "" })
-                      : t("settings.updates.upToDate"),
-                  );
-                }}
-              >
-                {t("settings.updates.check")}
-              </Button>
-            </Panel>
-          )}
         </div>
+
+        {user?.role === "Administrator" && (washEmbedded ? <WashSoftwareUpdatesSection /> : <UpdatesSettingsPanel />)}
       </PageContent>
     </PageContainer>
   );

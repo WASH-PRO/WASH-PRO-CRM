@@ -90,7 +90,6 @@ class ScriptCreate(BaseModel):
     script_type: str = "script"
     entrypoint: str = "main.py"
     code: str | None = None
-    metadata: dict = Field(default_factory=dict)
 
 
 class ScriptUpdate(BaseModel):
@@ -348,7 +347,8 @@ class SystemConfigInfo(BaseModel):
     runtime_queue: str
     minio_bucket: str
     minio_endpoint: str
-    minio_console_url: str
+    minio_console_url: str | None = None
+    grafana_url: str | None = None
     cors_origins: list[str]
 
 

@@ -195,7 +195,7 @@ platform.mqtt.publish("topic", payload)
 ## Раскладка файлов (MinIO)
 
 ```
-pyorchestrator/
+PyOrchestrator/
 ├── scripts/{script_id}/          # дерево проекта (main.py, modules/, ...)
 ├── runs/{run_id}/                  # артефакты запуска, временные выходы
 ├── backups/{backup_id}/            # снимки tarball

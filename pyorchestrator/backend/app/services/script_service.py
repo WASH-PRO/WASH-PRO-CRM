@@ -154,7 +154,6 @@ async def create_script(
         group_id=group_id,
         script_type=script_type,
         entrypoint=entrypoint,
-        metadata_=metadata or {},
     )
     db.add(script)
     await db.flush()

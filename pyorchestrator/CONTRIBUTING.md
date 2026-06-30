@@ -4,7 +4,7 @@
 
 ## Сообщения об ошибках
 
-Создайте [Issue](https://github.com/Developer-RU/pyorchestrator/issues) с описанием:
+Создайте [Issue](https://github.com/PyOrchestrator/PyOrchestrator/issues) с описанием:
 
 - Шаги воспроизведения
 - Ожидаемое и фактическое поведение
@@ -28,7 +28,7 @@
 - Навигация в `docs/_config.yml` → `nav`
 - Стили: `docs/assets/css/style.css`
 
-После push в `main` GitHub Actions публикует сайт на Pages: https://developer-ru.github.io/pyorchestrator/
+После push в `main` GitHub Actions публикует сайт на Pages: https://pyorchestrator.github.io/PyOrchestrator/
 
 Копия для GitHub Wiki: папка `wiki/`.
 
@@ -53,4 +53,4 @@ cd docs && bundle install && bundle exec jekyll serve
 
 ## Вопросы
 
-См. [документацию](https://developer-ru.github.io/pyorchestrator/) или создайте Issue.
+См. [документацию](https://pyorchestrator.github.io/PyOrchestrator/) или создайте Issue.

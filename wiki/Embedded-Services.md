@@ -10,14 +10,14 @@
 
 Upstream: https://dynamic-api-platform.github.io/Dynamic-API-Platform/
 
-## PyOrchestrator v0.1.0 (опц.)
+## PyOrchestrator v0.1.10 (опц.)
 
 - Python scripts/bots, schedules, secrets, WebSocket logs
 - Панель `:8090`: полный Control Plane
 - **WASH:** Telegram-боты через `pyorch-bridge` + Dashboard → Telegram
 - MCP `:8010`; observability — профиль `pyorch-observability`
 
-Upstream: https://developer-ru.github.io/pyorchestrator/
+Upstream: https://pyorchestrator.github.io/PyOrchestrator/
 
 ## Что не заявлять как готовое
 

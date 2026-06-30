@@ -82,6 +82,32 @@ async def _ping_minio() -> tuple[str, str]:
     return await asyncio.to_thread(check)
 
 
+async def _resolve_grafana_url() -> str | None:
+    """Return public Grafana URL only when configured and the service responds."""
+    candidates: list[tuple[str, str]] = []
+    if settings.grafana_public_url.strip():
+        candidates.append(("public", settings.grafana_public_url.rstrip("/")))
+    internal = settings.grafana_internal_url.strip()
+    if internal:
+        candidates.append(("internal", internal.rstrip("/")))
+
+    if not candidates:
+        return None
+
+    async with httpx.AsyncClient(timeout=2.5) as client:
+        for _kind, base in candidates:
+            try:
+                res = await client.get(f"{base}/api/health")
+                if res.status_code != 200:
+                    continue
+                if settings.grafana_public_url.strip():
+                    return settings.grafana_public_url.rstrip("/")
+                return base
+            except Exception:
+                continue
+    return None
+
+
 async def get_system_info(db: AsyncSession) -> dict:
     now = datetime.now(timezone.utc)
     uptime_sec = int((now - _APP_STARTED_AT).total_seconds())
@@ -96,6 +122,26 @@ async def get_system_info(db: AsyncSession) -> dict:
     services = {name: status for name, status in service_results}
     services["postgres"] = postgres_status
     services["backend"] = "ok"
+
+    grafana_url = await _resolve_grafana_url()
+
+    minio_console_url: str | None = None
+    if settings.minio_console_enabled:
+        minio_console_url = (
+            settings.minio_console_public_url.strip()
+            or f"http://localhost:{settings.minio_console_port}"
+        )
+
+    config: dict = {
+        "runtime_queue": settings.runtime_queue_key,
+        "minio_bucket": settings.minio_bucket,
+        "minio_endpoint": settings.minio_endpoint,
+        "cors_origins": settings.cors_origin_list,
+    }
+    if minio_console_url:
+        config["minio_console_url"] = minio_console_url
+    if grafana_url:
+        config["grafana_url"] = grafana_url
 
     counts = {
         "scripts": await db.scalar(select(func.count()).select_from(Script)) or 0,
@@ -132,12 +178,6 @@ async def get_system_info(db: AsyncSession) -> dict:
         "started_at": _APP_STARTED_AT.isoformat(),
         "services": services,
         "counts": counts,
-        "config": {
-            "runtime_queue": settings.runtime_queue_key,
-            "minio_bucket": settings.minio_bucket,
-            "minio_endpoint": settings.minio_endpoint,
-            "minio_console_url": f"http://localhost:{settings.minio_console_port}",
-            "cors_origins": settings.cors_origin_list,
-        },
+        "config": config,
         "resources": _host_resources(),
     }

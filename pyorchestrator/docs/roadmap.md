@@ -6,7 +6,7 @@ description: План развития PyOrchestrator — фазы MVP и Produc
 
 ## Статус v0.1.0
 
-**Релиз опубликован:** [v0.1.0](https://github.com/Developer-RU/pyorchestrator/releases/tag/v0.1.0) (27 июня 2026) · [заметки о выпуске]({{ '/release-notes/' | relative_url }})
+**Релиз опубликован:** [v0.1.0](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0) (27 июня 2026) · [заметки о выпуске]({{ '/release-notes/' | relative_url }})
 
 | Фаза | Статус | Примечания |
 |------|--------|------------|

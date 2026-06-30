@@ -30,6 +30,7 @@ interface SystemInfo {
     minio_bucket?: string;
     minio_endpoint?: string;
     minio_console_url?: string;
+    grafana_url?: string;
   };
 }
 
@@ -197,7 +198,10 @@ export default function SystemPage() {
             className="w-full"
             title={t("system.cards.storage.title")}
             subtitle={t("system.cards.storage.subtitle")}
-            bodyClassName="grid grid-cols-1 gap-4 p-5 sm:grid-cols-3 sm:p-6"
+            bodyClassName={cn(
+              "grid grid-cols-1 gap-4 p-5 sm:p-6",
+              info.config.minio_console_url ? "sm:grid-cols-3" : "sm:grid-cols-2",
+            )}
           >
             <div className="rounded-xl bg-surface-muted/60 p-4 ring-1 ring-ring-line">
               <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-faint">

@@ -10,17 +10,32 @@ DEMO="$PO/backend/app/seed/demo_scripts.py"
 
 echo "==> PyOrchestrator WASH patches"
 
-# ScriptCreate / ScriptUpdate — metadata для wash_telegram_bot
-if ! grep -q 'metadata: dict = Field(default_factory=dict)' "$SCHEMAS" 2>/dev/null; then
+PATCH_DIR="$(cd "$(dirname "$0")" && pwd)"
+OBS_PATCH="$PATCH_DIR/observability-storage.patch"
+CONFIG_PY="$PO/backend/app/core/config.py"
+
+if [[ -f "$OBS_PATCH" ]] && ! grep -q 'minio_console_enabled' "$CONFIG_PY" 2>/dev/null; then
+  echo "    Applying observability-storage.patch"
+  (cd "$PO" && patch -p1 --forward < "$OBS_PATCH") || {
+    echo "    ERROR: observability-storage.patch failed — fix conflicts manually" >&2
+    exit 1
+  }
+elif [[ -f "$OBS_PATCH" ]]; then
+  echo "    Observability patch already present (minio_console_enabled in config)"
+fi
+
+# ScriptCreate — metadata для wash_telegram_bot (ScriptResponse уже имеет metadata в response)
+if ! grep -A 8 'class ScriptCreate' "$SCHEMAS" | grep -q 'metadata: dict'; then
   perl -i -pe 's/(entrypoint: str = "main.py"\n    code: str \| None = None)/$1\n    metadata: dict = Field(default_factory=dict)/' "$SCHEMAS"
   echo "    Extended ScriptCreate with metadata"
 fi
-if ! grep -q 'metadata: dict | None = None' "$SCHEMAS" 2>/dev/null; then
+# ScriptUpdate — metadata (если upstream ещё без поля)
+if ! grep -A 12 'class ScriptUpdate' "$SCHEMAS" | grep -q 'metadata: dict'; then
   perl -i -pe 's/(max_memory_bytes: int \| None = None)/$1\n    metadata: dict | None = None/' "$SCHEMAS"
   echo "    Extended ScriptUpdate with metadata"
 fi
 
-if ! grep -q 'metadata=body.metadata' "$SCRIPTS_API" 2>/dev/null; then
+if ! grep -q 'meta = body.metadata' "$SCRIPTS_API" 2>/dev/null; then
   perl -i -pe 's/files = None/files = None\n    meta = body.metadata or {}/' "$SCRIPTS_API"
   perl -i -pe 's/body\.entrypoint, files/body.entrypoint, files, metadata=meta/' "$SCRIPTS_API"
   perl -i -0pe 's/for field, value in body\.model_dump\(exclude_unset=True\)\.items\(\):\n        setattr\(script, field, value\)/for field, value in body.model_dump(exclude_unset=True).items():\n        if field == "metadata" and value is not None:\n            script.metadata_ = value\n        elif field != "metadata":\n            setattr(script, field, value)/s' "$SCRIPTS_API"
@@ -202,6 +217,24 @@ DEMO_TEMPLATES.append(
 )
 PYEOF
   echo "    Added WASH Telegram bot template to demo_scripts.py"
+fi
+
+# ─── Embedded UI (Settings → Updates, hide OTA banner) ───────────────────────
+PATCH_DIR="$(cd "$(dirname "$0")" && pwd)"
+cp "$PATCH_DIR/WashSoftwareUpdatesSection.tsx" "$PO/frontend/src/components/"
+
+SETTINGS="$PO/frontend/src/pages/Settings.tsx"
+if ! grep -q 'WashSoftwareUpdatesSection' "$SETTINGS" 2>/dev/null; then
+  perl -i -pe 's|import UpdatesSettingsPanel from "@/components/UpdatesSettingsPanel";|import UpdatesSettingsPanel from "@/components/UpdatesSettingsPanel";\nimport WashSoftwareUpdatesSection from "@/components/WashSoftwareUpdatesSection";|' "$SETTINGS"
+  perl -i -pe 's|import \{ useTheme \} from "@/context/ThemeContext";|import { useTheme } from "@/context/ThemeContext";\n\nconst washEmbedded = import.meta.env.VITE_WASH_EMBEDDED === '\''true'\'';|' "$SETTINGS"
+  perl -i -pe 's/\{user\?\.role === "Administrator" && <UpdatesSettingsPanel \/>\}/\{user?.role === "Administrator" \&\& (washEmbedded ? <WashSoftwareUpdatesSection \/> : <UpdatesSettingsPanel \/>)\}/' "$SETTINGS"
+  echo "    Patched Settings.tsx for WASH embedded updates UI"
+fi
+
+BANNER="$PO/frontend/src/components/UpdateBanner.tsx"
+if ! grep -q 'VITE_WASH_EMBEDDED' "$BANNER" 2>/dev/null; then
+  perl -i -pe 's/^export default function UpdateBanner\(\) \{/export default function UpdateBanner() {\n  if (import.meta.env.VITE_WASH_EMBEDDED === '\''true'\'') return null;\n/' "$BANNER"
+  echo "    Patched UpdateBanner.tsx — hidden in WASH embedded mode"
 fi
 
 echo "==> PyOrchestrator WASH patches applied"

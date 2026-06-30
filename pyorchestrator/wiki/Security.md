@@ -40,4 +40,4 @@ Runtime и scheduler обращаются к backend через `X-Internal-Key:
 
 ## Сообщить об уязвимости
 
-См. [SECURITY.md](https://github.com/Developer-RU/pyorchestrator/blob/main/SECURITY.md) в корне репозитория.
+См. [SECURITY.md](https://github.com/PyOrchestrator/PyOrchestrator/blob/main/SECURITY.md) в корне репозитория.

@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/MongoDB-7-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB">
   <img src="https://img.shields.io/badge/RabbitMQ-Telemetry-FF6600?style=flat-square&logo=rabbitmq&logoColor=white" alt="RabbitMQ">
   <a href="https://github.com/Dynamic-API-Platform/Dynamic-API-Platform"><img src="https://img.shields.io/badge/Dynamic_API-v1.5.13-3b82f6?style=flat-square" alt="Dynamic API Platform v1.5.13"></a>
-  <a href="https://github.com/Developer-RU/pyorchestrator"><img src="https://img.shields.io/badge/PyOrchestrator-v0.1.0-22d3ee?style=flat-square" alt="PyOrchestrator v0.1.0"></a>
+  <a href="https://github.com/PyOrchestrator/PyOrchestrator"><img src="https://img.shields.io/badge/PyOrchestrator-v0.1.10-22d3ee?style=flat-square" alt="PyOrchestrator v0.1.10"></a>
   <img src="https://img.shields.io/badge/License-Proprietary-red?style=flat-square" alt="License">
 </p>
 
@@ -50,7 +50,7 @@
 | Платформа | Версия | Назначение в WASH |
 |-----------|--------|-------------------|
 | [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) | **v1.5.13** | REST API, MongoDB, CRM endpoints, RBAC, automation (cron, webhooks, MCP…) |
-| [PyOrchestrator](https://github.com/Developer-RU/pyorchestrator) | **v0.1.0** *(опц.)* | Python-скрипты и Telegram-боты через `pyorch-bridge` |
+| [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) | **v0.1.10** *(опц.)* | Python-скрипты и Telegram-боты через `pyorch-bridge` |
 
 Подробно: [docs/embedded-services.md](docs/embedded-services.md)
 
@@ -176,7 +176,7 @@ WASH-PRO-CRM/
 ./scripts/update-dynamic-api.sh
 docker compose up -d --build dynamic-api dynamic-api-panel
 
-# Обновить встроенный PyOrchestrator (v0.1.0+)
+# Обновить встроенный PyOrchestrator (v0.1.10+)
 ./scripts/update-pyorchestrator.sh
 docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-backend pyorchestrator-panel pyorch-bridge
 

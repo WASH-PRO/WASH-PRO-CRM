@@ -8,7 +8,7 @@ layout: default
   <p class="hero-lead">
     Локальная CRM/SCADA-система для автомоек самообслуживания на базе
     <a href="https://github.com/Dynamic-API-Platform/Dynamic-API-Platform">Dynamic API Platform</a>
-    и опционально <a href="https://github.com/Developer-RU/pyorchestrator">PyOrchestrator</a>
+    и опционально <a href="https://github.com/PyOrchestrator/PyOrchestrator">PyOrchestrator</a>
   </p>
 </div>
 
@@ -39,7 +39,7 @@ layout: default
 | Платформа | Версия | Панель | В WASH |
 |-----------|--------|--------|--------|
 | [Dynamic API Platform](https://dynamic-api-platform.github.io/Dynamic-API-Platform/) | **v1.5.13** | `:8080` | Backend CRM, endpoints, RBAC, automation |
-| [PyOrchestrator](https://developer-ru.github.io/pyorchestrator/) | **v0.1.0** *(опц.)* | `:8090` | Telegram-боты, Python scripts |
+| [PyOrchestrator](https://pyorchestrator.github.io/PyOrchestrator/) | **v0.1.10** *(опц.)* | `:8090` | Telegram-боты, Python scripts |
 
 Подробно: [Встроенные сервисы](embedded-services.md).
 
@@ -51,7 +51,7 @@ layout: default
 | Dashboard | React 18 + TypeScript + Vite + Tailwind + Recharts |
 | Очередь | RabbitMQ |
 | Телеметрия | message-processor (Node.js) |
-| Python automation | PyOrchestrator v0.1.0 *(опц.)* |
+| Python automation | PyOrchestrator v0.1.10 *(опц.)* |
 | Инфраструктура | Docker Compose |
 
 ## Быстрый старт

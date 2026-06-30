@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from app.api.v1.router import api_router
 from app.api.v1.misc import internal_router as internal_routes
+from app.services.update_settings_service import get_app_version
 from app.core.config import settings
 from app.core.security import hash_password
 from app.db.schema_patches import apply_schema_patches
@@ -19,7 +20,8 @@ from app.models.run import BackupSettings
 from app.models.script import Script, ScriptTemplate
 from app.models.user import Group, User
 from app.seed.demo_scripts import DEMO_SCRIPTS, DEMO_TEMPLATES
-from app.services.script_service import create_script, storage_service
+from app.services.update_scheduler import update_scheduler
+from app.services.update_settings_service import update_settings_service
 from app.ws.logs import router as ws_router
 
 
@@ -33,7 +35,11 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
     await seed_data()
+    async with async_session() as db:
+        await update_settings_service.seed_defaults(db)
+    await update_scheduler.start()
     yield
+    await update_scheduler.stop()
     await engine.dispose()
 
 
@@ -97,7 +103,7 @@ async def seed_data() -> None:
 
 app = FastAPI(
     title="PyOrchestrator API",
-    version=settings.app_version,
+    version=get_app_version(),
     description="SCADA/CMS platform for Python scripts and bots",
     lifespan=lifespan,
 )
@@ -118,4 +124,4 @@ app.mount("/metrics", make_asgi_app())
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "backend", "version": settings.app_version}
+    return {"status": "ok", "service": "backend", "version": get_app_version()}

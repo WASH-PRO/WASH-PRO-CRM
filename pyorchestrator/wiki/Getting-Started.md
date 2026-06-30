@@ -7,8 +7,8 @@
 ## Установка
 
 ```bash
-git clone https://github.com/Developer-RU/pyorchestrator.git
-cd pyorchestrator
+git clone https://github.com/PyOrchestrator/PyOrchestrator.git
+cd PyOrchestrator
 cp .env.example .env
 docker compose up --build
 ```

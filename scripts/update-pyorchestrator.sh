@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PO="$ROOT/pyorchestrator"
 UPSTREAM_REPO="${PYORCHESTRATOR_UPSTREAM:-https://github.com/PyOrchestrator/PyOrchestrator.git}"
-UPSTREAM_REF="${PYORCHESTRATOR_REF:-v0.1.0}"
+UPSTREAM_REF="${PYORCHESTRATOR_REF:-v0.1.11}"
 
 echo "==> Fetch upstream: $UPSTREAM_REPO ($UPSTREAM_REF)"
 tmpdir="$(mktemp -d)"

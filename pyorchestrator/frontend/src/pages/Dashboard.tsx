@@ -103,6 +103,7 @@ export default function Dashboard() {
         api<Stats>("/api/v1/dashboard/stats"),
         api<Timeseries>("/api/v1/dashboard/timeseries"),
         api<Script[]>("/api/v1/scripts"),
+        api<{ config?: { grafana_url?: string } }>("/api/v1/system/info"),
       ]),
     [],
   );
@@ -112,6 +113,7 @@ export default function Dashboard() {
   const stats = data?.[0] ?? null;
   const timeseries = data?.[1] ?? null;
   const scripts = data?.[2] ?? [];
+  const grafanaUrl = data?.[3]?.config?.grafana_url;
 
   const s = stats ?? {
     total_scripts: 0,
@@ -258,7 +260,7 @@ export default function Dashboard() {
             );
           })}
 
-          <Col span={4}>
+          <Col span={grafanaUrl ? 4 : 6}>
             <Panel className="h-full" title={t("dashboard.health.title")} bodyClassName="flex flex-1 flex-col">
               <StatusRow label={t("dashboard.health.activeScripts")} value={s.active_scripts} tone="success" />
               <StatusRow label={t("dashboard.health.runningSandboxes")} value={s.running_now} tone={s.running_now > 0 ? "accent" : "neutral"} />
@@ -267,26 +269,28 @@ export default function Dashboard() {
             </Panel>
           </Col>
 
-          <Col span={4}>
+          <Col span={grafanaUrl ? 4 : 6}>
             <Panel className="h-full" title={t("dashboard.assetMix.title")} bodyClassName="flex flex-1 flex-col justify-center">
               <MetricBars items={distribution} />
             </Panel>
           </Col>
 
-          <Col span={4}>
-            <Panel className="h-full" title={t("dashboard.observability.title")} bodyClassName="flex flex-1 flex-col justify-between">
-              <p className="text-sm leading-relaxed text-muted">{t("dashboard.observability.description")}</p>
-              <a
-                href="http://localhost:3000"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-400 ring-1 ring-inset ring-cyan-400/20 transition-colors hover:bg-cyan-400/15"
-              >
-                {t("dashboard.observability.openGrafana")}
-                <ArrowTopRightOnSquareIcon className="size-4" />
-              </a>
-            </Panel>
-          </Col>
+          {grafanaUrl ? (
+            <Col span={4}>
+              <Panel className="h-full" title={t("dashboard.observability.title")} bodyClassName="flex flex-1 flex-col justify-between">
+                <p className="text-sm leading-relaxed text-muted">{t("dashboard.observability.description")}</p>
+                <a
+                  href={grafanaUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-400 ring-1 ring-inset ring-cyan-400/20 transition-colors hover:bg-cyan-400/15"
+                >
+                  {t("dashboard.observability.openGrafana")}
+                  <ArrowTopRightOnSquareIcon className="size-4" />
+                </a>
+              </Panel>
+            </Col>
+          ) : null}
         </PageGrid>
       </PageContent>
     </PageContainer>

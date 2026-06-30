@@ -37,7 +37,7 @@ Add to **Cursor Settings → MCP** or `~/.cursor/mcp.json`:
     "pyorchestrator": {
       "command": "python3",
       "args": ["-m", "pyorchestrator_mcp"],
-      "cwd": "/path/to/pyorchestrator/mcp",
+      "cwd": "/path/to/PyOrchestrator/mcp",
       "env": {
         "PYORCH_API_URL": "http://localhost:8000",
         "PYORCH_EMAIL": "admin@pyorchestrator.local",

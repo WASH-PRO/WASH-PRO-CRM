@@ -1,6 +1,6 @@
 # WASH PRO CRM / SCADA
 
-Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/Developer-RU/pyorchestrator) **v0.1.0**.
+Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.10**.
 
 **Документация (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/
 

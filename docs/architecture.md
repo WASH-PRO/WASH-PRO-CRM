@@ -118,9 +118,9 @@ Vendored-копия [Dynamic API Platform](https://github.com/Dynamic-API-Platfo
 
 In-app updater **отключён**: `UPDATE_EXECUTOR_ENABLED=false`.
 
-## PyOrchestrator (vendored v0.1.0)
+## PyOrchestrator (vendored v0.1.10)
 
-Vendored-копия [PyOrchestrator](https://github.com/Developer-RU/pyorchestrator).
+Vendored-копия [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator).
 
 По умолчанию в `.env.example`: `PYORCHESTRATOR_ENABLED=true`, но стек стартует только если переменная `true` в **вашем** `.env` и `./scripts/start.sh` подключает overlay.
 

@@ -1,4 +1,8 @@
 # PyOrchestrator — Docker Compose stack
+name: pyorchestrator
+
+# PYORCH_HOST_PROJECT_ROOT — host paths for bind mounts (Docker daemon).
+# PYORCH_BUILD_ROOT — paths readable by the compose client for image builds (OTA updater uses /deploy).
 
 x-common-env: &common-env
   POSTGRES_HOST: postgres
@@ -12,6 +16,10 @@ x-common-env: &common-env
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
   MINIO_BUCKET: ${MINIO_BUCKET:-pyorchestrator}
   MINIO_CONSOLE_PORT: ${MINIO_CONSOLE_PORT:-9001}
+  MINIO_CONSOLE_ENABLED: ${MINIO_CONSOLE_ENABLED:-true}
+  MINIO_CONSOLE_PUBLIC_URL: ${MINIO_CONSOLE_PUBLIC_URL:-}
+  GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
+  GRAFANA_INTERNAL_URL: ${GRAFANA_INTERNAL_URL:-http://grafana:3000}
   SECRET_MASTER_KEY: ${SECRET_MASTER_KEY:-change-me-in-production-32chars!!}
 
 services:
@@ -19,8 +27,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ${PYORCH_BUILD_ROOT:-${PYORCH_HOST_PROJECT_ROOT:-.}}
+      dockerfile: backend/Dockerfile
     container_name: pyorch-backend
     restart: unless-stopped
     ports:
@@ -28,12 +36,30 @@ services:
     environment:
       <<: *common-env
       APP_ENV: ${APP_ENV:-development}
+      APP_VERSION: ${APP_VERSION:-0.1.11}
       JWT_SECRET: ${JWT_SECRET:-jwt-dev-secret-change-in-prod}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-dev-key}
       RUNTIME_QUEUE_KEY: runtime:jobs
+      GITHUB_UPDATE_REPO: ${GITHUB_UPDATE_REPO:-PyOrchestrator/PyOrchestrator}
+      GITHUB_UPDATE_TOKEN: ${GITHUB_UPDATE_TOKEN:-}
+      PYORCH_HOST_PROJECT_ROOT: ${PYORCH_HOST_PROJECT_ROOT:-}
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-pyorchestrator}
+      UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
+      UPDATE_DEPLOY_MODE: ${UPDATE_DEPLOY_MODE:-docker}
+      UPDATE_COMPOSE_FILE: /deploy/docker-compose.yml
+      UPDATE_PROJECT_ROOT: /deploy
+      UPDATE_HOST_PROJECT_ROOT: ${PYORCH_HOST_PROJECT_ROOT:-}
+      UPDATE_DATA_DIR: /app/data/updates
+      UPDATE_DATA_VOLUME: ${COMPOSE_PROJECT_NAME:-pyorchestrator}_update_data
+      UPDATE_DOCKER_NETWORK: ${COMPOSE_PROJECT_NAME:-pyorchestrator}_pyorch-net
+      UPDATE_HEALTH_URL: http://backend:8000/health
+      UPDATE_RUNNER_IMAGE: ${UPDATE_RUNNER_IMAGE:-docker:26-cli}
     volumes:
-      - ./backend/app:/app/app
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/backend/app:/app/app
+      - update_data:/app/data/updates
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}:/deploy
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,7 +80,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ${PYORCH_BUILD_ROOT:-${PYORCH_HOST_PROJECT_ROOT:-.}}/frontend
       dockerfile: Dockerfile
       target: ${FRONTEND_TARGET:-development}
     container_name: pyorch-frontend
@@ -65,10 +91,10 @@ services:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
       VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8000/ws}
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/package.json:/app/package.json
-      - ./frontend/package-lock.json:/app/package-lock.json
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/frontend/src:/app/src
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/frontend/public:/app/public
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/frontend/package.json:/app/package.json
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/frontend/package-lock.json:/app/package-lock.json
     depends_on:
       - backend
     networks:
@@ -76,7 +102,7 @@ services:
 
   runtime:
     build:
-      context: ./runtime
+      context: ${PYORCH_BUILD_ROOT:-${PYORCH_HOST_PROJECT_ROOT:-.}}/runtime
       dockerfile: Dockerfile
     container_name: pyorch-runtime
     restart: unless-stopped
@@ -92,7 +118,7 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-dev-key}
     volumes:
       - runtime-workspaces:/workspaces
-      - ./runtime/engine:/app/engine:ro
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/runtime/engine:/app/engine:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,7 +140,7 @@ services:
 
   scheduler:
     build:
-      context: ./scheduler
+      context: ${PYORCH_BUILD_ROOT:-${PYORCH_HOST_PROJECT_ROOT:-.}}/scheduler
       dockerfile: Dockerfile
     container_name: pyorch-scheduler
     restart: unless-stopped
@@ -139,7 +165,7 @@ services:
 
   mcp:
     build:
-      context: ./mcp
+      context: ${PYORCH_BUILD_ROOT:-${PYORCH_HOST_PROJECT_ROOT:-.}}/mcp
       dockerfile: Dockerfile
     container_name: pyorch-mcp
     restart: unless-stopped
@@ -172,7 +198,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pyorch_secret}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
     networks:
       - pyorch-net
     healthcheck:
@@ -254,7 +280,7 @@ services:
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
-      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -274,7 +300,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
@@ -289,7 +315,7 @@ services:
     ports:
       - "${LOKI_PORT:-3100}:3100"
     volumes:
-      - ./infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       - loki-data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
@@ -300,7 +326,7 @@ services:
     container_name: pyorch-promtail
     restart: unless-stopped
     volumes:
-      - ./infrastructure/loki/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ${PYORCH_HOST_PROJECT_ROOT:-.}/infrastructure/loki/promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
@@ -320,3 +346,4 @@ volumes:
   prometheus-data:
   grafana-data:
   loki-data:
+  update_data:

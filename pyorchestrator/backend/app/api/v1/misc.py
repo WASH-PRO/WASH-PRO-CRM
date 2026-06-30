@@ -26,7 +26,6 @@ from app.schemas import (
     NotificationResponse,
     SecretCreate,
     SecretResponse,
-    UpdateCheckResponse,
 )
 from app.services.backup_service import (
     create_backup,
@@ -301,28 +300,3 @@ async def internal_run_metric(body: InternalRunMetric, db: Annotated[AsyncSessio
     return {"ok": True}
 
 
-ota_router = APIRouter()
-
-
-@ota_router.get("/check", response_model=UpdateCheckResponse)
-async def check_updates(user: Annotated[User, Depends(get_current_user)]):
-    if user.role != "Administrator":
-        raise HTTPException(403)
-    from app.core.config import settings
-    from app.services.update_provider import GitHubUpdateProvider
-
-    provider = GitHubUpdateProvider()
-    latest = await provider.check_latest()
-    return UpdateCheckResponse(
-        current_version=settings.app_version,
-        latest_version=latest.version if latest else None,
-        update_available=False,
-        release_notes=latest.release_notes if latest else "",
-    )
-
-
-@ota_router.post("/apply")
-async def apply_update(user: Annotated[User, Depends(get_current_user)]):
-    if user.role != "Administrator":
-        raise HTTPException(403)
-    return {"status": "not_configured", "message": "Configure GITHUB_UPDATE_REPO for OTA"}

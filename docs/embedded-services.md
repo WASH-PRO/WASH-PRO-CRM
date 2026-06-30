@@ -9,9 +9,9 @@ WASH PRO CRM включает две платформы как **vendored-коп
 | Сервис | Vendored-версия | Панель | API |
 |--------|-----------------|--------|-----|
 | **Dynamic API Platform** | v1.5.13 (`dynamic-api/backend/package.json`) | http://localhost:8080 | http://localhost:3001 |
-| **PyOrchestrator** *(опц.)* | v0.1.0 (`pyorchestrator/CHANGELOG.md`) | http://localhost:8090 | http://localhost:8000 |
+| **PyOrchestrator** *(опц.)* | v0.1.10 (`pyorchestrator/CHANGELOG.md`) | http://localhost:8090 | http://localhost:8000 |
 
-> Полная upstream-документация: [Dynamic API Platform](https://dynamic-api-platform.github.io/Dynamic-API-Platform/) · [PyOrchestrator](https://developer-ru.github.io/pyorchestrator/)
+> Полная upstream-документация: [Dynamic API Platform](https://dynamic-api-platform.github.io/Dynamic-API-Platform/) · [PyOrchestrator](https://pyorchestrator.github.io/PyOrchestrator/)
 
 ---
 
@@ -94,7 +94,7 @@ PYORCHESTRATOR_ENABLED=true
 | `pyorch-mcp` | MCP для AI-агентов (`:8010`, опционально) |
 | `pyorch-prometheus`, `pyorch-grafana`, `pyorch-loki`, `pyorch-promtail` | Observability (профиль `pyorch-observability`, выкл. по умолчанию) |
 
-### Подтверждённые возможности PyOrchestrator (v0.1.0)
+### Подтверждённые возможности PyOrchestrator (v0.1.10)
 
 Доступны в панели **PyOrchestrator** (`:8090`):
 
@@ -114,7 +114,8 @@ PYORCHESTRATOR_ENABLED=true
 
 | Функция | Статус |
 |---------|--------|
-| OTA updates (`GitHubUpdateProvider`) | Stub / backlog |
+| In-app OTA updates в панели `:8090` | ❌ отключено в WASH (`UPDATE_EXECUTOR_ENABLED=false`) — `./scripts/update-pyorchestrator.sh` |
+| OTA updates (`GitHubUpdateProvider`) upstream | Stub / backlog |
 | Audit logs UI | Таблица есть; UI в roadmap |
 | Production multi-runtime scaling | Только в upstream `docker-compose.prod.yml`, не в WASH overlay |
 

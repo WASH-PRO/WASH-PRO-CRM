@@ -5,14 +5,27 @@ layout: default
 <img src="{{ '/assets/banner.png' | relative_url }}" alt="PyOrchestrator" class="banner" width="1280" height="640" loading="eager">
 
 <div class="hero">
-  <span class="hero-badge">v0.1.0 · первый релиз · MIT</span>
+  <div class="hero-badges">
+    <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/actions/workflows/ci.yml" target="_blank" rel="noopener">
+      <img src="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/actions/workflows/ci.yml/badge.svg" alt="CI" width="88" height="20">
+    </a>
+    <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/releases/tag/v0.1.0" target="_blank" rel="noopener">
+      <img src="https://img.shields.io/github/v/release/{{ site.github_org }}/{{ site.github_repo }}?label=release&amp;color=22d3ee" alt="Release v0.1.0" width="88" height="20">
+    </a>
+    <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/blob/main/LICENSE" target="_blank" rel="noopener">
+      <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache License 2.0" width="120" height="20">
+    </a>
+    <a href="{{ '/' | relative_url }}">
+      <img src="https://img.shields.io/badge/docs-GitHub%20Pages-22d3ee" alt="GitHub Pages" width="120" height="20">
+    </a>
+  </div>
   <p class="hero-lead">
     SCADA/CMS-платформа управления для тысяч изолированных Python-скриптов и ботов —
     один Runtime Engine, множество sandbox, без отдельного контейнера на скрипт.
   </p>
 </div>
 
-> **27 июня 2026** — опубликован [первый релиз v0.1.0](https://github.com/Developer-RU/pyorchestrator/releases/tag/v0.1.0).
+> **27 июня 2026** — опубликован [первый релиз v0.1.0](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0).
 > См. [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
 
 **PyOrchestrator** — платформа для создания, планирования, запуска и мониторинга Python-автоматизации в фиксированном стеке Docker Compose: веб-интерфейс, API, планировщик, изолированный runtime, наблюдаемость и MCP-сервер для AI-агентов.
@@ -58,8 +71,8 @@ layout: default
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/Developer-RU/pyorchestrator.git
-cd pyorchestrator
+git clone https://github.com/PyOrchestrator/PyOrchestrator.git
+cd PyOrchestrator
 cp .env.example .env
 docker compose up --build
 ```
@@ -78,7 +91,7 @@ docker compose up --build
 ## Структура репозитория
 
 ```
-pyorchestrator/
+PyOrchestrator/
 ├── backend/           # FastAPI — REST, WebSocket, RBAC
 ├── frontend/          # React — панель управления
 ├── runtime/           # Движок sandbox
@@ -92,4 +105,4 @@ pyorchestrator/
 
 ## Лицензия
 
-[MIT License](https://github.com/Developer-RU/pyorchestrator/blob/main/LICENSE)
+[Apache License 2.0](https://github.com/PyOrchestrator/PyOrchestrator/blob/main/LICENSE)

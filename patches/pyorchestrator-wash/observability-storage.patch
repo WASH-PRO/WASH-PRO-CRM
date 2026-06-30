@@ -1,0 +1,327 @@
+diff --git a/.env.example b/.env.example
+index 44910bd..d1ddab5 100644
+--- a/.env.example
++++ b/.env.example
+@@ -1,6 +1,6 @@
+ # ─── Application ─────────────────────────────────────────────────────────────
+ APP_ENV=development
+-APP_VERSION=0.1.10
++APP_VERSION=0.1.11
+ 
+ # ─── Internal service auth ─────────────────────────────────────────────────────
+ INTERNAL_API_KEY=internal-dev-key
+@@ -28,6 +28,9 @@ POSTGRES_PASSWORD=pyorch_secret
+ MINIO_ACCESS_KEY=minioadmin
+ MINIO_SECRET_KEY=minioadmin
+ MINIO_BUCKET=pyorchestrator
++# Hide MinIO web console link in UI when storage works without the console panel
++MINIO_CONSOLE_ENABLED=true
++# MINIO_CONSOLE_PUBLIC_URL=http://localhost:9001
+ 
+ # ─── Security (CHANGE IN PRODUCTION) ─────────────────────────────────────────
+ SECRET_MASTER_KEY=change-me-in-production-32chars!!
+@@ -49,6 +52,9 @@ RUNTIME_REPLICAS=1
+ # ─── Grafana ─────────────────────────────────────────────────────────────────
+ GRAFANA_ADMIN_USER=admin
+ GRAFANA_ADMIN_PASSWORD=admin
++# Public URL for dashboard link (leave empty to hide Observability panel when Grafana is down)
++# GRAFANA_PUBLIC_URL=http://localhost:3000
++GRAFANA_INTERNAL_URL=http://grafana:3000
+ 
+ # ─── OTA Updates ─────────────────────────────────────────────────────────────
+ GITHUB_UPDATE_REPO=PyOrchestrator/PyOrchestrator
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4c88492..19bb048 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
+ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
++## [0.1.11] - 2026-06-23
++
++### Changed
++
++- Grafana Observability panel on the dashboard is shown only when Grafana responds to a health check
++- MinIO web console link in System info is optional (`MINIO_CONSOLE_ENABLED`, `MINIO_CONSOLE_PUBLIC_URL`)
++- New settings: `GRAFANA_PUBLIC_URL`, `GRAFANA_INTERNAL_URL`
++
++[0.1.11]: https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.11
++
+ ## [0.1.10] - 2026-06-30
+ 
+ ### Changed
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 32741ef..d45daba 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -5,7 +5,7 @@ class Settings(BaseSettings):
+     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+ 
+     app_env: str = "development"
+-    app_version: str = "0.1.10"
++    app_version: str = "0.1.11"
+ 
+     postgres_host: str = "postgres"
+     postgres_port: int = 5432
+@@ -21,6 +21,11 @@ class Settings(BaseSettings):
+     minio_bucket: str = "pyorchestrator"
+     minio_secure: bool = False
+     minio_console_port: int = 9001
++    minio_console_enabled: bool = True
++    minio_console_public_url: str = ""
++
++    grafana_public_url: str = ""
++    grafana_internal_url: str = "http://grafana:3000"
+ 
+     secret_master_key: str = "change-me-in-production-32chars!!"
+     jwt_secret: str = "jwt-dev-secret"
+diff --git a/backend/app/schemas/__init__.py b/backend/app/schemas/__init__.py
+index 584d30a..6fe14ef 100644
+--- a/backend/app/schemas/__init__.py
++++ b/backend/app/schemas/__init__.py
+@@ -346,7 +346,8 @@ class SystemConfigInfo(BaseModel):
+     runtime_queue: str
+     minio_bucket: str
+     minio_endpoint: str
+-    minio_console_url: str
++    minio_console_url: str | None = None
++    grafana_url: str | None = None
+     cors_origins: list[str]
+ 
+ 
+diff --git a/backend/app/services/system_service.py b/backend/app/services/system_service.py
+index ab9c100..d8d8b5c 100644
+--- a/backend/app/services/system_service.py
++++ b/backend/app/services/system_service.py
+@@ -82,6 +82,32 @@ async def _ping_minio() -> tuple[str, str]:
+     return await asyncio.to_thread(check)
+ 
+ 
++async def _resolve_grafana_url() -> str | None:
++    """Return public Grafana URL only when configured and the service responds."""
++    candidates: list[tuple[str, str]] = []
++    if settings.grafana_public_url.strip():
++        candidates.append(("public", settings.grafana_public_url.rstrip("/")))
++    internal = settings.grafana_internal_url.strip()
++    if internal:
++        candidates.append(("internal", internal.rstrip("/")))
++
++    if not candidates:
++        return None
++
++    async with httpx.AsyncClient(timeout=2.5) as client:
++        for _kind, base in candidates:
++            try:
++                res = await client.get(f"{base}/api/health")
++                if res.status_code != 200:
++                    continue
++                if settings.grafana_public_url.strip():
++                    return settings.grafana_public_url.rstrip("/")
++                return base
++            except Exception:
++                continue
++    return None
++
++
+ async def get_system_info(db: AsyncSession) -> dict:
+     now = datetime.now(timezone.utc)
+     uptime_sec = int((now - _APP_STARTED_AT).total_seconds())
+@@ -97,6 +123,26 @@ async def get_system_info(db: AsyncSession) -> dict:
+     services["postgres"] = postgres_status
+     services["backend"] = "ok"
+ 
++    grafana_url = await _resolve_grafana_url()
++
++    minio_console_url: str | None = None
++    if settings.minio_console_enabled:
++        minio_console_url = (
++            settings.minio_console_public_url.strip()
++            or f"http://localhost:{settings.minio_console_port}"
++        )
++
++    config: dict = {
++        "runtime_queue": settings.runtime_queue_key,
++        "minio_bucket": settings.minio_bucket,
++        "minio_endpoint": settings.minio_endpoint,
++        "cors_origins": settings.cors_origin_list,
++    }
++    if minio_console_url:
++        config["minio_console_url"] = minio_console_url
++    if grafana_url:
++        config["grafana_url"] = grafana_url
++
+     counts = {
+         "scripts": await db.scalar(select(func.count()).select_from(Script)) or 0,
+         "scripts_enabled": await db.scalar(
+@@ -132,12 +178,6 @@ async def get_system_info(db: AsyncSession) -> dict:
+         "started_at": _APP_STARTED_AT.isoformat(),
+         "services": services,
+         "counts": counts,
+-        "config": {
+-            "runtime_queue": settings.runtime_queue_key,
+-            "minio_bucket": settings.minio_bucket,
+-            "minio_endpoint": settings.minio_endpoint,
+-            "minio_console_url": f"http://localhost:{settings.minio_console_port}",
+-            "cors_origins": settings.cors_origin_list,
+-        },
++        "config": config,
+         "resources": _host_resources(),
+     }
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 2682c10..3145dec 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -16,6 +16,10 @@ x-common-env: &common-env
+   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+   MINIO_BUCKET: ${MINIO_BUCKET:-pyorchestrator}
+   MINIO_CONSOLE_PORT: ${MINIO_CONSOLE_PORT:-9001}
++  MINIO_CONSOLE_ENABLED: ${MINIO_CONSOLE_ENABLED:-true}
++  MINIO_CONSOLE_PUBLIC_URL: ${MINIO_CONSOLE_PUBLIC_URL:-}
++  GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
++  GRAFANA_INTERNAL_URL: ${GRAFANA_INTERNAL_URL:-http://grafana:3000}
+   SECRET_MASTER_KEY: ${SECRET_MASTER_KEY:-change-me-in-production-32chars!!}
+ 
+ services:
+@@ -32,7 +36,7 @@ services:
+     environment:
+       <<: *common-env
+       APP_ENV: ${APP_ENV:-development}
+-      APP_VERSION: ${APP_VERSION:-0.1.10}
++      APP_VERSION: ${APP_VERSION:-0.1.11}
+       JWT_SECRET: ${JWT_SECRET:-jwt-dev-secret-change-in-prod}
+       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-dev-key}
+diff --git a/docs/configuration.md b/docs/configuration.md
+index 60a94cf..29a756c 100644
+--- a/docs/configuration.md
++++ b/docs/configuration.md
+@@ -72,5 +72,18 @@ description: Переменные окружения и настройка се
+ |------------|--------------|
+ | `GRAFANA_ADMIN_USER` | `admin` |
+ | `GRAFANA_ADMIN_PASSWORD` | `admin` |
++| `GRAFANA_PUBLIC_URL` | *(пусто — ссылка в UI скрыта)* |
++| `GRAFANA_INTERNAL_URL` | `http://grafana:3000` |
++
++Панель **Observability** на дашборде показывается только если Grafana доступна: backend проверяет `/api/health` по `GRAFANA_INTERNAL_URL`, а ссылку отдаёт из `GRAFANA_PUBLIC_URL` (или internal URL, если public не задан).
+ 
+ Provisioning: `infrastructure/grafana/provisioning/`
++
++## MinIO UI
++
++| Переменная | По умолчанию |
++|------------|--------------|
++| `MINIO_CONSOLE_ENABLED` | `true` |
++| `MINIO_CONSOLE_PUBLIC_URL` | *(пусто — `http://localhost:{MINIO_CONSOLE_PORT}`)* |
++
++При `MINIO_CONSOLE_ENABLED=false` ссылка на веб-консоль MinIO не попадает в `/api/v1/system/info` и скрывается на странице System.
+diff --git a/frontend/package.json b/frontend/package.json
+index 724dd00..2781364 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -1,7 +1,7 @@
+ {
+   "name": "pyorchestrator-frontend",
+   "private": true,
+-  "version": "0.1.10",
++  "version": "0.1.11",
+   "license": "Apache-2.0",
+   "type": "module",
+   "scripts": {
+diff --git a/frontend/src/pages/Dashboard.tsx b/frontend/src/pages/Dashboard.tsx
+index 52532a5..589227c 100644
+--- a/frontend/src/pages/Dashboard.tsx
++++ b/frontend/src/pages/Dashboard.tsx
+@@ -103,6 +103,7 @@ export default function Dashboard() {
+         api<Stats>("/api/v1/dashboard/stats"),
+         api<Timeseries>("/api/v1/dashboard/timeseries"),
+         api<Script[]>("/api/v1/scripts"),
++        api<{ config?: { grafana_url?: string } }>("/api/v1/system/info"),
+       ]),
+     [],
+   );
+@@ -112,6 +113,7 @@ export default function Dashboard() {
+   const stats = data?.[0] ?? null;
+   const timeseries = data?.[1] ?? null;
+   const scripts = data?.[2] ?? [];
++  const grafanaUrl = data?.[3]?.config?.grafana_url;
+ 
+   const s = stats ?? {
+     total_scripts: 0,
+@@ -258,7 +260,7 @@ export default function Dashboard() {
+             );
+           })}
+ 
+-          <Col span={4}>
++          <Col span={grafanaUrl ? 4 : 6}>
+             <Panel className="h-full" title={t("dashboard.health.title")} bodyClassName="flex flex-1 flex-col">
+               <StatusRow label={t("dashboard.health.activeScripts")} value={s.active_scripts} tone="success" />
+               <StatusRow label={t("dashboard.health.runningSandboxes")} value={s.running_now} tone={s.running_now > 0 ? "accent" : "neutral"} />
+@@ -267,26 +269,28 @@ export default function Dashboard() {
+             </Panel>
+           </Col>
+ 
+-          <Col span={4}>
++          <Col span={grafanaUrl ? 4 : 6}>
+             <Panel className="h-full" title={t("dashboard.assetMix.title")} bodyClassName="flex flex-1 flex-col justify-center">
+               <MetricBars items={distribution} />
+             </Panel>
+           </Col>
+ 
+-          <Col span={4}>
+-            <Panel className="h-full" title={t("dashboard.observability.title")} bodyClassName="flex flex-1 flex-col justify-between">
+-              <p className="text-sm leading-relaxed text-muted">{t("dashboard.observability.description")}</p>
+-              <a
+-                href="http://localhost:3000"
+-                target="_blank"
+-                rel="noreferrer"
+-                className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-400 ring-1 ring-inset ring-cyan-400/20 transition-colors hover:bg-cyan-400/15"
+-              >
+-                {t("dashboard.observability.openGrafana")}
+-                <ArrowTopRightOnSquareIcon className="size-4" />
+-              </a>
+-            </Panel>
+-          </Col>
++          {grafanaUrl ? (
++            <Col span={4}>
++              <Panel className="h-full" title={t("dashboard.observability.title")} bodyClassName="flex flex-1 flex-col justify-between">
++                <p className="text-sm leading-relaxed text-muted">{t("dashboard.observability.description")}</p>
++                <a
++                  href={grafanaUrl}
++                  target="_blank"
++                  rel="noreferrer"
++                  className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-400 ring-1 ring-inset ring-cyan-400/20 transition-colors hover:bg-cyan-400/15"
++                >
++                  {t("dashboard.observability.openGrafana")}
++                  <ArrowTopRightOnSquareIcon className="size-4" />
++                </a>
++              </Panel>
++            </Col>
++          ) : null}
+         </PageGrid>
+       </PageContent>
+     </PageContainer>
+diff --git a/frontend/src/pages/System.tsx b/frontend/src/pages/System.tsx
+index 4b2c5c3..4d36b36 100644
+--- a/frontend/src/pages/System.tsx
++++ b/frontend/src/pages/System.tsx
+@@ -30,6 +30,7 @@ interface SystemInfo {
+     minio_bucket?: string;
+     minio_endpoint?: string;
+     minio_console_url?: string;
++    grafana_url?: string;
+   };
+ }
+ 
+@@ -197,7 +198,10 @@ export default function SystemPage() {
+             className="w-full"
+             title={t("system.cards.storage.title")}
+             subtitle={t("system.cards.storage.subtitle")}
+-            bodyClassName="grid grid-cols-1 gap-4 p-5 sm:grid-cols-3 sm:p-6"
++            bodyClassName={cn(
++              "grid grid-cols-1 gap-4 p-5 sm:p-6",
++              info.config.minio_console_url ? "sm:grid-cols-3" : "sm:grid-cols-2",
++            )}
+           >
+             <div className="rounded-xl bg-surface-muted/60 p-4 ring-1 ring-ring-line">
+               <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-faint">

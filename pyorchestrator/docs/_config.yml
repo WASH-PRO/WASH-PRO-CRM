@@ -1,8 +1,8 @@
 title: PyOrchestrator
 description: SCADA/CMS платформа для изолированных Python-скриптов и ботов в Docker Compose
-url: https://developer-ru.github.io
-baseurl: /pyorchestrator
-repository: Developer-RU/pyorchestrator
+url: https://pyorchestrator.github.io
+baseurl: /PyOrchestrator
+repository: PyOrchestrator/PyOrchestrator
 
 markdown: GFM
 permalink: pretty
@@ -52,5 +52,5 @@ nav:
   - title: Устранение неполадок
     url: /troubleshooting/
 
-github_org: Developer-RU
-github_repo: pyorchestrator
+github_org: PyOrchestrator
+github_repo: PyOrchestrator

@@ -52,4 +52,4 @@ Alembic — в [дорожной карте](/roadmap/).
 
 ## Полная спецификация
 
-Исходник с детальными полями: [database-er.md](https://github.com/Developer-RU/pyorchestrator/blob/main/docs/database-er.md) в репозитории.
+Исходник с детальными полями: [database-er.md](https://github.com/PyOrchestrator/PyOrchestrator/blob/main/docs/database-er.md) в репозитории.

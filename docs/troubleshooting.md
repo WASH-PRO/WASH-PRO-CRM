@@ -75,6 +75,23 @@ curl -s http://localhost:8000/health
 
 Учётные данные bridge: `PYORCH_DASHBOARD_EMAIL` / `PYORCH_DASHBOARD_PASSWORD`.
 
+## PyOrchestrator MCP: «unreachable» / не стартует
+
+В WASH сервис называется `pyorch-mcp`, а backend по умолчанию обращается к `http://mcp:8010`. В overlay заданы `MCP_INTERNAL_URL` и сетевой alias `mcp`.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d pyorch-mcp pyorch-backend
+docker logs wash-pyorch-mcp --tail 30
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8010/mcp   # 200/405/406 — норма
+```
+
+Проверка из API (нужен JWT admin):
+
+```bash
+curl -s http://localhost:8000/api/v1/mcp/info -H "Authorization: Bearer TOKEN" | jq .status
+# ожидается: "ok"
+```
+
 ## Resources: PyOrchestrator «Остановлен»
 
 Индикатор проверяет `/api/telegram-bots/health`. Если PyOrch выключен — это ожидаемо. Dynamic API проверяется через `/api/health`.

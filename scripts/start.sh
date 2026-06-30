@@ -25,6 +25,8 @@ if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
   COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.pyorchestrator.yml"
   if [ "${PYORCH_OBSERVABILITY_ENABLED:-false}" = "true" ]; then
     export COMPOSE_PROFILES=pyorch-observability
+    export PYORCH_GRAFANA_PUBLIC_URL="${PYORCH_GRAFANA_PUBLIC_URL:-http://localhost:${PYORCH_GRAFANA_PORT:-3000}}"
+    export PYORCH_GRAFANA_INTERNAL_URL="${PYORCH_GRAFANA_INTERNAL_URL:-http://pyorch-grafana:3000}"
   fi
 fi
 

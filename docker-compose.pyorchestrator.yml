@@ -20,8 +20,9 @@ services:
 
   pyorch-backend:
     build:
-      context: ./pyorchestrator/backend
-      dockerfile: Dockerfile
+      context: ./pyorchestrator
+      dockerfile: backend/Dockerfile
+      target: production
     container_name: wash-pyorch-backend
     restart: unless-stopped
     ports:
@@ -33,6 +34,12 @@ services:
       CORS_ORIGINS: ${PYORCH_CORS_ORIGINS:-http://localhost,http://localhost:8090}
       INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
       RUNTIME_QUEUE_KEY: runtime:jobs
+      UPDATE_EXECUTOR_ENABLED: "false"
+      # Upstream defaults: http://mcp:8010 — в WASH сервис называется pyorch-mcp
+      MCP_INTERNAL_URL: http://pyorch-mcp:8010
+      MINIO_CONSOLE_ENABLED: "false"
+      GRAFANA_PUBLIC_URL: ${PYORCH_GRAFANA_PUBLIC_URL:-}
+      GRAFANA_INTERNAL_URL: ${PYORCH_GRAFANA_INTERNAL_URL:-}
     depends_on:
       pyorch-postgres:
         condition: service_healthy
@@ -121,7 +128,9 @@ services:
       pyorch-minio:
         condition: service_healthy
     networks:
-      - wash-internal
+      wash-internal:
+        aliases:
+          - runtime
     cgroup: host
     privileged: false
     healthcheck:
@@ -174,9 +183,21 @@ services:
     depends_on:
       pyorch-backend:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "code=$$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8010/mcp); test \"$$code\" = '200' || test \"$$code\" = '405' || test \"$$code\" = '406'",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks:
-      - wash-internal
-      - wash-external
+      wash-internal:
+        aliases:
+          - mcp
+      wash-external: {}
 
   # ─── Data Layer (только внутренняя сеть) ────────────────────────────────────
 
@@ -297,7 +318,9 @@ services:
       - pyorch-prometheus
       - pyorch-loki
     networks:
-      - wash-internal
+      wash-internal:
+        aliases:
+          - grafana
 
   pyorch-loki:
     image: grafana/loki:3.1.0

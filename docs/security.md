@@ -58,7 +58,7 @@ Rate limiting, login lockout, Helmet, network access rules — см. [upstream s
 
 ## PyOrchestrator
 
-JWT, RBAC (Administrator/Developer/Operator/Viewer), encrypted script secrets — см. [PyOrchestrator security](https://developer-ru.github.io/pyorchestrator/security/).
+JWT, RBAC (Administrator/Developer/Operator/Viewer), encrypted script secrets — см. [PyOrchestrator security](https://pyorchestrator.github.io/PyOrchestrator/security/).
 
 ## Резервное копирование
 

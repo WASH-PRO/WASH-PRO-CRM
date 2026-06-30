@@ -1,12 +1,12 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { listDapGroups } from '../api/admin';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, Badge, ErrorMessage } from '../components/UI';
-import { DataTable, type DataTableColumn } from '../components/DataTable';
+import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { DapGroup, Permission } from '../types';
 import { ALL_PERMISSIONS, entityId, PERMISSION_LABELS } from '../utils/rbac';
 
@@ -93,6 +93,27 @@ export function GroupsPage() {
     }
   };
 
+  const filters: DataTableFilter<DapGroup>[] = useMemo(
+    () => [
+      {
+        id: 'type',
+        label: 'Тип',
+        options: [
+          { value: 'system', label: 'Системная' },
+          { value: 'custom', label: 'Пользовательская' },
+        ],
+        match: (g, value) => (value === 'system' ? !!g.isSystem : !g.isSystem),
+      },
+      {
+        id: 'permission',
+        label: 'Право',
+        options: ALL_PERMISSIONS.map((p) => ({ value: p, label: PERMISSION_LABELS[p] ?? p })),
+        match: (g, value) => (g.permissions ?? []).includes(value as Permission),
+      },
+    ],
+    []
+  );
+
   const columns: DataTableColumn<DapGroup>[] = useMemo(
     () => [
       {
@@ -116,6 +137,9 @@ export function GroupsPage() {
       {
         key: 'permissions',
         header: 'Права доступа',
+        sortable: true,
+        sortValue: (g) => (g.permissions ?? []).join(','),
+        searchValue: (g) => (g.permissions ?? []).map((p) => PERMISSION_LABELS[p] ?? p).join(' '),
         render: (g) => (
           <div className="flex flex-wrap gap-1">
             {(g.permissions ?? []).map((p) => (
@@ -132,13 +156,23 @@ export function GroupsPage() {
               key: 'actions',
               header: '',
               render: (g: DapGroup) => (
-                <div className="text-right">
-                  <button type="button" className="btn-secondary mr-2" onClick={() => openEdit(g)}>
-                    Изменить
+                <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    className="btn-secondary !px-2 !py-1"
+                    onClick={() => openEdit(g)}
+                    title="Изменить"
+                  >
+                    <Pencil size={14} />
                   </button>
                   {!g.isSystem && (
-                    <button type="button" className="btn-secondary text-red-600" onClick={() => void handleDelete(g)}>
-                      Удалить
+                    <button
+                      type="button"
+                      className="btn-secondary !px-2 !py-1 text-red-600"
+                      onClick={() => void handleDelete(g)}
+                      title="Удалить"
+                    >
+                      <Trash2 size={14} />
                     </button>
                   )}
                 </div>
@@ -170,7 +204,13 @@ export function GroupsPage() {
           <ErrorMessage message={error} />
         </div>
       )}
-      <DataTable columns={columns} data={groups ?? []} rowKey={(g) => entityId(g)} searchPlaceholder="Поиск групп…" />
+      <DataTable
+        columns={columns}
+        data={groups ?? []}
+        rowKey={(g) => entityId(g)}
+        filters={filters}
+        searchPlaceholder="Поиск групп…"
+      />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать группу' : 'Новая группа'}>
         <form onSubmit={handleSubmit} className="space-y-3">

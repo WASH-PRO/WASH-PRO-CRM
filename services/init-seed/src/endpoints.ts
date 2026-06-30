@@ -322,6 +322,8 @@ const currencyFields: SchemaField[] = [
 const discountTypeFields: SchemaField[] = [
   { name: 'number', type: 'number', required: true, order: 0, description: 'Номер типа скидки (1–5)' },
   { name: 'name', type: 'string', required: true, order: 1, description: 'Название типа скидки' },
+  { name: 'status', type: 'string', order: 2, description: 'active|inactive' },
+  { name: 'createdAt', type: 'datetime', order: 3 },
 ];
 
 export const CRM_ENDPOINTS: EndpointDef[] = [
@@ -464,9 +466,9 @@ export const DEFAULT_CURRENCIES = [
 ];
 
 export const DEFAULT_DISCOUNT_TYPES = [
-  { number: 1, name: 'Карта такси' },
-  { number: 2, name: 'Постоянный клиент' },
-  { number: 3, name: 'Корпоративный клиент' },
-  { number: 4, name: 'Сотрудник' },
-  { number: 5, name: 'Промоакция' },
+  { number: 1, name: 'Карта такси', status: 'active' },
+  { number: 2, name: 'Постоянный клиент', status: 'active' },
+  { number: 3, name: 'Корпоративный клиент', status: 'active' },
+  { number: 4, name: 'Сотрудник', status: 'active' },
+  { number: 5, name: 'Промоакция', status: 'active' },
 ];

@@ -1,5 +1,12 @@
 import fetch from 'node-fetch';
 import { pino } from 'pino';
+import {
+  channelsFromSettings,
+  DEFAULT_NOTIFICATION_SETTINGS,
+  isNotificationTypeEnabled,
+  normalizeNotificationSettings,
+  type NotificationSettingsValue,
+} from './notification-settings.js';
 
 const API_URL = process.env.API_URL || 'http://dynamic-api:3001';
 const SERVICE_LOGIN = process.env.SERVICE_LOGIN || 'service';
@@ -60,6 +67,25 @@ export async function findPostState(postId: string): Promise<{ id: string } | nu
   return state ? { id: state.id } : null;
 }
 
+let cachedNotificationSettings: NotificationSettingsValue | null = null;
+let notificationSettingsExpiresAt = 0;
+
+async function loadNotificationSettings(): Promise<NotificationSettingsValue> {
+  if (cachedNotificationSettings && Date.now() < notificationSettingsExpiresAt) {
+    return cachedNotificationSettings;
+  }
+  try {
+    const rows = await apiRequest<Array<{ key: string; value: unknown }>>('GET', '/api/crm/settings?limit=50');
+    const row = rows.find((r) => r.key === 'notifications');
+    cachedNotificationSettings = normalizeNotificationSettings(row?.value);
+  } catch (err) {
+    logger.warn({ err }, 'Failed to load notification settings, using defaults');
+    cachedNotificationSettings = DEFAULT_NOTIFICATION_SETTINGS;
+  }
+  notificationSettingsExpiresAt = Date.now() + 60_000;
+  return cachedNotificationSettings;
+}
+
 export async function createNotification(payload: {
   type: string;
   severity: string;
@@ -67,10 +93,22 @@ export async function createNotification(payload: {
   postId?: string;
   message: string;
 }): Promise<void> {
+  const settings = await loadNotificationSettings();
+  if (!isNotificationTypeEnabled(payload.type, settings)) {
+    logger.debug({ type: payload.type }, 'Notification skipped (disabled in CRM settings)');
+    return;
+  }
+
+  const channels = channelsFromSettings(settings);
+  if (!channels.length) {
+    logger.debug({ type: payload.type }, 'Notification skipped (no delivery channels enabled)');
+    return;
+  }
+
   await apiRequest('POST', '/api/crm/notifications', {
     ...payload,
     read: false,
-    channels: ['telegram', 'web'],
+    channels,
     createdAt: new Date().toISOString(),
   });
 }

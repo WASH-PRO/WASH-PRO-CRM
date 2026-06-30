@@ -243,7 +243,9 @@ export function SettingsPage() {
 
         <SettingSection title="Уведомления" icon={Bell}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Каналы и типы событий для оповещений операторов. Список — на странице{' '}
+            Каналы и типы событий для оповещений операторов. Сервисы{' '}
+            <span className="font-mono">message-processor</span> и <span className="font-mono">wash-backup</span>{' '}
+            читают эти настройки при создании записей. Список — на странице{' '}
             <Link to="/notifications" className="text-brand-600 hover:underline dark:text-brand-400">
               Уведомления
             </Link>

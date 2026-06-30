@@ -236,47 +236,53 @@ export function startServer(): void {
         }
 
         const groupId = await getBotsGroupId();
-        const script = await pyorchFetch<PyorchScript>('/scripts', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: body.name.trim(),
-            description: body.description?.trim() || 'Telegram-бот WASH PRO CRM',
-            group_id: groupId,
-            script_type: 'bot',
-            entrypoint: 'main.py',
-            code: WASH_TELEGRAM_BOT_MAIN,
-            metadata: {
-              wash_telegram_bot: true,
-              source: 'wash-pro-crm',
-              admin_ids: body.adminIds,
-              allowed_commands: body.commands ?? [],
-            },
-          }),
-        });
+        const botMeta = {
+          wash_telegram_bot: true,
+          source: 'wash-pro-crm',
+          admin_ids: body.adminIds,
+          allowed_commands: body.commands ?? [],
+        };
 
-        await pyorchFetch(`/scripts/${script.id}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            max_runtime_seconds: 86400,
-            max_concurrent_runs: 1,
-            metadata: {
-              wash_telegram_bot: true,
-              source: 'wash-pro-crm',
-              admin_ids: body.adminIds,
-              allowed_commands: body.commands ?? [],
-            },
-          }),
-        });
+        let script: PyorchScript | undefined;
+        try {
+          script = await pyorchFetch<PyorchScript>('/scripts', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: body.name.trim(),
+              description: body.description?.trim() || 'Telegram-бот WASH PRO CRM',
+              group_id: groupId,
+              script_type: 'bot',
+              entrypoint: 'main.py',
+              code: WASH_TELEGRAM_BOT_MAIN,
+              metadata: botMeta,
+            }),
+          });
 
-        await applySecrets(
-          script.id,
-          { token: body.token, adminIds: body.adminIds, commands: body.commands ?? [] },
-          true
-        );
-        await pyorchFetch(`/scripts/${script.id}/enable`, { method: 'POST' });
+          await pyorchFetch(`/scripts/${script.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              max_runtime_seconds: 86400,
+              max_concurrent_runs: 1,
+              metadata: botMeta,
+            }),
+          });
 
-        if (body.start !== false) {
-          await pyorchFetch(`/runs/scripts/${script.id}/run`, { method: 'POST' });
+          await applySecrets(
+            script.id,
+            { token: body.token, adminIds: body.adminIds, commands: body.commands ?? [] },
+            true
+          );
+          await pyorchFetch(`/scripts/${script.id}/enable`, { method: 'POST' });
+
+          if (body.start !== false) {
+            await pyorchFetch(`/runs/scripts/${script.id}/run`, { method: 'POST' });
+          }
+        } catch (err) {
+          if (script?.id) {
+            await pyorchFetch(`/runs/scripts/${script.id}/stop`, { method: 'POST' }).catch(() => undefined);
+            await pyorchFetch(`/scripts/${script.id}`, { method: 'DELETE' }).catch(() => undefined);
+          }
+          throw err;
         }
 
         const bots = await listWashBots();

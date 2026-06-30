@@ -3,7 +3,7 @@ import json
 import re
 import zipfile
 from io import BytesIO
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import redis.asyncio as aioredis
 from minio import Minio
@@ -126,15 +126,19 @@ def ordered_file_paths(script: Script) -> list[str]:
 
 
 async def slugify(name: str, db: AsyncSession) -> str:
-    base = name.lower().replace(" ", "-")[:200]
+    base = re.sub(r"[^\w\s-]", "", name.lower(), flags=re.UNICODE)
+    base = re.sub(r"[\s_]+", "-", base).strip("-")[:200]
+    if not base:
+        base = "script"
     slug = base
     i = 1
-    while True:
+    while i < 100:
         exists = await db.execute(select(Script.id).where(Script.slug == slug))
         if not exists.scalar_one_or_none():
             return slug
         slug = f"{base}-{i}"
         i += 1
+    return f"{base}-{uuid4().hex[:8]}"
 
 
 async def create_script(
@@ -154,6 +158,7 @@ async def create_script(
         group_id=group_id,
         script_type=script_type,
         entrypoint=entrypoint,
+        metadata_=metadata or {},
     )
     db.add(script)
     await db.flush()

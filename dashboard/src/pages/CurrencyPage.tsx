@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, apiList } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
@@ -143,13 +143,23 @@ export function CurrencyPage() {
               key: 'actions',
               header: '',
               render: (c: Currency) => (
-                <div className="text-right">
-                  <button type="button" className="btn-secondary mr-2" onClick={() => openEdit(c)}>
-                    Изменить
+                <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    className="btn-secondary !px-2 !py-1"
+                    onClick={() => openEdit(c)}
+                    title="Изменить"
+                  >
+                    <Pencil size={14} />
                   </button>
                   {!c.isDefault && (
-                    <button type="button" className="btn-secondary text-red-600" onClick={() => handleDelete(c.id)}>
-                      Удалить
+                    <button
+                      type="button"
+                      className="btn-secondary !px-2 !py-1 text-red-600"
+                      onClick={() => handleDelete(c.id)}
+                      title="Удалить"
+                    >
+                      <Trash2 size={14} />
                     </button>
                   )}
                 </div>

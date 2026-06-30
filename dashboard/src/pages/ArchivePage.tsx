@@ -278,93 +278,109 @@ export function ArchivePage() {
       {message && <p className="mb-4 text-sm text-emerald-600">{message}</p>}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+      <form onSubmit={savePolicy} className="card mb-6 space-y-6">
+        <h2 className="font-semibold">Настройки архивирования</h2>
+
         {ARCHIVE_GROUPS.map(({ key, label }) => {
           const group = setting[key] as ArchiveGroupSettings;
           return (
-            <form key={key} onSubmit={savePolicy} className="card space-y-3">
-              <h2 className="font-semibold">{label}</h2>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={group.enabled}
-                  onChange={(e) => updateGroup(key, { enabled: e.target.checked })}
-                  disabled={!canEdit}
-                />
-                Включение архивирования
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={group.autoRun}
-                  onChange={(e) => updateGroup(key, { autoRun: e.target.checked })}
-                  disabled={!canEdit}
-                />
-                Автозапуск архивирования
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={group.saveArchive}
-                  onChange={(e) => updateGroup(key, { saveArchive: e.target.checked })}
-                  disabled={!canEdit}
-                />
-                Сохранение архива
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={group.deleteAfter}
-                  onChange={(e) => updateGroup(key, { deleteAfter: e.target.checked })}
-                  disabled={!canEdit}
-                />
-                Удаление исходных данных после архивирования
-              </label>
-              <div>
-                <label className="label">Срок хранения данных</label>
-                <select
-                  className="input"
-                  value={group.retentionDays}
-                  onChange={(e) => updateGroup(key, { retentionDays: Number(e.target.value) })}
-                  disabled={!canEdit}
-                >
-                  {RETENTION_OPTIONS.map((d) => (
-                    <option key={d} value={d}>{d} дней</option>
-                  ))}
-                </select>
+            <div
+              key={key}
+              className="space-y-3 border-t border-panel-border pt-5 first:border-t-0 first:pt-0 dark:border-panel-border-dark"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">{label}</h3>
+                {canRun && (
+                  <button
+                    type="button"
+                    className="btn-secondary !py-1.5 !px-3 text-xs"
+                    disabled={runningGroup === key}
+                    onClick={() => runArchive(key)}
+                  >
+                    {runningGroup === key ? 'Запуск…' : 'Запустить'}
+                  </button>
+                )}
               </div>
-              <div>
-                <label className="label">Политика хранения</label>
-                <select
-                  className="input"
-                  value={group.policy}
-                  onChange={(e) => updateGroup(key, { policy: e.target.value })}
-                  disabled={!canEdit}
-                >
-                  <option value="standard">Стандартная</option>
-                  <option value="compressed">Сжатие</option>
-                  <option value="cold">Холодное хранение</option>
-                </select>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={group.enabled}
+                    onChange={(e) => updateGroup(key, { enabled: e.target.checked })}
+                    disabled={!canEdit}
+                  />
+                  Включение архивирования
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={group.autoRun}
+                    onChange={(e) => updateGroup(key, { autoRun: e.target.checked })}
+                    disabled={!canEdit}
+                  />
+                  Автозапуск архивирования
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={group.saveArchive}
+                    onChange={(e) => updateGroup(key, { saveArchive: e.target.checked })}
+                    disabled={!canEdit}
+                  />
+                  Сохранение архива
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={group.deleteAfter}
+                    onChange={(e) => updateGroup(key, { deleteAfter: e.target.checked })}
+                    disabled={!canEdit}
+                  />
+                  Удаление исходных данных после архивирования
+                </label>
               </div>
-              {canEdit && (
-                <div className="flex gap-2 pt-1">
-                  <button type="submit" className="btn-primary">Сохранить</button>
-                  {canRun && (
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      disabled={runningGroup === key}
-                      onClick={() => runArchive(key)}
-                    >
-                      {runningGroup === key ? 'Запуск…' : 'Запустить'}
-                    </button>
-                  )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label">Срок хранения данных</label>
+                  <select
+                    className="select"
+                    value={group.retentionDays}
+                    onChange={(e) => updateGroup(key, { retentionDays: Number(e.target.value) })}
+                    disabled={!canEdit}
+                  >
+                    {RETENTION_OPTIONS.map((d) => (
+                      <option key={d} value={d}>
+                        {d} дней
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </form>
+                <div>
+                  <label className="label">Политика хранения</label>
+                  <select
+                    className="select"
+                    value={group.policy}
+                    onChange={(e) => updateGroup(key, { policy: e.target.value })}
+                    disabled={!canEdit}
+                  >
+                    <option value="standard">Стандартная</option>
+                    <option value="compressed">Сжатие</option>
+                    <option value="cold">Холодное хранение</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           );
         })}
-      </div>
+
+        {canEdit && (
+          <div className="border-t border-panel-border pt-4 dark:border-panel-border-dark">
+            <button type="submit" className="btn-primary">
+              Сохранить настройки
+            </button>
+          </div>
+        )}
+      </form>
 
       <h2 className="mb-3 font-semibold">Журнал архивирования</h2>
       <DataTable columns={logColumns} data={logs} rowKey={(l) => l.id} filters={logFilters} searchPlaceholder="Поиск в журнале…" bulkActions={logBulkActions} />

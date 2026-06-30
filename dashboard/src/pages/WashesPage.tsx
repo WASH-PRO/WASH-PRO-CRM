@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, ErrorMessage } from '../components/UI';
-import { DataTable, type DataTableBulkAction, type DataTableColumn } from '../components/DataTable';
+import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { Wash, Post } from '../types';
 import { refId } from '../utils/refs';
 import { formatDateTime } from '../utils/format';
@@ -68,6 +68,33 @@ export function WashesPage() {
       setError(err instanceof Error ? err.message : 'Ошибка удаления');
     }
   };
+
+  const filters: DataTableFilter<Wash>[] = useMemo(
+    () => [
+      {
+        id: 'cloudEnabled',
+        label: 'Облако',
+        options: [
+          { value: 'yes', label: 'Подключено' },
+          { value: 'no', label: 'Не подключено' },
+        ],
+        match: (w, value) => (value === 'yes' ? !!w.cloudEnabled : !w.cloudEnabled),
+      },
+      {
+        id: 'posts',
+        label: 'Посты',
+        options: [
+          { value: 'with', label: 'С постами' },
+          { value: 'without', label: 'Без постов' },
+        ],
+        match: (w, value) => {
+          const count = postCountByWash[w.id] || 0;
+          return value === 'with' ? count > 0 : count === 0;
+        },
+      },
+    ],
+    [postCountByWash]
+  );
 
   const columns: DataTableColumn<Wash>[] = useMemo(
     () => [
@@ -201,6 +228,7 @@ export function WashesPage() {
         columns={columns}
         data={data?.washes || []}
         rowKey={(w) => w.id}
+        filters={filters}
         searchPlaceholder="Поиск автомоек…"
         bulkActions={bulkActions}
       />

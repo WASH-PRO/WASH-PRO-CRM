@@ -554,13 +554,13 @@ async function ensureDefaultCurrencies(token: string): Promise<void> {
 }
 
 async function ensureDefaultDiscountTypes(token: string): Promise<void> {
-  let existing: Array<{ id: string; number: number }> = [];
+  let existing: Array<{ id: string; number: number; name: string; status?: string }> = [];
   try {
     const res = await fetch(`${API_URL}/api/crm/discount-types`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status === 404) return;
-    const json = (await res.json()) as ApiResponse<Array<{ id: string; number: number }>>;
+    const json = (await res.json()) as ApiResponse<Array<{ id: string; number: number; name: string; status?: string }>>;
     if (json.success && json.data) {
       existing = json.data;
     }
@@ -585,6 +585,20 @@ async function ensureDefaultDiscountTypes(token: string): Promise<void> {
         throw new Error(`Failed to create discount type ${item.number}: ${err.error}`);
       }
       console.log(`  Created default discount type: ${item.number} (${item.name})`);
+    } else if (!found.status) {
+      const res = await fetch(`${API_URL}/api/crm/discount-types/${found.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ number: found.number, name: found.name, status: 'active' }),
+      });
+      if (!res.ok) {
+        const err = (await res.json()) as ApiResponse;
+        throw new Error(`Failed to update discount type ${found.number}: ${err.error}`);
+      }
+      console.log(`  Set default status for discount type: ${found.number}`);
     }
   }
 }

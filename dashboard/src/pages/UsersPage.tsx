@@ -1,12 +1,12 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { listDapGroups, listDapUsers } from '../api/admin';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, Badge, ErrorMessage } from '../components/UI';
-import { DataTable, type DataTableColumn } from '../components/DataTable';
+import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { DapUser } from '../types';
 import { entityId, USER_STATUS_LABELS } from '../utils/rbac';
 import { formatDateTime } from '../utils/format';
@@ -118,6 +118,27 @@ export function UsersPage() {
     }
   };
 
+  const filters: DataTableFilter<DapUser>[] = useMemo(
+    () => [
+      {
+        id: 'status',
+        label: 'Статус',
+        options: (['active', 'inactive', 'suspended'] as const).map((s) => ({
+          value: s,
+          label: USER_STATUS_LABELS[s] ?? s,
+        })),
+        match: (u, value) => u.status === value,
+      },
+      {
+        id: 'group',
+        label: 'Группа',
+        options: groups.map((g) => ({ value: entityId(g), label: g.name })),
+        match: (u, value) => (u.groupIds ?? []).includes(value),
+      },
+    ],
+    [groups]
+  );
+
   const columns: DataTableColumn<DapUser>[] = useMemo(
     () => [
       {
@@ -138,6 +159,7 @@ export function UsersPage() {
         header: 'Email',
         sortable: true,
         sortValue: (u) => u.email,
+        searchValue: (u) => u.email,
         render: (u) => u.email,
       },
       {
@@ -154,6 +176,9 @@ export function UsersPage() {
       {
         key: 'groups',
         header: 'Группы',
+        sortable: true,
+        sortValue: (u) => (u.groupIds ?? []).map((gid) => groupNameById.get(gid) ?? gid).join(','),
+        searchValue: (u) => (u.groupIds ?? []).map((gid) => groupNameById.get(gid) ?? gid).join(' '),
         render: (u) => (
           <div className="flex flex-wrap gap-1">
             {(u.groupIds ?? []).length ? (
@@ -184,17 +209,23 @@ export function UsersPage() {
               key: 'actions',
               header: '',
               render: (u: DapUser) => (
-                <div className="text-right">
-                  <button type="button" className="btn-secondary mr-2" onClick={() => openEdit(u)}>
-                    Изменить
+                <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    className="btn-secondary !px-2 !py-1"
+                    onClick={() => openEdit(u)}
+                    title="Изменить"
+                  >
+                    <Pencil size={14} />
                   </button>
                   <button
                     type="button"
-                    className="btn-secondary text-red-600"
+                    className="btn-secondary !px-2 !py-1 text-red-600"
                     disabled={entityId(u) === entityId(currentUser ?? {})}
                     onClick={() => void handleDelete(u)}
+                    title="Удалить"
                   >
-                    Удалить
+                    <Trash2 size={14} />
                   </button>
                 </div>
               ),
@@ -225,7 +256,13 @@ export function UsersPage() {
           <ErrorMessage message={error} />
         </div>
       )}
-      <DataTable columns={columns} data={users} rowKey={(u) => entityId(u)} searchPlaceholder="Поиск пользователей…" />
+      <DataTable
+        columns={columns}
+        data={users}
+        rowKey={(u) => entityId(u)}
+        filters={filters}
+        searchPlaceholder="Поиск пользователей…"
+      />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать пользователя' : 'Новый пользователь'}>
         <form onSubmit={handleSubmit} className="space-y-3">

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Play, Plus, RefreshCw, Square, Trash2 } from 'lucide-react';
 import {
   WASH_TELEGRAM_COMMANDS,
@@ -11,7 +11,8 @@ import {
   updateTelegramBot,
   type TelegramBot,
 } from '../api/telegramBots';
-import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader, Table } from '../components/UI';
+import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader } from '../components/UI';
+import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 
@@ -41,6 +42,13 @@ function runStatus(bot: TelegramBot): { label: string; variant: 'success' | 'war
   if (run?.status === 'queued') return { label: 'Запуск…', variant: 'warning' };
   if (bot.status === 'disabled') return { label: 'Остановлен', variant: 'default' };
   return { label: 'Остановлен', variant: 'default' };
+}
+
+function botRunState(bot: TelegramBot): 'running' | 'queued' | 'stopped' {
+  const run = bot.active_run?.status;
+  if (run === 'running') return 'running';
+  if (run === 'queued') return 'queued';
+  return 'stopped';
 }
 
 export function TelegramPage() {
@@ -207,6 +215,128 @@ export function TelegramPage() {
     }
   };
 
+  const botList = bots ?? [];
+
+  const filters: DataTableFilter<TelegramBot>[] = useMemo(
+    () => [
+      {
+        id: 'status',
+        label: 'Статус',
+        options: [
+          { value: 'running', label: 'Запущен' },
+          { value: 'queued', label: 'Запуск…' },
+          { value: 'stopped', label: 'Остановлен' },
+        ],
+        match: (bot, value) => botRunState(bot) === value,
+      },
+    ],
+    []
+  );
+
+  const columns: DataTableColumn<TelegramBot>[] = useMemo(
+    () => [
+      {
+        key: 'name',
+        header: 'Бот',
+        sortable: true,
+        sortValue: (bot) => bot.name,
+        searchValue: (bot) => `${bot.name} ${bot.description || ''}`,
+        render: (bot) => (
+          <div>
+            <div className="font-medium text-panel-ink dark:text-panel-ink-dark">{bot.name}</div>
+            {bot.description && (
+              <div className="text-xs text-panel-muted dark:text-panel-muted-dark">{bot.description}</div>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Статус',
+        sortable: true,
+        sortValue: (bot) => botRunState(bot),
+        searchValue: (bot) => runStatus(bot).label,
+        render: (bot) => {
+          const st = runStatus(bot);
+          return <Badge variant={st.variant}>{st.label}</Badge>;
+        },
+      },
+      {
+        key: 'commands',
+        header: 'Команды',
+        sortable: true,
+        sortValue: (bot) =>
+          (bot.metadata.allowed_commands?.length ? bot.metadata.allowed_commands : WASH_TELEGRAM_COMMANDS).join(','),
+        searchValue: (bot) =>
+          (bot.metadata.allowed_commands?.length ? bot.metadata.allowed_commands : WASH_TELEGRAM_COMMANDS).join(' '),
+        render: (bot) => {
+          const cmds = bot.metadata.allowed_commands?.length
+            ? bot.metadata.allowed_commands
+            : [...WASH_TELEGRAM_COMMANDS];
+          return (
+            <div className="flex flex-wrap gap-1">
+              {cmds.slice(0, 4).map((c) => (
+                <span
+                  key={c}
+                  className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                >
+                  {c}
+                </span>
+              ))}
+              {cmds.length > 4 && <span className="text-[10px] text-panel-muted">+{cmds.length - 4}</span>}
+            </div>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        header: '',
+        render: (bot) => {
+          const running = bot.active_run?.status === 'running' || bot.active_run?.status === 'queued';
+          const busy = actionId === bot.id;
+          return (
+            <div className="flex justify-end gap-1">
+              {!running ? (
+                <button
+                  type="button"
+                  className="btn-icon text-emerald-600"
+                  title="Запустить"
+                  disabled={busy}
+                  onClick={() => void handleStart(bot)}
+                >
+                  <Play size={16} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-icon text-amber-600"
+                  title="Остановить"
+                  disabled={busy}
+                  onClick={() => void handleStop(bot)}
+                >
+                  <Square size={16} />
+                </button>
+              )}
+              <button type="button" className="btn-icon" title="Настройки" onClick={() => openEdit(bot)}>
+                <Pencil size={16} />
+              </button>
+              <button
+                type="button"
+                className="btn-icon text-red-500"
+                title="Удалить"
+                disabled={busy}
+                onClick={() => void handleDelete(bot)}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          );
+        },
+      },
+    ],
+    [actionId]
+  );
+
   if (pageState === 'loading') {
     return (
       <div>
@@ -230,8 +360,6 @@ export function TelegramPage() {
       </div>
     );
   }
-
-  const botList = bots ?? [];
 
   return (
     <div>
@@ -265,92 +393,14 @@ export function TelegramPage() {
           </div>
         </div>
       ) : (
-        <Table>
-          <thead>
-            <tr className="border-b border-panel-border text-xs uppercase tracking-wide text-panel-muted dark:border-panel-border-dark">
-              <th className="px-4 py-3 font-medium">Бот</th>
-              <th className="px-4 py-3 font-medium">Статус</th>
-              <th className="px-4 py-3 font-medium">Команды</th>
-              <th className="px-4 py-3 font-medium text-right">Действия</th>
-            </tr>
-          </thead>
-          <tbody>
-            {botList.map((bot) => {
-              const st = runStatus(bot);
-              const running = bot.active_run?.status === 'running' || bot.active_run?.status === 'queued';
-              const busy = actionId === bot.id;
-              const cmds = bot.metadata.allowed_commands?.length
-                ? bot.metadata.allowed_commands
-                : [...WASH_TELEGRAM_COMMANDS];
-
-              return (
-                <tr key={bot.id} className="border-b border-panel-border/60 dark:border-panel-border-dark/60">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-panel-ink dark:text-panel-ink-dark">{bot.name}</div>
-                    {bot.description && (
-                      <div className="text-xs text-panel-muted dark:text-panel-muted-dark">{bot.description}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={st.variant}>{st.label}</Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {cmds.slice(0, 4).map((c) => (
-                        <span
-                          key={c}
-                          className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                        >
-                          {c}
-                        </span>
-                      ))}
-                      {cmds.length > 4 && (
-                        <span className="text-[10px] text-panel-muted">+{cmds.length - 4}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      {!running ? (
-                        <button
-                          type="button"
-                          className="btn-icon text-emerald-600"
-                          title="Запустить"
-                          disabled={busy}
-                          onClick={() => void handleStart(bot)}
-                        >
-                          <Play size={16} />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn-icon text-amber-600"
-                          title="Остановить"
-                          disabled={busy}
-                          onClick={() => void handleStop(bot)}
-                        >
-                          <Square size={16} />
-                        </button>
-                      )}
-                      <button type="button" className="btn-icon" title="Настройки" onClick={() => openEdit(bot)}>
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-icon text-red-500"
-                        title="Удалить"
-                        disabled={busy}
-                        onClick={() => void handleDelete(bot)}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
+        <DataTable
+          columns={columns}
+          data={botList}
+          rowKey={(bot) => bot.id}
+          filters={filters}
+          searchPlaceholder="Поиск ботов…"
+          emptyMessage="Telegram-ботов пока нет"
+        />
       )}
 
       <Modal

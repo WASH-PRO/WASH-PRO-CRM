@@ -24,9 +24,8 @@ elif [[ -f "$OBS_PATCH" ]]; then
   echo "    Observability patch already present (minio_console_enabled in config)"
 fi
 
-# ScriptCreate — metadata для wash_telegram_bot (ScriptResponse уже имеет metadata в response)
-if ! grep -A 8 'class ScriptCreate' "$SCHEMAS" | grep -q 'metadata: dict'; then
-  perl -i -pe 's/(entrypoint: str = "main.py"\n    code: str \| None = None)/$1\n    metadata: dict = Field(default_factory=dict)/' "$SCHEMAS"
+if ! grep -q 'metadata: dict = Field(default_factory=dict)' "$SCHEMAS" 2>/dev/null; then
+  perl -i -0777 -pe 's/(class ScriptCreate\(BaseModel\):\n(?:.*\n)*?    code: str \| None = None\n)/$1    metadata: dict = Field(default_factory=dict)\n/s' "$SCHEMAS"
   echo "    Extended ScriptCreate with metadata"
 fi
 # ScriptUpdate — metadata (если upstream ещё без поля)
@@ -44,7 +43,7 @@ fi
 
 if ! grep -q 'metadata_=metadata or' "$SCRIPT_SVC" 2>/dev/null; then
   perl -i -pe 's/files: dict\[str, str\] \| None = None,/files: dict[str, str] | None = None,\n    metadata: dict | None = None,/' "$SCRIPT_SVC"
-  perl -i -pe 's/entrypoint=entrypoint,\n    \)/entrypoint=entrypoint,\n        metadata_=metadata or {},\n    )/' "$SCRIPT_SVC"
+  perl -i -0777 -pe 's/(entrypoint=entrypoint,\n)(    \)\n    db\.add\(script\))/$1        metadata_=metadata or {},\n$2/s' "$SCRIPT_SVC"
   echo "    Patched create_script for metadata"
 fi
 

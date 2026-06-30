@@ -201,10 +201,13 @@ export interface Currency {
   createdAt?: string;
 }
 
+export type DiscountTypeStatus = 'active' | 'inactive';
+
 export interface DiscountType {
   id: string;
   number: number;
   name: string;
+  status?: DiscountTypeStatus;
   createdAt?: string;
 }
 

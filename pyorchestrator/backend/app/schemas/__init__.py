@@ -90,6 +90,7 @@ class ScriptCreate(BaseModel):
     script_type: str = "script"
     entrypoint: str = "main.py"
     code: str | None = None
+    metadata: dict = Field(default_factory=dict)
 
 
 class ScriptUpdate(BaseModel):

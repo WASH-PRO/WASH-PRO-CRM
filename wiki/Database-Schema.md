@@ -1,6 +1,6 @@
 # Схема данных
 
-Полное описание: [docs/database-schema.md](https://github.com/Developer-RU/WASH-PRO-CRM/blob/main/docs/database-schema.md)
+Полное описание: [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/database-schema/)
 
 ## Группы endpoints
 

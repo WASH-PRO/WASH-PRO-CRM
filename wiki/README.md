@@ -1,14 +1,16 @@
 # Wiki WASH PRO CRM
 
-Исходники страниц для [GitHub Wiki](https://github.com/Developer-RU/WASH-PRO-CRM/wiki) репозитория.
+Исходники для [GitHub Wiki](https://github.com/Developer-RU/WASH-PRO-CRM/wiki).
 
-Основная документация публикуется на **GitHub Pages**: https://developer-ru.github.io/WASH-PRO-CRM/
+**Полная документация:** https://developer-ru.github.io/WASH-PRO-CRM/
 
-| Файл | Страница Wiki |
-|------|---------------|
+| Файл | Wiki |
+|------|------|
 | [Home.md](Home.md) | Home |
 | [Getting-Started.md](Getting-Started.md) | Getting-Started |
+| [Architecture.md](Architecture.md) | Architecture |
+| [Embedded-Services.md](Embedded-Services.md) | Embedded-Services |
 | [Dashboard.md](Dashboard.md) | Dashboard |
 | [Database-Schema.md](Database-Schema.md) | Database-Schema |
 
-При обновлении синхронизируйте с папкой [`docs/`](../docs/) в репозитории.
+Синхронизируйте с [`docs/`](../docs/) при обновлениях.

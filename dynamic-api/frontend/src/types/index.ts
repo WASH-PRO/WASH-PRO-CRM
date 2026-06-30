@@ -270,6 +270,7 @@ export interface DbCollectionInfo {
   name: string;
   label: string;
   count: number;
+  clearable?: boolean;
 }
 
 export interface DbDocumentPage {

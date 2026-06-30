@@ -220,14 +220,21 @@ export function matchDynamicPath(pattern: string, requestPath: string): { match:
   return { match: true, params };
 }
 
+export function getVersionedApiPath(path: string, apiVersion?: string): string {
+  const normalized = normalizePath(path);
+  const version = apiVersion?.trim();
+  if (!version) return normalized;
+  const v = version.startsWith('v') ? version : `v${version}`;
+  if (normalized.includes(`/api/${v}/`)) return normalized;
+  return normalized.replace(/^\/api\//, `/api/${v}/`);
+}
+
 export function getEndpointMatchPaths(path: string, apiVersion?: string): string[] {
-  const paths = new Set<string>([normalizePath(path)]);
-  if (apiVersion?.trim()) {
-    const version = apiVersion.trim().startsWith('v') ? apiVersion.trim() : `v${apiVersion.trim()}`;
-    const normalized = normalizePath(path);
-    if (!normalized.includes(`/api/${version}/`)) {
-      paths.add(normalized.replace(/^\/api\//, `/api/${version}/`));
-    }
+  const normalized = normalizePath(path);
+  const paths = new Set<string>([normalized]);
+  const versioned = getVersionedApiPath(path, apiVersion);
+  if (versioned !== normalized) {
+    paths.add(versioned);
   }
   return [...paths];
 }

@@ -7,3 +7,4 @@ _site/
 data/backups/*.gz
 data/backups/*.archive
 dynamic-api/.git
+pyorchestrator/.git

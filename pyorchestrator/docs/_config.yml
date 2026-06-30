@@ -1,0 +1,56 @@
+title: PyOrchestrator
+description: SCADA/CMS платформа для изолированных Python-скриптов и ботов в Docker Compose
+url: https://developer-ru.github.io
+baseurl: /pyorchestrator
+repository: Developer-RU/pyorchestrator
+
+markdown: GFM
+permalink: pretty
+lang: ru
+
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+  - jekyll-redirect-from
+
+relative_links:
+  enabled: true
+  collections: true
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - roadmap-status.md
+
+nav:
+  - title: Главная
+    url: /
+  - title: Заметки о выпуске
+    url: /release-notes/
+  - title: Быстрый старт
+    url: /getting-started/
+  - title: Архитектура
+    url: /architecture/
+  - title: Панель управления
+    url: /control-plane/
+  - title: Runtime и sandbox
+    url: /runtime/
+  - title: MCP для AI-агентов
+    url: /mcp/
+  - title: Схема данных
+    url: /database-schema/
+  - title: Справочник API
+    url: /api-reference/
+  - title: Развёртывание
+    url: /deployment/
+  - title: Конфигурация
+    url: /configuration/
+  - title: Безопасность
+    url: /security/
+  - title: Дорожная карта
+    url: /roadmap/
+  - title: Устранение неполадок
+    url: /troubleshooting/
+
+github_org: Developer-RU
+github_repo: pyorchestrator

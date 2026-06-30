@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -15,24 +15,28 @@ import {
   Tags,
   FileText,
   LogOut,
-  Moon,
-  Sun,
   Menu,
   X,
-  BookOpen,
-  Github,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Users,
+  Shield,
   type LucideIcon,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { ThemeToggle } from './ThemeToggle';
 import { LiveModeProvider } from '../context/LiveModeContext';
 import { LiveModeIndicator } from './LiveModeIndicator';
+import { EmbeddedServicesSidebar } from './EmbeddedServicesSidebar';
+import { breadcrumbsFromPath } from '../utils/breadcrumbs';
 
 interface NavItem {
   to: string;
   label: string;
+  shortLabel?: string;
   icon: LucideIcon;
   admin?: boolean;
 }
@@ -50,9 +54,9 @@ const navGroups: NavGroup[] = [
   {
     title: 'Объекты',
     items: [
-      { to: '/washes', label: 'Автомойки самообслуживания', icon: Building2 },
+      { to: '/washes', label: 'Автомойки', shortLabel: 'Мойки', icon: Building2 },
       { to: '/posts', label: 'Посты', icon: Columns3 },
-      { to: '/states', label: 'Текущее состояние', icon: Activity },
+      { to: '/states', label: 'Состояние', shortLabel: 'Состояние', icon: Activity },
     ],
   },
   {
@@ -66,16 +70,18 @@ const navGroups: NavGroup[] = [
   {
     title: 'Аналитика',
     items: [
-      { to: '/usage', label: 'Статистика использования', icon: BarChart3 },
-      { to: '/finance', label: 'Финансовая статистика', icon: Wallet },
-      { to: '/archive', label: 'Архивирование', icon: Archive },
+      { to: '/usage', label: 'Использование', shortLabel: 'Usage', icon: BarChart3 },
+      { to: '/finance', label: 'Финансы', icon: Wallet },
+      { to: '/archive', label: 'Архив', icon: Archive },
     ],
   },
   {
     title: 'Система',
     items: [
       { to: '/notifications', label: 'Уведомления', icon: Bell },
-      { to: '/backups', label: 'Резервные копии', icon: HardDrive, admin: true },
+      { to: '/users', label: 'Пользователи', icon: Users, admin: true },
+      { to: '/groups', label: 'Группы и права', icon: Shield, admin: true },
+      { to: '/backups', label: 'Резервные копии', shortLabel: 'Бэкапы', icon: HardDrive, admin: true },
       { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
       { to: '/currency', label: 'Валюты', icon: Coins, admin: true },
       { to: '/discount-types', label: 'Типы скидок', icon: Tags, admin: true },
@@ -84,15 +90,24 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-const resourceLinks = [
-  { href: 'https://developer-ru.github.io/WASH-PRO-CRM/', label: 'Документация', icon: BookOpen },
-  { href: 'https://github.com/Developer-RU/WASH-PRO-CRM', label: 'WASH-PRO-CRM', icon: Github },
-] as const;
+const SIDEBAR_KEY = 'wash_sidebar_collapsed';
+
+function userInitials(name?: string, login?: string): string {
+  const source = (name || login || '?').trim();
+  const parts = source.split(/\s+/);
+  if (parts.length >= 2) return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
 
 export function Layout() {
   const { user, logout, isAdmin } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_KEY) === '1');
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+  }, [collapsed]);
 
   const filteredGroups = useMemo(
     () =>
@@ -105,45 +120,59 @@ export function Layout() {
     [isAdmin]
   );
 
+  const crumbs = useMemo(() => breadcrumbsFromPath(location.pathname), [location.pathname]);
+  const sidebarWidth = collapsed ? 'w-[4.5rem]' : 'w-64';
+  const mainOffset = collapsed ? 'lg:ml-[4.5rem]' : 'lg:ml-64';
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside
+    <LiveModeProvider>
+      <div className="flex h-screen overflow-hidden bg-panel-canvas dark:bg-panel-canvas-dark">
+        <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-900',
+          'fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-panel-border bg-panel-card text-panel-ink transition-all duration-300 ease-out dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300',
+          sidebarWidth,
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        <div className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200 px-5 dark:border-slate-800">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold">W</div>
-          <div>
-            <div className="font-semibold">WASH PRO CRM</div>
-            <div className="text-xs text-slate-500">SCADA система</div>
+        <div
+          className={clsx(
+            'flex h-16 shrink-0 items-center border-b border-panel-border dark:border-panel-sidebar-border',
+            collapsed ? 'justify-center px-2' : 'gap-3 px-4'
+          )}
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-glow">
+            W
           </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-panel-ink dark:text-white">WASH PRO CRM</div>
+              <div className="truncate text-[11px] text-panel-muted dark:text-slate-500">SCADA · Управление</div>
+            </div>
+          )}
         </div>
-        <nav className="min-h-0 flex-1 overflow-y-auto p-3">
+
+        <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-4">
           {filteredGroups.map((group) => (
-            <div key={group.title} className="mb-4 last:mb-0">
-              <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                {group.title}
-              </div>
+            <div key={group.title} className="mb-5 last:mb-0">
+              {!collapsed && (
+                <div className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-panel-muted dark:text-slate-500">
+                  {group.title}
+                </div>
+              )}
               <div className="space-y-0.5">
-                {group.items.map(({ to, label, icon: Icon }) => (
+                {group.items.map(({ to, label, shortLabel, icon: Icon }) => (
                   <NavLink
                     key={to}
                     to={to}
                     end={to === '/'}
+                    title={collapsed ? label : undefined}
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
-                      clsx(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                        isActive
-                          ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
-                          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                      )
+                      clsx('nav-item', isActive && 'nav-item-active', collapsed && 'justify-center px-2')
                     }
                   >
-                    <Icon size={18} />
-                    {label}
+                    <Icon size={18} strokeWidth={1.75} className="shrink-0" />
+                    {!collapsed && <span className="truncate">{shortLabel ?? label}</span>}
                   </NavLink>
                 ))}
               </div>
@@ -151,57 +180,89 @@ export function Layout() {
           ))}
         </nav>
 
-        <div className="shrink-0 border-t border-slate-200 p-3 dark:border-slate-800">
-          <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Resources
-          </div>
-          <div className="space-y-0.5">
-            {resourceLinks.map(({ href, label, icon: Icon }) => (
-              <a
-                key={href}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              >
-                <Icon size={18} />
-                {label}
-              </a>
-            ))}
-          </div>
+        <div className="shrink-0 space-y-2 border-t border-panel-border p-2 dark:border-panel-sidebar-border">
+          <EmbeddedServicesSidebar collapsed={collapsed} />
+
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
+            title={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
+          >
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            {!collapsed && <span>Свернуть меню</span>}
+          </button>
         </div>
       </aside>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />
+        <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:ml-64">
-        <LiveModeProvider>
-          <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 lg:px-6">
-            <button className="lg:hidden" onClick={() => setMobileOpen((v) => !v)}>
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+      <div className={clsx('flex min-h-0 min-w-0 flex-1 flex-col transition-all duration-300', mainOffset)}>
+          <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-panel-border bg-panel-card/90 px-4 backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 lg:px-6">
+            <button
+              type="button"
+              className="btn-icon lg:hidden"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Меню"
+            >
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
-            <div className="flex items-center gap-3">
-              <LiveModeIndicator />
-              <div className="text-sm text-slate-500">
-                {user?.name || user?.login}
+
+            <div className="flex min-w-0 shrink-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600/15 text-xs font-semibold text-brand-700 ring-1 ring-brand-500/25 dark:bg-brand-400/15 dark:text-brand-300 dark:ring-brand-400/30">
+                {userInitials(user?.name, user?.login)}
+              </div>
+              <div className="hidden min-w-0 sm:block">
+                <div className="truncate text-sm font-medium text-panel-ink dark:text-panel-ink-dark">
+                  {user?.name || user?.login}
+                </div>
+                <div className="truncate text-[11px] text-panel-muted dark:text-panel-muted-dark">
+                  {isAdmin ? 'Администратор' : 'Оператор'}
+                </div>
               </div>
             </div>
+
+            <div className="flex-1" />
+
             <div className="flex items-center gap-2">
-              <button onClick={toggleTheme} className="btn-secondary !px-2" title="Тема">
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <button onClick={() => logout()} className="btn-secondary !px-2" title="Выход">
+              <LiveModeIndicator />
+              <Link to="/notifications" className="btn-icon relative" title="Уведомления">
+                <Bell size={18} />
+              </Link>
+              <ThemeToggle />
+              <button type="button" onClick={() => logout()} className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-500" title="Выход">
                 <LogOut size={18} />
               </button>
             </div>
           </header>
-          <main className="min-h-0 flex-1 overflow-auto p-4 lg:p-6">
-            <Outlet />
+
+          <main className="min-h-0 flex-1 overflow-auto">
+            <div className="animate-slide-up mx-auto w-full max-w-[1600px] p-4 lg:p-8">
+              <nav className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 text-sm" aria-label="Навигация">
+                {crumbs.map((crumb, i) => (
+                  <span key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
+                    {i > 0 && <ChevronRight size={14} className="shrink-0 text-panel-muted" />}
+                    {crumb.path ? (
+                      <Link
+                        to={crumb.path}
+                        className="truncate text-panel-muted transition-colors hover:text-brand-600 dark:text-panel-muted-dark dark:hover:text-brand-400"
+                      >
+                        {crumb.label}
+                      </Link>
+                    ) : (
+                      <span className="truncate font-medium text-panel-ink dark:text-panel-ink-dark">{crumb.label}</span>
+                    )}
+                  </span>
+                ))}
+              </nav>
+              <div className="mb-6 h-px w-full bg-panel-border dark:bg-panel-border-dark" aria-hidden />
+              <Outlet />
+            </div>
           </main>
-        </LiveModeProvider>
       </div>
     </div>
+    </LiveModeProvider>
   );
 }

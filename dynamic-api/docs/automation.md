@@ -85,15 +85,24 @@ Includes JWT and API key security schemes, versioned paths, and reference fields
 
 **UI:** `/mcp` (requires `manage_api`) — endpoint URL, JSON-RPC examples, registered tools table
 
-**Endpoint:** `POST /api/mcp` (JSON-RPC 2.0)
+**Endpoint:** `POST /api/mcp` (JSON-RPC 2.0) — **requires authentication** (JWT Bearer or API key)
 
 Compatible with MCP clients (Claude, ChatGPT tools, OpenWebUI):
 
 ```bash
 curl -X POST http://localhost:3001/api/mcp \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <access_token>" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+
+# or with API key:
+curl -X POST http://localhost:3001/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: dap_xxxxxxxx" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
+
+`tools/list` and `tools/call` respect each endpoint's `accessType` (public / authenticated / group). The admin UI at `/mcp` lists all registered tools; JSON-RPC returns only tools the token can use.
 
 | Method | Purpose |
 |--------|---------|

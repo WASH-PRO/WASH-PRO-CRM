@@ -1,0 +1,43 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Docker volumes (local dev)
+data/
+
+# Secrets
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Jekyll
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+
+# Runtime workspaces (local)
+workspaces/

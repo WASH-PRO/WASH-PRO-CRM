@@ -1,4 +1,5 @@
 import type { Endpoint, EndpointGroup, SchemaField } from '../types';
+import { getEndpointDisplayPath } from './apiPath';
 
 export interface SchemaMethod {
   method: string;
@@ -130,14 +131,17 @@ export function buildApiSchemaGraph(
 ): ApiSchemaGraph {
   const endpointById = new Map(endpoints.map((ep) => [ep._id, ep]));
 
+  const endpointGroupKey = (ep: Endpoint) => `${ep.path}::${ep.apiVersion ?? ''}`;
+
   const byPath = new Map<string, Endpoint[]>();
   for (const ep of endpoints) {
-    const list = byPath.get(ep.path) ?? [];
+    const key = endpointGroupKey(ep);
+    const list = byPath.get(key) ?? [];
     list.push(ep);
-    byPath.set(ep.path, list);
+    byPath.set(key, list);
   }
 
-  const pathToNodeId = (path: string) => `node:${path}`;
+  const pathToNodeId = (ep: Endpoint) => `node:${endpointGroupKey(ep)}`;
 
   const laneOrder: { id: string; name: string; color: string; description?: string }[] = [
     ...groups
@@ -150,7 +154,7 @@ export function buildApiSchemaGraph(
 
   const nodesByLane = new Map<string, Omit<SchemaNode, 'x' | 'y' | 'width' | 'height'>[]>();
 
-  for (const [path, eps] of byPath.entries()) {
+  for (const [, eps] of byPath.entries()) {
     const primary = eps.find((ep) => !ep.isSystem) ?? eps[0];
     const group = primary.groupId;
     const groupId = typeof group === 'object' && group?._id ? group._id : (group as string | undefined);
@@ -162,8 +166,8 @@ export function buildApiSchemaGraph(
     const displayFields = buildDisplayFields(fields);
 
     const node = {
-      id: pathToNodeId(path),
-      path,
+      id: pathToNodeId(primary),
+      path: getEndpointDisplayPath(primary.path, primary.apiVersion),
       title: primary.name,
       description: primary.description,
       methods: eps.map((ep) => ({
@@ -241,7 +245,7 @@ export function buildApiSchemaGraph(
         if (!refId) return;
         const target = endpointById.get(refId);
         if (!target) return;
-        const toNodeId = pathToNodeId(target.path);
+        const toNodeId = pathToNodeId(target);
         if (toNodeId === n.id) return;
         const targetNode = sized.find((tn) => tn.id === toNodeId);
         edges.push({
@@ -250,7 +254,7 @@ export function buildApiSchemaGraph(
           fromField: field.name,
           fromFieldIndex: fieldIndex,
           toNodeId,
-          toPath: target.path,
+          toPath: getEndpointDisplayPath(target.path, target.apiVersion),
           toTitle: targetNode?.title ?? target.name,
           label: field.name,
         });

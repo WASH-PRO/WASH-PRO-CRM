@@ -20,6 +20,7 @@ Ideal when you need APIs that evolve quickly: internal admin backends, MVPs, int
 
 | Update | Summary |
 |--------|---------|
+| **v1.5.13 — MCP auth & UX** | MCP requires JWT/API key; database clear collection; API version in paths; login redesign — [Automation]({{ '/automation/' | relative_url }}) |
 | **v1.5.12 — Live UI** | Header **Live** badge: auto-refresh on Dashboard/System, **статические данные** elsewhere — [Live UI]({{ '/live-ui/' | relative_url }}) |
 | **v1.5.11 — Docker update fix** | In-app update uses host path `DAP_HOST_PROJECT_ROOT` for compose bind mounts (macOS / updater container) — [Updates]({{ '/updates/' | relative_url }}) |
 | **v1.5.10 — Security** | `githubRepo` validation, HSTS, Referrer-Policy — [Updates]({{ '/updates/' | relative_url }}) |
@@ -29,7 +30,7 @@ Ideal when you need APIs that evolve quickly: internal admin backends, MVPs, int
 | **v1.5.5 — Update reliability** | Stale job cleanup, **Cancel** in Settings, bash updater fix — [Updates]({{ '/updates/' | relative_url }}) |
 | **v1.5 — Software updates** | In-app updates from GitHub Releases, **Update now**, auto-update in Docker, rollback — [Updates]({{ '/updates/' | relative_url }}) |
 | **v1.4 — Deployment** | [Three variants]({{ '/deployment-variants/' | relative_url }}): Docker single, MongoDB replica set, Kubernetes |
-| **v1.4 — Testing** | Vitest (37 tests), load test, CI — [Testing]({{ '/testing/' | relative_url }}) |
+| **v1.4 — Testing** | Vitest (38 tests), load test, CI — [Testing]({{ '/testing/' | relative_url }}) |
 | **v1.4 — Observability** | Dashboard automation KPIs, charts, health widget; audit log `source` field |
 | **v1.3 — Cron** | Scheduled jobs at `/cron` |
 | **v1.3 — Webhooks** | Outbound events at `/webhooks` |

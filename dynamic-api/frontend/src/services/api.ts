@@ -385,6 +385,14 @@ class ApiClient {
     });
   }
 
+  async clearDbCollection(collection: string) {
+    const res = await this.request<{ success: boolean; data: { deletedCount: number } }>(
+      `/api/database/collections/${encodeURIComponent(collection)}`,
+      { method: 'DELETE' }
+    );
+    return res.data;
+  }
+
   async callDynamicApi(path: string, method: string, body?: unknown) {
     const options: RequestInit = { method };
     if (body && method !== 'GET') {

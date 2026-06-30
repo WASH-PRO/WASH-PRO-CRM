@@ -22,7 +22,7 @@ Dynamic API Platform includes **automated unit tests** (Vitest), **CI integratio
 
 ## Unit tests (Vitest)
 
-Unit tests live in `backend/src/**/*.test.ts` and run **without MongoDB** — they cover pure logic: validation, security helpers, path matching, and MCP naming.
+Unit tests live in `backend/src/**/*.test.ts` and run **without MongoDB** — they cover pure logic: validation, security helpers, path matching, and MCP naming. **38 tests** across 8 files (Vitest).
 
 ### Run locally
 
@@ -57,7 +57,7 @@ npm test && npm run build
 | `src/utils/github-repo.test.ts` | Security | `githubRepo` setting validation (`owner/repo`) |
 | `src/services/mcp.service.test.ts` | MCP | Tool name generation from method + path |
 
-**Current count:** 37 tests across 8 files.
+**Current count:** 38 tests across 8 files.
 
 ### What unit tests do *not* cover
 

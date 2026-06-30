@@ -124,14 +124,43 @@ async function refreshAccessToken(): Promise<string | null> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken: refresh }),
   });
-  const json = (await res.json()) as ApiResult<{ accessToken: string; refreshToken: string }>;
+  const json = (await res.json()) as ApiResult<{ accessToken: string; refreshToken?: string }>;
   if (json.success && json.data) {
-    setTokens(json.data.accessToken, json.data.refreshToken);
+    setTokens(json.data.accessToken, json.data.refreshToken ?? refresh);
     setStoredPermissions(decodeJwtPermissions(json.data.accessToken));
     return json.data.accessToken;
   }
   clearAuth();
   return null;
+}
+
+function authHeaders(token: string | null, extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    ...extra,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+/** fetch с Bearer-токеном и автоматическим refresh при 401 */
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  let token = getToken();
+  let res = await fetch(url, {
+    ...options,
+    headers: authHeaders(token, options.headers as Record<string, string>),
+  });
+
+  if (res.status === 401 && token) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      res = await fetch(url, {
+        ...options,
+        headers: authHeaders(newToken, options.headers as Record<string, string>),
+      });
+    }
+  }
+
+  return res;
 }
 
 export async function login(login: string, password: string) {

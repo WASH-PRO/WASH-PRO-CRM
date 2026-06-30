@@ -1,4 +1,4 @@
-Welcome to the **Dynamic API Platform** wiki (v1.5.12).
+Welcome to the **Dynamic API Platform** wiki (v1.5.13).
 
 Create, manage, and test REST APIs without writing backend code.
 
@@ -10,6 +10,10 @@ Endpoints are stored in MongoDB and served **at runtime** — add or change a ro
 
 | Area | Summary |
 |------|---------|
+| **MCP auth (v1.5.13)** | `POST /api/mcp` requires JWT or API key; tools respect endpoint access — [FAQ](FAQ) |
+| **Database clear (v1.5.13)** | Clear `endpointdatas` / `logs` collections from UI — [Database Explorer](Database-Explorer) |
+| **API version UI (v1.5.13)** | Versioned paths in endpoints list, schema, test tab |
+| **Login redesign (v1.5.13)** | Split login page, favicon |
 | **Live UI (v1.5.12)** | Header **Live** badge — auto-refresh on Dashboard/System, **статические данные** elsewhere — [Live UI](Live-UI) |
 | **Docker update fix (v1.5.11)** | `DAP_HOST_PROJECT_ROOT` for in-app compose on macOS — [Software Updates](Software-Updates) |
 | **Security (v1.5.10)** | `githubRepo` validation, HSTS, Referrer-Policy |
@@ -18,7 +22,7 @@ Endpoints are stored in MongoDB and served **at runtime** — add or change a ro
 | **UI themes** | Dark, Light, **Ocean**, **Forest** — [Themes](Themes) |
 | **System page** | Correct installed version, auto-update status |
 | **v1.4 deployment** | Docker single-node, MongoDB replica set, Kubernetes — [Deployment Variants](Deployment-Variants) |
-| **Testing** | Vitest (37 tests), load test, CI — [Testing](Testing) |
+| **Testing** | Vitest (38 tests), load test, CI — [Testing](Testing) |
 | **Observability** | Dashboard automation KPIs, charts, health widget |
 
 Earlier releases: `reference` fields, network access, Database Explorer, cron/webhooks/API keys/MCP, OpenAPI, JS handlers — see [CHANGELOG](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/blob/main/CHANGELOG.md).

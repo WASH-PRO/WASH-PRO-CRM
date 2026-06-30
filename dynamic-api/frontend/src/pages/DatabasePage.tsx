@@ -33,6 +33,7 @@ export default function DatabasePage() {
   const [editorJson, setEditorJson] = useState('{}');
   const [editorDocId, setEditorDocId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadCollections = useCallback(() => {
@@ -127,6 +128,37 @@ export default function DatabasePage() {
     }
   };
 
+  const clearCollection = async () => {
+    if (!selected || !selectedMeta?.clearable) return;
+    const countLabel = (selectedMeta.count ?? 0).toLocaleString();
+    const confirmed = confirm(
+      `Delete all ${countLabel} documents in "${selectedMeta.label}" (${selected})?\n\nThis cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    const typed = prompt(`Type "${selected}" to confirm collection deletion:`);
+    if (typed !== selected) {
+      if (typed !== null) alert('Collection name did not match. Deletion cancelled.');
+      return;
+    }
+
+    setClearing(true);
+    setError(null);
+    try {
+      const result = await api.clearDbCollection(selected);
+      setPage(1);
+      loadCollections();
+      loadDocuments();
+      alert(`Deleted ${result.deletedCount.toLocaleString()} documents from ${selectedMeta.label}.`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to clear collection';
+      setError(message);
+      alert(message);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   const selectedMeta = collections.find((c) => c.name === selected);
 
   return (
@@ -180,9 +212,22 @@ export default function DatabasePage() {
                   <h2 className="font-semibold">{selectedMeta?.label || selected}</h2>
                   <p className="text-xs text-dark-muted font-mono">{selected}</p>
                 </div>
-                <button className="btn-primary py-1.5" onClick={openCreate}>
-                  <Plus className="w-4 h-4" /> New document
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  {selectedMeta?.clearable && (
+                    <button
+                      className="btn-danger py-1.5"
+                      onClick={clearCollection}
+                      disabled={clearing || (selectedMeta.count ?? 0) === 0}
+                      title={(selectedMeta.count ?? 0) === 0 ? 'Collection is already empty' : 'Delete all documents in this collection'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {clearing ? 'Clearing…' : 'Clear collection'}
+                    </button>
+                  )}
+                  <button className="btn-primary py-1.5" onClick={openCreate}>
+                    <Plus className="w-4 h-4" /> New document
+                  </button>
+                </div>
               </div>
 
               <SearchInput

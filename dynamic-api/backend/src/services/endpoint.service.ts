@@ -14,6 +14,7 @@ import {
   matchDynamicPath,
   getCollectionPath,
   getEndpointMatchPaths,
+  getVersionedApiPath,
   normalizeNetworkAccessInput,
   validateNetworkAccessInput,
   resolveEffectiveNetworkAccess,
@@ -226,7 +227,15 @@ export class EndpointService {
 
       if (dto.method !== undefined) updateData.method = nextMethod;
     }
-    if (dto.apiVersion !== undefined) updateData.apiVersion = dto.apiVersion?.trim() || undefined;
+    const unsetFields: string[] = [];
+    if (dto.apiVersion !== undefined) {
+      const version = dto.apiVersion === null ? '' : String(dto.apiVersion).trim();
+      if (version) {
+        updateData.apiVersion = version;
+      } else {
+        unsetFields.push('apiVersion');
+      }
+    }
     if (dto.groupId !== undefined) updateData.groupId = dto.groupId;
     if (dto.accessType !== undefined) updateData.accessType = dto.accessType;
     if (dto.allowedGroupIds !== undefined) updateData.allowedGroupIds = dto.allowedGroupIds;
@@ -259,7 +268,12 @@ export class EndpointService {
       }));
     }
 
-    const updated = await endpointRepository.update(id, updateData);
+    const mongoUpdate: Record<string, unknown> = { ...updateData };
+    if (unsetFields.length) {
+      mongoUpdate.$unset = Object.fromEntries(unsetFields.map((field) => [field, 1]));
+    }
+
+    const updated = await endpointRepository.update(id, mongoUpdate);
 
     await logRepository.create({
       action: 'endpoint_update',
@@ -312,7 +326,7 @@ export class EndpointService {
     return {
       name: endpoint.name,
       description: endpoint.description,
-      url: endpoint.path,
+      url: getVersionedApiPath(endpoint.path, endpoint.apiVersion),
       method: endpoint.method,
       accessType: endpoint.accessType,
       parameters: endpoint.fields,
@@ -327,7 +341,7 @@ export class EndpointService {
     const startTime = Date.now();
 
     const method = (dto.method || endpoint.method) as HttpMethod;
-    const path = dto.path || endpoint.path;
+    const path = dto.path || getVersionedApiPath(endpoint.path, endpoint.apiVersion);
 
     const mockReq = {
       method,
@@ -458,6 +472,15 @@ export class DynamicEngine {
         user.groupIds.includes(gid.toString())
       );
       if (!hasAccess) throw new Error('Forbidden: insufficient group permissions');
+    }
+  }
+
+  canAccessEndpoint(endpoint: IEndpoint, user?: JwtPayload): boolean {
+    try {
+      this.checkAccess(endpoint, user);
+      return true;
+    } catch {
+      return false;
     }
   }
 

@@ -15,6 +15,7 @@ Permission **`manage_users`** (default: Super Admin, Admin).
 - List collections with document counts
 - Paginated document table with JSON preview
 - View / edit / create / delete via JSON editor
+- **Clear collection** — delete all documents in `endpointdatas` or `logs` (with confirmation)
 - Search by `_id` or common text fields
 - Passwords redacted in `users` collection
 
@@ -27,9 +28,10 @@ GET    /api/database/collections/:name/:id
 POST   /api/database/collections/:name
 PUT    /api/database/collections/:name/:id
 DELETE /api/database/collections/:name/:id
+DELETE /api/database/collections/:name
 ```
 
-All routes require `manage_users`.
+All routes require `manage_users`. Collection clear is allowed only for `endpointdatas` and `logs`.
 
 ## Safety
 

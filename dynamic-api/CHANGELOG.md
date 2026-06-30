@@ -10,6 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 - Multi-tenant workspace support
 
+## [1.5.13] - 2026-06-30
+
+### Added
+- **MCP authentication** — `POST /api/mcp` requires JWT Bearer or API key (`X-API-Key` / `Authorization: ApiKey`); `tools/list` and `tools/call` respect endpoint `accessType`
+- **Database Explorer** — clear entire collection (`endpointdatas`, `logs`) with confirmation
+- **API version in UI** — versioned paths (`/api/v1/…`) shown in endpoints list, API schema, and endpoint test tab; optional `apiVersion` can be cleared on save
+- **Login page** — split layout with visual panel and favicon
+- **GitHub Pages** — Issues section in docs sidebar
+
+### Changed
+- **MCP admin page** — authentication headers, access rules, curl examples; refreshed screenshot
+- **Resources sidebar** — removed Developer link
+- MCP tool descriptions include public URL with API version when set
+
+### Security
+- MCP JSON-RPC endpoint no longer accepts unauthenticated requests
+
 ## [1.5.12] - 2026-06-25
 
 ### Added
@@ -277,6 +294,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Default endpoint groups
 - CRM, SHOP, DEVICES
 
+[1.5.13]: https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.13
 [1.5.12]: https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.12
 [1.5.11]: https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.11
 [1.5.10]: https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.10

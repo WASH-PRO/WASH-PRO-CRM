@@ -7,7 +7,7 @@ title: Screenshots
 description: UI screenshots from localhost deployment
 ---
 
-Screenshots of **Dynamic API Platform v1.5.12** running at `http://localhost:8080` (captured June 2026).
+Screenshots of **Dynamic API Platform v1.5.13** running at `http://localhost:8080` (captured June 2026).
 
 > The admin header shows a **Live** badge (auto-refresh on Dashboard/System, **статические данные** on other pages). See [Live UI]({{ '/live-ui/' | relative_url }}).
 >
@@ -71,7 +71,7 @@ Screenshots of **Dynamic API Platform v1.5.12** running at `http://localhost:808
 
 ![MCP Server]({{ '/screenshots/mcp-server.png' | relative_url }})
 
-**URL:** `/mcp` — MCP tools list, JSON-RPC examples, connection info for AI agents
+**URL:** `/mcp` — MCP tools list, authentication examples, JSON-RPC curl samples, access rules
 
 ## Database Explorer
 

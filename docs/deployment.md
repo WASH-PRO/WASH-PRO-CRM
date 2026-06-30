@@ -6,12 +6,12 @@ description: Production, обновление и восстановление
 
 ## Production checklist
 
-1. Смените все секреты в `.env` (JWT, CSRF, пароли)
-2. Задайте сильный пароль администратора (`ADMIN_PASSWORD`)
-3. Настройте `CORS_ORIGIN` под реальные домены Dashboard и API
-4. Ограничьте доступ к портам 80, 3001, 8080 файрволом / reverse proxy
-5. Не публикуйте MongoDB и RabbitMQ наружу без необходимости
-6. Настройте регулярные бэкапы (`BACKUP_CRON`, `BACKUP_RETENTION_COUNT`)
+1. Смените все секреты в `.env` (JWT, CSRF, пароли, PyOrch keys)
+2. Задайте сильный `ADMIN_PASSWORD`
+3. Настройте `CORS_ORIGIN` под реальные домены
+4. Ограничьте порты 80, 3001, 8080 (и 8000, 8090, 8010 при PyOrch) файрволом
+5. Не публикуйте MongoDB и RabbitMQ без необходимости
+6. Настройте `BACKUP_CRON` и проверьте восстановление
 
 ## Запуск
 
@@ -19,33 +19,42 @@ description: Production, обновление и восстановление
 ./scripts/start.sh
 ```
 
-Или вручную:
-
-```bash
-docker compose up -d --build
-```
+Скрипт подключает overlays: Redis, external RabbitMQ, PyOrchestrator — по переменным в `.env`.
 
 ## Обновление
 
-### Dynamic API Platform (vendored)
+### Dynamic API Platform (vendored v1.5.13)
 
 ```bash
 ./scripts/update-dynamic-api.sh
 docker compose up -d --build dynamic-api dynamic-api-panel
-./scripts/run-init-seed.sh   # при изменениях схемы API
+./scripts/run-init-seed.sh   # при изменениях CRM-схемы
 ```
 
-Актуальная версия встроенной платформы: **v1.5.6** (см. `dynamic-api/CHANGELOG.md`).
+> In-app updater в панели `:8080` **отключён** в WASH (`UPDATE_EXECUTOR_ENABLED=false`). Используйте скрипт обновления.
 
-> **Важно:** в панели Dynamic API (`:8080`) может отображаться раздел Software Updates. В WASH-PRO-CRM in-app updater **отключён** — он предназначен для standalone-развёртывания. Используйте `./scripts/update-dynamic-api.sh` в корне репозитория.
+### PyOrchestrator (vendored v0.1.0, опционально)
 
-### Весь стек WASH-PRO-CRM
+```bash
+./scripts/update-pyorchestrator.sh
+docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-backend pyorchestrator-panel pyorch-bridge
+```
+
+### Dashboard и bridge
+
+```bash
+docker compose up -d --build dashboard pyorch-bridge
+```
+
+### Весь стек
 
 ```bash
 docker compose up -d --build
+# или с PyOrch:
+PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 ```
 
-Данные сохраняются в Docker volumes и не теряются при пересборке.
+Данные в Docker volumes сохраняются при пересборке.
 
 ## Восстановление из бэкапа
 
@@ -53,27 +62,22 @@ docker compose up -d --build
 ./scripts/restore.sh wash-pro-crm-2024-06-22T02-00-00.archive.gz
 ```
 
-Список бэкапов доступен в Dashboard → **Резервные копии** или в volume `wash_backup_data`.
+Или Dashboard → **Резервные копии**.
 
-## GitHub Pages (документация)
+## GitHub Pages
 
-Документация в папке `docs/` публикуется через GitHub Actions.
+1. **Settings → Pages → GitHub Actions**
+2. `docs/_config.yml`: `url` и `baseurl`
+3. Push в `main` → workflow `.github/workflows/pages.yml`
 
-1. В репозитории: **Settings → Pages → Build and deployment → GitHub Actions**
-2. В `docs/_config.yml` замените `url` и `baseurl` на ваши значения:
-   - `url: https://Developer-RU.github.io`
-   - `baseurl: /WASH-PRO-CRM`
-3. Push в ветку `main` — workflow `.github/workflows/pages.yml` задеплоит сайт
+## Reverse proxy (TLS)
 
-## Reverse proxy (опционально)
-
-Пример nginx для Dashboard с TLS:
+Пример для Dashboard:
 
 ```nginx
 server {
     listen 443 ssl;
     server_name crm.example.com;
-
     location / {
         proxy_pass http://127.0.0.1:80;
         proxy_set_header Host $host;
@@ -82,7 +86,7 @@ server {
 }
 ```
 
-Для API и панели Dynamic API — отдельные `server` блоки на порты 3001 и 8080.
+Отдельные блоки для `:3001`, `:8080`, `:8090` при необходимости.
 
 ## Мониторинг
 
@@ -90,5 +94,9 @@ server {
 docker compose ps
 docker logs -f wash-dynamic-api
 docker logs -f wash-message-processor
+docker logs -f wash-pyorch-bridge    # если PyOrch
 curl -s http://localhost:3001/api/health | jq
+curl -s http://localhost/api/telegram-bots/health | jq   # через Dashboard nginx
 ```
+
+Observability PyOrchestrator: `PYORCH_OBSERVABILITY_ENABLED=true` → Grafana `:3000`, Prometheus `:9090`.

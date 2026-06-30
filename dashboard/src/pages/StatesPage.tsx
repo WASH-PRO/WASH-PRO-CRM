@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { apiList } from '../api/client';
 import { PageHeader, Loading } from '../components/UI';
+import { PostStatesChart } from '../components/PostStatesChart';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { LiveModeTimer } from '../components/LiveModeTimer';
 import { usePolling } from '../hooks/usePolling';
@@ -199,6 +200,7 @@ export function StatesPage() {
         title="Текущее состояние постов"
         subtitle={`Все посты всех объектов · ${rows?.length ?? 0} постов`}
       />
+      <PostStatesChart rows={rows ?? []} currency={currency} />
       <DataTable
         columns={columns}
         data={rows || []}

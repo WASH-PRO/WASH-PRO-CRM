@@ -3,28 +3,83 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased;
+    @apply bg-panel-canvas font-sans text-panel-ink antialiased dark:bg-panel-canvas-dark dark:text-panel-ink-dark;
+  }
+
+  ::selection {
+    @apply bg-brand-500/25 text-brand-900;
   }
 }
 
 @layer components {
+  .panel-card {
+    @apply rounded-panel border border-panel-border bg-panel-card shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark dark:shadow-none;
+  }
+
   .card {
-    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900;
+    @apply panel-card p-6;
   }
+
+  .panel-stat {
+    @apply relative overflow-hidden rounded-panel border border-panel-border bg-panel-card p-5 shadow-panel transition-shadow hover:shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark;
+  }
+
+  .panel-stat::before {
+    content: '';
+    @apply absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600 opacity-80;
+  }
+
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-45;
   }
+
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-500 active:scale-[0.98] dark:bg-brand-500 dark:hover:bg-brand-400;
   }
+
   .btn-secondary {
-    @apply btn border border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700;
+    @apply btn border border-panel-border bg-panel-card text-panel-ink shadow-sm hover:bg-panel-canvas dark:border-panel-border-dark dark:bg-panel-card-dark dark:text-panel-ink-dark dark:hover:bg-panel-sidebar-hover;
   }
+
+  .btn-ghost {
+    @apply btn text-panel-muted hover:bg-black/5 hover:text-panel-ink dark:text-panel-muted-dark dark:hover:bg-white/5 dark:hover:text-white;
+  }
+
+  .btn-icon {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-panel-border bg-panel-card text-panel-muted transition-colors hover:border-brand-500/30 hover:text-brand-600 dark:border-panel-border-dark dark:bg-panel-card-dark dark:text-panel-muted-dark dark:hover:text-brand-400;
+  }
+
   .input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900;
+    @apply w-full rounded-lg border border-panel-border bg-panel-card px-3.5 py-2.5 text-sm text-panel-ink shadow-sm placeholder:text-panel-muted focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-panel-border-dark dark:bg-[#0d1218] dark:text-panel-ink-dark dark:placeholder:text-panel-muted-dark dark:focus:border-brand-400 dark:focus:ring-brand-400/20;
   }
+
   .label {
-    @apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300;
+    @apply mb-1.5 block text-xs font-medium text-panel-muted dark:text-panel-muted-dark;
+  }
+
+  .nav-item {
+    @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-panel-muted transition-all duration-200 dark:text-slate-400;
+  }
+
+  .nav-item:hover {
+    @apply bg-panel-canvas text-panel-ink dark:bg-panel-sidebar-hover dark:text-slate-200;
+  }
+
+  .nav-item-active {
+    @apply bg-brand-50 text-brand-700 dark:bg-panel-sidebar-hover dark:text-white dark:shadow-panel-inset;
+  }
+
+  .nav-item-active::before {
+    content: '';
+    @apply absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-brand-600 dark:bg-brand-400;
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-panel border border-panel-border bg-panel-card shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark;
   }
 }

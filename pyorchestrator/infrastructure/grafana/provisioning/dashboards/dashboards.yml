@@ -1,0 +1,18 @@
+apiVersion: 1
+
+providers:
+  - name: default
+    folder: PyOrchestrator
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards
+
+dashboards:
+  - name: default
+    orgId: 1
+    folder: PyOrchestrator
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

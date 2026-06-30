@@ -18,7 +18,7 @@ import { formatMoney, type CurrencyConfig } from '../utils/format';
 import { latestUsageByPostAndCategory } from '../utils/statsAggregation';
 import type { FinanceStat, Post, UsageStat } from '../types';
 
-const CATEGORY_COLORS = ['#14b8a6', '#3b82f6', '#8b5cf6'];
+const CATEGORY_COLORS = ['#0891b2', '#6366f1', '#0f766e'];
 
 const usageChartLabel: Record<string, string> = {
   regular: 'Скидочные карты',
@@ -48,7 +48,7 @@ function ChartCard({ title, children, empty }: { title: string; children: React.
     <div className="card">
       <h2 className="mb-4 font-semibold">{title}</h2>
       {empty ? (
-        <p className="flex h-80 items-center justify-center text-sm text-slate-500">Нет данных для графика</p>
+        <p className="flex h-80 items-center justify-center text-sm text-panel-muted dark:text-panel-muted-dark">Нет данных для графика</p>
       ) : (
         <div className="h-80">{children}</div>
       )}
@@ -79,10 +79,10 @@ export function DashboardCharts({
   };
 
   const postStatusCards = [
-    { label: 'Постов онлайн', value: online, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
-    { label: 'Постов офлайн', value: offline, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800/50' },
-    { label: 'Постов в обслуживании', value: maintenanceCount, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-    { label: 'Постов в ошибке', value: errorCount, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/40' },
+    { label: 'Постов онлайн', value: online, color: 'text-emerald-600', bg: 'panel-stat' },
+    { label: 'Постов офлайн', value: offline, color: 'text-panel-muted', bg: 'panel-stat' },
+    { label: 'Постов в обслуживании', value: maintenanceCount, color: 'text-amber-600', bg: 'panel-stat' },
+    { label: 'Постов в ошибке', value: errorCount, color: 'text-red-600', bg: 'panel-stat' },
   ];
 
   const usageByCategory = useMemo(() => {
@@ -156,10 +156,10 @@ export function DashboardCharts({
     <div className="mb-6 space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {postStatusCards.map((c) => (
-          <div key={c.label} className={`card ${c.bg}`}>
-            <div className="text-sm text-slate-500">{c.label}</div>
-            <div className={`mt-1 text-3xl font-bold ${c.color}`}>{c.value}</div>
-            <div className="mt-1 text-xs text-slate-400">из {posts.length} постов</div>
+          <div key={c.label} className={c.bg}>
+            <div className="text-xs font-medium uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark">{c.label}</div>
+            <div className={`mt-2 text-3xl font-semibold tracking-tight ${c.color}`}>{c.value}</div>
+            <div className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">из {posts.length} постов</div>
           </div>
         ))}
       </div>

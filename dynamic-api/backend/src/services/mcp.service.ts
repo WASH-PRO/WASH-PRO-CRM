@@ -1,6 +1,9 @@
 import { endpointRepository, logRepository } from '../repositories';
+import { getVersionedApiPath } from '../utils';
 import { dynamicEngine } from './endpoint.service';
 import { openApiService } from './openapi.service';
+import { resolveLogUserId } from '../utils/auditLog';
+import { JwtPayload } from '../types';
 
 type JsonRpcRequest = {
   jsonrpc: '2.0';
@@ -23,27 +26,42 @@ export function buildMcpToolName(method: string, path: string): string {
   return `${method.toLowerCase()}_${path.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
 }
 
-export class McpService {
-  async listTools(): Promise<McpTool[]> {
-    const endpoints = await endpointRepository.findAll({ isSystem: false, enabled: true });
-    return endpoints.map((ep) => ({
-      name: toolName(ep.method, ep.path),
-      description: ep.description || `${ep.method} ${ep.path} — ${ep.name}`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          body: { type: 'object', description: 'Request JSON body (POST/PUT/PATCH)' },
-          query: { type: 'object', description: 'Query parameters' },
-          params: { type: 'object', description: 'Path parameters, e.g. { id: "..." }' },
-        },
+function toTool(ep: { method: string; path: string; name: string; description?: string; apiVersion?: string }): McpTool {
+  const publicPath = getVersionedApiPath(ep.path, ep.apiVersion);
+  return {
+    name: toolName(ep.method, ep.path),
+    description: ep.description || `${ep.method} ${publicPath} — ${ep.name}`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        body: { type: 'object', description: 'Request JSON body (POST/PUT/PATCH)' },
+        query: { type: 'object', description: 'Query parameters' },
+        params: { type: 'object', description: 'Path parameters, e.g. { id: "..." }' },
       },
-    }));
+    },
+  };
+}
+
+export class McpService {
+  async listAllTools(): Promise<McpTool[]> {
+    const endpoints = await endpointRepository.findAll({ isSystem: false, enabled: true });
+    return endpoints.map(toTool);
   }
 
-  async callTool(name: string, args: Record<string, unknown> = {}): Promise<unknown> {
+  async listToolsForUser(user: JwtPayload): Promise<McpTool[]> {
+    const endpoints = await endpointRepository.findAll({ isSystem: false, enabled: true });
+    return endpoints
+      .filter((ep) => dynamicEngine.canAccessEndpoint(ep, user))
+      .map(toTool);
+  }
+
+  async callTool(name: string, args: Record<string, unknown> = {}, user: JwtPayload): Promise<unknown> {
     const endpoints = await endpointRepository.findAll({ isSystem: false, enabled: true });
     const endpoint = endpoints.find((ep) => toolName(ep.method, ep.path) === name);
     if (!endpoint) throw new Error(`Unknown tool: ${name}`);
+    if (!dynamicEngine.canAccessEndpoint(endpoint, user)) {
+      throw new Error('Forbidden: insufficient permissions for this tool');
+    }
 
     let path = endpoint.path;
     const params = (args.params || {}) as Record<string, string>;
@@ -56,18 +74,19 @@ export class McpService {
       endpoint.method,
       args.body || {},
       (args.query || {}) as Record<string, string>,
-      undefined,
+      user,
       { ip: '127.0.0.1', userAgent: 'mcp-server', skipAuditLog: true }
     );
 
     await logRepository.create({
       action: 'mcp_call',
       source: 'mcp',
+      userId: resolveLogUserId(user),
       endpointId: endpoint._id,
       message: `MCP tool ${name} - ${result.statusCode}`,
       statusCode: result.statusCode,
       userAgent: 'mcp-server',
-      details: { toolName: name },
+      details: { toolName: name, login: user.login },
     });
 
     if (result.statusCode >= 400) {
@@ -79,7 +98,7 @@ export class McpService {
     return result.body;
   }
 
-  async handleJsonRpc(request: JsonRpcRequest): Promise<Record<string, unknown>> {
+  async handleJsonRpc(request: JsonRpcRequest, user: JwtPayload): Promise<Record<string, unknown>> {
     const id = request.id ?? null;
 
     try {
@@ -99,14 +118,14 @@ export class McpService {
           return {
             jsonrpc: '2.0',
             id,
-            result: { tools: await this.listTools() },
+            result: { tools: await this.listToolsForUser(user) },
           };
 
         case 'tools/call': {
           const params = request.params || {};
           const name = String(params.name || '');
           const args = (params.arguments || {}) as Record<string, unknown>;
-          const content = await this.callTool(name, args);
+          const content = await this.callTool(name, args, user);
           return {
             jsonrpc: '2.0',
             id,

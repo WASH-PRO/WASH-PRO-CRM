@@ -16,16 +16,16 @@ export function LiveModeIndicator() {
 
   return (
     <div
-      className="hidden items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 sm:flex"
+      className="hidden items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/5 px-3 py-1.5 text-xs text-brand-700 dark:border-brand-400/25 dark:bg-brand-400/10 dark:text-brand-300 md:flex"
       title="Данные обновляются автоматически"
     >
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-60" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
       </span>
       <span className="font-medium">Live</span>
-      <span className="text-emerald-600/80 dark:text-emerald-400/80">каждые {formatInterval(live.intervalMs)}</span>
-      <span className="text-emerald-600/60 dark:text-emerald-400/60">· {updated}</span>
+      <span className="opacity-70">{formatInterval(live.intervalMs)}</span>
+      <span className="hidden opacity-50 lg:inline">· {updated}</span>
     </div>
   );
 }

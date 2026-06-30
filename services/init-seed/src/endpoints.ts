@@ -424,6 +424,17 @@ export const DEFAULT_SETTINGS = [
     },
   },
   {
+    key: 'pyorchestrator',
+    value: {
+      email: 'admin@pyorchestrator.local',
+      password: 'admin',
+      panelPort: 8090,
+      serviceLogin: 'service',
+      servicePassword: 'ServiceInternal123!',
+      apiBaseUrl: 'http://dynamic-api:3001',
+    },
+  },
+  {
     key: 'notifications',
     value: {
       telegram: true,

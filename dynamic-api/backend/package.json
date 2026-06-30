@@ -1,6 +1,6 @@
 {
   "name": "dynamic-api-platform-backend",
-  "version": "1.5.12",
+  "version": "1.5.13",
   "description": "Dynamic API Platform Backend",
   "license": "Apache-2.0",
   "main": "dist/index.js",

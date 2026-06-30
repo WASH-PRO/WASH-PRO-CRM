@@ -6,7 +6,7 @@
 
 **Open-source platform for creating, managing, and testing REST APIs without writing backend code.**
 
-[![Release](https://img.shields.io/github/v/release/Dynamic-API-Platform/Dynamic-API-Platform?label=v1.5.12)](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.12)
+[![Release](https://img.shields.io/github/v/release/Dynamic-API-Platform/Dynamic-API-Platform?label=v1.5.13)](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.13)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-manifests-326CE5?logo=kubernetes&logoColor=white)](k8s/)
@@ -186,7 +186,7 @@ See [Development Guide](docs/development.md).
 
 ```bash
 cd backend
-npm test                 # Vitest — 37 tests, no MongoDB required
+npm test                 # Vitest — 38 tests, no MongoDB required
 npm run test:load        # autocannon — backend must be running
 ```
 
@@ -209,7 +209,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.
 
 ## Changelog
 
-**[v1.5.12](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.12)** (latest) — Live header badge (auto-refresh + static data mode).
+**[v1.5.13](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.13)** (latest) — MCP auth, database clear collection, API version UI, login redesign.
+
+**[v1.5.12](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.12)** — Live header badge (auto-refresh + static data mode).
 
 **[v1.5.11](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases/tag/v1.5.11)** — fix in-app Docker update host bind mounts.
 

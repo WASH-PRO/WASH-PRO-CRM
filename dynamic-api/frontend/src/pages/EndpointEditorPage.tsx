@@ -6,6 +6,7 @@ import { Endpoint, EndpointGroup, SchemaField, TestResult } from '../types';
 import { PageHeader, MethodBadge, LoadingSpinner, SearchInput } from '../components/UI';
 import NetworkAccessEditor, { DEFAULT_NETWORK_ACCESS } from '../components/NetworkAccessEditor';
 import { matchesSearch } from '../utils/search';
+import { getDefaultTestPath, getEndpointDisplayPath, getEndpointPublicPaths } from '../utils/apiPath';
 
 const FIELD_TYPES = ['string', 'number', 'boolean', 'object', 'array', 'datetime', 'json', 'reference'];
 
@@ -44,11 +45,12 @@ export default function EndpointEditorPage() {
   const [testApplyNetworkAccess, setTestApplyNetworkAccess] = useState(false);
   const [testClientIp, setTestClientIp] = useState('');
   const [testOrigin, setTestOrigin] = useState('');
+  const [testPath, setTestPath] = useState('');
 
   const refEndpointLabel = (refEndpointId?: string) => {
     if (!refEndpointId) return '—';
     const target = refEndpoints.find((ep) => ep._id === refEndpointId);
-    return target ? `${target.method} ${target.path} — ${target.name}` : refEndpointId;
+    return target ? `${target.method} ${getEndpointDisplayPath(target.path, target.apiVersion)} — ${target.name}` : refEndpointId;
   };
 
   useEffect(() => {
@@ -78,6 +80,16 @@ export default function EndpointEditorPage() {
     }).catch(console.error).finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (!endpoint) return;
+    setTestPath(getDefaultTestPath(endpoint.path, endpoint.apiVersion));
+  }, [endpoint?.path, endpoint?.apiVersion]);
+
+  const testPaths = useMemo(
+    () => (endpoint ? getEndpointPublicPaths(endpoint.path, endpoint.apiVersion) : []),
+    [endpoint?.path, endpoint?.apiVersion]
+  );
+
   const save = async () => {
     if (!endpoint || !id) return;
     setSaving(true);
@@ -93,7 +105,7 @@ export default function EndpointEditorPage() {
         networkAccess: endpoint.networkAccess,
         inheritGroupNetworkAccess: endpoint.inheritGroupNetworkAccess,
         handlers: endpoint.handlers,
-        apiVersion: endpoint.apiVersion,
+        apiVersion: endpoint.apiVersion?.trim() || null,
         dataRetentionDays: endpoint.dataRetentionDays ?? null,
       });
       setEndpoint(updated);
@@ -139,6 +151,7 @@ export default function EndpointEditorPage() {
       let body: unknown;
       try { body = JSON.parse(testBody); } catch { body = testBody; }
       const result = await api.testEndpoint(id, {
+        path: testPath || getDefaultTestPath(endpoint?.path || '', endpoint?.apiVersion),
         body,
         query: endpoint?.method === 'GET' && testPopulate.trim()
           ? { populate: testPopulate.trim() }
@@ -189,7 +202,7 @@ export default function EndpointEditorPage() {
 
       <PageHeader
         title={endpoint.name}
-        subtitle={endpoint.description || endpoint.path}
+        subtitle={endpoint.description || getEndpointDisplayPath(endpoint.path, endpoint.apiVersion)}
         action={
           <div className="flex items-center gap-2">
             <MethodBadge method={endpoint.method} />
@@ -284,17 +297,19 @@ export default function EndpointEditorPage() {
             <label className="block text-sm font-medium mb-1">API Version</label>
             <input
               className="input font-mono max-w-xs"
-              placeholder="v1 (optional — also serves /api/v1/...)"
+              placeholder="v1, v2… (optional)"
               value={endpoint.apiVersion || ''}
               onChange={(e) => setEndpoint({ ...endpoint, apiVersion: e.target.value || undefined })}
             />
             <p className="text-xs text-dark-muted mt-1">
-              Path <code className="text-accent">{endpoint.path}</code> will also match{' '}
-              <code className="text-accent">
-                {endpoint.apiVersion
-                  ? endpoint.path.replace(/^\/api\//, `/api/${endpoint.apiVersion.replace(/^v/, 'v')}/`)
-                  : '/api/v1/...'}
-              </code>
+              Public URL:{' '}
+              <code className="text-accent">{getEndpointDisplayPath(endpoint.path, endpoint.apiVersion)}</code>
+              {endpoint.apiVersion && (
+                <>
+                  {' '}· base path{' '}
+                  <code className="text-accent">{endpoint.path}</code> also matches
+                </>
+              )}
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -441,7 +456,7 @@ export default function EndpointEditorPage() {
                           <option value="">— Select endpoint —</option>
                           {refEndpoints.map((ep) => (
                             <option key={ep._id} value={ep._id}>
-                              {ep.method} {ep.path} — {ep.name}
+                              {ep.method} {getEndpointDisplayPath(ep.path, ep.apiVersion)} — {ep.name}
                             </option>
                           ))}
                         </select>
@@ -480,8 +495,25 @@ export default function EndpointEditorPage() {
           <div className="card space-y-4">
             <div className="flex items-center gap-3">
               <MethodBadge method={endpoint.method} />
-              <span className="font-mono text-sm text-dark-muted">{endpoint.path}</span>
+              {testPaths.length > 1 ? (
+                <select
+                  className="select font-mono text-sm flex-1"
+                  value={testPath}
+                  onChange={(e) => setTestPath(e.target.value)}
+                >
+                  {testPaths.map((path) => (
+                    <option key={path} value={path}>{path}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className="font-mono text-sm text-dark-muted">{testPath || getEndpointDisplayPath(endpoint.path, endpoint.apiVersion)}</span>
+              )}
             </div>
+            {endpoint.apiVersion && testPaths.length > 1 && (
+              <p className="text-xs text-dark-muted">
+                API version <code className="text-accent">{endpoint.apiVersion}</code> — choose which public path to send in the test request.
+              </p>
+            )}
 
             {endpoint.method === 'GET' && (
               <div>

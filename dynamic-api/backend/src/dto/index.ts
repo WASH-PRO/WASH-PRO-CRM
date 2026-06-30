@@ -85,7 +85,7 @@ export interface CreateEndpointDto {
   slug: string;
   path: string;
   method: string;
-  apiVersion?: string;
+  apiVersion?: string | null;
   groupId?: string;
   schema?: SchemaFieldDto[];
   accessType?: string;
@@ -106,7 +106,7 @@ export interface UpdateEndpointDto {
   slug?: string;
   path?: string;
   method?: string;
-  apiVersion?: string;
+  apiVersion?: string | null;
   groupId?: string;
   schema?: SchemaFieldDto[];
   accessType?: string;

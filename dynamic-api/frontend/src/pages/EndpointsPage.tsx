@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit, Lock, Pencil, Folder, ChevronDown, ChevronRight } f
 import { api } from '../services/api';
 import { Endpoint, EndpointGroup } from '../types';
 import { PageHeader, MethodBadge, LoadingSpinner, EmptyState, Modal, SearchInput } from '../components/UI';
+import { getEndpointDisplayPath } from '../utils/apiPath';
 
 const defaultForm = {
   name: '', description: '', slug: '', path: '/api/', method: 'GET',
@@ -40,7 +41,9 @@ function EndpointRow({
       <td className="text-dark-muted text-sm max-w-[220px] truncate" title={ep.description}>
         {ep.description || '—'}
       </td>
-      <td className="font-mono text-xs text-dark-muted">{ep.path}</td>
+      <td className="font-mono text-xs text-dark-muted" title={getEndpointDisplayPath(ep.path, ep.apiVersion)}>
+        {getEndpointDisplayPath(ep.path, ep.apiVersion)}
+      </td>
       <td className="text-center">
         {ep.fields?.some((f) => f.type === 'reference') ? (
           <span className="badge-purple" title="Schema contains reference (foreign key) fields">
@@ -173,8 +176,11 @@ export default function EndpointsPage() {
 
   const filtered = useMemo(() => endpoints.filter((ep) => {
     const q = search.toLowerCase();
+    const displayPath = getEndpointDisplayPath(ep.path, ep.apiVersion);
     return ep.name.toLowerCase().includes(q) ||
       ep.path.toLowerCase().includes(q) ||
+      displayPath.toLowerCase().includes(q) ||
+      (ep.apiVersion || '').toLowerCase().includes(q) ||
       (ep.description || '').toLowerCase().includes(q);
   }), [endpoints, search]);
 

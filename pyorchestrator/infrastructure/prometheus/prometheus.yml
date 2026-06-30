@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: pyorch-backend
+    static_configs:
+      - targets: ["backend:8000"]
+    metrics_path: /metrics
+
+  - job_name: pyorch-runtime
+    static_configs:
+      - targets: ["runtime:9093"]
+    metrics_path: /metrics
+
+  - job_name: pyorch-scheduler
+    static_configs:
+      - targets: ["scheduler:9092"]
+    metrics_path: /metrics

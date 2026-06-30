@@ -1,0 +1,173 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* ─── Theme tokens ─────────────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --po-canvas: #09090b;
+  --po-overlay: rgb(9 9 11 / 0.92);
+  --po-surface: #18181b;
+  --po-surface-muted: rgb(9 9 11 / 0.45);
+  --po-panel: rgb(24 24 27 / 0.82);
+  --po-panel-muted: rgb(24 24 27 / 0.52);
+  --po-panel-solid: #18181b;
+  --po-input: rgb(9 9 11 / 0.55);
+  --po-chip: #27272a;
+  --po-track: #09090b;
+  --po-foreground: #f4f4f5;
+  --po-foreground-secondary: #e4e4e7;
+  --po-muted: #a1a1aa;
+  --po-faint: #71717a;
+  --po-dim: #52525b;
+  --po-line: rgb(255 255 255 / 0.06);
+  --po-line-strong: rgb(255 255 255 / 0.1);
+  --po-ring: rgb(255 255 255 / 0.1);
+  --po-hover: rgb(255 255 255 / 0.05);
+  --po-hover-subtle: rgb(255 255 255 / 0.025);
+  --po-hover-chip: rgb(39 39 42 / 0.35);
+  --po-inset: rgb(255 255 255 / 0.05);
+  --po-on-accent: #09090b;
+  --po-glow-1: rgb(34 211 238 / 0.06);
+  --po-glow-2: rgb(99 102 241 / 0.04);
+  --po-scroll: rgb(255 255 255 / 0.08);
+  --po-scroll-hover: rgb(255 255 255 / 0.14);
+}
+
+[data-theme="light"] {
+  --po-canvas: #f4f4f5;
+  --po-overlay: rgb(244 244 245 / 0.92);
+  --po-surface: #ffffff;
+  --po-surface-muted: rgb(255 255 255 / 0.72);
+  --po-panel: #ffffff;
+  --po-panel-muted: rgb(255 255 255 / 0.88);
+  --po-panel-solid: #ffffff;
+  --po-input: #eef0f2;
+  --po-chip: #e4e4e7;
+  --po-track: #e4e4e7;
+  --po-foreground: #18181b;
+  --po-foreground-secondary: #27272a;
+  --po-muted: #52525b;
+  --po-faint: #71717a;
+  --po-dim: #a1a1aa;
+  --po-line: rgb(0 0 0 / 0.07);
+  --po-line-strong: rgb(0 0 0 / 0.11);
+  --po-ring: rgb(0 0 0 / 0.09);
+  --po-hover: rgb(0 0 0 / 0.045);
+  --po-hover-subtle: rgb(0 0 0 / 0.025);
+  --po-hover-chip: rgb(0 0 0 / 0.035);
+  --po-inset: rgb(0 0 0 / 0.04);
+  --po-on-accent: #09090b;
+  --po-glow-1: rgb(6 182 212 / 0.1);
+  --po-glow-2: rgb(99 102 241 / 0.07);
+  --po-scroll: rgb(0 0 0 / 0.12);
+  --po-scroll-hover: rgb(0 0 0 / 0.18);
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-brand-50: #ecfeff;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-canvas: var(--po-canvas);
+  --color-overlay: var(--po-overlay);
+  --color-surface: var(--po-surface);
+  --color-surface-muted: var(--po-surface-muted);
+  --color-panel: var(--po-panel);
+  --color-panel-muted: var(--po-panel-muted);
+  --color-panel-solid: var(--po-panel-solid);
+  --color-input: var(--po-input);
+  --color-chip: var(--po-chip);
+  --color-track: var(--po-track);
+  --color-foreground: var(--po-foreground);
+  --color-foreground-secondary: var(--po-foreground-secondary);
+  --color-muted: var(--po-muted);
+  --color-faint: var(--po-faint);
+  --color-dim: var(--po-dim);
+  --color-line: var(--po-line);
+  --color-line-strong: var(--po-line-strong);
+  --color-ring-line: var(--po-ring);
+  --color-hover: var(--po-hover);
+  --color-hover-subtle: var(--po-hover-subtle);
+  --color-hover-chip: var(--po-hover-chip);
+  --color-inset: var(--po-inset);
+  --color-on-accent: var(--po-on-accent);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  @apply bg-canvas text-foreground antialiased font-sans;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 10% -5%, var(--po-glow-1), transparent 55%),
+    radial-gradient(700px 400px at 95% 0%, var(--po-glow-2), transparent 50%);
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--po-scroll);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--po-scroll-hover);
+  background-clip: padding-box;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fade-up 0.45s ease-out both;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.status-dot-live {
+  animation: status-pulse 2s ease-in-out infinite;
+}

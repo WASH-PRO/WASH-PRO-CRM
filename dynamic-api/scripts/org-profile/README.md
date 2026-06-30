@@ -13,7 +13,7 @@ git clone https://github.com/Dynamic-API-Platform/.github.git /tmp/DAP-dotgithub
 cp scripts/org-profile/profile/README.md /tmp/DAP-dotgithub/profile/README.md
 cd /tmp/DAP-dotgithub
 git add profile/README.md
-git commit -m "docs: sync org profile for v1.5.12"
+git commit -m "docs: sync org profile for v1.5.13"
 git push
 ```
 
@@ -21,6 +21,6 @@ git push
 
 ```bash
 gh api -X PATCH orgs/Dynamic-API-Platform \
-  -f description='Open-source dynamic REST API platform — admin UI, Live header badge, MongoDB, in-app software updates, cron/webhooks/MCP, Docker & Kubernetes (v1.5.12)' \
+  -f description='Open-source dynamic REST API platform — admin UI, MCP auth, MongoDB, in-app software updates, cron/webhooks/MCP, Docker & Kubernetes (v1.5.13)' \
   -f blog='https://dynamic-api-platform.github.io/Dynamic-API-Platform/'
 ```

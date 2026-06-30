@@ -51,6 +51,14 @@ export default function McpPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const sampleTool = tools[0]?.name || 'get_api_products';
+
+  const authHeadersExample = `Authorization: Bearer <access_token>
+# or
+X-API-Key: dap_<your_key>
+# or
+Authorization: ApiKey dap_<your_key>`;
+
   const listToolsExample = JSON.stringify({
     jsonrpc: '2.0',
     id: 1,
@@ -62,14 +70,30 @@ export default function McpPage() {
     id: 2,
     method: 'tools/call',
     params: {
-      name: tools[0]?.name || 'get_api_products',
+      name: sampleTool,
       arguments: { query: {}, body: {}, params: {} },
     },
   }, null, 2);
 
-  const curlExample = `curl -X POST ${mcpUrl} \\
+  const curlListExample = `curl -X POST ${mcpUrl} \\
   -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer <access_token>" \\
   -d '${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' })}'`;
+
+  const curlApiKeyExample = `curl -X POST ${mcpUrl} \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: dap_<your_key>" \\
+  -d '${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' })}'`;
+
+  const curlCallExample = `curl -X POST ${mcpUrl} \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: dap_<your_key>" \\
+  -d '${JSON.stringify({
+    jsonrpc: '2.0',
+    id: 2,
+    method: 'tools/call',
+    params: { name: sampleTool, arguments: { query: {}, body: {}, params: {} } },
+  })}'`;
 
   if (loading) return <LoadingSpinner />;
 
@@ -85,11 +109,13 @@ export default function McpPage() {
         <div>
           <p className="font-medium text-slate-800 dark:text-slate-100">JSON-RPC 2.0 endpoint</p>
           <p className="mt-1 text-slate-600 dark:text-slate-400">
-            Each enabled dynamic endpoint is registered as an MCP tool. Supports{' '}
-            <code className="text-accent">initialize</code>,{' '}
+            <code className="text-accent">POST /api/mcp</code> requires authentication on every request.
+            Use the same credentials as for direct <code className="text-accent">/api/…</code> calls.
+            Methods: <code className="text-accent">initialize</code>,{' '}
             <code className="text-accent">tools/list</code>,{' '}
-            <code className="text-accent">tools/call</code>, and OpenAPI resource at{' '}
-            <code className="text-accent">openapi://spec</code>.
+            <code className="text-accent">tools/call</code>,{' '}
+            <code className="text-accent">resources/list</code>,{' '}
+            <code className="text-accent">resources/read</code> (<code className="text-accent">openapi://spec</code>).
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <code className="rounded bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800">{mcpUrl}</code>
@@ -100,18 +126,51 @@ export default function McpPage() {
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <h3 className="mb-2 text-sm font-semibold">List tools</h3>
+          <h3 className="mb-1 text-sm font-semibold">Authentication headers</h3>
+          <p className="mb-3 text-xs text-slate-500">
+            Required for all JSON-RPC calls. API keys from <strong>API Keys</strong> work here and on direct{' '}
+            <code className="text-accent">/api/…</code> routes.
+          </p>
+          <CodeBlock code={authHeadersExample} />
+        </div>
+        <div className="card p-4">
+          <h3 className="mb-1 text-sm font-semibold">Access rules</h3>
+          <ul className="list-disc space-y-1.5 pl-4 text-xs text-slate-600 dark:text-slate-400">
+            <li><code className="text-accent">tools/list</code> returns only tools the token can access (public, authenticated, or group).</li>
+            <li><code className="text-accent">tools/call</code> runs the endpoint with the same <code className="text-accent">accessType</code> checks.</li>
+            <li>This admin table lists <strong>all</strong> registered tools; agents see a filtered list.</li>
+            <li>Without a valid token the server responds with <strong>401 Unauthorized</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+        <div className="card p-4">
+          <h3 className="mb-1 text-sm font-semibold">List tools — request body</h3>
+          <p className="mb-2 text-xs text-slate-500">Add authentication headers from above.</p>
           <CodeBlock code={listToolsExample} />
         </div>
         <div className="card p-4">
-          <h3 className="mb-2 text-sm font-semibold">Call a tool</h3>
+          <h3 className="mb-1 text-sm font-semibold">Call a tool — request body</h3>
+          <p className="mb-2 text-xs text-slate-500">Add authentication headers from above.</p>
           <CodeBlock code={callToolExample} />
         </div>
       </div>
 
-      <div className="card mb-6 p-4">
-        <h3 className="mb-2 text-sm font-semibold">curl</h3>
-        <CodeBlock code={curlExample} />
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+        <div className="card p-4">
+          <h3 className="mb-2 text-sm font-semibold">curl — list tools (Bearer)</h3>
+          <CodeBlock code={curlListExample} />
+        </div>
+        <div className="card p-4">
+          <h3 className="mb-2 text-sm font-semibold">curl — call tool (API key)</h3>
+          <CodeBlock code={curlCallExample} />
+        </div>
+      </div>
+
+      <div className="card mb-4 overflow-hidden p-4">
+        <h3 className="mb-2 text-sm font-semibold">curl — list tools (API key)</h3>
+        <CodeBlock code={curlApiKeyExample} />
       </div>
 
       <div className="card overflow-hidden">
@@ -119,7 +178,9 @@ export default function McpPage() {
           <h3 className="text-sm font-semibold">
             Registered tools ({tools.length})
           </h3>
-          <p className="text-xs text-slate-500">From enabled non-system endpoints</p>
+          <p className="text-xs text-slate-500">
+            All enabled non-system endpoints (admin view). Descriptions show the public URL including API version when set.
+          </p>
         </div>
         {tools.length === 0 ? (
           <div className="p-8 text-center text-sm text-slate-500">

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Документация
+    url: https://developer-ru.github.io/pyorchestrator/
+    about: GitHub Pages — полная документация
+  - name: Вопросы и обсуждения
+    url: https://github.com/Developer-RU/pyorchestrator/discussions
+    about: Общие вопросы (если Discussions включены)

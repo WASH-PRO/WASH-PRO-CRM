@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "pyorchestrator": {
+      "command": "python3",
+      "args": ["-m", "pyorchestrator_mcp"],
+      "cwd": "${workspaceFolder}/mcp",
+      "env": {
+        "PYORCH_API_URL": "http://localhost:8000",
+        "PYORCH_EMAIL": "admin@pyorchestrator.local",
+        "PYORCH_PASSWORD": "admin"
+      }
+    }
+  }
+}

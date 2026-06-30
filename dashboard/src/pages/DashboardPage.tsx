@@ -84,13 +84,6 @@ export function DashboardPage() {
     return { online, offline, maintenance, errors };
   }, [data]);
 
-  const activeErrors = useMemo(() => {
-    if (!data) return 0;
-    const postErrors = postCounts.errors;
-    const notifErrors = data.notifications.filter((n) => !n.read && n.severity === 'error').length;
-    return postErrors + notifErrors;
-  }, [data, postCounts.errors]);
-
   const notificationFilters: DataTableFilter<Notification>[] = useMemo(
     () => [
       {
@@ -144,7 +137,7 @@ export function DashboardPage() {
         sortable: true,
         sortValue: (n) => n.createdAt || '',
         render: (n) => (
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-panel-muted dark:text-panel-muted-dark">
             {n.createdAt ? new Date(n.createdAt).toLocaleString('ru') : '—'}
           </span>
         ),
@@ -183,12 +176,11 @@ export function DashboardPage() {
     <div>
       <PageHeader title="Обзор" subtitle={`До инкассации · ${data.posts.length} постов · ${data.washes.length} автомоек`} />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Наличная выручка" value={formatMoney(finance.cash, currency)} hint="До инкассации" />
         <StatCard label="Безналичная выручка" value={formatMoney(finance.cashless, currency)} hint="До инкассации" />
         <StatCard label="Общая выручка" value={formatMoney(finance.revenue, currency)} hint="До инкассации" />
         <StatCard label="Сумма скидок" value={formatMoney(finance.discounts, currency)} hint="До инкассации" />
-        <StatCard label="Активные ошибки" value={activeErrors} hint="Посты + непрочитанные уведомления" />
       </div>
 
       <DashboardCharts

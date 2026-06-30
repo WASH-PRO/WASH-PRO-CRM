@@ -334,7 +334,25 @@ Replace/update document fields. Body: JSON (without `_id`).
 
 Delete document.
 
+### DELETE `/api/database/collections/:name`
+
+Clear all documents in a collection. Allowed only for `endpointdatas` and `logs`.
+
 See [Database Explorer](database.md) for collection list and security notes.
+
+---
+
+## MCP Server (JSON-RPC)
+
+### POST `/api/mcp`
+
+**Requires authentication:** JWT `Authorization: Bearer <token>` or API key (`X-API-Key` / `Authorization: ApiKey dap_…`).
+
+JSON-RPC 2.0 body. Methods: `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`.
+
+`tools/list` returns only tools the caller can access. `tools/call` runs the endpoint with the same `accessType` rules as direct API calls.
+
+See [Automation — MCP](automation.md#mcp-server-ai-agents).
 
 ---
 

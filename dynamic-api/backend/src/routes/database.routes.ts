@@ -51,4 +51,9 @@ router.delete('/collections/:name/:id', asyncHandler(async (req: AuthenticatedRe
   res.json({ success: true, message: 'Document deleted' });
 }));
 
+router.delete('/collections/:name', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const result = await databaseService.clearCollection(paramCollection(req), req.user?.userId);
+  res.json({ success: true, data: result, message: 'Collection cleared' });
+}));
+
 export default router;

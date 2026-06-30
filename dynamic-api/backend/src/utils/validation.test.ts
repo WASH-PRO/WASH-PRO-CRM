@@ -4,6 +4,7 @@ import {
   applyDefaults,
   matchDynamicPath,
   getEndpointMatchPaths,
+  getVersionedApiPath,
   normalizePath,
   sanitizeUser,
   getClientIp,
@@ -78,6 +79,13 @@ describe('path utilities', () => {
     const paths = getEndpointMatchPaths('/api/users', 'v1');
     expect(paths).toContain('/api/users');
     expect(paths).toContain('/api/v1/users');
+  });
+
+  it('builds versioned api path', () => {
+    expect(getVersionedApiPath('/api/users', 'v1')).toBe('/api/v1/users');
+    expect(getVersionedApiPath('/api/users', '2')).toBe('/api/v2/users');
+    expect(getVersionedApiPath('/api/v1/users', 'v1')).toBe('/api/v1/users');
+    expect(getVersionedApiPath('/api/users')).toBe('/api/users');
   });
 });
 

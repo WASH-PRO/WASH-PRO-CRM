@@ -4,13 +4,14 @@ title: Конфигурация
 description: Переменные окружения .env
 ---
 
-Все настройки задаются в файле `.env` (шаблон — `.env.example`).
+Все настройки задаются в `.env` (шаблон — `.env.example`).
 
 ## Dashboard
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `DASHBOARD_PORT` | `80` | Порт веб-интерфейса CRM |
+| `DASHBOARD_PORT` | `80` | Порт CRM Dashboard |
+| `APP_VERSION` | `1.0.0` | Версия приложения |
 
 ## Dynamic API
 
@@ -18,73 +19,81 @@ description: Переменные окружения .env
 |------------|--------------|----------|
 | `DYNAMIC_API_PORT` | `3001` | Порт REST API |
 | `DYNAMIC_API_PANEL_PORT` | `8080` | Порт панели Dynamic API |
-| `CORS_ORIGIN` | localhost URLs | Разрешённые origin через запятую |
-| `JWT_SECRET` | — | Секрет access-токена (мин. 32 символа) |
-| `JWT_REFRESH_SECRET` | — | Секрет refresh-токена |
-| `CSRF_SECRET` | — | CSRF-защита |
+| `CORS_ORIGIN` | localhost URLs | Origin через запятую |
+| `JWT_SECRET` | — | Access token (≥32 символов) |
+| `JWT_REFRESH_SECRET` | — | Refresh token |
+| `CSRF_SECRET` | — | CSRF |
 | `ADMIN_LOGIN` | `admin` | Логин администратора |
-| `ADMIN_EMAIL` | `admin@wash-pro-crm.local` | Email администратора |
-| `ADMIN_PASSWORD` | `Admin123!` | Пароль администратора |
+| `ADMIN_EMAIL` | `admin@wash-pro-crm.local` | Email |
+| `ADMIN_PASSWORD` | `Admin123!` | Пароль |
+| `UPDATE_EXECUTOR_ENABLED` | `false` | In-app updater (**выключен в WASH**) |
+| `# DYNAMIC_API_VERSION` | из package.json | Принудительная версия (обычно не нужна) |
 
-## Внутренние сервисы
+Актуальная vendored-версия: **v1.5.13** (`dynamic-api/backend/package.json`).
+
+## Service account
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `SERVICE_LOGIN` | `service` | Service account для message-processor |
-| `SERVICE_PASSWORD` | — | Пароль service account |
+| `SERVICE_LOGIN` | `service` | Аккаунт для message-processor, backup, pyorch-bridge |
+| `SERVICE_PASSWORD` | — | Пароль |
 
 ## RabbitMQ
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `RABBITMQ_USER` | `wash` | Пользователь RabbitMQ |
+| `RABBITMQ_USER` | `wash` | Пользователь |
 | `RABBITMQ_PASSWORD` | — | Пароль |
-| `RABBITMQ_EXTERNAL_PORT` | пусто | Внешний порт для контроллеров |
+| `RABBITMQ_EXTERNAL_PORT` | пусто | Внешний `:5672` для контроллеров |
 
 ## Redis (опционально)
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `REDIS_ENABLED` | `false` | Включить Redis |
-| `REDIS_PASSWORD` | пусто | Пароль Redis |
+| `REDIS_ENABLED` | `false` | + `docker-compose.redis.yml` |
+| `REDIS_PASSWORD` | пусто | Пароль |
 
-## Telegram
+## Telegram (PyOrchestrator)
 
-| Переменная | По умолчанию | Описание |
-|------------|--------------|----------|
-| `TELEGRAM_BOT_TOKEN` | пусто | Токен бота от @BotFather |
-| `TELEGRAM_ADMIN_IDS` | пусто | ID администраторов через запятую |
+Telegram-боты управляются через **Dashboard → Telegram** и `pyorch-bridge` → PyOrchestrator. См. [Встроенные сервисы](embedded-services.md).
 
-## Резервное копирование
+## Backup
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `BACKUP_RETENTION_COUNT` | `7` | Сколько бэкапов хранить |
-| `BACKUP_CRON` | `0 2 * * *` | Расписание (cron) |
+| `BACKUP_RETENTION_COUNT` | `7` | Хранить N копий |
+| `BACKUP_CRON` | `0 2 * * *` | Расписание mongodump |
 
-## Версия
+## PyOrchestrator (опционально)
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `APP_VERSION` | `1.0.0` | Версия приложения |
+| `PYORCHESTRATOR_ENABLED` | `true` в `.env.example` | Стек включается только при `true` в вашем `.env` |
+| `PYORCHESTRATOR_VERSION` | `0.1.0` | Vendored-версия |
+| `PYORCH_BACKEND_PORT` | `8000` | FastAPI |
+| `PYORCH_PANEL_PORT` | `8090` | Control Plane UI |
+| `PYORCH_MCP_PORT` | `8010` | MCP server |
+| `PYORCH_CORS_ORIGINS` | localhost | CORS |
+| `PYORCH_JWT_SECRET` | — | JWT PyOrchestrator |
+| `PYORCH_SECRET_MASTER_KEY` | — | Шифрование secrets |
+| `PYORCH_INTERNAL_API_KEY` | — | runtime ↔ backend |
+| `PYORCH_POSTGRES_*` | см. example | PostgreSQL |
+| `PYORCH_MINIO_*` | см. example | MinIO workspace |
+| `PYORCH_DASHBOARD_EMAIL` | `admin@pyorchestrator.local` | Логин bridge → PyOrch |
+| `PYORCH_DASHBOARD_PASSWORD` | `admin` | Пароль bridge |
+| `PYORCH_MCP_EMAIL` / `PYORCH_MCP_PASSWORD` | admin@… / admin | MCP auth |
+| `PYORCH_OBSERVABILITY_ENABLED` | `false` | Prometheus/Grafana/Loki |
 
-## Пример production .env
+## Пример production `.env`
 
 ```env
 DASHBOARD_PORT=80
-DYNAMIC_API_PORT=3001
-CORS_ORIGIN=https://crm.example.com,https://api.example.com
-
 JWT_SECRET=your-very-long-random-secret-at-least-32-chars
 JWT_REFRESH_SECRET=another-long-random-secret
-CSRF_SECRET=csrf-random-secret
-
-ADMIN_LOGIN=admin
 ADMIN_PASSWORD=StrongP@ssw0rd!
-
-RABBITMQ_USER=wash
+SERVICE_PASSWORD=StrongServiceP@ss!
 RABBITMQ_PASSWORD=secure-rabbit-password
-
-TELEGRAM_BOT_TOKEN=123456:ABC...
-TELEGRAM_ADMIN_IDS=123456789
+PYORCHESTRATOR_ENABLED=true
+PYORCH_JWT_SECRET=change-me-in-production
+PYORCH_SECRET_MASTER_KEY=change-me-in-production-32chars!!
 ```

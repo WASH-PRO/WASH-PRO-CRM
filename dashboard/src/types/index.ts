@@ -9,11 +9,33 @@ export type Permission =
 
 export interface User {
   id: string;
+  _id?: string;
   login: string;
   email: string;
   name: string;
   groupIds: string[];
   permissions?: Permission[];
+}
+
+export interface DapUser {
+  id?: string;
+  _id?: string;
+  login: string;
+  email: string;
+  name: string;
+  status: 'active' | 'inactive' | 'suspended';
+  groupIds: string[];
+  createdAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface DapGroup {
+  id?: string;
+  _id?: string;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+  isSystem?: boolean;
 }
 
 export interface Wash {

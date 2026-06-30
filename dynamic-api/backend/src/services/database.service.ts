@@ -1,14 +1,14 @@
 import mongoose, { Types } from 'mongoose';
 import { logRepository } from '../repositories';
 
-const COLLECTION_META: Record<string, { label: string; sensitiveFields?: string[] }> = {
-  users: { label: 'Users', sensitiveFields: ['password', 'refreshToken'] },
-  groups: { label: 'Groups' },
-  endpoints: { label: 'Endpoints' },
-  endpointgroups: { label: 'Endpoint Groups' },
-  endpointdatas: { label: 'Endpoint Data' },
-  logs: { label: 'Audit Logs' },
-  systemsettings: { label: 'System Settings' },
+const COLLECTION_META: Record<string, { label: string; sensitiveFields?: string[]; clearable?: boolean }> = {
+  users: { label: 'Users', sensitiveFields: ['password', 'refreshToken'], clearable: false },
+  groups: { label: 'Groups', clearable: false },
+  endpoints: { label: 'Endpoints', clearable: false },
+  endpointgroups: { label: 'Endpoint Groups', clearable: false },
+  endpointdatas: { label: 'Endpoint Data', clearable: true },
+  logs: { label: 'Audit Logs', clearable: true },
+  systemsettings: { label: 'System Settings', clearable: false },
 };
 
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
@@ -93,6 +93,7 @@ export class DatabaseService {
         name,
         label: meta.label,
         count: await db.collection(name).countDocuments(),
+        clearable: meta.clearable !== false,
       }))
     );
 
@@ -180,6 +181,23 @@ export class DatabaseService {
     const result = await col.deleteOne({ _id: new Types.ObjectId(id) });
     if (result.deletedCount === 0) throw new Error('Document not found');
     await this.logEdit(userId, key, id, 'delete');
+  }
+
+  async clearCollection(collection: string, userId?: string) {
+    const { key, col } = this.collection(collection);
+    if (COLLECTION_META[key]?.clearable === false) {
+      throw new Error('This collection cannot be cleared');
+    }
+
+    const result = await col.deleteMany({});
+    await logRepository.create({
+      action: 'api_call',
+      userId: userId as unknown as Types.ObjectId,
+      message: `Raw DB clear collection: ${key} (${result.deletedCount} documents)`,
+      details: { collection: key, operation: 'clear', deletedCount: result.deletedCount },
+    });
+
+    return { deletedCount: result.deletedCount };
   }
 
   private async logEdit(userId: string | undefined, collection: string, id: string, operation: string) {

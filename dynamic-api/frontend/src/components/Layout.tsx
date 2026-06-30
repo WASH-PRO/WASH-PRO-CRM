@@ -63,7 +63,6 @@ const navSections: { label: string; items: NavItem[] }[] = [
 
 const DOCS_URL = 'https://dynamic-api-platform.github.io/Dynamic-API-Platform/';
 const GITHUB_URL = 'https://github.com/Dynamic-API-Platform';
-const DEVELOPER_URL = 'https://github.com/Developer-RU';
 
 function externalLinkClass() {
   return 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200';
@@ -169,15 +168,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             >
               <Github className="h-4 w-4 shrink-0" />
               GitHub
-            </a>
-            <a
-              href={DEVELOPER_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={externalLinkClass()}
-            >
-              <Github className="h-4 w-4 shrink-0" />
-              Developer
             </a>
           </div>
         </div>

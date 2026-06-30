@@ -1,0 +1,39 @@
+# PyOrchestrator — Production overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  backend:
+    build:
+      target: production
+    environment:
+      APP_ENV: production
+    volumes: []
+
+  frontend:
+    build:
+      target: production
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    volumes: []
+
+  runtime:
+    deploy:
+      replicas: ${RUNTIME_REPLICAS:-2}
+
+  scheduler:
+    deploy:
+      replicas: 1
+
+  postgres:
+    ports: []
+
+  redis:
+    ports: []
+
+  prometheus:
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+
+  grafana:
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"

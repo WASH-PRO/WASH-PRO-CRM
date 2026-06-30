@@ -47,7 +47,7 @@ services:
       ADMIN_EMAIL: admin@dynamic-api.local
       ADMIN_PASSWORD: Admin123!
       ADMIN_LOGIN: admin
-      APP_VERSION: ${APP_VERSION:-1.5.12}
+      APP_VERSION: ${APP_VERSION:-1.5.13}
       UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
       UPDATE_DEPLOY_MODE: docker
       UPDATE_COMPOSE_FILE: /deploy/docker-compose.yml

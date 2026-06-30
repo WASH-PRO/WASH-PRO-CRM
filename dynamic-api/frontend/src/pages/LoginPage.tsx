@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, BookOpen, Github, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getThemeOption } from '../themes';
+import LoginVisualPanel from '../components/LoginVisualPanel';
 
 export default function LoginPage() {
   const [login, setLogin] = useState('');
@@ -30,100 +31,104 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-brand-50 p-4 dark:from-slate-950 dark:to-slate-900">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-600/20">
-            <Zap className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold">Dynamic API Platform</h1>
-          <p className="mt-2 text-sm text-slate-500">Sign in to manage your dynamic APIs</p>
+    <div className="flex min-h-screen w-full flex-col lg:flex-row">
+      <section className="login-panel-visual relative hidden min-h-screen w-full overflow-hidden lg:block lg:w-[52%]" aria-hidden>
+        <LoginVisualPanel />
+      </section>
+
+      <section className="login-panel-form flex min-h-screen w-full flex-col justify-center px-6 py-12 sm:px-10 lg:w-[48%] lg:px-12 xl:px-16">
+        <div className="login-mobile-brand mb-8 lg:hidden">
+          <p className="text-lg font-semibold text-slate-900">Welcome back</p>
+          <p className="mt-1 text-sm text-slate-500">Sign in to manage your dynamic APIs</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card space-y-4">
-          {error && <div className="alert-error">{error}</div>}
-
-          <div>
-            <label className="label">Login</label>
-            <input
-              type="text"
-              className="input"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
-              placeholder="admin"
-              required
-              autoFocus
-            />
+        <div className="mx-auto w-full max-w-[26rem]">
+          <div className="mb-8 hidden lg:block">
+            <h1 className="text-[1.75rem] font-semibold tracking-tight text-slate-900">
+              Welcome back
+            </h1>
+            <p className="mt-2 text-[0.95rem] leading-relaxed text-slate-500">
+              Sign in to manage your dynamic APIs
+            </p>
           </div>
 
-          <div>
-            <label className="label">Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="input pr-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+          <form onSubmit={handleSubmit} className="login-form space-y-5">
+            {error && <div className="alert-error">{error}</div>}
+
+            <div className="space-y-4">
+              <div>
+                <label className="login-field-label" htmlFor="login">Login</label>
+                <input
+                  id="login"
+                  type="text"
+                  className="login-field"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  placeholder="admin"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="login-field-label" htmlFor="password">Password</label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="login-field pr-11"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+            <button type="submit" className="login-submit" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
 
-          <p className="text-center text-xs text-slate-500">
-            Default: admin / Admin123!
-          </p>
-        </form>
+            <p className="text-center text-xs text-slate-400">
+              Default credentials: <span className="font-medium text-slate-500">admin</span> / <span className="font-medium text-slate-500">Admin123!</span>
+            </p>
+          </form>
 
-        <div className="mt-4 flex flex-col items-center gap-2 text-center text-sm">
-          <button
-            type="button"
-            onClick={cycleTheme}
-            className="text-slate-500 hover:text-brand-600 dark:hover:text-brand-300"
-          >
-            Theme: {getThemeOption(theme)?.label ?? theme} — click to change
-          </button>
-          <div className="flex items-center gap-3 text-slate-500">
+          <div className="login-footer">
+            <button type="button" onClick={cycleTheme} className="login-footer-link">
+              <Palette className="h-4 w-4" />
+              {getThemeOption(theme)?.label ?? theme}
+            </button>
             <a
               href="https://dynamic-api-platform.github.io/Dynamic-API-Platform/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-brand-600 dark:hover:text-brand-300"
+              className="login-footer-link"
             >
+              <BookOpen className="h-4 w-4" />
               Documentation
             </a>
-            <span aria-hidden>·</span>
             <a
               href="https://github.com/Dynamic-API-Platform"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-brand-600 dark:hover:text-brand-300"
+              className="login-footer-link"
             >
+              <Github className="h-4 w-4" />
               GitHub
-            </a>
-            <span aria-hidden>·</span>
-            <a
-              href="https://github.com/Developer-RU"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-brand-600 dark:hover:text-brand-300"
-            >
-              Developer
             </a>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

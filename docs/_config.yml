@@ -1,6 +1,6 @@
 title: WASH PRO CRM
 description: Локальная CRM/SCADA для автомоек самообслуживания на базе Dynamic API Platform
-url: https://developer-ru.github.io
+url: https://wash-pro.github.io
 baseurl: /WASH-PRO-CRM
 
 markdown: GFM
@@ -29,6 +29,8 @@ nav:
     url: /architecture/
   - title: Dashboard
     url: /dashboard/
+  - title: Встроенные сервисы
+    url: /embedded-services/
   - title: RabbitMQ
     url: /rabbitmq/
   - title: Схема данных

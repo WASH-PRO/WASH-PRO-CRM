@@ -213,7 +213,7 @@ export function DataTable<T>({
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-sm flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-panel-muted" />
             <input
               className="input pl-9"
               placeholder={searchPlaceholder}
@@ -249,8 +249,8 @@ export function DataTable<T>({
       </div>
 
       {selectable && selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm dark:border-brand-900 dark:bg-brand-950/40">
-          <span className="font-medium text-brand-800 dark:text-brand-200">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-sm dark:border-brand-400/20 dark:bg-brand-400/10">
+          <span className="font-medium text-brand-800 dark:text-brand-300">
             Выбрано: {selectedIds.size}
           </span>
           {bulkActions.map((action) => {
@@ -274,9 +274,9 @@ export function DataTable<T>({
         </div>
       )}
 
-      <div className="card overflow-x-auto !p-0">
+      <div className="table-shell overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+          <thead className="border-b border-panel-border bg-panel-canvas/80 dark:border-panel-border-dark dark:bg-[#0d1218]">
             <tr>
               {selectable && (
                 <th className="w-10 px-4 py-3">
@@ -323,8 +323,8 @@ export function DataTable<T>({
                   <tr
                     key={id}
                     className={clsx(
-                      'border-b border-slate-100 dark:border-slate-800',
-                      selectedIds.has(id) && 'bg-brand-50/50 dark:bg-brand-950/20'
+                      'border-b border-panel-border transition-colors hover:bg-panel-canvas/50 dark:border-panel-border-dark dark:hover:bg-white/[0.02]',
+                      selectedIds.has(id) && 'bg-brand-500/5 dark:bg-brand-400/10'
                     )}
                   >
                     {selectable && (
@@ -352,7 +352,7 @@ export function DataTable<T>({
         </table>
       </div>
 
-      <div className="flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 text-sm text-panel-muted dark:text-panel-muted-dark sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <span>
             {sorted.length} записей

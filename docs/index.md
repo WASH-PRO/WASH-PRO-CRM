@@ -8,40 +8,50 @@ layout: default
   <p class="hero-lead">
     Локальная CRM/SCADA-система для автомоек самообслуживания на базе
     <a href="https://github.com/Dynamic-API-Platform/Dynamic-API-Platform">Dynamic API Platform</a>
+    и опционально <a href="https://github.com/Developer-RU/pyorchestrator">PyOrchestrator</a>
   </p>
 </div>
 
-**Локальная система управления автомойками самообслуживания** — мониторинг постов в реальном времени, карты клиентов, аналитика, финансы, справочники валют и типов скидок, архивирование и Telegram-уведомления.
+**Локальная система управления автомойками** — SCADA в реальном времени, карты клиентов, аналитика, RBAC, встроенные платформы Dynamic API и PyOrchestrator.
 
 <p class="quick-links">
   <a href="{{ '/getting-started/' | relative_url }}">Быстрый старт</a> ·
   <a href="{{ '/architecture/' | relative_url }}">Архитектура</a> ·
-  <a href="{{ '/dashboard/' | relative_url }}">Dashboard</a> ·
-  <a href="{{ '/database-schema/' | relative_url }}">Схема данных</a>
+  <a href="{{ '/embedded-services/' | relative_url }}">Встроенные сервисы</a> ·
+  <a href="{{ '/dashboard/' | relative_url }}">Dashboard</a>
 </p>
 
-## Возможности
+## Возможности WASH PRO CRM
 
 | Модуль | Описание |
 |--------|----------|
-| **Обзор** | KPI, графики выручки и использования, уведомления |
-| **Объекты и посты** | Автомойки, посты с серийным номером контроллера |
-| **SCADA** | Текущее состояние всех постов, live-таймер режима |
-| **Карты** | Скидочные, сервисные, VIP; привязка к посту |
+| **Обзор** | KPI, графики Recharts, live-уведомления |
+| **SCADA** | Состояние постов, live-таймер, **интерактивный график** |
+| **Объекты** | Автомойки, посты (серийный номер контроллера) |
+| **Карты** | Скидочные / сервисные / VIP, типы скидок 1–5 |
 | **Аналитика** | Использование и финансы до/после инкассации |
-| **Справочники** | Валюты, типы скидок (1–5) |
-| **Архив и бэкапы** | Политики хранения, `mongodump` по расписанию |
-| **Telegram** | Бот для администраторов |
-| **Live-данные** | Автообновление без перезагрузки страницы |
+| **Система** | Уведомления, **пользователи**, **группы RBAC**, бэкапы, **Telegram-боты**, справочники, логи |
+| **Resources** | Статус и ссылки на панели Dynamic API и PyOrchestrator |
+| **Live-данные** | Автообновление 3–15 с без перезагрузки |
+
+## Встроенные платформы
+
+| Платформа | Версия | Панель | В WASH |
+|-----------|--------|--------|--------|
+| [Dynamic API Platform](https://dynamic-api-platform.github.io/Dynamic-API-Platform/) | **v1.5.13** | `:8080` | Backend CRM, endpoints, RBAC, automation |
+| [PyOrchestrator](https://developer-ru.github.io/pyorchestrator/) | **v0.1.0** *(опц.)* | `:8090` | Telegram-боты, Python scripts |
+
+Подробно: [Встроенные сервисы](embedded-services.md).
 
 ## Стек
 
 | Компонент | Технология |
 |-----------|------------|
-| API | Dynamic API Platform **v1.5.6** (Node.js + MongoDB) |
-| Dashboard | React 18 + TypeScript + Vite + Tailwind |
+| API | Dynamic API Platform v1.5.13 (Node.js + MongoDB) |
+| Dashboard | React 18 + TypeScript + Vite + Tailwind + Recharts |
 | Очередь | RabbitMQ |
-| Обработка телеметрии | message-processor (Node.js) |
+| Телеметрия | message-processor (Node.js) |
+| Python automation | PyOrchestrator v0.1.0 *(опц.)* |
 | Инфраструктура | Docker Compose |
 
 ## Быстрый старт
@@ -57,12 +67,20 @@ chmod +x scripts/*.sh
 | Сервис | URL |
 |--------|-----|
 | Dashboard | http://localhost |
-| Dynamic API | http://localhost:3001 |
 | Dynamic API Panel | http://localhost:8080 |
+| Dynamic API health | http://localhost:3001/api/health |
+| PyOrchestrator Panel *(если включён)* | http://localhost:8090 |
 
-**Логин по умолчанию:** `admin` / `Admin123!` — смените в `.env` перед production.
+**Логин Dashboard:** `admin` / `Admin123!`
 
-### Демо-данные (опционально)
+### PyOrchestrator (опционально)
+
+```bash
+# В .env: PYORCHESTRATOR_ENABLED=true
+./scripts/start.sh
+```
+
+### Демо-данные
 
 ```bash
 ./scripts/generate-demo-data.sh
@@ -73,21 +91,22 @@ chmod +x scripts/*.sh
 
 ```
 WASH-PRO-CRM/
-├── dashboard/              # React CRM Dashboard
-├── dynamic-api/            # Dynamic API Platform (vendored)
+├── dashboard/                 # React CRM
+├── dynamic-api/               # Dynamic API Platform (vendored)
+├── pyorchestrator/            # PyOrchestrator (vendored, опц.)
 ├── services/
-│   ├── init-seed/          # CRM endpoints, RBAC, seed
-│   ├── message-processor/  # RabbitMQ → API
+│   ├── init-seed/             # CRM endpoints + RBAC
+│   ├── message-processor/
 │   ├── backup/
-│   └── telegram-bot/
-├── config/rabbitmq/
-├── scripts/                # start, seed, demo data, backup
-├── docs/                   # Документация (GitHub Pages)
-├── wiki/                   # Копия для GitHub Wiki
-└── docker-compose.yml
+│   ├── pyorch-bridge/         # Telegram ↔ PyOrchestrator
+│   ├── dynamic-api-panel/
+│   └── pyorchestrator-panel/
+├── scripts/                   # start, update, demo, backup
+├── docs/                      # GitHub Pages
+└── wiki/                      # GitHub Wiki
 ```
 
 ## Лицензия
 
 WASH PRO CRM — проприетарный проект.  
-[Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) — Apache License 2.0.
+Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.

@@ -44,6 +44,9 @@ Arbitrary collection names are **not** exposed — only the whitelist above.
 | Edit JSON | Pencil icon | `PUT /api/database/collections/:name/:id` |
 | Create document | New document | `POST /api/database/collections/:name` |
 | Delete document | Trash icon | `DELETE /api/database/collections/:name/:id` |
+| Clear collection | Clear collection | `DELETE /api/database/collections/:name` |
+
+Clearing is allowed only for **`endpointdatas`** and **`logs`**. Requires typing the collection name to confirm.
 
 ### Search
 

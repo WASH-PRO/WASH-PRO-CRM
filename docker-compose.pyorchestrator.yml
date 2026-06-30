@@ -1,0 +1,344 @@
+# PyOrchestrator — опциональный стек (как Dynamic API Platform)
+# Запуск: PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
+# или: docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build
+
+x-pyorch-env: &pyorch-env
+  POSTGRES_HOST: pyorch-postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: ${PYORCH_POSTGRES_DB:-pyorchestrator}
+  POSTGRES_USER: ${PYORCH_POSTGRES_USER:-pyorch}
+  POSTGRES_PASSWORD: ${PYORCH_POSTGRES_PASSWORD:-pyorch_secret}
+  REDIS_URL: redis://pyorch-redis:6379/0
+  MINIO_ENDPOINT: pyorch-minio:9000
+  MINIO_ACCESS_KEY: ${PYORCH_MINIO_ACCESS_KEY:-minioadmin}
+  MINIO_SECRET_KEY: ${PYORCH_MINIO_SECRET_KEY:-minioadmin}
+  MINIO_BUCKET: ${PYORCH_MINIO_BUCKET:-pyorchestrator}
+  SECRET_MASTER_KEY: ${PYORCH_SECRET_MASTER_KEY:-change-me-in-production-32chars!!}
+
+services:
+  # ─── Core Application ───────────────────────────────────────────────────────
+
+  pyorch-backend:
+    build:
+      context: ./pyorchestrator/backend
+      dockerfile: Dockerfile
+    container_name: wash-pyorch-backend
+    restart: unless-stopped
+    ports:
+      - "${PYORCH_BACKEND_PORT:-8000}:8000"
+    environment:
+      <<: *pyorch-env
+      APP_ENV: ${PYORCH_APP_ENV:-production}
+      JWT_SECRET: ${PYORCH_JWT_SECRET:-jwt-dev-secret-change-in-prod}
+      CORS_ORIGINS: ${PYORCH_CORS_ORIGINS:-http://localhost,http://localhost:8090}
+      INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
+      RUNTIME_QUEUE_KEY: runtime:jobs
+    depends_on:
+      pyorch-postgres:
+        condition: service_healthy
+      pyorch-redis:
+        condition: service_healthy
+      pyorch-minio:
+        condition: service_healthy
+      pyorch-minio-init:
+        condition: service_completed_successfully
+    networks:
+      - wash-internal
+      - wash-external
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  pyorchestrator-panel:
+    build:
+      context: .
+      dockerfile: services/pyorchestrator-panel/Dockerfile
+      args:
+        VITE_API_URL: ""
+        VITE_WS_URL: ""
+        VITE_WASH_EMBEDDED: "true"
+    container_name: wash-pyorchestrator-panel
+    restart: unless-stopped
+    ports:
+      - "${PYORCH_PANEL_PORT:-8090}:80"
+    depends_on:
+      pyorch-backend:
+        condition: service_healthy
+    networks:
+      - wash-internal
+      - wash-external
+
+  pyorch-bridge:
+    build:
+      context: ./services/pyorch-bridge
+      dockerfile: Dockerfile
+    container_name: wash-pyorch-bridge
+    restart: unless-stopped
+    environment:
+      PYORCH_BRIDGE_PORT: 3021
+      PYORCH_API_URL: http://pyorch-backend:8000
+      PYORCH_EMAIL: ${PYORCH_DASHBOARD_EMAIL:-admin@pyorchestrator.local}
+      PYORCH_PASSWORD: ${PYORCH_DASHBOARD_PASSWORD:-admin}
+      CRM_API_URL: http://dynamic-api:3001
+      CRM_API_BASE_URL: http://dynamic-api:3001
+      SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
+      SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
+    depends_on:
+      pyorch-backend:
+        condition: service_healthy
+      dynamic-api:
+        condition: service_healthy
+    networks:
+      - wash-internal
+
+  pyorch-runtime:
+    build:
+      context: ./pyorchestrator/runtime
+      dockerfile: Dockerfile
+    container_name: wash-pyorch-runtime
+    restart: unless-stopped
+    environment:
+      <<: *pyorch-env
+      RUNTIME_QUEUE_KEY: runtime:jobs
+      WORKSPACES_ROOT: /workspaces
+      MAX_CONCURRENT_SANDBOXES: ${PYORCH_MAX_CONCURRENT_SANDBOXES:-50}
+      DEFAULT_MAX_MEMORY_MB: ${PYORCH_DEFAULT_MAX_MEMORY_MB:-512}
+      DEFAULT_MAX_CPU_SECONDS: ${PYORCH_DEFAULT_MAX_CPU_SECONDS:-300}
+      DEFAULT_WALL_TIMEOUT_SEC: ${PYORCH_DEFAULT_WALL_TIMEOUT_SEC:-3600}
+      BACKEND_INTERNAL_URL: http://pyorch-backend:8000
+      INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
+    volumes:
+      - pyorch_runtime_workspaces:/workspaces
+      - ./pyorchestrator/runtime/engine:/app/engine:ro
+    depends_on:
+      pyorch-postgres:
+        condition: service_healthy
+      pyorch-redis:
+        condition: service_healthy
+      pyorch-minio:
+        condition: service_healthy
+    networks:
+      - wash-internal
+    cgroup: host
+    privileged: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9091/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  pyorch-scheduler:
+    build:
+      context: ./pyorchestrator/scheduler
+      dockerfile: Dockerfile
+    container_name: wash-pyorch-scheduler
+    restart: unless-stopped
+    environment:
+      <<: *pyorch-env
+      RUNTIME_QUEUE_KEY: runtime:jobs
+      SCHEDULER_RELOAD_CHANNEL: scheduler:reload
+      BACKEND_INTERNAL_URL: http://pyorch-backend:8000
+      INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
+    depends_on:
+      pyorch-postgres:
+        condition: service_healthy
+      pyorch-redis:
+        condition: service_healthy
+    networks:
+      - wash-internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9092/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  pyorch-mcp:
+    build:
+      context: ./pyorchestrator/mcp
+      dockerfile: Dockerfile
+    container_name: wash-pyorch-mcp
+    restart: unless-stopped
+    ports:
+      - "${PYORCH_MCP_PORT:-8010}:8010"
+    environment:
+      PYORCH_API_URL: http://pyorch-backend:8000
+      PYORCH_EMAIL: ${PYORCH_MCP_EMAIL:-admin@pyorchestrator.local}
+      PYORCH_PASSWORD: ${PYORCH_MCP_PASSWORD:-admin}
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8010
+    depends_on:
+      pyorch-backend:
+        condition: service_healthy
+    networks:
+      - wash-internal
+      - wash-external
+
+  # ─── Data Layer (только внутренняя сеть) ────────────────────────────────────
+
+  pyorch-postgres:
+    image: postgres:16-alpine
+    container_name: wash-pyorch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PYORCH_POSTGRES_DB:-pyorchestrator}
+      POSTGRES_USER: ${PYORCH_POSTGRES_USER:-pyorch}
+      POSTGRES_PASSWORD: ${PYORCH_POSTGRES_PASSWORD:-pyorch_secret}
+    volumes:
+      - pyorch_postgres_data:/var/lib/postgresql/data
+      - ./pyorchestrator/infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - wash-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PYORCH_POSTGRES_USER:-pyorch} -d ${PYORCH_POSTGRES_DB:-pyorchestrator}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pyorch-redis:
+    image: redis:7-alpine
+    container_name: wash-pyorch-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - pyorch_redis_data:/data
+    networks:
+      - wash-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pyorch-minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: wash-pyorch-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${PYORCH_MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${PYORCH_MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - pyorch_minio_data:/data
+    networks:
+      - wash-internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  pyorch-minio-init:
+    image: minio/mc:latest
+    container_name: wash-pyorch-minio-init
+    depends_on:
+      pyorch-minio:
+        condition: service_healthy
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      for i in 1 2 3 4 5 6 7 8 9 10; do
+        mc alias set local http://pyorch-minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+        mc mb --ignore-existing local/$${MINIO_BUCKET} &&
+        mc anonymous set none local/$${MINIO_BUCKET} &&
+        exit 0;
+        sleep 2;
+      done;
+      exit 1
+      "
+    environment:
+      MINIO_ROOT_USER: ${PYORCH_MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${PYORCH_MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${PYORCH_MINIO_BUCKET:-pyorchestrator}
+    networks:
+      - wash-internal
+
+  # ─── Observability (внутренняя сеть; порты — только при PYORCH_OBSERVABILITY_EXPOSE=true) ─
+
+  pyorch-prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: wash-pyorch-prometheus
+    restart: unless-stopped
+    profiles:
+      - pyorch-observability
+    ports:
+      - "${PYORCH_PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./config/pyorchestrator/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - pyorch_prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    networks:
+      - wash-internal
+
+  pyorch-grafana:
+    image: grafana/grafana:11.1.0
+    container_name: wash-pyorch-grafana
+    restart: unless-stopped
+    profiles:
+      - pyorch-observability
+    ports:
+      - "${PYORCH_GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${PYORCH_GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${PYORCH_GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./pyorchestrator/infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - pyorch_grafana_data:/var/lib/grafana
+    depends_on:
+      - pyorch-prometheus
+      - pyorch-loki
+    networks:
+      - wash-internal
+
+  pyorch-loki:
+    image: grafana/loki:3.1.0
+    container_name: wash-pyorch-loki
+    restart: unless-stopped
+    profiles:
+      - pyorch-observability
+    volumes:
+      - ./pyorchestrator/infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - pyorch_loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - wash-internal
+
+  pyorch-promtail:
+    image: grafana/promtail:3.1.0
+    container_name: wash-pyorch-promtail
+    restart: unless-stopped
+    profiles:
+      - pyorch-observability
+    volumes:
+      - ./config/pyorchestrator/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - pyorch-loki
+    networks:
+      - wash-internal
+
+volumes:
+  pyorch_postgres_data:
+    name: wash_pyorch_postgres_data
+  pyorch_redis_data:
+    name: wash_pyorch_redis_data
+  pyorch_minio_data:
+    name: wash_pyorch_minio_data
+  pyorch_runtime_workspaces:
+    name: wash_pyorch_runtime_workspaces
+  pyorch_prometheus_data:
+    name: wash_pyorch_prometheus_data
+  pyorch_grafana_data:
+    name: wash_pyorch_grafana_data
+  pyorch_loki_data:
+    name: wash_pyorch_loki_data

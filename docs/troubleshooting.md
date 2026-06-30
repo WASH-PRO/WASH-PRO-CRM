@@ -6,47 +6,43 @@ description: Типичные проблемы и решения
 
 ## Обновление Dynamic API Platform
 
-В панели (`:8080` → **Settings → Software Updates**) отображается блок **«WASH-PRO-CRM — встроенная платформа»** с инструкцией. In-app updater отключён намеренно.
+In-app updater в панели `:8080` **отключён** в WASH. Используйте:
 
 ```bash
 ./scripts/update-dynamic-api.sh
 docker compose up -d --build dynamic-api dynamic-api-panel
 ```
 
+Актуальная vendored-версия: **v1.5.13**.
+
 ## init-seed: статус Exited
 
-`init-seed` — **одноразовый** контейнер. Статус `Exited (0)` означает успешное завершение.
+`Exited (0)` — норма (одноразовый контейнер).
 
-Если зависимые сервисы не стартовали (код выхода 1):
+При ошибке:
 
 ```bash
 docker logs wash-init-seed
 ./scripts/run-init-seed.sh
 ```
 
-**Типичная причина:** Dynamic API отвечал на `/health`, но учётная запись admin ещё не была создана в MongoDB.
+## RabbitMQ
 
-## RabbitMQ: `Invalid challenge reply` / зависший `wash-rabbitmq-init`
-
-Контейнер `rabbitmq-init` должен монтировать тот же volume `rabbitmq_data`, что и `rabbitmq` — иначе CLI подключается с другим Erlang cookie.
+### `Invalid challenge reply` / зависший `rabbitmq-init`
 
 ```bash
 docker rm -f wash-rabbitmq-init
 docker compose up -d rabbitmq rabbitmq-init
 ```
 
-Статус `wash-rabbitmq-init` **Exited (0)** — норма (одноразовая настройка пользователя).
-
-## RabbitMQ: `PLAIN login refused: user 'wash'`
-
-Пользователь RabbitMQ мог не создаться при первом запуске.
+### `PLAIN login refused: user 'wash'`
 
 ```bash
 ./scripts/fix-rabbitmq.sh
 docker restart wash-message-processor
 ```
 
-Полный сброс данных RabbitMQ:
+Полный сброс:
 
 ```bash
 docker compose down
@@ -54,32 +50,44 @@ docker volume rm wash_rabbitmq_data
 docker compose up -d
 ```
 
-## Не создаётся / не удаляется автомойка
+## Страница «Пользователи» пустая
 
-1. Проверьте, что пользователь в группе Super Admin или Administrator
-2. Перезапустите init-seed: `./scripts/run-init-seed.sh`
-3. Проверьте логи API: `docker logs wash-dynamic-api`
+1. Убедитесь, что вы **Administrator** (`manage_users` или `view_logs`)
+2. Проверьте API: `curl -H "Authorization: Bearer TOKEN" http://localhost:3001/api/users?page=1&limit=5`
+3. Обновите Dashboard: `docker compose up -d --build dashboard`
+4. Перелогиньтесь (истёкший JWT)
 
-## Телеметрия не обновляет состояние поста
+## Telegram: «Unauthorized» при создании бота
 
-1. Убедитесь, что `postSerial` в сообщении совпадает с `serialNumber` поста в CRM
-2. Проверьте message-processor: `docker logs wash-message-processor`
-3. Проверьте очередь в RabbitMQ Management (если включён)
-4. Смотрите DLQ `wash.dlq` на необработанные сообщения
+1. `PYORCHESTRATOR_ENABLED=true` в `.env` и `./scripts/start.sh`
+2. Health: `curl http://localhost/api/telegram-bots/health`
+3. Пересборка: `docker compose … up -d --build dashboard pyorch-bridge`
+4. Обновите страницу / перелогиньтесь
+5. Логи: `docker logs wash-pyorch-bridge --tail 50`
 
-## CORS ошибки в браузере
-
-Добавьте origin Dashboard в `CORS_ORIGIN` в `.env`:
-
-```env
-CORS_ORIGIN=http://localhost,http://localhost:3001,http://your-host
-```
-
-Перезапустите `dynamic-api`:
+## Telegram: «PyOrchestrator недоступен»
 
 ```bash
-docker compose up -d dynamic-api
+docker compose ps | grep pyorch
+docker logs wash-pyorch-backend
+curl -s http://localhost:8000/health
 ```
+
+Учётные данные bridge: `PYORCH_DASHBOARD_EMAIL` / `PYORCH_DASHBOARD_PASSWORD`.
+
+## Resources: PyOrchestrator «Остановлен»
+
+Индикатор проверяет `/api/telegram-bots/health`. Если PyOrch выключен — это ожидаемо. Dynamic API проверяется через `/api/health`.
+
+## Телеметрия не обновляется
+
+1. `postSerial` в сообщении = `serialNumber` поста в CRM
+2. `docker logs wash-message-processor`
+3. DLQ `wash.dlq`
+
+## CORS
+
+Добавьте origin в `CORS_ORIGIN`, перезапустите `dynamic-api`.
 
 ## Dashboard не открывается
 
@@ -88,28 +96,24 @@ docker compose ps
 docker logs wash-dashboard
 ```
 
-Проверьте, что порт `DASHBOARD_PORT` не занят другим процессом.
-
-## Проблемы с бэкапом
+## Бэкап
 
 ```bash
 docker logs wash-backup
-docker volume inspect wash_backup_data
 ```
 
-Ручной запуск бэкапа — через Dashboard → **Резервные копии**.
+Ручной запуск — Dashboard → Резервные копии.
 
-## Полный перезапуск стека
+## Полный перезапуск
 
 ```bash
 docker compose down
 docker compose up -d --build
 ```
 
-Данные MongoDB сохраняются в volume `wash_mongodb_data`.
+MongoDB сохраняется в `wash_mongodb_data`.
 
-## Получение помощи
+## Помощь
 
-1. Соберите логи: `docker compose logs > logs.txt`
-2. Опишите шаги воспроизведения
-3. Создайте Issue в GitHub с версией `APP_VERSION` и выводом `docker compose ps`
+1. `docker compose logs > logs.txt`
+2. Issue на GitHub с `APP_VERSION`, `docker compose ps`, шаги воспроизведения

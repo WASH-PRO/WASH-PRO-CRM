@@ -6,56 +6,60 @@ description: RBAC, сеть и рекомендации
 
 ## Принципы
 
-1. **Минимальная поверхность атаки** — наружу доступны только Dashboard, Dynamic API и панель Dynamic API
-2. **Нет прямого доступа к MongoDB** — все запросы через API с JWT
-3. **Изолированная сеть** — `wash-internal` без маршрутизации в интернет
-4. **RBAC** — разграничение прав по группам
+1. **Минимальная поверхность атаки** — наружу: Dashboard, Dynamic API, панели платформ
+2. **Нет прямого доступа к MongoDB** — только через API с JWT
+3. **Изолированная сеть** `wash-internal` для БД и очередей
+4. **RBAC** — группы Dynamic API + разделы Admin в Dashboard
 
-## Роли (RBAC)
+## Роли CRM (init-seed)
 
-| Группа | Права | Использование |
-|--------|-------|---------------|
-| Super Admin / Administrator | Полный доступ | Владельцы системы |
-| Operator | view, create, update | Операторы автомойки |
-| Viewer | view | Только просмотр |
-| Service | API для внутренних сервисов | message-processor, backup, telegram-bot |
+| Группа | Permissions | Dashboard |
+|--------|-------------|-----------|
+| **Administrator** | view, create, update, delete, manage_users, manage_api, view_logs | Полный доступ + Система (admin) |
+| **Operator** | view, create, update | CRM без admin-разделов |
+| **Viewer** | view | Только просмотр |
+| **Service** | view (+ API для automation) | Внутренние сервисы |
 
-Группы и права настраиваются в Dynamic API Panel. `init-seed` создаёт CRM endpoints с `allowedGroupIds`, включающими Super Admin.
+Admin-разделы Dashboard (пользователи, группы, бэкапы, Telegram, логи…) требуют `manage_users` **или** `view_logs` в JWT.
 
-## Секреты
+Управление: **Dashboard → Пользователи / Группы и права** или **Dynamic API Panel → Users / Groups**.
 
-Обязательно смените перед production:
+## Секреты (обязательно сменить)
 
 - `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CSRF_SECRET`
-- `ADMIN_PASSWORD`, `SERVICE_PASSWORD`
-- `RABBITMQ_PASSWORD`
+- `ADMIN_PASSWORD`, `SERVICE_PASSWORD`, `RABBITMQ_PASSWORD`
+- `PYORCH_JWT_SECRET`, `PYORCH_SECRET_MASTER_KEY`, `PYORCH_INTERNAL_API_KEY` *(если PyOrch)*
 
-Не коммитьте `.env` в git — файл в `.gitignore`.
+`.env` в `.gitignore`.
 
 ## CORS
 
-`CORS_ORIGIN` поддерживает несколько origin через запятую:
-
 ```env
-CORS_ORIGIN=http://localhost,http://localhost:3001,https://crm.example.com
+CORS_ORIGIN=http://localhost,http://localhost:3001,http://localhost:8080,https://crm.example.com
 ```
+
+## pyorch-bridge
+
+- Доступен только через Dashboard nginx `/api/telegram-bots/`
+- Проверяет CRM JWT + права admin
+- Хранит учётные данные PyOrchestrator в env (`PYORCH_DASHBOARD_*`)
 
 ## RabbitMQ
 
-По умолчанию RabbitMQ доступен только внутри Docker. При открытии порта для контроллеров:
-
-- Используйте сложный пароль
-- Ограничьте IP на файрволе
-- Рассмотрите VPN между контроллерами и сервером
+По умолчанию только internal. При `RABBITMQ_EXTERNAL_PORT` — сложный пароль + firewall/VPN.
 
 ## Аудит
 
-Системные логи Dynamic API доступны в Dashboard → **Логи** (только администратор). Логируются действия пользователей, HTTP-запросы к API, ошибки аутентификации.
-
-## Резервное копирование
-
-Регулярные бэкапы MongoDB хранятся в volume `wash_backup_data`. Проверяйте восстановление на тестовом стенде.
+Dashboard → **Логи** (Admin) и Dynamic API Panel → Audit Logs.
 
 ## Dynamic API Platform
 
-Дополнительные механизмы безопасности платформы: rate limiting, login lockout, Helmet, JWT refresh. Подробнее — [документация Dynamic API](https://dynamic-api-platform.github.io/Dynamic-API-Platform/).
+Rate limiting, login lockout, Helmet, network access rules — см. [upstream security](https://dynamic-api-platform.github.io/Dynamic-API-Platform/security/) и `dynamic-api/docs/`.
+
+## PyOrchestrator
+
+JWT, RBAC (Administrator/Developer/Operator/Viewer), encrypted script secrets — см. [PyOrchestrator security](https://developer-ru.github.io/pyorchestrator/security/).
+
+## Резервное копирование
+
+Volume `wash_backup_data`. Тестируйте `./scripts/restore.sh` на стенде.

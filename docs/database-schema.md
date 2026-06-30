@@ -4,7 +4,9 @@ title: Схема данных
 description: CRM endpoints и коллекции MongoDB
 ---
 
-Данные хранятся в **MongoDB** (часть [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform)).
+Данные хранятся в **MongoDB** через [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13**.
+
+Управление пользователями и группами: `/api/users`, `/api/groups` (management API) — UI в Dashboard → Система или панель `:8080`.
 
 ## Системные коллекции Dynamic API
 

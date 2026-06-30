@@ -1,10 +1,10 @@
 # Быстрый старт
 
+Полная версия: [docs/getting-started.md](https://wash-pro.github.io/WASH-PRO-CRM/getting-started/)
+
 ## Требования
 
-- Docker 24+, Docker Compose v2
-- 4 GB RAM
-- Порты: 80, 3001, 8080
+Docker 24+, Compose v2, 4 GB RAM (8 GB с PyOrchestrator).
 
 ## Установка
 
@@ -12,35 +12,42 @@
 git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
 cd WASH-PRO-CRM
 cp .env.example .env
-# Измените JWT_SECRET, пароли!
 chmod +x scripts/*.sh
 ./scripts/start.sh
 ```
 
-## Первый вход
+## Вход
 
-| Интерфейс | URL |
-|-----------|-----|
-| Dashboard | http://localhost |
-| Dynamic API Panel | http://localhost:8080 |
-
-Логин: `admin` / `Admin123!`
+| URL | Логин |
+|-----|-------|
+| http://localhost | `admin` / `Admin123!` |
+| http://localhost:8080 | Dynamic API Panel |
+| http://localhost:8090 | PyOrchestrator *(если `PYORCHESTRATOR_ENABLED=true`)* |
 
 ## Настройка
 
-1. Создайте **автомойку** (название, адрес).
-2. Добавьте **посты** с уникальным **серийным номером**.
-3. При необходимости настройте **Валюты** и **Типы скидок** (Admin).
-4. Настройте **Telegram** (токен, ID администраторов).
+1. Автомойка + посты (серийный номер).
+2. Admin: пользователи, группы, Telegram-боты.
+3. Справочники валют и типов скидок.
 
-## Демо-данные
+## PyOrchestrator
 
-```bash
-./scripts/generate-demo-data.sh    # мойки, посты, статистика
-./scripts/generate-demo-cards.sh   # карты с типами скидок 1–5
+```env
+PYORCHESTRATOR_ENABLED=true
 ```
 
-## Повторный seed
+```bash
+./scripts/start.sh
+```
+
+## Демо
+
+```bash
+./scripts/generate-demo-data.sh
+./scripts/generate-demo-cards.sh
+```
+
+## Seed
 
 ```bash
 ./scripts/run-init-seed.sh

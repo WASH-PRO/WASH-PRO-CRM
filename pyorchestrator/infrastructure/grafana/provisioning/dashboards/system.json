@@ -1,0 +1,23 @@
+{
+  "title": "PyOrchestrator System",
+  "uid": "pyorch-system",
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Sandboxes",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "pyorch_runtime_active_sandboxes", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Runs Total",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [{ "expr": "rate(pyorch_runtime_runs_total[5m])", "refId": "A" }]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

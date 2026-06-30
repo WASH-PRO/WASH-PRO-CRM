@@ -166,16 +166,16 @@ export function CardsLayout() {
   return (
     <div>
       <PageHeader title="Карты" subtitle="Скидочные, сервисные и VIP-карты" />
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="mb-6 flex flex-wrap gap-1 rounded-lg border border-panel-border bg-panel-card p-1 dark:border-panel-border-dark dark:bg-panel-card-dark">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}
             className={clsx(
-              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              'rounded-md px-4 py-2 text-sm font-medium transition-all',
               location.pathname.startsWith(tab.to)
-                ? 'border-brand-600 text-brand-700 dark:text-brand-300'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-panel-muted hover:bg-panel-canvas hover:text-panel-ink dark:text-panel-muted-dark dark:hover:bg-panel-sidebar-hover dark:hover:text-white'
             )}
           >
             {tab.label}

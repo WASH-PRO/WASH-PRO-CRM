@@ -6,10 +6,9 @@ description: Установка и первый запуск WASH PRO CRM
 
 ## Требования
 
-- Docker 24+
-- Docker Compose v2
-- Минимум 4 GB RAM
-- Порты: `80` (Dashboard), `3001` (API), `8080` (панель Dynamic API)
+- Docker 24+, Docker Compose v2
+- 4 GB RAM (8 GB с PyOrchestrator)
+- Порты: `80`, `3001`, `8080`; при PyOrch — `8000`, `8090`, `8010`
 
 ## Установка
 
@@ -17,74 +16,81 @@ description: Установка и первый запуск WASH PRO CRM
 git clone https://github.com/Developer-RU/WASH-PRO-CRM.git
 cd WASH-PRO-CRM
 cp .env.example .env
-```
-
-Отредактируйте `.env`: задайте `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CSRF_SECRET`, пароли RabbitMQ и администратора.
-
-```bash
+# Измените JWT_SECRET, пароли!
 chmod +x scripts/*.sh
 ./scripts/start.sh
 ```
 
-Скрипт `start.sh` создаёт `.env` при отсутствии, собирает контейнеры и запускает стек.
-
 ## Первый вход
 
-| Интерфейс | URL | Назначение |
-|-----------|-----|------------|
-| **Dashboard** | http://localhost | CRM для операторов |
-| **Dynamic API Panel** | http://localhost:8080 | Endpoints, пользователи, логи |
-| **Health check** | http://localhost:3001/api/health | Статус API |
+| Интерфейс | URL | Учётные данные |
+|-----------|-----|----------------|
+| **Dashboard** | http://localhost | `admin` / `Admin123!` |
+| **Dynamic API Panel** | http://localhost:8080 | те же |
+| **PyOrchestrator Panel** *(опц.)* | http://localhost:8090 | `admin@pyorchestrator.local` / `admin` |
 
-Учётные данные по умолчанию (из `.env`):
+Health checks:
 
-- Логин: `admin`
-- Пароль: `Admin123!`
+```bash
+curl -s http://localhost:3001/api/health
+curl -s http://localhost/api/telegram-bots/health   # через Dashboard, если PyOrch
+```
 
 ## Первоначальная настройка
 
-1. Войдите в Dashboard и создайте **автомойку** (название, адрес).
-2. Добавьте **посты** с уникальным **серийным номером** — по нему контроллер идентифицируется в RabbitMQ.
-3. При необходимости настройте Telegram в разделе **Telegram** (токен бота, ID администраторов).
+1. Создайте **автомойку** и **посты** с уникальным **серийным номером** контроллера.
+2. **Administrator:** настройте **Пользователи** и **Группы и права** (Dashboard → Система).
+3. При PyOrchestrator: создайте **Telegram-ботов** (Dashboard → Telegram).
+4. Справочники: **Валюты**, **Типы скидок**.
 
-Контейнер `init-seed` автоматически создаёт CRM endpoints, RBAC-группы, валюту RUB и типы скидок 1–5. Статус `Exited (0)` — норма.
+`init-seed` создаёт CRM endpoints, RBAC, RUB, типы скидок 1–5. `Exited (0)` — норма.
 
-### Демо-данные (опционально)
+### Демо-данные
 
 ```bash
 ./scripts/generate-demo-data.sh
 ./scripts/generate-demo-cards.sh
 ```
 
-Переменные `CARD_REGULAR_COUNT`, `CARD_SERVICE_COUNT`, `CARD_VIP_COUNT` — в `generate-demo-cards.mjs`.
-
 ## Опции запуска
 
-### С Redis (кеш Dynamic API)
+### Redis
 
 ```bash
 REDIS_ENABLED=true docker compose -f docker-compose.yml -f docker-compose.redis.yml up -d --build
 ```
 
-### С внешним портом RabbitMQ для контроллеров
+### RabbitMQ для контроллеров
 
 ```bash
 RABBITMQ_EXTERNAL_PORT=5672 docker compose -f docker-compose.yml -f docker-compose.controllers.yml up -d --build
 ```
 
-## Повторная инициализация CRM
+### PyOrchestrator
 
-Если endpoints не создались или нужно обновить схему:
+```bash
+# В .env: PYORCHESTRATOR_ENABLED=true
+./scripts/start.sh
+```
+
+### Observability PyOrch
+
+```env
+PYORCH_OBSERVABILITY_ENABLED=true
+```
+
+## Повторный seed
 
 ```bash
 ./scripts/run-init-seed.sh
 ```
 
-## Проверка работоспособности
+## Проверка
 
 ```bash
 docker compose ps
 docker logs wash-init-seed
 docker logs wash-message-processor
-curl -s http://localhost:3001/api/health
 ```
+
+Подробнее о платформах: [Встроенные сервисы](embedded-services.md).

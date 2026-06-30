@@ -17,84 +17,116 @@ description: Компоненты и потоки данных WASH PRO CRM
                             ▲
 Dashboard (React) ──────────┤ nginx /api proxy
                             │
-              Telegram Bot / Backup
+         pyorch-bridge ─────┤ (Telegram, Admin)
+              ▲             │
+              │             │
+       PyOrchestrator ──────┘ (опц.)
+              │
+    backup / service account
 ```
 
 ## Сервисы Docker Compose
 
+### Основной стек (`docker-compose.yml`)
+
 | Сервис | Контейнер | Назначение | Внешний доступ |
 |--------|-----------|------------|----------------|
-| `mongodb` | wash-mongodb | База данных | ❌ |
-| `dynamic-api` | wash-dynamic-api | REST API | ✅ порт 3001 |
-| `dynamic-api-panel` | wash-dynamic-api-panel | Панель управления API | ✅ порт 8080 |
-| `dashboard` | wash-dashboard | CRM интерфейс | ✅ порт 80 |
+| `mongodb` | wash-mongodb | База CRM (Dynamic API) | ❌ |
+| `dynamic-api` | wash-dynamic-api | REST API | ✅ `:3001` |
+| `dynamic-api-panel` | wash-dynamic-api-panel | Панель Dynamic API | ✅ `:8080` |
+| `dashboard` | wash-dashboard | CRM Dashboard | ✅ `:80` |
+| `init-seed` | wash-init-seed | Одноразовая инициализация CRM | ❌ |
 | `rabbitmq` | wash-rabbitmq | Очередь телеметрии | ❌* |
-| `message-processor` | wash-message-processor | Обработка сообщений | ❌ |
-| `init-seed` | wash-init-seed | Одноразовая инициализация | ❌ |
-| `backup` | wash-backup | Резервное копирование | ❌ |
-| `telegram-bot` | wash-telegram-bot | Telegram-бот | ❌ |
-| `redis` | wash-redis | Кеш (опционально) | ❌ |
+| `rabbitmq-init` | wash-rabbitmq-init | Создание пользователя RabbitMQ | ❌ |
+| `message-processor` | wash-message-processor | RabbitMQ → API | ❌ |
+| `backup` | wash-backup | mongodump + HTTP файлов | ❌ |
 
-\* Для подключения контроллеров снаружи используйте `docker-compose.controllers.yml`.
+\* Порт `:5672` — через `docker-compose.controllers.yml` (`RABBITMQ_EXTERNAL_PORT`).
+
+### Опциональные сервисы
+
+| Сервис | Условие | Назначение |
+|--------|---------|------------|
+| `redis` | `REDIS_ENABLED=true` + `docker-compose.redis.yml` | Кеш (profile `redis`) |
+| **PyOrchestrator stack** | `PYORCHESTRATOR_ENABLED=true` | См. таблицу ниже |
+
+### PyOrchestrator (`docker-compose.pyorchestrator.yml`)
+
+| Сервис | Внешний доступ | Назначение |
+|--------|----------------|------------|
+| `pyorch-backend` | ✅ `:8000` | FastAPI |
+| `pyorchestrator-panel` | ✅ `:8090` | Control Plane UI |
+| `pyorch-mcp` | ✅ `:8010` | MCP для AI-агентов |
+| `pyorch-bridge` | ❌ (через Dashboard) | Telegram-боты CRM |
+| `pyorch-runtime` | ❌ | Python sandbox |
+| `pyorch-scheduler` | ❌ | Расписания |
+| `pyorch-postgres` | ❌ | Метаданные |
+| `pyorch-redis` | ❌ | Очередь jobs |
+| `pyorch-minio` | ❌ | Workspace |
+| `pyorch-prometheus/grafana/loki/promtail` | профиль `pyorch-observability` | Метрики и логи |
+
+Подробнее: [Встроенные сервисы](embedded-services.md).
 
 ## Сети Docker
 
 | Сеть | Тип | Назначение |
 |------|-----|------------|
-| `wash-internal` | internal | MongoDB, RabbitMQ, внутренние сервисы |
-| `wash-external` | bridge | Dashboard, Dynamic API — доступ с хоста |
+| `wash-internal` | internal | MongoDB, RabbitMQ, bridge, runtime, backup |
+| `wash-external` | bridge | Dashboard, API, панели |
 
-MongoDB и RabbitMQ **не публикуются** наружу по умолчанию. Все CRM-запросы идут через Dynamic API с JWT и RBAC.
+MongoDB и RabbitMQ **не публикуются** наружу по умолчанию.
 
 ## Поток телеметрии
 
-1. Контроллер поста публикует JSON в exchange `wash.exchange` с routing key `telemetry.#`.
-2. `message-processor` читает очередь `wash.telemetry`.
+1. Контроллер публикует JSON в `wash.exchange`, routing key `telemetry.#`.
+2. `message-processor` читает `wash.telemetry`.
 3. По `postSerial` находится пост в `/api/crm/posts`.
-4. Данные записываются в соответствующие CRM endpoints (`post-states`, `cards`, статистика и т.д.).
-5. При ошибке сообщение попадает в DLQ `wash.dlq`.
+4. Данные пишутся в CRM endpoints (`post-states`, `cards`, статистика…).
+5. Ошибки → DLQ `wash.dlq`.
+
+Типы сообщений: `mode`/`state`, `card`, `statistics`, `finance`, `equipment`, `event`, `settings`.
 
 ## Инициализация (init-seed)
 
-При старте `init-seed`:
+- **11** CRM endpoint groups, **52** endpoints
+- RBAC: Administrator, Operator, Viewer, Service
+- Валюта RUB, типы скидок 1–5, настройки backup/archive/telegram
+- Идемпотентен — безопасен для повторного запуска
 
-- Создаёт **11** CRM endpoint groups и **52** endpoints
-- Настраивает RBAC (Administrator, Operator, Viewer, Service)
-- Добавляет настройки по умолчанию, валюту RUB и типы скидок 1–5
-- Идемпотентен — безопасно запускать повторно
+```bash
+./scripts/run-init-seed.sh
+```
 
 ## Volumes
 
 | Volume | Данные |
 |--------|--------|
-| `wash_mongodb_data` | База MongoDB |
-| `wash_backup_data` | Файлы резервных копий |
-| `wash_rabbitmq_data` | Очереди RabbitMQ |
+| `wash_mongodb_data` | MongoDB CRM |
+| `wash_backup_data` | Файлы бэкапов |
+| `wash_rabbitmq_data` | RabbitMQ |
+| `wash_pyorch_*` | PostgreSQL, Redis, MinIO PyOrchestrator *(опц.)* |
 
-## Зависимость от Dynamic API
+## Dynamic API Platform (vendored v1.5.13)
 
-Проект включает `dynamic-api/` — vendored-копия [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.6** с локальными патчами (CORS, обработка 502, Safari email).
+Vendored-копия [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) с патчами WASH.
 
-### Возможности платформы (актуально для панели `:8080`)
+| В WASH | Upstream-only |
+|--------|---------------|
+| Runtime engine для `/api/crm/*` | K8s / MongoDB replica set deploy |
+| Панель `:8080` (embedded build) | Standalone in-app updater |
+| Обновление: `./scripts/update-dynamic-api.sh` | `npm run k8s:deploy` |
 
-| Версия | Основное |
-|--------|----------|
-| **1.5.x** | In-app проверка обновлений (UI), авто-обновление в standalone Docker; в WASH — через скрипт (см. ниже) |
-| **1.4.x** | KPI автоматизации на Dashboard, audit logs с `source`, K8s / replica set манифесты |
-| **1.3.x** | Cron, Webhooks, MCP, API Keys, версионирование API |
-| **1.2.x** | OpenAPI, экспорт/импорт проекта, JS handlers |
-| **1.1.x** | Database Explorer, references, Network Access |
+In-app updater **отключён**: `UPDATE_EXECUTOR_ENABLED=false`.
 
-Полный changelog: `dynamic-api/CHANGELOG.md` и [релизы на GitHub](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform/releases).
+## PyOrchestrator (vendored v0.1.0)
 
-### Обновление в WASH-PRO-CRM
+Vendored-копия [PyOrchestrator](https://github.com/Developer-RU/pyorchestrator).
 
-Встроенный **Update executor** отключён (`UPDATE_EXECUTOR_ENABLED=false`) — платформа встроена в репозиторий, а не развёрнута как отдельный clone. Обновление:
+По умолчанию в `.env.example`: `PYORCHESTRATOR_ENABLED=true`, но стек стартует только если переменная `true` в **вашем** `.env` и `./scripts/start.sh` подключает overlay.
+
+Обновление:
 
 ```bash
-./scripts/update-dynamic-api.sh
-docker compose up -d --build dynamic-api dynamic-api-panel
-./scripts/run-init-seed.sh   # при изменениях схемы API
+./scripts/update-pyorchestrator.sh
+docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build
 ```
-
-Патчи: `patches/dynamic-api-wash.patch`. Сборка backend: `context: ./dynamic-api`, `dockerfile: backend/Dockerfile` (нужны `scripts/` для updater).

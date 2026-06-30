@@ -1,19 +1,18 @@
 # WASH PRO CRM / SCADA
 
-Локальная CRM/SCADA-система для автомоек самообслуживания на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform).
+Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/Developer-RU/pyorchestrator) **v0.1.0**.
 
-**Документация (GitHub Pages):** https://developer-ru.github.io/WASH-PRO-CRM/
+**Документация (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/
 
 ## Возможности
 
-- Управление автомойками и постами (серийный номер — у поста)
-- SCADA: текущее состояние постов в реальном времени (live-таймер режима)
-- Карты: скидочные, сервисные, VIP с привязкой к посту
-- Статистика использования и финансов (до/после инкассации)
-- Справочники валют и типов скидок (номера 1–5)
-- Архивирование и резервное копирование MongoDB
-- Telegram-бот и уведомления
-- RBAC: Administrator / Operator / Viewer
+- SCADA: состояние постов, live-таймер, интерактивный график
+- Автомойки, посты (серийный номер контроллера), карты (regular/service/VIP)
+- Аналитика до/после инкассации, архив, бэкапы MongoDB
+- **Пользователи и группы RBAC** в Dashboard
+- **Telegram-боты** (несколько) через PyOrchestrator + pyorch-bridge
+- **Resources** — статус Dynamic API (`:8080`) и PyOrchestrator (`:8090`)
+- Live-обновление 3–15 с
 
 ## Быстрый старт
 
@@ -29,22 +28,26 @@ chmod +x scripts/*.sh
 |-----------|-----|
 | Dashboard | http://localhost |
 | Dynamic API Panel | http://localhost:8080 |
-| API health | http://localhost:3001/api/health |
+| PyOrchestrator Panel *(опц.)* | http://localhost:8090 |
 
-Логин: `admin` / `Admin123!`
+Логин Dashboard: `admin` / `Admin123!`
 
-## Разделы Wiki
+PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 
-- [Dashboard](Dashboard) — веб-интерфейс CRM
-- [Схема данных](Database-Schema) — API endpoints и MongoDB
-- [Быстрый старт](Getting-Started) — установка и демо-данные
+## Wiki
+
+- [Быстрый старт](Getting-Started)
+- [Dashboard](Dashboard)
+- [Архитектура](Architecture)
+- [Встроенные сервисы](Embedded-Services)
+- [Схема данных](Database-Schema)
 
 ## Архитектура
 
 ```
 Контроллеры → RabbitMQ → Message Processor → Dynamic API → MongoDB
-                                                      ↑
-Dashboard (React) ──────────── nginx /api proxy ──────┘
+Dashboard ──nginx──► Dynamic API
+Dashboard ──pyorch-bridge──► PyOrchestrator (Telegram, опц.)
 ```
 
 ## Репозиторий

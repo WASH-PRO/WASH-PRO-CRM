@@ -1,6 +1,6 @@
 {
   "name": "dynamic-api-platform",
-  "version": "1.5.12",
+  "version": "1.5.13",
   "description": "Create, manage and test dynamic REST APIs without writing backend code",
   "private": true,
   "license": "Apache-2.0",

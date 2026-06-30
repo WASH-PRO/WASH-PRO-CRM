@@ -235,30 +235,6 @@ services:
       - wash-internal
 
   # ===========================================================================
-  # Telegram Bot Service
-  # ===========================================================================
-  telegram-bot:
-    build:
-      context: ./services/telegram-bot
-      dockerfile: Dockerfile
-    container_name: wash-telegram-bot
-    restart: unless-stopped
-    environment:
-      API_URL: http://dynamic-api:3001
-      SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
-      SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_ADMIN_IDS: ${TELEGRAM_ADMIN_IDS:-}
-      POLL_INTERVAL_MS: 5000
-    depends_on:
-      dynamic-api:
-        condition: service_healthy
-      init-seed:
-        condition: service_completed_successfully
-    networks:
-      - wash-internal
-
-  # ===========================================================================
   # Dashboard — единственный сервис, доступный снаружи
   # ===========================================================================
   dashboard:

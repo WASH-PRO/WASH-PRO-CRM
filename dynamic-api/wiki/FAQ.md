@@ -31,7 +31,7 @@ Yes — [Network Access](Network-Access). Configure on endpoint groups or the Ne
 Yes — [Database Explorer](Database-Explorer) (`/database`, requires `manage_users`).
 
 **Q: What is MCP Server?**  
-JSON-RPC at `POST /api/mcp` exposes dynamic endpoints as AI agent tools. Admin UI at `/mcp`.
+JSON-RPC at `POST /api/mcp` exposes dynamic endpoints as AI agent tools. **Requires JWT Bearer or API key** (same as direct `/api/…` calls). Admin UI at `/mcp`.
 
 **Q: Light or dark theme?**  
 Four themes: Dark, Light, Ocean, Forest. Click the **palette** icon in the header. See [Themes](Themes).

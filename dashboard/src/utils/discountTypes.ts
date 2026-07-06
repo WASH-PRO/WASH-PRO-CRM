@@ -9,18 +9,23 @@ export function discountTypeStatus(type: DiscountType): NonNullable<DiscountType
   return type.status ?? 'active';
 }
 
-export function discountTypesByNumber(types: DiscountType[]): Map<number, DiscountType> {
-  return new Map(types.map((t) => [t.number, t]));
+export function normalizeDiscountTypeCode(code: string): string {
+  return code.trim().toUpperCase();
+}
+
+export function discountTypesByCode(types: DiscountType[]): Map<string, DiscountType> {
+  return new Map(types.map((t) => [normalizeDiscountTypeCode(t.code), t]));
 }
 
 export function resolveDiscountTypeLabel(
   discountType: string | number | undefined,
-  byNumber: Map<number, DiscountType>
+  byCode: Map<string, DiscountType>
 ): string {
   if (discountType == null || discountType === '') return '—';
-  const num = Number(discountType);
-  if (!Number.isNaN(num) && byNumber.has(num)) {
-    return byNumber.get(num)!.name;
-  }
+
+  const key = normalizeDiscountTypeCode(String(discountType));
+  const found = byCode.get(key);
+  if (found) return found.name;
+
   return String(discountType);
 }

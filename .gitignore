@@ -4,7 +4,8 @@ dist/
 _site/
 *.log
 .DS_Store
-data/backups/*.gz
-data/backups/*.archive
+# Persistent runtime data (see data/README.md)
+data/**
+!data/README.md
 dynamic-api/.git
 pyorchestrator/.git

@@ -7,12 +7,14 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { WashesPage } from './pages/WashesPage';
 import { PostsPage } from './pages/PostsPage';
+import { PostDetailPage } from './pages/PostDetailPage';
 import { StatesPage } from './pages/StatesPage';
 import {
   CardsLayout,
   CardsDiscountPage,
   CardsServicePage,
   CardsVipPage,
+  CardsCollectionPage,
 } from './pages/CardsPage';
 import { UsagePage } from './pages/UsagePage';
 import { FinancePage } from './pages/FinancePage';
@@ -22,10 +24,13 @@ import { TelegramPage } from './pages/TelegramPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { CurrencyPage } from './pages/CurrencyPage';
 import { DiscountTypesPage } from './pages/DiscountTypesPage';
+import { WorkModesPage } from './pages/WorkModesPage';
 import { LogsPage } from './pages/LogsPage';
+import { MqttPage } from './pages/MqttPage';
 import { UsersPage } from './pages/UsersPage';
 import { GroupsPage } from './pages/GroupsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -55,12 +60,15 @@ function AppRoutes() {
         <Route index element={<DashboardPage />} />
         <Route path="washes" element={<WashesPage />} />
         <Route path="posts" element={<PostsPage />} />
+        <Route path="posts/:postId" element={<PostDetailPage />} />
         <Route path="states" element={<StatesPage />} />
+        <Route path="mqtt" element={<MqttPage />} />
         <Route path="cards" element={<CardsLayout />}>
           <Route index element={<Navigate to="discount" replace />} />
           <Route path="discount" element={<CardsDiscountPage />} />
           <Route path="service" element={<CardsServicePage />} />
           <Route path="vip" element={<CardsVipPage />} />
+          <Route path="collection" element={<CardsCollectionPage />} />
         </Route>
         <Route path="usage" element={<UsagePage />} />
         <Route path="finance" element={<FinancePage />} />
@@ -70,9 +78,11 @@ function AppRoutes() {
         <Route path="groups" element={<AdminRoute><GroupsPage /></AdminRoute>} />
         <Route path="backups" element={<AdminRoute><BackupsPage /></AdminRoute>} />
         <Route path="telegram" element={<AdminRoute><TelegramPage /></AdminRoute>} />
+        <Route path="work-modes" element={<AdminRoute><WorkModesPage /></AdminRoute>} />
         <Route path="currency" element={<AdminRoute><CurrencyPage /></AdminRoute>} />
         <Route path="discount-types" element={<AdminRoute><DiscountTypesPage /></AdminRoute>} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="logs" element={<AdminRoute><LogsPage /></AdminRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

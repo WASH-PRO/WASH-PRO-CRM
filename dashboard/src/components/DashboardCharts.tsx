@@ -48,9 +48,9 @@ function ChartCard({ title, children, empty }: { title: string; children: React.
     <div className="card">
       <h2 className="mb-4 font-semibold">{title}</h2>
       {empty ? (
-        <p className="flex h-80 items-center justify-center text-sm text-panel-muted dark:text-panel-muted-dark">Нет данных для графика</p>
+        <p className="flex h-64 items-center justify-center text-sm text-panel-muted dark:text-panel-muted-dark sm:h-80">Нет данных для графика</p>
       ) : (
-        <div className="h-80">{children}</div>
+        <div className="h-64 sm:h-80">{children}</div>
       )}
     </div>
   );
@@ -79,8 +79,8 @@ export function DashboardCharts({
   };
 
   const postStatusCards = [
-    { label: 'Постов онлайн', value: online, color: 'text-emerald-600', bg: 'panel-stat' },
-    { label: 'Постов офлайн', value: offline, color: 'text-panel-muted', bg: 'panel-stat' },
+    { label: 'Постов онлайн', value: online, color: 'text-emerald-600', bg: 'panel-stat', hint: 'данные за 30 сек' },
+    { label: 'Постов офлайн', value: offline, color: 'text-panel-muted', bg: 'panel-stat', hint: 'нет данных > 30 сек' },
     { label: 'Постов в обслуживании', value: maintenanceCount, color: 'text-amber-600', bg: 'panel-stat' },
     { label: 'Постов в ошибке', value: errorCount, color: 'text-red-600', bg: 'panel-stat' },
   ];
@@ -122,36 +122,6 @@ export function DashboardCharts({
     [usageByCategory]
   );
 
-  const pieLabelColor = isDark ? '#cbd5e1' : '#475569';
-
-  const renderUsagePieLabel = (props: {
-    name?: string;
-    percent?: number;
-    cx?: number;
-    cy?: number;
-    midAngle?: number;
-    outerRadius?: number;
-  }) => {
-    const { name = '', percent = 0, cx = 0, cy = 0, midAngle = 0, outerRadius = 0 } = props;
-    const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 18;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill={pieLabelColor}
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        fontSize={11}
-      >
-        {`${name} ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
   return (
     <div className="mb-6 space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -159,7 +129,9 @@ export function DashboardCharts({
           <div key={c.label} className={c.bg}>
             <div className="text-xs font-medium uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark">{c.label}</div>
             <div className={`mt-2 text-3xl font-semibold tracking-tight ${c.color}`}>{c.value}</div>
-            <div className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">из {posts.length} постов</div>
+            <div className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+              {c.hint ? c.hint : `из ${posts.length} постов`}
+            </div>
           </div>
         ))}
       </div>
@@ -167,18 +139,16 @@ export function DashboardCharts({
       <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard title="Использование типов карт" empty={usageByCategory.length === 0}>
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 12, right: 28, bottom: 36, left: 28 }}>
+            <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
               <Pie
                 data={usageByCategory}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
-                cy="46%"
-                innerRadius={48}
-                outerRadius={68}
+                cy="50%"
+                innerRadius="42%"
+                outerRadius="62%"
                 paddingAngle={3}
-                label={renderUsagePieLabel}
-                labelLine={{ stroke: pieLabelColor, strokeWidth: 1 }}
               >
                 {usageByCategory.map((entry) => (
                   <Cell key={entry.name} fill={entry.fill} />
@@ -195,7 +165,7 @@ export function DashboardCharts({
               <Legend
                 verticalAlign="bottom"
                 layout="horizontal"
-                wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+                wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }}
               />
             </PieChart>
           </ResponsiveContainer>

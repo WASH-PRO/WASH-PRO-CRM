@@ -118,7 +118,7 @@ services:
       BACKEND_INTERNAL_URL: http://pyorch-backend:8000
       INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
     volumes:
-      - pyorch_runtime_workspaces:/workspaces
+      - ${DATA_DIR:-./data}/pyorchestrator/runtime-workspaces:/workspaces
       - ./pyorchestrator/runtime/engine:/app/engine:ro
     depends_on:
       pyorch-postgres:
@@ -210,7 +210,7 @@ services:
       POSTGRES_USER: ${PYORCH_POSTGRES_USER:-pyorch}
       POSTGRES_PASSWORD: ${PYORCH_POSTGRES_PASSWORD:-pyorch_secret}
     volumes:
-      - pyorch_postgres_data:/var/lib/postgresql/data
+      - ${DATA_DIR:-./data}/pyorchestrator/postgres:/var/lib/postgresql/data
       - ./pyorchestrator/infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
     networks:
       - wash-internal
@@ -226,7 +226,7 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
-      - pyorch_redis_data:/data
+      - ${DATA_DIR:-./data}/pyorchestrator/redis:/data
     networks:
       - wash-internal
     healthcheck:
@@ -244,7 +244,7 @@ services:
       MINIO_ROOT_PASSWORD: ${PYORCH_MINIO_SECRET_KEY:-minioadmin}
     command: server /data --console-address ":9001"
     volumes:
-      - pyorch_minio_data:/data
+      - ${DATA_DIR:-./data}/pyorchestrator/minio:/data
     networks:
       - wash-internal
     healthcheck:
@@ -291,7 +291,7 @@ services:
       - "${PYORCH_PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./config/pyorchestrator/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - pyorch_prometheus_data:/prometheus
+      - ${DATA_DIR:-./data}/pyorchestrator/prometheus:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
@@ -313,7 +313,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./pyorchestrator/infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
-      - pyorch_grafana_data:/var/lib/grafana
+      - ${DATA_DIR:-./data}/pyorchestrator/grafana:/var/lib/grafana
     depends_on:
       - pyorch-prometheus
       - pyorch-loki
@@ -330,7 +330,7 @@ services:
       - pyorch-observability
     volumes:
       - ./pyorchestrator/infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
-      - pyorch_loki_data:/loki
+      - ${DATA_DIR:-./data}/pyorchestrator/loki:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - wash-internal
@@ -349,19 +349,3 @@ services:
       - pyorch-loki
     networks:
       - wash-internal
-
-volumes:
-  pyorch_postgres_data:
-    name: wash_pyorch_postgres_data
-  pyorch_redis_data:
-    name: wash_pyorch_redis_data
-  pyorch_minio_data:
-    name: wash_pyorch_minio_data
-  pyorch_runtime_workspaces:
-    name: wash_pyorch_runtime_workspaces
-  pyorch_prometheus_data:
-    name: wash_pyorch_prometheus_data
-  pyorch_grafana_data:
-    name: wash_pyorch_grafana_data
-  pyorch_loki_data:
-    name: wash_pyorch_loki_data

@@ -7,11 +7,13 @@
 ## Возможности
 
 - SCADA: состояние постов, live-таймер, интерактивный график
-- Автомойки, посты (серийный номер контроллера), карты (regular/service/VIP)
+- Автомойки, посты, **настройки устройства** (цены режимов, команды MQTT)
+- Карты (regular/service/VIP), журнал применений NFC
 - Аналитика до/после инкассации, архив, бэкапы MongoDB
-- **Пользователи и группы RBAC** в Dashboard
+- Уведомления web + Telegram, настраиваемые типы событий
+- Пользователи и группы RBAC в Dashboard, профиль пользователя
 - **Telegram-боты** (несколько) через PyOrchestrator + pyorch-bridge
-- **Resources** — статус Dynamic API (`:8080`) и PyOrchestrator (`:8090`)
+- MQTT (Mosquitto) вместо RabbitMQ для телеметрии
 - Live-обновление 3–15 с
 
 ## Быстрый старт
@@ -39,16 +41,21 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [Быстрый старт](Getting-Started)
 - [Dashboard](Dashboard)
 - [Архитектура](Architecture)
+- [MQTT и управление постами](MQTT)
 - [Встроенные сервисы](Embedded-Services)
 - [Схема данных](Database-Schema)
 
 ## Архитектура
 
 ```
-Контроллеры → RabbitMQ → Message Processor → Dynamic API → MongoDB
-Dashboard ──nginx──► Dynamic API
+Контроллеры ⇄ MQTT (Mosquitto) ⇄ Message Processor ⇄ Dynamic API ⇄ MongoDB
+Dashboard ──nginx──► Dynamic API, post-device API, backup, telegram-bots
 Dashboard ──pyorch-bridge──► PyOrchestrator (Telegram, опц.)
 ```
+
+## Changelog
+
+См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) в репозитории.
 
 ## Репозиторий
 

@@ -5,8 +5,9 @@
 ## Поток данных
 
 ```
-Контроллеры → RabbitMQ → Message Processor → Dynamic API → MongoDB
+Контроллеры ⇄ MQTT (Mosquitto) ⇄ Message Processor ⇄ Dynamic API ⇄ MongoDB
 Dashboard ──► Dynamic API (nginx /api)
+Dashboard ──► /api/crm/post-device/ ──► message-processor:3022 (команды/цены)
 Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 ```
 
@@ -17,7 +18,10 @@ Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 | dashboard | 80 | ✅ |
 | dynamic-api | 3001 | ✅ |
 | dynamic-api-panel | 8080 | ✅ |
-| mongodb, rabbitmq, backup, message-processor | — | internal |
+| mosquitto | 1883 | ✅ LAN |
+| mongodb, backup, message-processor | — | internal |
+
+`message-processor`: подписка MQTT + HTTP `:3022` для исходящих `set/prices` и `set/command`.
 
 ## PyOrchestrator (опц.)
 
@@ -29,6 +33,13 @@ Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 | pyorch-bridge | internal |
 
 Включение: `PYORCHESTRATOR_ENABLED=true` + `./scripts/start.sh`
+
+## Телеметрия
+
+- **Входящая:** `wash/telemetry/#` (legacy) и `+/+/#` (нативный `{dt_pref}/{serial}/state/*`)
+- **Исходящая:** Dashboard → processor HTTP → `{dt_pref}/{serial}/set/*`
+- Журнал: `/api/crm/telemetry` (все сообщения)
+- DLQ: `wash/dlq`
 
 ## init-seed
 

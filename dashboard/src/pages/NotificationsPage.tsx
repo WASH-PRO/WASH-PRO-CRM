@@ -7,6 +7,7 @@ import { usePolling } from '../hooks/usePolling';
 import { bulkPatch } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
+import { NOTIFICATION_TYPE_LABELS } from '../utils/notificationSettings';
 import type { Notification } from '../types';
 
 export function NotificationsPage() {
@@ -45,12 +46,7 @@ export function NotificationsPage() {
       {
         id: 'type',
         label: 'Тип',
-        options: [
-          { value: 'connection_lost', label: 'connection_lost' },
-          { value: 'equipment_error', label: 'equipment_error' },
-          { value: 'queue_overflow', label: 'queue_overflow' },
-          { value: 'backup_error', label: 'backup_error' },
-        ],
+        options: Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => ({ value, label })),
         match: (n, v) => n.type === v,
       },
     ],
@@ -63,7 +59,7 @@ export function NotificationsPage() {
         key: 'type',
         header: 'Тип',
         searchValue: (n) => n.type,
-        render: (n) => n.type,
+        render: (n) => NOTIFICATION_TYPE_LABELS[n.type] ?? n.type,
       },
       {
         key: 'severity',
@@ -136,6 +132,7 @@ export function NotificationsPage() {
     <div>
       <PageHeader title="Уведомления" subtitle="Telegram и Web Notifications" />
       <DataTable
+        tableId="notifications"
         columns={columns}
         data={items || []}
         rowKey={(n) => n.id}

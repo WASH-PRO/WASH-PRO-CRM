@@ -53,6 +53,11 @@ describe('validateDataAgainstSchema', () => {
     );
     expect(result.valid).toBe(true);
   });
+
+  it('allows partial PATCH without required fields', () => {
+    const result = validateDataAgainstSchema({ count: 2 }, schema, { partial: true });
+    expect(result.valid).toBe(true);
+  });
 });
 
 describe('applyDefaults', () => {

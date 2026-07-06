@@ -1,4 +1,5 @@
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
 import { listDapGroups, listDapUsers } from '../api/admin';
@@ -37,6 +38,7 @@ export function UsersPage() {
   const { data, loading, error, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
   const users = data?.users ?? [];
   const groups = data?.groups ?? [];
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const groupNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -64,6 +66,17 @@ export function UsersPage() {
     setFormError(null);
     setModal(true);
   };
+
+  useEffect(() => {
+    const editIdFromUrl = searchParams.get('edit');
+    if (!editIdFromUrl || !users.length || !canEdit) return;
+    const target = users.find((u) => entityId(u) === editIdFromUrl);
+    if (!target) return;
+    openEdit(target);
+    const next = new URLSearchParams(searchParams);
+    next.delete('edit');
+    setSearchParams(next, { replace: true });
+  }, [users, searchParams, canEdit, setSearchParams]);
 
   const toggleGroup = (groupId: string) => {
     setForm((prev) => ({
@@ -257,6 +270,7 @@ export function UsersPage() {
         </div>
       )}
       <DataTable
+        tableId="users"
         columns={columns}
         data={users}
         rowKey={(u) => entityId(u)}

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Trash2 } from 'lucide-react';
 import { api, apiList } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import type { ArchiveLog, CrmSetting, ArchiveGroupSettings, ArchiveSettings } fr
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
 import { executeArchiveGroup, type ArchiveGroupKey } from '../utils/archive';
+import { archiveFilenameLabel, resolveArchiveFilename } from '../utils/archiveLog';
 import { deleteArchiveFile, downloadArchiveFile, downloadJson } from '../utils/download';
 
 const RETENTION_OPTIONS = [30, 90, 180, 365];
@@ -118,11 +119,13 @@ export function ArchivePage() {
           recordsAffected: result.affected,
           policyDays: group.retentionDays,
           createdAt: new Date().toISOString(),
+          ...(result.filename ? { filename: result.filename } : {}),
           details: {
             manual: true,
             group: groupKey,
             deleteAfter: group.deleteAfter,
-            filename: result.filename,
+            saveArchive: group.saveArchive,
+            ...(result.filename ? { filename: result.filename } : {}),
           },
         }),
       });
@@ -149,7 +152,7 @@ export function ArchivePage() {
   };
 
   const downloadLog = async (log: ArchiveLog) => {
-    const filename = log.details?.filename as string | undefined;
+    const filename = resolveArchiveFilename(log);
     try {
       if (filename) {
         await downloadArchiveFile(filename);
@@ -161,17 +164,61 @@ export function ArchivePage() {
     }
   };
 
+  const deleteLogs = useCallback(
+    async (selected: ArchiveLog[]) => {
+      if (selected.length === 0) return;
+
+      let deleted = 0;
+      const fileErrors: string[] = [];
+      const dbErrors: string[] = [];
+
+      for (const log of selected) {
+        const filename = resolveArchiveFilename(log);
+        if (filename) {
+          try {
+            await deleteArchiveFile(filename);
+          } catch {
+            fileErrors.push(filename);
+          }
+        }
+
+        if (!log.id) {
+          dbErrors.push('запись без id');
+          continue;
+        }
+
+        try {
+          await api(`/crm/archive-logs/${log.id}`, { method: 'DELETE' });
+          deleted += 1;
+        } catch {
+          dbErrors.push(log.id);
+        }
+      }
+
+      await refresh();
+
+      if (deleted === 0) {
+        throw new Error('Не удалось удалить выбранные записи. Проверьте права доступа.');
+      }
+      if (dbErrors.length > 0 || fileErrors.length > 0) {
+        const parts: string[] = [];
+        if (dbErrors.length) parts.push(`записей в журнале: ${dbErrors.length}`);
+        if (fileErrors.length) parts.push(`файлов архива: ${fileErrors.length}`);
+        throw new Error(`Удалено ${deleted} из ${selected.length}. Ошибки (${parts.join(', ')})`);
+      }
+    },
+    [refresh]
+  );
+
   const deleteLog = async (log: ArchiveLog) => {
     if (!confirm('Удалить запись из журнала архивирования?')) return;
-    const filename = log.details?.filename as string | undefined;
     try {
-      if (filename) {
-        await deleteArchiveFile(filename);
-      }
-      await api(`/crm/archive-logs/${log.id}`, { method: 'DELETE' });
-      refresh();
+      await deleteLogs([log]);
+      setMessage('Запись удалена');
+      setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось удалить запись');
+      setMessage('');
     }
   };
 
@@ -223,11 +270,18 @@ export function ArchivePage() {
     },
     {
       key: 'file',
-      header: 'Файл',
-      searchValue: (l) => (l.details?.filename as string) || '',
+      header: 'Имя файла',
+      sortable: true,
+      sortValue: (l) => resolveArchiveFilename(l) || '',
+      searchValue: (l) => archiveFilenameLabel(l),
       render: (l) => {
-        const filename = l.details?.filename as string | undefined;
-        return filename ? <span className="font-mono text-xs">{filename}</span> : '—';
+        const label = archiveFilenameLabel(l);
+        const filename = resolveArchiveFilename(l);
+        return filename ? (
+          <span className="font-mono text-xs">{filename}</span>
+        ) : (
+          <span className="text-panel-muted dark:text-panel-muted-dark">{label}</span>
+        );
       },
     },
     ...(canDelete
@@ -260,15 +314,38 @@ export function ArchivePage() {
       : []),
   ];
 
-  const logBulkActions: DataTableBulkAction<ArchiveLog>[] = [
-    createExportBulkAction('archive-logs.csv', [
-      { header: 'Действие', value: (l) => l.action },
-      { header: 'Группа', value: (l) => (l.details?.group as string) || '' },
-      { header: 'Записей', value: (l) => String(l.recordsAffected ?? '') },
-      { header: 'Срок хранения', value: (l) => String(l.policyDays ?? '') },
-      { header: 'Дата и время', value: (l) => l.createdAt || '' },
-    ]),
-  ];
+  const logBulkActions = useMemo((): DataTableBulkAction<ArchiveLog>[] => {
+    const actions: DataTableBulkAction<ArchiveLog>[] = [
+      createExportBulkAction('archive-logs.csv', [
+        { header: 'Действие', value: (l) => l.action },
+        { header: 'Группа', value: (l) => (l.details?.group as string) || '' },
+        { header: 'Записей', value: (l) => String(l.recordsAffected ?? '') },
+        { header: 'Срок хранения', value: (l) => String(l.policyDays ?? '') },
+        { header: 'Имя файла', value: (l) => archiveFilenameLabel(l) },
+        { header: 'Дата и время', value: (l) => l.createdAt || '' },
+      ]),
+    ];
+    if (canDelete) {
+      actions.push({
+        id: 'delete',
+        label: 'Удалить',
+        variant: 'danger',
+        confirmMessage: (_rows, ids) =>
+          `Удалить ${ids.length} записей из журнала (и связанные файлы архивов)?`,
+        onAction: async (rows) => {
+          try {
+            await deleteLogs(rows);
+            setMessage(`Удалено записей: ${rows.length}`);
+            setError('');
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Не удалось удалить записи');
+            setMessage('');
+          }
+        },
+      });
+    }
+    return actions;
+  }, [canDelete, deleteLogs]);
 
   if (loading && !data) return <Loading />;
 
@@ -301,37 +378,41 @@ export function ArchivePage() {
                   </button>
                 )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="flex items-center gap-2 text-sm">
+              <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+                <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
                     type="checkbox"
+                    className="mt-0.5 shrink-0"
                     checked={group.enabled}
                     onChange={(e) => updateGroup(key, { enabled: e.target.checked })}
                     disabled={!canEdit}
                   />
                   Включение архивирования
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
                     type="checkbox"
+                    className="mt-0.5 shrink-0"
                     checked={group.autoRun}
                     onChange={(e) => updateGroup(key, { autoRun: e.target.checked })}
                     disabled={!canEdit}
                   />
                   Автозапуск архивирования
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
                     type="checkbox"
+                    className="mt-0.5 shrink-0"
                     checked={group.saveArchive}
                     onChange={(e) => updateGroup(key, { saveArchive: e.target.checked })}
                     disabled={!canEdit}
                   />
                   Сохранение архива
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
                     type="checkbox"
+                    className="mt-0.5 shrink-0"
                     checked={group.deleteAfter}
                     onChange={(e) => updateGroup(key, { deleteAfter: e.target.checked })}
                     disabled={!canEdit}
@@ -339,7 +420,7 @@ export function ArchivePage() {
                   Удаление исходных данных после архивирования
                 </label>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
                   <label className="label">Срок хранения данных</label>
                   <select
@@ -383,7 +464,7 @@ export function ArchivePage() {
       </form>
 
       <h2 className="mb-3 font-semibold">Журнал архивирования</h2>
-      <DataTable columns={logColumns} data={logs} rowKey={(l) => l.id} filters={logFilters} searchPlaceholder="Поиск в журнале…" bulkActions={logBulkActions} />
+      <DataTable tableId="archive-logs" columns={logColumns} data={logs} rowKey={(l) => l.id} filters={logFilters} searchPlaceholder="Поиск в журнале…" bulkActions={logBulkActions} />
     </div>
   );
 }

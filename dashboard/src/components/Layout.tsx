@@ -1,115 +1,33 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Building2,
-  Columns3,
-  Activity,
-  CreditCard,
-  BarChart3,
-  Wallet,
-  Archive,
-  HardDrive,
-  Bot,
   Bell,
-  Coins,
-  Tags,
-  FileText,
   LogOut,
   Menu,
   X,
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
-  Users,
-  Shield,
-  Settings,
-  type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
+import { useSidebarSize } from '../hooks/useSidebarSize';
 import { ThemeToggle } from './ThemeToggle';
 import { LiveModeProvider } from '../context/LiveModeContext';
 import { LiveModeIndicator } from './LiveModeIndicator';
 import { EmbeddedServicesSidebar } from './EmbeddedServicesSidebar';
 import { breadcrumbsFromPath } from '../utils/breadcrumbs';
+import { navGroups } from '../utils/navRoutes';
+import { BreadcrumbProvider, useBreadcrumbLastLabelOverride } from '../context/BreadcrumbContext';
+import { BrandLogo } from './BrandLogo';
 
-interface NavItem {
-  to: string;
-  label: string;
-  shortLabel?: string;
-  icon: LucideIcon;
-  admin?: boolean;
-}
-
-interface NavGroup {
-  title: string;
-  items: NavItem[];
-}
-
-const navGroups: NavGroup[] = [
-  {
-    title: 'Главное',
-    items: [{ to: '/', label: 'Обзор', icon: LayoutDashboard }],
-  },
-  {
-    title: 'Объекты',
-    items: [
-      { to: '/washes', label: 'Автомойки', shortLabel: 'Мойки', icon: Building2 },
-      { to: '/posts', label: 'Посты', icon: Columns3 },
-      { to: '/states', label: 'Состояние', shortLabel: 'Состояние', icon: Activity },
-    ],
-  },
-  {
-    title: 'Карты',
-    items: [
-      { to: '/cards/discount', label: 'Скидочные', icon: CreditCard },
-      { to: '/cards/service', label: 'Сервисные', icon: CreditCard },
-      { to: '/cards/vip', label: 'VIP', icon: CreditCard },
-    ],
-  },
-  {
-    title: 'Аналитика',
-    items: [
-      { to: '/usage', label: 'Использование', shortLabel: 'Usage', icon: BarChart3 },
-      { to: '/finance', label: 'Финансы', icon: Wallet },
-      { to: '/archive', label: 'Архив', icon: Archive },
-    ],
-  },
-  {
-    title: 'Система',
-    items: [
-      { to: '/notifications', label: 'Уведомления', icon: Bell },
-      { to: '/users', label: 'Пользователи', icon: Users, admin: true },
-      { to: '/groups', label: 'Группы и права', icon: Shield, admin: true },
-      { to: '/backups', label: 'Резервные копии', shortLabel: 'Бэкапы', icon: HardDrive, admin: true },
-      { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
-      { to: '/currency', label: 'Валюты', icon: Coins, admin: true },
-      { to: '/discount-types', label: 'Типы скидок', icon: Tags, admin: true },
-      { to: '/settings', label: 'Настройки', icon: Settings },
-      { to: '/logs', label: 'Логи', icon: FileText, admin: true },
-    ],
-  },
-];
-
-const SIDEBAR_KEY = 'wash_sidebar_collapsed';
-
-function userInitials(name?: string, login?: string): string {
-  const source = (name || login || '?').trim();
-  const parts = source.split(/\s+/);
-  if (parts.length >= 2) return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
-  return source.slice(0, 2).toUpperCase();
-}
-
-export function Layout() {
+function LayoutInner() {
   const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_KEY) === '1');
-
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
-  }, [collapsed]);
+  const sidebarUserKey = user?.id || user?.login;
+  const { collapsed, setCollapsed, effectiveWidth, resizing, startResize, canResize } =
+    useSidebarSize(sidebarUserKey);
 
   const filteredGroups = useMemo(
     () =>
@@ -122,17 +40,25 @@ export function Layout() {
     [isAdmin]
   );
 
-  const crumbs = useMemo(() => breadcrumbsFromPath(location.pathname), [location.pathname]);
-  const sidebarWidth = collapsed ? 'w-[4.5rem]' : 'w-64';
-  const mainOffset = collapsed ? 'lg:ml-[4.5rem]' : 'lg:ml-64';
+  const lastCrumbLabel = useBreadcrumbLastLabelOverride();
+  const crumbs = useMemo(() => {
+    const items = breadcrumbsFromPath(location.pathname);
+    if (!lastCrumbLabel || items.length === 0) return items;
+    return items.map((item, i) =>
+      i === items.length - 1 ? { ...item, label: lastCrumbLabel } : item
+    );
+  }, [location.pathname, lastCrumbLabel]);
 
   return (
-    <LiveModeProvider>
-      <div className="flex h-screen overflow-hidden bg-panel-canvas dark:bg-panel-canvas-dark">
+      <div
+        className="flex h-screen overflow-hidden bg-panel-canvas dark:bg-panel-canvas-dark"
+        style={{ '--sidebar-width': `${effectiveWidth}px` } as CSSProperties}
+      >
         <aside
+        style={{ '--drawer-width': `${effectiveWidth}px` } as CSSProperties}
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-panel-border bg-panel-card text-panel-ink transition-all duration-300 ease-out dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300',
-          sidebarWidth,
+          'fixed inset-y-0 left-0 z-40 flex h-full w-[min(calc(100vw-1rem),var(--drawer-width))] flex-col border-r border-panel-border bg-panel-card text-panel-ink dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300 lg:w-[var(--drawer-width)]',
+          !resizing && 'transition-[width,transform] duration-300 ease-out',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -142,9 +68,7 @@ export function Layout() {
             collapsed ? 'justify-center px-2' : 'gap-3 px-4'
           )}
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-glow">
-            W
-          </div>
+          <BrandLogo size="md" className={collapsed ? '' : undefined} />
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-panel-ink dark:text-white">WASH PRO CRM</div>
@@ -183,26 +107,45 @@ export function Layout() {
         </nav>
 
         <div className="shrink-0 space-y-2 border-t border-panel-border p-2 dark:border-panel-sidebar-border">
-          <EmbeddedServicesSidebar collapsed={collapsed} />
+          <EmbeddedServicesSidebar collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
 
           <button
             type="button"
             onClick={() => setCollapsed((v) => !v)}
-            className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
+            className={clsx('nav-item hidden w-full lg:flex', collapsed && 'justify-center px-2')}
             title={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
             {!collapsed && <span>Свернуть меню</span>}
           </button>
         </div>
+
+        {canResize && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Изменить ширину меню"
+            onMouseDown={startResize}
+            className={clsx(
+              'absolute inset-y-0 right-0 z-50 hidden w-1.5 translate-x-1/2 cursor-col-resize touch-none lg:block',
+              'hover:bg-brand-500/35 active:bg-brand-500/50',
+              resizing && 'bg-brand-500/50'
+            )}
+          />
+        )}
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      <div className={clsx('flex min-h-0 min-w-0 flex-1 flex-col transition-all duration-300', mainOffset)}>
-          <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-panel-border bg-panel-card/90 px-4 backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 lg:px-6">
+      <div
+        className={clsx(
+          'flex min-h-0 min-w-0 flex-1 flex-col lg:ml-[var(--sidebar-width)]',
+          !resizing && 'transition-[margin-left] duration-300 ease-out'
+        )}
+      >
+          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-panel-border bg-panel-card/90 px-3 backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 sm:h-16 sm:gap-4 sm:px-4 lg:px-6">
             <button
               type="button"
               className="btn-icon lg:hidden"
@@ -212,8 +155,12 @@ export function Layout() {
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
 
-            <div className="flex min-w-0 shrink-0 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600/15 text-xs font-semibold text-brand-700 ring-1 ring-brand-500/25 dark:bg-brand-400/15 dark:text-brand-300 dark:ring-brand-400/30">
+            <Link
+              to="/profile"
+              className="flex min-w-0 shrink-0 items-center gap-3 rounded-lg transition-colors hover:bg-panel-canvas/80 dark:hover:bg-white/[0.04]"
+              title="Мой профиль"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-brand-500/35 bg-transparent text-xs font-semibold text-brand-700 dark:border-brand-400/40 dark:text-brand-300">
                 {userInitials(user?.name, user?.login)}
               </div>
               <div className="hidden min-w-0 sm:block">
@@ -224,11 +171,11 @@ export function Layout() {
                   {isAdmin ? 'Администратор' : 'Оператор'}
                 </div>
               </div>
-            </div>
+            </Link>
 
             <div className="flex-1" />
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <LiveModeIndicator />
               <Link to="/notifications" className="btn-icon relative" title="Уведомления">
                 <Bell size={18} />
@@ -241,8 +188,8 @@ export function Layout() {
           </header>
 
           <main className="min-h-0 flex-1 overflow-auto">
-            <div className="animate-slide-up mx-auto w-full max-w-[1600px] p-4 lg:p-8">
-              <nav className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 text-sm" aria-label="Навигация">
+            <div className="animate-slide-up mx-auto w-full max-w-[1600px] p-3 sm:p-4 lg:p-8">
+              <nav className="mb-3 flex min-w-0 flex-wrap items-center gap-1.5 text-xs sm:mb-4 sm:text-sm" aria-label="Навигация">
                 {crumbs.map((crumb, i) => (
                   <span key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
                     {i > 0 && <ChevronRight size={14} className="shrink-0 text-panel-muted" />}
@@ -259,12 +206,27 @@ export function Layout() {
                   </span>
                 ))}
               </nav>
-              <div className="mb-6 h-px w-full bg-panel-border dark:bg-panel-border-dark" aria-hidden />
               <Outlet />
             </div>
           </main>
       </div>
-    </div>
+      </div>
+  );
+}
+
+function userInitials(name?: string, login?: string): string {
+  const source = (name || login || '?').trim();
+  const parts = source.split(/\s+/);
+  if (parts.length >= 2) return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
+
+export function Layout() {
+  return (
+    <LiveModeProvider>
+      <BreadcrumbProvider>
+        <LayoutInner />
+      </BreadcrumbProvider>
     </LiveModeProvider>
   );
 }

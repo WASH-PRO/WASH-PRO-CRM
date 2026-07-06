@@ -53,7 +53,7 @@ async function registerBackup(
 }
 
 async function updateBackup(token: string, id: string, data: Record<string, unknown>): Promise<void> {
-  await fetch(`${API_URL}/api/crm/backups/${id}`, {
+  const res = await fetch(`${API_URL}/api/crm/backups/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -61,9 +61,18 @@ async function updateBackup(token: string, id: string, data: Record<string, unkn
     },
     body: JSON.stringify(data),
   });
+  const json = (await res.json()) as { success?: boolean; error?: string };
+  if (!res.ok || json.success === false) {
+    throw new Error(json.error || `Backup update failed (${res.status})`);
+  }
 }
 
-async function notifyBackupError(token: string, message: string): Promise<void> {
+async function notifyCrm(
+  token: string,
+  type: string,
+  message: string,
+  severity: 'info' | 'warning' | 'error' = 'info'
+): Promise<void> {
   let settings = DEFAULT_NOTIFICATION_SETTINGS;
   try {
     const settingsRes = await fetch(`${API_URL}/api/crm/settings`, {
@@ -79,7 +88,7 @@ async function notifyBackupError(token: string, message: string): Promise<void> 
     // defaults
   }
 
-  if (!isNotificationTypeEnabled('backup_error', settings)) return;
+  if (!isNotificationTypeEnabled(type, settings)) return;
 
   const channels = channelsFromSettings(settings);
   if (!channels.length) return;
@@ -91,8 +100,8 @@ async function notifyBackupError(token: string, message: string): Promise<void> 
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      type: 'backup_error',
-      severity: 'error',
+      type,
+      severity,
       message,
       read: false,
       channels,
@@ -144,6 +153,7 @@ export async function runBackup(type: 'manual' | 'auto' = 'auto', existingRecord
     const fileStat = await stat(filepath);
     if (recordId) {
       await updateBackup(token, recordId, {
+        filename,
         status: 'completed',
         size: fileStat.size,
       });
@@ -151,15 +161,19 @@ export async function runBackup(type: 'manual' | 'auto' = 'auto', existingRecord
 
     await cleanupOldBackups();
     logger.info({ filename, size: fileStat.size }, 'Backup completed');
+    const successType = type === 'auto' ? 'auto_backup' : 'backup_success';
+    const successLabel = type === 'auto' ? 'Автоматическое резервное копирование выполнено' : 'Резервное копирование выполнено';
+    await notifyCrm(token, successType, `${successLabel}: ${filename} (${fileStat.size} байт)`);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown backup error';
     logger.error({ err }, 'Backup failed');
     try {
       if (!token) token = await getToken();
       if (recordId) {
-        await updateBackup(token, recordId, { status: 'failed', error: message });
+        await updateBackup(token, recordId, { filename, status: 'failed', error: message });
       }
-      await notifyBackupError(token, `Ошибка резервного копирования: ${message}`);
+      const errorType = 'backup_error';
+      await notifyCrm(token, errorType, `Ошибка резервного копирования: ${message}`, 'error');
     } catch {
       // best effort
     }
@@ -174,64 +188,81 @@ export async function restoreBackup(filename: string): Promise<void> {
 }
 
 async function runArchive(): Promise<void> {
-  const token = await getToken();
+  let token = '';
+  try {
+    token = await getToken();
 
-  const settingsRes = await fetch(`${API_URL}/api/crm/settings`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const settingsJson = (await settingsRes.json()) as {
-    success: boolean;
-    data?: Array<{ key: string; id: string }>;
-  };
-
-  const archiveSetting = settingsJson.data?.find((s) => s.key === 'archive');
-  if (!archiveSetting) return;
-
-  const detailRes = await fetch(`${API_URL}/api/crm/settings/${(archiveSetting as { id: string }).id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const detail = (await detailRes.json()) as { data?: { value?: { retentionDays?: number; autoArchive?: boolean } } };
-  const retentionDays = detail.data?.value?.retentionDays ?? 90;
-  if (!detail.data?.value?.autoArchive) return;
-
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - retentionDays);
-
-  const telemetry = await fetch(`${API_URL}/api/crm/telemetry?limit=500`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const telemetryJson = (await telemetry.json()) as {
-    success: boolean;
-    data?: Array<{ id: string; receivedAt?: string }>;
-  };
-
-  let affected = 0;
-  for (const record of telemetryJson.data || []) {
-    if (record.receivedAt && new Date(record.receivedAt) < cutoff) {
-      await fetch(`${API_URL}/api/crm/telemetry/${record.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      affected++;
-    }
-  }
-
-  if (affected > 0) {
-    await fetch(`${API_URL}/api/crm/archive-logs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: 'archive',
-        recordsAffected: affected,
-        policyDays: retentionDays,
-        createdAt: new Date().toISOString(),
-        details: { entity: 'telemetry' },
-      }),
+    const settingsRes = await fetch(`${API_URL}/api/crm/settings`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    logger.info({ affected, retentionDays }, 'Archive run completed');
+    const settingsJson = (await settingsRes.json()) as {
+      success: boolean;
+      data?: Array<{ key: string; id: string }>;
+    };
+
+    const archiveSetting = settingsJson.data?.find((s) => s.key === 'archive');
+    if (!archiveSetting) return;
+
+    const detailRes = await fetch(`${API_URL}/api/crm/settings/${archiveSetting.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const detail = (await detailRes.json()) as { data?: { value?: { retentionDays?: number; autoArchive?: boolean } } };
+    const retentionDays = detail.data?.value?.retentionDays ?? 90;
+    if (!detail.data?.value?.autoArchive) return;
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - retentionDays);
+
+    const telemetry = await fetch(`${API_URL}/api/crm/telemetry?limit=500`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const telemetryJson = (await telemetry.json()) as {
+      success: boolean;
+      data?: Array<{ id: string; receivedAt?: string }>;
+    };
+
+    let affected = 0;
+    for (const record of telemetryJson.data || []) {
+      if (record.receivedAt && new Date(record.receivedAt) < cutoff) {
+        await fetch(`${API_URL}/api/crm/telemetry/${record.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        affected++;
+      }
+    }
+
+    if (affected > 0) {
+      await fetch(`${API_URL}/api/crm/archive-logs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: 'archive',
+          recordsAffected: affected,
+          policyDays: retentionDays,
+          createdAt: new Date().toISOString(),
+          details: { entity: 'telemetry' },
+        }),
+      });
+      logger.info({ affected, retentionDays }, 'Archive run completed');
+      await notifyCrm(
+        token,
+        'auto_archive',
+        `Автоархивирование: удалено ${affected} записей телеметрии (политика ${retentionDays} дн.)`
+      );
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown archive error';
+    logger.error({ err }, 'Archive run failed');
+    try {
+      if (!token) token = await getToken();
+      await notifyCrm(token, 'archive_error', `Ошибка автоархивирования: ${message}`, 'error');
+    } catch {
+      // best effort
+    }
   }
 }
 
@@ -241,8 +272,16 @@ async function checkManualBackups(): Promise<void> {
     const res = await fetch(`${API_URL}/api/crm/backups`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const json = (await res.json()) as { success: boolean; data?: Array<{ id: string; type: string; status: string }> };
-    const pending = (json.data || []).find((b) => b.type === 'manual' && b.status === 'in_progress');
+    const json = (await res.json()) as {
+      success: boolean;
+      data?: Array<{ id: string; type: string; status: string; filename?: string }>;
+    };
+    const pending = (json.data || []).find(
+      (b) =>
+        b.type === 'manual' &&
+        b.status === 'in_progress' &&
+        String(b.filename || '').endsWith('.pending')
+    );
     if (pending) {
       await runBackup('manual', pending.id);
     }

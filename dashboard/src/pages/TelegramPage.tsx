@@ -15,6 +15,7 @@ import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader } from '../compo
 import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
+import { formatDateTime } from '../utils/format';
 
 interface BotForm {
   name: string;
@@ -289,6 +290,13 @@ export function TelegramPage() {
         },
       },
       {
+        key: 'created_at',
+        header: 'Дата создания',
+        sortable: true,
+        sortValue: (bot) => bot.created_at || '',
+        render: (bot) => formatDateTime(bot.created_at),
+      },
+      {
         key: 'actions',
         header: '',
         render: (bot) => {
@@ -394,6 +402,7 @@ export function TelegramPage() {
         </div>
       ) : (
         <DataTable
+          tableId="telegram-bots"
           columns={columns}
           data={botList}
           rowKey={(bot) => bot.id}
@@ -480,7 +489,7 @@ export function TelegramPage() {
             </label>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <button type="button" className="btn-secondary" onClick={() => setModalOpen(false)}>
               Отмена
             </button>

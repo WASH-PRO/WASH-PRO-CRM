@@ -28,6 +28,32 @@ function decodeJwtPermissions(token: string): import('../types').Permission[] {
   }
 }
 
+function decodeJwtExp(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]!)) as { exp?: number };
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+type AuthExpiredListener = () => void;
+const authExpiredListeners = new Set<AuthExpiredListener>();
+
+export function onAuthExpired(listener: AuthExpiredListener): () => void {
+  authExpiredListeners.add(listener);
+  return () => {
+    authExpiredListeners.delete(listener);
+  };
+}
+
+export function notifyAuthExpired(): void {
+  clearAuth();
+  for (const listener of authExpiredListeners) {
+    listener();
+  }
+}
+
 export function getStoredPermissions(): import('../types').Permission[] {
   const raw = localStorage.getItem(PERMS_KEY);
   if (raw) return JSON.parse(raw) as import('../types').Permission[];
@@ -76,7 +102,26 @@ async function fetchApi<T>(
     }
   }
 
-  const json = (await res.json()) as ApiResult<T>;
+  if (res.status === 401) {
+    notifyAuthExpired();
+    throw new Error('Сессия истекла. Войдите снова.');
+  }
+
+  const text = await res.text();
+  if (!text.trim()) {
+    if (!res.ok) throw new Error(`Ошибка запроса: ${res.status}`);
+    return { success: true };
+  }
+
+  let json: ApiResult<T>;
+  try {
+    json = JSON.parse(text) as ApiResult<T>;
+  } catch {
+    throw new Error(
+      res.ok ? 'Некорректный ответ сервера' : text.slice(0, 200) || `Ошибка запроса: ${res.status}`
+    );
+  }
+
   if (!json.success) {
     throw new Error(json.error || `Ошибка запроса: ${res.status}`);
   }
@@ -91,8 +136,30 @@ export async function api<T>(
   return json.data as T;
 }
 
+/** Одна страница списка Dynamic API. */
+export async function apiListPage<T>(
+  path: string,
+  page = 1,
+  limit = 100,
+  signal?: AbortSignal
+): Promise<{ data: T[]; pagination: NonNullable<ApiResult<T[]>['pagination']> }> {
+  const [basePath, queryString] = path.split('?');
+  const params = new URLSearchParams(queryString || '');
+  params.set('page', String(page));
+  params.set('limit', String(limit));
+  const json = await fetchApi<T[]>(`${basePath}?${params.toString()}`, { signal });
+  const data = Array.isArray(json.data) ? json.data : [];
+  const pagination = json.pagination ?? { total: data.length, page, limit, totalPages: 1 };
+  return { data, pagination };
+}
+
 /** Загружает все страницы списка (Dynamic API по умолчанию limit=20). */
-export async function apiListAll<T>(path: string, pageSize = 100): Promise<T[]> {
+export async function apiListAll<T>(
+  path: string,
+  pageSize = 100,
+  maxPages?: number,
+  signal?: AbortSignal
+): Promise<T[]> {
   const [basePath, queryString] = path.split('?');
   const params = new URLSearchParams(queryString || '');
   const all: T[] = [];
@@ -100,20 +167,29 @@ export async function apiListAll<T>(path: string, pageSize = 100): Promise<T[]> 
   let totalPages = 1;
 
   while (page <= totalPages) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    if (maxPages != null && page > maxPages) break;
     params.set('page', String(page));
     params.set('limit', String(pageSize));
-    const json = await fetchApi<T[]>(`${basePath}?${params.toString()}`);
+    const json = await fetchApi<T[]>(`${basePath}?${params.toString()}`, { signal });
     const chunk = Array.isArray(json.data) ? json.data : [];
     all.push(...chunk);
     totalPages = json.pagination?.totalPages ?? 1;
+    if (chunk.length === 0) break;
     page += 1;
   }
 
   return all;
 }
 
-export async function apiList<T>(path: string): Promise<T[]> {
-  return apiListAll<T>(path);
+/** Одна страница — для небольших справочников. */
+export async function apiListDictionary<T>(path: string, signal?: AbortSignal): Promise<T[]> {
+  const { data } = await apiListPage<T>(path, 1, 200, signal);
+  return data;
+}
+
+export async function apiList<T>(path: string, signal?: AbortSignal): Promise<T[]> {
+  return apiListAll<T>(path, 100, 100, signal);
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -130,7 +206,7 @@ async function refreshAccessToken(): Promise<string | null> {
     setStoredPermissions(decodeJwtPermissions(json.data.accessToken));
     return json.data.accessToken;
   }
-  clearAuth();
+  notifyAuthExpired();
   return null;
 }
 
@@ -160,7 +236,48 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
     }
   }
 
+  if (res.status === 401) {
+    notifyAuthExpired();
+  }
+
   return res;
+}
+
+/** Периодическая проверка JWT и refresh при простое (без API-запросов). */
+export function startSessionWatch(): () => void {
+  const tick = async () => {
+    const refresh = localStorage.getItem(REFRESH_KEY);
+    const access = getToken();
+    if (!refresh && !access) return;
+
+    const refreshExp = refresh ? decodeJwtExp(refresh) : null;
+    if (refreshExp && Date.now() >= refreshExp * 1000) {
+      notifyAuthExpired();
+      return;
+    }
+
+    if (!access) {
+      notifyAuthExpired();
+      return;
+    }
+
+    const accessExp = decodeJwtExp(access);
+    if (accessExp && Date.now() >= accessExp * 1000) {
+      const newToken = await refreshAccessToken();
+      if (!newToken) notifyAuthExpired();
+    }
+  };
+
+  void tick();
+  const intervalId = window.setInterval(() => void tick(), 30_000);
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') void tick();
+  };
+  document.addEventListener('visibilitychange', onVisible);
+  return () => {
+    clearInterval(intervalId);
+    document.removeEventListener('visibilitychange', onVisible);
+  };
 }
 
 export async function login(login: string, password: string) {
@@ -190,7 +307,23 @@ export async function logout(): Promise<void> {
 }
 
 export async function getProfile() {
-  return api<import('../types').User>('/profile');
+  const profile = await api<import('../types').User>('/profile');
+  return {
+    ...profile,
+    id: profile.id || String((profile as { _id?: string })._id ?? ''),
+    groupIds: Array.isArray(profile.groupIds) ? profile.groupIds : [],
+  };
+}
+
+export async function updateProfile(body: {
+  name?: string;
+  email?: string;
+  password?: string;
+}): Promise<import('../types').User> {
+  return api<import('../types').User>('/profile', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function getSystemLogs(query = 'page=1&limit=50') {

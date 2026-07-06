@@ -4,6 +4,9 @@ import {
   CRM_GROUPS,
   DEFAULT_CURRENCIES,
   DEFAULT_DISCOUNT_TYPES,
+  DEFAULT_WORK_MODES,
+  DEFAULT_DEMO_WASH,
+  DEFAULT_DEMO_POSTS,
   DEFAULT_SETTINGS,
   ENDPOINT_GROUPS,
   LEGACY_ENDPOINT_GROUP,
@@ -457,6 +460,7 @@ async function ensureEndpoints(
     else if (item.path.includes('usage-stats') || item.path.includes('finance-stats')) groupKey = 'statistics';
     else if (item.path.includes('/currencies')) groupKey = 'currencies';
     else if (item.path.includes('discount-types')) groupKey = 'discount-types';
+    else if (item.path.includes('work-modes')) groupKey = 'work-modes';
     else if (item.path.includes('/settings')) groupKey = 'settings';
     else if (item.path.includes('/notifications')) groupKey = 'notifications';
     else if (item.path.includes('/backups') || item.path.includes('archive-logs')) groupKey = 'backup';
@@ -554,13 +558,13 @@ async function ensureDefaultCurrencies(token: string): Promise<void> {
 }
 
 async function ensureDefaultDiscountTypes(token: string): Promise<void> {
-  let existing: Array<{ id: string; number: number; name: string; status?: string }> = [];
+  let existing: Array<{ id: string; code: string; name: string; status?: string }> = [];
   try {
     const res = await fetch(`${API_URL}/api/crm/discount-types`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status === 404) return;
-    const json = (await res.json()) as ApiResponse<Array<{ id: string; number: number; name: string; status?: string }>>;
+    const json = (await res.json()) as ApiResponse<Array<{ id: string; code: string; name: string; status?: string }>>;
     if (json.success && json.data) {
       existing = json.data;
     }
@@ -570,7 +574,7 @@ async function ensureDefaultDiscountTypes(token: string): Promise<void> {
   }
 
   for (const item of DEFAULT_DISCOUNT_TYPES) {
-    const found = existing.find((e) => e.number === item.number);
+    const found = existing.find((e) => String(e.code).toUpperCase() === item.code.toUpperCase());
     if (!found) {
       const res = await fetch(`${API_URL}/api/crm/discount-types`, {
         method: 'POST',
@@ -582,9 +586,9 @@ async function ensureDefaultDiscountTypes(token: string): Promise<void> {
       });
       if (!res.ok) {
         const err = (await res.json()) as ApiResponse;
-        throw new Error(`Failed to create discount type ${item.number}: ${err.error}`);
+        throw new Error(`Failed to create discount type ${item.code}: ${err.error}`);
       }
-      console.log(`  Created default discount type: ${item.number} (${item.name})`);
+      console.log(`  Created default discount type: ${item.code} (${item.name})`);
     } else if (!found.status) {
       const res = await fetch(`${API_URL}/api/crm/discount-types/${found.id}`, {
         method: 'PUT',
@@ -592,14 +596,125 @@ async function ensureDefaultDiscountTypes(token: string): Promise<void> {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ number: found.number, name: found.name, status: 'active' }),
+        body: JSON.stringify({ code: found.code, name: found.name, status: 'active' }),
       });
       if (!res.ok) {
         const err = (await res.json()) as ApiResponse;
-        throw new Error(`Failed to update discount type ${found.number}: ${err.error}`);
+        throw new Error(`Failed to update discount type ${found.code}: ${err.error}`);
       }
-      console.log(`  Set default status for discount type: ${found.number}`);
+      console.log(`  Set default status for discount type: ${found.code}`);
     }
+  }
+}
+
+async function ensureDefaultWorkModes(token: string): Promise<void> {
+  let existing: Array<{ id: string; code: string; name: string; modeType?: string; status?: string }> = [];
+  try {
+    const res = await fetch(`${API_URL}/api/crm/work-modes`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 404) return;
+    const json = (await res.json()) as ApiResponse<
+      Array<{ id: string; code: string; name: string; modeType?: string; status?: string }>
+    >;
+    if (json.success && json.data) {
+      existing = json.data;
+    }
+  } catch {
+    console.log('  CRM work-modes endpoint not ready yet, skipping work modes');
+    return;
+  }
+
+  for (const item of DEFAULT_WORK_MODES) {
+    const found = existing.find((e) => String(e.code).toUpperCase() === item.code.toUpperCase());
+    if (!found) {
+      const res = await fetch(`${API_URL}/api/crm/work-modes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) {
+        const err = (await res.json()) as ApiResponse;
+        throw new Error(`Failed to create work mode ${item.code}: ${err.error}`);
+      }
+      console.log(`  Created default work mode: ${item.code} (${item.name})`);
+    } else if (!found.status || !found.modeType) {
+      const res = await fetch(`${API_URL}/api/crm/work-modes/${found.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          code: found.code,
+          name: found.name,
+          modeType: found.modeType || item.modeType || 'system',
+          status: found.status || 'active',
+        }),
+      });
+      if (!res.ok) {
+        const err = (await res.json()) as ApiResponse;
+        throw new Error(`Failed to update work mode ${found.code}: ${err.error}`);
+      }
+      console.log(`  Patched default fields for work mode: ${found.code}`);
+    }
+  }
+}
+
+async function ensureDemoSite(token: string): Promise<void> {
+  let washes: Array<{ id: string }> = [];
+  try {
+    const res = await fetch(`${API_URL}/api/crm/washes?limit=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 404) return;
+    const json = (await res.json()) as ApiResponse<Array<{ id: string }>>;
+    if (json.success && json.data) washes = json.data;
+  } catch {
+    console.log('  CRM washes endpoint not ready yet, skipping demo site');
+    return;
+  }
+
+  if (washes.length > 0) {
+    console.log('  Demo site skipped: washes already exist');
+    return;
+  }
+
+  const washRes = await fetch(`${API_URL}/api/crm/washes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      ...DEFAULT_DEMO_WASH,
+      registeredAt: new Date().toISOString(),
+    }),
+  });
+  const washJson = (await washRes.json()) as ApiResponse<{ id: string }>;
+  if (!washRes.ok || !washJson.success || !washJson.data?.id) {
+    throw new Error(`Failed to create demo wash: ${washJson.error || washRes.statusText}`);
+  }
+  const washId = washJson.data.id;
+  console.log(`  Created demo wash: ${DEFAULT_DEMO_WASH.name}`);
+
+  for (const post of DEFAULT_DEMO_POSTS) {
+    const postRes = await fetch(`${API_URL}/api/crm/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ washId, ...post }),
+    });
+    const postJson = (await postRes.json()) as ApiResponse<{ id: string }>;
+    if (!postRes.ok || !postJson.success) {
+      throw new Error(`Failed to create demo post ${post.serialNumber}: ${postJson.error || postRes.statusText}`);
+    }
+    console.log(`  Created demo post: ${post.serialNumber}`);
   }
 }
 
@@ -629,6 +744,8 @@ async function main(): Promise<void> {
   await ensureDefaultSettings(token);
   await ensureDefaultCurrencies(token);
   await ensureDefaultDiscountTypes(token);
+  await ensureDefaultWorkModes(token);
+  await ensureDemoSite(token);
   await verifyServiceLogin();
 
   console.log('WASH PRO CRM Init Seed — complete (exit 0 is normal for this one-shot container)');

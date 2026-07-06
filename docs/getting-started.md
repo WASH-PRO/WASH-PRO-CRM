@@ -38,8 +38,9 @@ curl -s http://localhost/api/telegram-bots/health   # через Dashboard, ес
 
 ## Первоначальная настройка
 
-1. Создайте **автомойку** и **посты** с уникальным **серийным номером** контроллера.
-2. **Administrator:** настройте **Пользователи** и **Группы и права** (Dashboard → Система).
+1. Создайте **автомойку** и **посты** с уникальным **серийным номером** контроллера (должен совпадать с `{serial}` в MQTT-топиках).
+2. На странице поста настройте **цены режимов** и проверьте префикс MQTT (`washpro` по умолчанию).
+3. **Administrator:** настройте **Пользователи** и **Группы и права** (Dashboard → Система).
 3. При PyOrchestrator: создайте **Telegram-ботов** (Dashboard → Telegram).
 4. Справочники: **Валюты**, **Типы скидок**.
 
@@ -60,11 +61,22 @@ curl -s http://localhost/api/telegram-bots/health   # через Dashboard, ес
 REDIS_ENABLED=true docker compose -f docker-compose.yml -f docker-compose.redis.yml up -d --build
 ```
 
-### RabbitMQ для контроллеров
+### Миграция с RabbitMQ
+
+Если раньше использовался RabbitMQ (AMQP):
 
 ```bash
-RABBITMQ_EXTERNAL_PORT=5672 docker compose -f docker-compose.yml -f docker-compose.controllers.yml up -d --build
+./scripts/migrate-to-mqtt.sh
+docker compose up -d --build message-processor
 ```
+
+### MQTT для контроллеров
+
+Порт **1883** открыт в локальной сети по умолчанию. Контроллеры подключаются к `mqtt://wash:PASSWORD@<IP-сервера>:1883`.
+
+Только localhost (без LAN): `MQTT_BIND=127.0.0.1` в `.env`.
+
+Нативный протокол панели: `{dt_pref}/{serial}/state/*`. Управление из CRM: [MQTT](mqtt.md).
 
 ### PyOrchestrator
 

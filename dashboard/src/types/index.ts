@@ -66,14 +66,32 @@ export interface Post {
   postNumber: number;
   name: string;
   serialNumber: string;
-  settings?: Record<string, unknown>;
+  settings?: PostSettings;
   createdAt?: string;
+}
+
+export interface PostSettings {
+  firmwareVersion?: string;
+  warrantyUntil?: string;
+  maintenance?: string;
+  features?: string;
+  /** Префикс MQTT топика (dt_pref), по умолчанию washpro */
+  mqttPrefix?: string;
+  /** Цены режимов: ключ — код режима (0–9) */
+  modePrices?: Record<string, number>;
+  pricesUpdatedAt?: string;
+  pricesSyncedAt?: string;
+  lastCommand?: string;
+  lastCommandAt?: string;
 }
 
 export interface PostState {
   id: string;
-  postId: string | Post;
-  washId: WashRef;
+  postId?: PostIdRef;
+  recordedAt?: string;
+  lastMessageAt?: string;
+  createdAt?: string;
+  washId?: WashRef;
   mode?: string;
   modeName?: string;
   modeNumber?: number;
@@ -83,7 +101,6 @@ export interface PostState {
   discount?: number;
   modeTime?: number;
   equipmentState?: Record<string, unknown>;
-  lastMessageAt?: string;
   connected?: boolean;
 }
 
@@ -92,7 +109,7 @@ export type CardStatus = 'success' | 'rejected';
 export interface Card {
   id: string;
   cardNumber: string;
-  cardType: 'regular' | 'unlimited' | 'service';
+  cardType: 'regular' | 'unlimited' | 'service' | 'collection';
   balance: number;
   discount: number;
   discountType?: string;
@@ -173,10 +190,37 @@ export interface NotificationSettings {
   telegram: boolean;
   web: boolean;
   events: {
-    connectionLost: boolean;
-    equipmentError: boolean;
-    queueOverflow: boolean;
-    backupError: boolean;
+    connectionLost?: boolean;
+    equipmentError?: boolean;
+    queueOverflow?: boolean;
+    backupSuccess?: boolean;
+    backupError?: boolean;
+    archiveSuccess?: boolean;
+    archiveError?: boolean;
+    telegramBotCreated?: boolean;
+    telegramBotError?: boolean;
+    userLogin?: boolean;
+    userLogout?: boolean;
+    userPasswordChanged?: boolean;
+    userCreated?: boolean;
+    userUpdated?: boolean;
+    userDeleted?: boolean;
+    washCreated?: boolean;
+    washUpdated?: boolean;
+    washDeleted?: boolean;
+    postCreated?: boolean;
+    postUpdated?: boolean;
+    postDeleted?: boolean;
+    settingsUpdated?: boolean;
+    currencyCreated?: boolean;
+    currencyUpdated?: boolean;
+    currencyDeleted?: boolean;
+    discountTypeUpdated?: boolean;
+    workModeUpdated?: boolean;
+    cardCreated?: boolean;
+    cardUpdated?: boolean;
+    cardDeleted?: boolean;
+    autoTask?: boolean;
   };
 }
 
@@ -205,9 +249,21 @@ export type DiscountTypeStatus = 'active' | 'inactive';
 
 export interface DiscountType {
   id: string;
-  number: number;
+  code: string;
   name: string;
   status?: DiscountTypeStatus;
+  createdAt?: string;
+}
+
+export type WorkModeStatus = 'active' | 'inactive';
+export type WorkModeType = 'system' | 'user';
+
+export interface WorkMode {
+  id: string;
+  code: string;
+  name: string;
+  modeType?: WorkModeType;
+  status?: WorkModeStatus;
   createdAt?: string;
 }
 
@@ -238,6 +294,7 @@ export interface ArchiveLog {
   action: string;
   recordsAffected: number;
   policyDays: number;
+  filename?: string;
   createdAt?: string;
   details?: Record<string, unknown>;
 }

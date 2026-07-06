@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import clsx from 'clsx';
 import {
   Save,
   HardDrive,
@@ -13,6 +14,11 @@ import {
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
 import WashSoftwareUpdatesSection from '../components/WashSoftwareUpdatesSection';
 import { PageHeader, Loading } from '../components/UI';
+import {
+  DEFAULT_NOTIFICATION_SETTINGS,
+  NOTIFICATION_EVENT_GROUPS,
+  parseNotificationSettings,
+} from '../utils/notificationSettings';
 import type {
   BackupSettings,
   CrmSetting,
@@ -28,16 +34,7 @@ const DEFAULT_BACKUP: BackupSettings = {
   storagePath: '/backups',
 };
 
-const DEFAULT_NOTIFICATIONS: NotificationSettings = {
-  telegram: true,
-  web: true,
-  events: {
-    connectionLost: true,
-    equipmentError: true,
-    queueOverflow: true,
-    backupError: true,
-  },
-};
+const DEFAULT_NOTIFICATIONS = DEFAULT_NOTIFICATION_SETTINGS;
 
 const DEFAULT_PYORCH: PyOrchestratorCrmSettings = {
   email: 'admin@pyorchestrator.local',
@@ -51,9 +48,19 @@ const DEFAULT_DAP: DynamicApiCrmSettings = {
   apiBaseUrl: 'http://dynamic-api:3001',
 };
 
-function SettingSection({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
+function SettingSection({
+  title,
+  icon: Icon,
+  children,
+  className,
+}: {
+  title: string;
+  icon: LucideIcon;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="card">
+    <div className={clsx('card h-full', className)}>
       <div className="mb-4 flex items-center gap-2 border-b border-panel-border pb-3 dark:border-panel-border-dark">
         <Icon className="h-4 w-4 text-brand-600 dark:text-brand-400" />
         <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">{title}</h3>
@@ -74,17 +81,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 function parseNotifications(raw: Record<string, unknown>): NotificationSettings {
-  const events = (raw.events as Record<string, unknown>) ?? {};
-  return {
-    telegram: raw.telegram !== false,
-    web: raw.web !== false,
-    events: {
-      connectionLost: events.connectionLost !== false,
-      equipmentError: events.equipmentError !== false,
-      queueOverflow: events.queueOverflow !== false,
-      backupError: events.backupError !== false,
-    },
-  };
+  return parseNotificationSettings(raw);
 }
 
 function parsePyOrch(raw: Record<string, unknown>): PyOrchestratorCrmSettings {
@@ -202,7 +199,8 @@ export function SettingsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <SettingSection title="Резервное копирование" icon={HardDrive}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             Используется сервисом <span className="font-mono">wash-backup</span>. Список копий — на странице{' '}
@@ -238,60 +236,6 @@ export function SettingsPage() {
               value={backup.storagePath ?? '/backups'}
               onChange={(e) => setBackup({ ...backup, storagePath: e.target.value })}
             />
-          </Field>
-        </SettingSection>
-
-        <SettingSection title="Уведомления" icon={Bell}>
-          <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Каналы и типы событий для оповещений операторов. Сервисы{' '}
-            <span className="font-mono">message-processor</span> и <span className="font-mono">wash-backup</span>{' '}
-            читают эти настройки при создании записей. Список — на странице{' '}
-            <Link to="/notifications" className="text-brand-600 hover:underline dark:text-brand-400">
-              Уведомления
-            </Link>
-            .
-          </p>
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={notifications.web}
-              onChange={(e) => setNotifications({ ...notifications, web: e.target.checked })}
-            />
-            Уведомления в веб-панели
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={notifications.telegram}
-              onChange={(e) => setNotifications({ ...notifications, telegram: e.target.checked })}
-            />
-            Уведомления в Telegram
-          </label>
-          <Field label="События">
-            <div className="space-y-2">
-              {(
-                [
-                  ['connectionLost', 'Потеря связи с постом'],
-                  ['equipmentError', 'Ошибка оборудования'],
-                  ['queueOverflow', 'Переполнение очереди'],
-                  ['backupError', 'Ошибка резервного копирования'],
-                ] as const
-              ).map(([key, label]) => (
-                <label key={key} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={notifications.events[key]}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        events: { ...notifications.events, [key]: e.target.checked },
-                      })
-                    }
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
           </Field>
         </SettingSection>
 
@@ -349,6 +293,64 @@ export function SettingsPage() {
               value={dynamicApi.apiBaseUrl}
               onChange={(e) => setDynamicApi({ ...dynamicApi, apiBaseUrl: e.target.value })}
             />
+          </Field>
+        </SettingSection>
+        </div>
+
+        <SettingSection title="Уведомления" icon={Bell}>
+          <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
+            Каналы и типы событий для оповещений операторов. Сервисы{' '}
+            <span className="font-mono">message-processor</span> и <span className="font-mono">wash-backup</span>{' '}
+            читают эти настройки при создании записей. Список — на странице{' '}
+            <Link to="/notifications" className="text-brand-600 hover:underline dark:text-brand-400">
+              Уведомления
+            </Link>
+            .
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={notifications.web}
+                onChange={(e) => setNotifications({ ...notifications, web: e.target.checked })}
+              />
+              Уведомления в веб-панели
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={notifications.telegram}
+                onChange={(e) => setNotifications({ ...notifications, telegram: e.target.checked })}
+              />
+              Уведомления в Telegram
+            </label>
+          </div>
+          <Field label="События">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {NOTIFICATION_EVENT_GROUPS.map((group) => (
+                <div key={group.title} className="rounded-lg border border-panel-border p-3 dark:border-panel-border-dark">
+                  <p className="mb-2 text-xs font-medium text-panel-muted dark:text-panel-muted-dark">{group.title}</p>
+                  <div className="space-y-2">
+                    {group.items.map(({ key, label }) => (
+                      <label key={key} className="flex cursor-pointer items-start gap-2 text-sm leading-snug">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 shrink-0"
+                          checked={notifications.events[key] !== false}
+                          onChange={(e) =>
+                            setNotifications({
+                              ...notifications,
+                              events: { ...notifications.events, [key]: e.target.checked },
+                            })
+                          }
+                        />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </Field>
         </SettingSection>
 

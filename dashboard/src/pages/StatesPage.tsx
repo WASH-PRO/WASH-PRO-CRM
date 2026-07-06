@@ -1,14 +1,15 @@
 import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiList } from '../api/client';
-import { PageHeader, Loading } from '../components/UI';
-import { PostStatesChart } from '../components/PostStatesChart';
+import { PageHeader, Loading, ErrorMessage } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
-import { LiveModeTimer } from '../components/LiveModeTimer';
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
+import { useWorkModes } from '../hooks/useWorkModes';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatPause, formatDateTime, formatMoney } from '../utils/format';
 import { refId, resolveWashAddress } from '../utils/refs';
+import { latestPostStateByPost } from '../utils/statsAggregation';
 import { createExportBulkAction } from '../utils/export';
 import type { PostState, Post, Wash, Card } from '../types';
 
@@ -21,11 +22,9 @@ interface StateRow {
   balance?: number;
   discount?: number;
   freePause?: number;
-  modeTime?: number;
   modeName?: string;
   lastMessageAt?: string;
   hasData: boolean;
-  fetchedAt: number;
 }
 
 function latestCardByPost(cards: Card[]): Map<string, Card> {
@@ -44,17 +43,18 @@ function latestCardByPost(cards: Card[]): Map<string, Card> {
 }
 
 export function StatesPage() {
+  const navigate = useNavigate();
   const { currency } = useCurrency();
+  const { label: workModeLabel } = useWorkModes();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (signal: AbortSignal) => {
     const [states, posts, washes, cards] = await Promise.all([
-      apiList<PostState>('/crm/post-states'),
-      apiList<Post>('/crm/posts?populate=washId'),
-      apiList<Wash>('/crm/washes'),
-      apiList<Card>('/crm/cards'),
+      apiList<PostState>('/crm/post-states', signal),
+      apiList<Post>('/crm/posts?populate=washId', signal),
+      apiList<Wash>('/crm/washes', signal),
+      apiList<Card>('/crm/cards', signal),
     ]);
-    const fetchedAt = Date.now();
-    const stateByPost = new Map(states.map((s) => [refId(s.postId), s]));
+    const stateByPost = new Map(latestPostStateByPost(states).map((s) => [refId(s.postId), s]));
     const washById = new Map(washes.map((w) => [w.id, w]));
     const cardByPost = latestCardByPost(cards);
 
@@ -71,18 +71,16 @@ export function StatesPage() {
         balance: state?.balance ?? card?.balance,
         discount: state?.discount ?? card?.discount,
         freePause: state?.freePause,
-        modeTime: state?.modeTime,
         modeName: state?.modeName || state?.mode,
         lastMessageAt: state?.lastMessageAt,
         hasData,
-        fetchedAt,
       };
     });
 
     return rows;
   }, []);
 
-  const { data: rows, loading } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_FAST_MS });
+  const { data: rows, loading, error, lastUpdatedAt } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_FAST_MS });
 
   const filters: DataTableFilter<StateRow>[] = useMemo(
     () => [
@@ -150,23 +148,11 @@ export function StatesPage() {
           ),
       },
       {
-        key: 'modeTime',
-        header: 'Время режима',
-        sortValue: (r) => r.modeTime ?? -1,
-        render: (r) => (
-          <LiveModeTimer
-            baseSeconds={r.modeTime}
-            fetchedAt={r.fetchedAt}
-            waiting={!r.hasData}
-          />
-        ),
-      },
-      {
         key: 'mode',
         header: 'Режим',
-        searchValue: (r) => r.modeName || '',
-        sortValue: (r) => r.modeName || '',
-        render: (r) => (r.hasData ? r.modeName || '—' : '—'),
+        searchValue: (r) => (r.hasData ? workModeLabel(r.modeName) : ''),
+        sortValue: (r) => (r.hasData ? workModeLabel(r.modeName) : ''),
+        render: (r) => (r.hasData ? workModeLabel(r.modeName) : '—'),
       },
       {
         key: 'lastMessageAt',
@@ -176,7 +162,7 @@ export function StatesPage() {
         render: (r) => formatDateTime(r.lastMessageAt),
       },
     ],
-    [currency]
+    [currency, workModeLabel]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<StateRow>[] => [
@@ -186,22 +172,29 @@ export function StatesPage() {
       { header: 'Текущий баланс', value: (r) => String(r.balance ?? '') },
       { header: 'Бесплатная пауза', value: (r) => String(r.freePause ?? '') },
       { header: 'Сумма скидки', value: (r) => String(r.discount ?? '') },
-      { header: 'Время режима', value: (r) => String(r.modeTime ?? '') },
-      { header: 'Название режима', value: (r) => r.modeName || '' },
+      { header: 'Название режима', value: (r) => workModeLabel(r.modeName) },
       { header: 'Дата и время', value: (r) => r.lastMessageAt || '' },
     ]),
-  ], []);
+  ], [workModeLabel]);
 
   if (loading && !rows) return <Loading />;
+  if (error && !rows) {
+    return (
+      <div>
+        <PageHeader title="Текущее состояние постов" />
+        <ErrorMessage message={error} />
+      </div>
+    );
+  }
 
   return (
     <div>
       <PageHeader
         title="Текущее состояние постов"
-        subtitle={`Все посты всех объектов · ${rows?.length ?? 0} постов`}
+        subtitle={`Все посты · ${rows?.length ?? 0} · обновлено ${lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'}`}
       />
-      <PostStatesChart rows={rows ?? []} currency={currency} />
       <DataTable
+        tableId="states"
         columns={columns}
         data={rows || []}
         rowKey={(r) => r.postId}
@@ -209,6 +202,7 @@ export function StatesPage() {
         searchPlaceholder="Поиск по адресу или номеру поста…"
         pageSize={20}
         bulkActions={bulkActions}
+        onRowClick={(r) => navigate(`/posts/${r.postId}`)}
       />
     </div>
   );

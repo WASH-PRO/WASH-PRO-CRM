@@ -22,11 +22,11 @@
   }
 
   .card {
-    @apply panel-card p-6;
+    @apply panel-card p-4 sm:p-6;
   }
 
   .panel-stat {
-    @apply relative overflow-hidden rounded-panel border border-panel-border bg-panel-card p-5 shadow-panel transition-shadow hover:shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark;
+    @apply relative overflow-hidden rounded-panel border border-panel-border bg-panel-card p-4 shadow-panel transition-shadow hover:shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark sm:p-5;
   }
 
   .panel-stat::before {
@@ -89,5 +89,124 @@
 
   .table-shell {
     @apply overflow-hidden rounded-panel border border-panel-border bg-panel-card shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark;
+  }
+
+  .login-bg-animated {
+    @apply overflow-hidden;
+  }
+
+  .login-bg-pan {
+    animation: login-bg-pan 36s ease-in-out infinite alternate;
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .login-bg-shimmer {
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      rgb(34 211 238 / 0.08) 45%,
+      transparent 70%
+    );
+    animation: login-bg-shimmer 14s ease-in-out infinite;
+  }
+
+  .login-bg-bubbles .login-bubble {
+    @apply absolute rounded-full border border-cyan-100/25 bg-cyan-200/10;
+    animation: login-bubble-rise linear infinite;
+  }
+
+  .login-bubble-1 {
+    left: 12%;
+    bottom: -3rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    animation-duration: 18s;
+    animation-delay: 0s;
+  }
+
+  .login-bubble-2 {
+    left: 28%;
+    bottom: -2rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    animation-duration: 22s;
+    animation-delay: 3s;
+  }
+
+  .login-bubble-3 {
+    left: 52%;
+    bottom: -2.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    animation-duration: 26s;
+    animation-delay: 1s;
+  }
+
+  .login-bubble-4 {
+    left: 72%;
+    bottom: -1.5rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    animation-duration: 20s;
+    animation-delay: 6s;
+  }
+
+  .login-bubble-5 {
+    left: 88%;
+    bottom: -2rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    animation-duration: 24s;
+    animation-delay: 4s;
+  }
+}
+
+@keyframes login-bg-pan {
+  0% {
+    transform: scale(1.06) translate(0%, 0%);
+  }
+  50% {
+    transform: scale(1.14) translate(-1.8%, -1.2%);
+  }
+  100% {
+    transform: scale(1.08) translate(1%, 0.8%);
+  }
+}
+
+@keyframes login-bg-shimmer {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateX(-8%);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateX(8%);
+  }
+}
+
+@keyframes login-bubble-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  88% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-115vh) scale(1.15);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-bg-pan,
+  .login-bg-shimmer,
+  .login-bg-bubbles .login-bubble {
+    animation: none !important;
   }
 }

@@ -1,44 +1,146 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0c1220"/>
-      <stop offset="45%" stop-color="#0a1628"/>
-      <stop offset="100%" stop-color="#071018"/>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e7490"/>
+      <stop offset="35%" stop-color="#0891b2"/>
+      <stop offset="70%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#0c4a6e"/>
     </linearGradient>
-    <linearGradient id="wave" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0891b2" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#22d3ee" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#0891b2" stop-opacity="0"/>
+    <linearGradient id="depth" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#082f49" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#0c4a6e" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="glow" cx="20%" cy="15%" r="55%">
-      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.22"/>
+    <radialGradient id="glow-tl" cx="18%" cy="12%" r="55%">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#67e8f9" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-br" cx="88%" cy="82%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glow2" cx="85%" cy="80%" r="45%">
-      <stop offset="0%" stop-color="#0e7490" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#0e7490" stop-opacity="0"/>
+    <radialGradient id="bubble-shine" cx="32%" cy="28%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="#e0f2fe" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#22d3ee" stroke-opacity="0.06" stroke-width="1"/>
-    </pattern>
+    <filter id="soft-blur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="mist-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
   </defs>
-  <rect width="1440" height="900" fill="url(#bg)"/>
-  <rect width="1440" height="900" fill="url(#glow)"/>
-  <rect width="1440" height="900" fill="url(#glow2)"/>
-  <rect width="1440" height="900" fill="url(#grid)"/>
-  <path d="M0 620 Q360 560 720 620 T1440 620 L1440 900 L0 900 Z" fill="#0891b2" fill-opacity="0.08"/>
-  <path d="M0 680 Q400 620 800 680 T1440 680 L1440 900 L0 900 Z" fill="url(#wave)" fill-opacity="0.5"/>
-  <path d="M0 740 Q320 700 640 740 T1280 740 T1440 740 L1440 900 L0 900 Z" fill="#22d3ee" fill-opacity="0.06"/>
-  <ellipse cx="280" cy="320" rx="120" ry="40" fill="none" stroke="#22d3ee" stroke-opacity="0.12" stroke-width="2"/>
-  <ellipse cx="280" cy="320" rx="80" ry="26" fill="none" stroke="#22d3ee" stroke-opacity="0.18" stroke-width="1.5"/>
-  <ellipse cx="280" cy="320" rx="40" ry="13" fill="none" stroke="#67e8f9" stroke-opacity="0.25" stroke-width="1"/>
-  <g stroke="#22d3ee" stroke-opacity="0.1" stroke-width="1">
-    <line x1="180" y1="200" x2="380" y2="440"/>
-    <line x1="380" y1="200" x2="180" y2="440"/>
-    <rect x="200" y="240" width="160" height="160" rx="8" fill="none"/>
+
+  <rect width="1440" height="900" fill="url(#sky)"/>
+  <rect width="1440" height="900" fill="url(#depth)"/>
+  <rect width="1440" height="900" fill="url(#glow-tl)"/>
+  <rect width="1440" height="900" fill="url(#glow-br)"/>
+
+  <!-- Soft bokeh layer -->
+  <g filter="url(#soft-blur)" opacity="0.55">
+    <circle cx="180" cy="140" r="90" fill="#a5f3fc" fill-opacity="0.18"/>
+    <circle cx="420" cy="260" r="120" fill="#67e8f9" fill-opacity="0.14"/>
+    <circle cx="980" cy="180" r="100" fill="#22d3ee" fill-opacity="0.16"/>
+    <circle cx="1180" cy="420" r="140" fill="#7dd3fc" fill-opacity="0.12"/>
+    <circle cx="320" cy="620" r="110" fill="#38bdf8" fill-opacity="0.1"/>
+    <circle cx="760" cy="700" r="130" fill="#06b6d4" fill-opacity="0.14"/>
   </g>
-  <circle cx="1100" cy="260" r="4" fill="#22d3ee" fill-opacity="0.5"/>
-  <circle cx="1180" cy="300" r="3" fill="#22d3ee" fill-opacity="0.35"/>
-  <circle cx="1050" cy="340" r="2.5" fill="#67e8f9" fill-opacity="0.4"/>
-  <path d="M980 380 L1100 260 L1180 300 L1050 340 Z" fill="none" stroke="#0891b2" stroke-opacity="0.15" stroke-width="1"/>
+
+  <!-- Rising bubble field -->
+  <g fill="none" stroke="#e0f2fe" stroke-opacity="0.22">
+    <circle cx="120" cy="720" r="8"/><circle cx="145" cy="680" r="5"/><circle cx="95" cy="640" r="6"/>
+    <circle cx="210" cy="760" r="11"/><circle cx="240" cy="710" r="4"/><circle cx="180" cy="660" r="7"/>
+    <circle cx="310" cy="780" r="6"/><circle cx="350" cy="730" r="9"/><circle cx="290" cy="690" r="3"/>
+    <circle cx="430" cy="800" r="7"/><circle cx="470" cy="750" r="5"/><circle cx="410" cy="710" r="8"/>
+    <circle cx="560" cy="770" r="10"/><circle cx="600" cy="720" r="4"/><circle cx="540" cy="680" r="6"/>
+    <circle cx="700" cy="790" r="8"/><circle cx="740" cy="740" r="5"/><circle cx="680" cy="700" r="7"/>
+    <circle cx="860" cy="810" r="9"/><circle cx="900" cy="760" r="6"/><circle cx="840" cy="720" r="4"/>
+    <circle cx="1020" cy="780" r="7"/><circle cx="1060" cy="730" r="10"/><circle cx="1000" cy="690" r="5"/>
+    <circle cx="1180" cy="800" r="6"/><circle cx="1220" cy="750" r="8"/><circle cx="1160" cy="710" r="4"/>
+    <circle cx="1320" cy="770" r="9"/><circle cx="1360" cy="720" r="5"/><circle cx="1300" cy="680" r="7"/>
+  </g>
+
+  <!-- Mid-depth bubbles with shine -->
+  <g>
+    <circle cx="260" cy="480" r="28" fill="#0ea5e9" fill-opacity="0.12" stroke="#e0f2fe" stroke-opacity="0.35" stroke-width="1.2"/>
+    <circle cx="252" cy="472" r="9" fill="url(#bubble-shine)"/>
+    <circle cx="520" cy="390" r="36" fill="#0284c7" fill-opacity="0.1" stroke="#bae6fd" stroke-opacity="0.3" stroke-width="1.2"/>
+    <circle cx="508" cy="378" r="11" fill="url(#bubble-shine)"/>
+    <circle cx="780" cy="520" r="22" fill="#0ea5e9" fill-opacity="0.11" stroke="#e0f2fe" stroke-opacity="0.32" stroke-width="1"/>
+    <circle cx="773" cy="513" r="7" fill="url(#bubble-shine)"/>
+    <circle cx="1040" cy="430" r="42" fill="#0369a1" fill-opacity="0.12" stroke="#bae6fd" stroke-opacity="0.28" stroke-width="1.2"/>
+    <circle cx="1028" cy="416" r="13" fill="url(#bubble-shine)"/>
+    <circle cx="1280" cy="560" r="18" fill="#0ea5e9" fill-opacity="0.1" stroke="#e0f2fe" stroke-opacity="0.3" stroke-width="1"/>
+    <circle cx="1274" cy="554" r="6" fill="url(#bubble-shine)"/>
+    <circle cx="160" cy="340" r="20" fill="#0284c7" fill-opacity="0.09" stroke="#bae6fd" stroke-opacity="0.25" stroke-width="1"/>
+    <circle cx="154" cy="334" r="6" fill="url(#bubble-shine)"/>
+    <circle cx="640" cy="280" r="24" fill="#0ea5e9" fill-opacity="0.1" stroke="#e0f2fe" stroke-opacity="0.3" stroke-width="1"/>
+    <circle cx="632" cy="272" r="8" fill="url(#bubble-shine)"/>
+    <circle cx="920" cy="300" r="16" fill="#0284c7" fill-opacity="0.09" stroke="#bae6fd" stroke-opacity="0.28" stroke-width="1"/>
+    <circle cx="914" cy="294" r="5" fill="url(#bubble-shine)"/>
+  </g>
+
+  <!-- Water splash arcs -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M340 620 C360 560 400 520 460 500 C420 540 410 590 430 640 Z" fill="#e0f2fe" fill-opacity="0.08" stroke="#bae6fd" stroke-opacity="0.35" stroke-width="1.5"/>
+    <path d="M340 620 C380 580 430 565 490 570 C440 600 400 630 360 655 Z" fill="#67e8f9" fill-opacity="0.06" stroke="#7dd3fc" stroke-opacity="0.28" stroke-width="1.2"/>
+    <path d="M880 650 C910 590 970 560 1040 555 C990 600 960 640 920 675 Z" fill="#e0f2fe" fill-opacity="0.07" stroke="#bae6fd" stroke-opacity="0.32" stroke-width="1.5"/>
+    <path d="M880 650 C930 610 990 600 1060 615 C1010 645 960 675 910 695 Z" fill="#67e8f9" fill-opacity="0.05" stroke="#7dd3fc" stroke-opacity="0.25" stroke-width="1.2"/>
+    <path d="M1120 360 C1145 310 1190 280 1250 270 C1205 305 1185 345 1165 385 Z" fill="#e0f2fe" fill-opacity="0.06" stroke="#bae6fd" stroke-opacity="0.3" stroke-width="1.2"/>
+  </g>
+
+  <!-- Spray droplets / splash trails -->
+  <g fill="#e0f2fe" opacity="0.45">
+    <circle cx="470" cy="490" r="2.2"/><circle cx="488" cy="478" r="1.6"/><circle cx="505" cy="468" r="2"/>
+    <circle cx="522" cy="458" r="1.4"/><circle cx="538" cy="452" r="1.8"/><circle cx="455" cy="505" r="1.5"/>
+    <circle cx="1055" cy="545" r="2"/><circle cx="1072" cy="532" r="1.5"/><circle cx="1088" cy="522" r="1.8"/>
+    <circle cx="1104" cy="515" r="1.3"/><circle cx="1120" cy="510" r="1.6"/><circle cx="1040" cy="558" r="1.4"/>
+    <circle cx="1245" cy="285" r="1.8"/><circle cx="1260" cy="275" r="1.3"/><circle cx="1275" cy="268" r="1.6"/>
+    <circle cx="1290" cy="262" r="1.2"/><circle cx="1230" cy="295" r="1.5"/>
+  </g>
+
+  <!-- Curved splash ribbons -->
+  <g fill="none" stroke="#e0f2fe" stroke-opacity="0.2" stroke-width="2">
+    <path d="M200 760 Q280 680 360 720 T520 700"/>
+    <path d="M620 820 Q720 740 820 780 T1020 760"/>
+    <path d="M1080 820 Q1180 720 1280 760"/>
+    <path d="M80 520 Q180 440 300 480"/>
+    <path d="M1140 520 Q1220 450 1340 490"/>
+  </g>
+  <g fill="none" stroke="#67e8f9" stroke-opacity="0.35" stroke-width="1.2">
+    <path d="M240 740 Q310 670 390 700"/>
+    <path d="M900 790 Q980 710 1060 745"/>
+    <path d="M1180 300 Q1240 240 1310 260"/>
+  </g>
+
+  <!-- Fine foam mist -->
+  <g filter="url(#mist-blur)" fill="#ffffff" opacity="0.18">
+    <circle cx="400" cy="540" r="3"/><circle cx="415" cy="530" r="2"/><circle cx="430" cy="525" r="2.5"/>
+    <circle cx="445" cy="520" r="1.8"/><circle cx="460" cy="518" r="2"/><circle cx="475" cy="516" r="1.5"/>
+    <circle cx="960" cy="570" r="2.2"/><circle cx="975" cy="562" r="1.8"/><circle cx="990" cy="556" r="2"/>
+    <circle cx="1005" cy="552" r="1.5"/><circle cx="1020" cy="548" r="1.8"/>
+    <circle cx="1220" cy="310" r="2"/><circle cx="1235" cy="302" r="1.6"/><circle cx="1250" cy="296" r="1.8"/>
+  </g>
+
+  <!-- Large foreground splash crown -->
+  <g opacity="0.75">
+    <path d="M560 640 C580 580 640 540 710 530 C660 570 645 610 635 655 C615 630 590 640 560 640 Z" fill="#f0f9ff" fill-opacity="0.07" stroke="#e0f2fe" stroke-opacity="0.25" stroke-width="1"/>
+    <path d="M710 530 C760 520 820 535 860 570 C820 545 770 535 710 530 Z" fill="#bae6fd" fill-opacity="0.08"/>
+    <g fill="#f0f9ff" opacity="0.35">
+      <circle cx="720" cy="520" r="2.5"/><circle cx="738" cy="512" r="2"/><circle cx="756" cy="506" r="1.8"/>
+      <circle cx="774" cy="502" r="1.5"/><circle cx="792" cy="500" r="2"/><circle cx="810" cy="502" r="1.6"/>
+      <circle cx="828" cy="508" r="1.8"/><circle cx="846" cy="518" r="2"/>
+    </g>
+  </g>
+
+  <!-- Tiny bubble scatter -->
+  <g fill="#f0f9ff" opacity="0.25">
+    <circle cx="90" cy="220" r="2"/><circle cx="130" cy="180" r="1.5"/><circle cx="170" cy="210" r="1.8"/>
+    <circle cx="550" cy="150" r="2"/><circle cx="590" cy="130" r="1.4"/><circle cx="630" cy="160" r="1.7"/>
+    <circle cx="850" cy="190" r="1.8"/><circle cx="890" cy="170" r="1.3"/><circle cx="930" cy="200" r="2"/>
+    <circle cx="1200" cy="140" r="1.6"/><circle cx="1240" cy="120" r="2"/><circle cx="1280" cy="150" r="1.5"/>
+    <circle cx="200" cy="580" r="1.5"/><circle cx="380" cy="350" r="1.8"/><circle cx="720" cy="420" r="1.4"/>
+    <circle cx="1100" cy="650" r="1.6"/><circle cx="1350" cy="400" r="1.8"/><circle cx="60" cy="480" r="1.3"/>
+  </g>
 </svg>

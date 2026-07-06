@@ -10,7 +10,7 @@ export default function WashSoftwareUpdatesSection() {
           Платформа обновляется из git-репозитория и Docker Compose. In-app updater отключён — обновление выполняется
           скриптами на сервере.
         </p>
-        <div className="mt-3 flex justify-between border-t border-sky-200/80 pt-3 text-sm dark:border-sky-800">
+        <div className="mt-3 flex flex-col gap-1 border-t border-sky-200/80 pt-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-sky-800">
           <span className="text-panel-muted dark:text-panel-muted-dark">Версия dashboard</span>
           <span className="font-mono font-medium text-panel-ink dark:text-panel-ink-dark">v{version}</span>
         </div>

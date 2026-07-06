@@ -1,72 +1,102 @@
-import amqp from 'amqplib';
+import { convertDeviceMessage, inferMqttLogEntry, isLegacyEnvelope } from './device-adapter.js';
 import { processMessage, WashMessage } from './processor.js';
-import { logger } from './api-client.js';
+import { apiRequest, logger } from './api-client.js';
+import { connectMqtt, DLQ_TOPIC, getMqttClient } from './mqtt-client.js';
+import { startProcessorHttpServer } from './http.js';
+import { syncPricesFromDevice } from './post-settings.js';
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://wash:wash_secret@rabbitmq:5672';
-const QUEUE = process.env.RABBITMQ_QUEUE || 'wash.telemetry';
-const DLQ = 'wash.dlq';
+function normalizeIncoming(topic: string, raw: unknown): WashMessage[] {
+  if (isLegacyEnvelope(raw)) {
+    return [raw];
+  }
 
-async function connect(): Promise<void> {
-  const connection = await amqp.connect(RABBITMQ_URL);
-  const channel = await connection.createChannel();
-  await channel.assertExchange('wash.exchange', 'topic', { durable: true });
-  await channel.assertQueue(QUEUE, { durable: true });
-  await channel.assertQueue(DLQ, { durable: true });
-  await channel.bindQueue(QUEUE, 'wash.exchange', 'telemetry.#');
-  await channel.prefetch(10);
-
-  logger.info({ queue: QUEUE }, 'Connected to RabbitMQ');
-
-  await channel.consume(QUEUE, async (msg) => {
-    if (!msg) return;
-
-    try {
-      const content = JSON.parse(msg.content.toString()) as WashMessage;
-      await processMessage(content);
-      channel.ack(msg);
-    } catch (err) {
-      logger.error({ err }, 'Failed to process message');
-      channel.sendToQueue(DLQ, msg.content, { persistent: true });
-      channel.ack(msg);
-
-      if (String(err).includes('queue') || String(err).includes('overflow')) {
-        try {
-          const { createNotification } = await import('./api-client.js');
-          await createNotification({
-            type: 'queue_overflow',
-            severity: 'error',
-            message: 'Переполнение очереди сообщений',
-          });
-        } catch {
-          // best effort
-        }
-      }
+  if (raw && typeof raw === 'object') {
+    const converted = convertDeviceMessage(topic, raw as Record<string, unknown>);
+    if (converted) {
+      return Array.isArray(converted) ? converted : [converted];
     }
-  });
+  }
 
-  process.on('SIGTERM', async () => {
-    logger.info('Shutting down...');
-    await channel.close();
-    await connection.close();
-    process.exit(0);
-  });
+  return [];
 }
 
-async function main(): Promise<void> {
-  logger.info('Message Processor starting...');
+async function logRawMqtt(topic: string, raw: unknown): Promise<void> {
+  try {
+    const entry = inferMqttLogEntry(topic, raw);
+    await apiRequest('POST', '/api/crm/telemetry', {
+      mqttTopic: topic,
+      postSerial: entry.postSerial,
+      messageType: entry.messageType,
+      payload: entry.payload,
+      receivedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.warn({ err, topic }, 'Raw MQTT telemetry log failed (non-fatal)');
+  }
+}
 
-  while (true) {
+async function handleMessage(topic: string, payload: Buffer): Promise<void> {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(payload.toString()) as unknown;
+  } catch {
+    raw = { _raw: payload.toString(), _error: 'invalid_json' };
+  }
+
+  const entry = inferMqttLogEntry(topic, raw);
+  await logRawMqtt(topic, raw);
+
+  if (entry.messageType === 'prices' && entry.postSerial && raw && typeof raw === 'object') {
     try {
-      await connect();
-      break;
+      await syncPricesFromDevice(entry.postSerial, raw as Record<string, unknown>);
     } catch (err) {
-      logger.error({ err }, 'RabbitMQ connection failed, retrying in 5s');
-      await new Promise((r) => setTimeout(r, 5000));
+      logger.warn({ err, topic }, 'Device prices sync failed (non-fatal)');
+    }
+  }
+
+  try {
+    const messages = normalizeIncoming(topic, raw);
+
+    if (messages.length === 0) {
+      return;
+    }
+
+    for (const content of messages) {
+      await processMessage(content, topic);
+    }
+  } catch (err) {
+    logger.error({ err, topic }, 'Failed to process message');
+
+    try {
+      const client = getMqttClient();
+      if (client.connected) {
+        client.publish(DLQ_TOPIC, payload, { qos: 1 });
+      }
+    } catch {
+      // client not ready
+    }
+
+    if (String(err).includes('queue') || String(err).includes('overflow')) {
+      try {
+        const { createNotification } = await import('./api-client.js');
+        await createNotification({
+          type: 'queue_overflow',
+          severity: 'error',
+          message: 'Переполнение очереди сообщений',
+        });
+      } catch {
+        // best effort
+      }
     }
   }
 }
 
-main().catch((err) => {
-  logger.error({ err }, 'Fatal error');
-  process.exit(1);
-});
+function main(): void {
+  logger.info('Message Processor starting...');
+  connectMqtt((topic, payload) => {
+    void handleMessage(topic, payload);
+  });
+  startProcessorHttpServer();
+}
+
+main();

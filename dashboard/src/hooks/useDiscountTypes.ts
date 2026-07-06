@@ -1,20 +1,23 @@
 import { useCallback, useMemo } from 'react';
-import { apiList } from '../api/client';
-import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
+import { apiListDictionary } from '../api/client';
 import { usePolling } from './usePolling';
-import { discountTypesByNumber, resolveDiscountTypeLabel } from '../utils/discountTypes';
+import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
+import { discountTypesByCode, resolveDiscountTypeLabel } from '../utils/discountTypes';
 import type { DiscountType } from '../types';
 
 export function useDiscountTypes() {
-  const fetchTypes = useCallback(() => apiList<DiscountType>('/crm/discount-types'), []);
+  const fetchTypes = useCallback(
+    (signal: AbortSignal) => apiListDictionary<DiscountType>('/crm/discount-types', signal),
+    []
+  );
   const { data: types, loading, refresh } = usePolling(fetchTypes, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
 
-  const byNumber = useMemo(() => discountTypesByNumber(types || []), [types]);
+  const byCode = useMemo(() => discountTypesByCode(types || []), [types]);
 
   const label = useCallback(
-    (discountType: string | number | undefined) => resolveDiscountTypeLabel(discountType, byNumber),
-    [byNumber]
+    (discountType: string | number | undefined) => resolveDiscountTypeLabel(discountType, byCode),
+    [byCode]
   );
 
-  return { types: types || [], byNumber, label, loading, refresh };
+  return { types: types || [], byCode, label, loading, refresh };
 }

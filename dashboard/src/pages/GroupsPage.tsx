@@ -205,6 +205,7 @@ export function GroupsPage() {
         </div>
       )}
       <DataTable
+        tableId="groups"
         columns={columns}
         data={groups ?? []}
         rowKey={(g) => entityId(g)}

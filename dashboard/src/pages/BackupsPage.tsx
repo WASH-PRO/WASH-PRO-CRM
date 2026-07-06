@@ -203,7 +203,7 @@ export function BackupsPage() {
         }
       />
 
-      <DataTable columns={columns} data={data?.backups || []} rowKey={(b) => b.id} filters={filters} searchPlaceholder="Поиск копий…" bulkActions={bulkActions} />
+      <DataTable tableId="backups" columns={columns} data={data?.backups || []} rowKey={(b) => b.id} filters={filters} searchPlaceholder="Поиск копий…" bulkActions={bulkActions} />
     </div>
   );
 }

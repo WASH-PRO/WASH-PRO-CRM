@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { BrandLogo } from '../components/BrandLogo';
 
 function LoginField({
   id,
@@ -23,7 +24,7 @@ function LoginField({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-sm font-medium text-panel-muted dark:text-panel-muted-dark">
+      <label htmlFor={id} className="label">
         {label}
       </label>
       <input
@@ -33,12 +34,7 @@ function LoginField({
         autoComplete={autoComplete}
         autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
-        className={clsx(
-          'block w-full rounded-lg border-0 px-3.5 py-2.5 text-sm',
-          'bg-white text-panel-ink ring-1 ring-inset ring-panel-border placeholder:text-panel-muted',
-          'outline-none transition-shadow focus:ring-2 focus:ring-inset focus:ring-brand-400/50',
-          'dark:bg-[#0d1218] dark:text-panel-ink-dark dark:ring-panel-border-dark dark:placeholder:text-panel-muted-dark'
-        )}
+        className="input"
       />
     </div>
   );
@@ -70,23 +66,30 @@ export function LoginPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Левая половина — брендинг (макет как PyOrchestrator, свой фон) */}
       <div className="relative hidden min-h-[280px] overflow-hidden lg:flex lg:min-h-screen lg:flex-col lg:justify-between">
+        <div className="login-bg-animated absolute inset-0" aria-hidden>
+          <div
+            className="login-bg-pan absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url(/login-background.svg)' }}
+          />
+          <div className="login-bg-shimmer absolute inset-0" aria-hidden />
+          <div className="login-bg-bubbles pointer-events-none absolute inset-0" aria-hidden>
+            <span className="login-bubble login-bubble-1" />
+            <span className="login-bubble login-bubble-2" />
+            <span className="login-bubble login-bubble-3" />
+            <span className="login-bubble login-bubble-4" />
+            <span className="login-bubble login-bubble-5" />
+          </div>
+        </div>
+        <div className="absolute inset-0 bg-sky-950/35" aria-hidden />
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/login-background.svg)' }}
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-zinc-950/50" aria-hidden />
-        <div
-          className="absolute inset-0 bg-[linear-gradient(135deg,rgb(8_15_24/0.55)_0%,transparent_42%,rgb(8_145_178/0.14)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(135deg,rgb(8_47_73/0.4)_0%,transparent_48%,rgb(34_211_238/0.1)_100%)]"
           aria-hidden
         />
 
         <div className="relative z-10 flex flex-1 flex-col justify-between p-12 xl:p-16">
           <div>
             <div className="mb-16 flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-brand-400/15 ring-1 ring-brand-400/30">
-                <span className="text-sm font-extrabold text-brand-400">W</span>
-              </div>
+              <BrandLogo size="lg" tone="onDark" />
               <span className="text-lg font-bold text-white">WASH PRO CRM</span>
             </div>
             <h2 className="max-w-md text-3xl font-bold leading-tight tracking-tight text-white xl:text-4xl">
@@ -110,9 +113,7 @@ export function LoginPage() {
         <div className="mx-auto w-full max-w-md animate-slide-up">
           <div className="mb-8 lg:mb-10">
             <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-brand-400/15 ring-1 ring-brand-400/30">
-                <span className="text-xs font-extrabold text-brand-400">W</span>
-              </div>
+              <BrandLogo size="md" tone="onLight" />
               <div>
                 <p className="text-base font-bold text-panel-ink dark:text-panel-ink-dark">WASH PRO CRM</p>
                 <p className="text-xs text-panel-muted dark:text-panel-muted-dark">Enterprise SCADA</p>

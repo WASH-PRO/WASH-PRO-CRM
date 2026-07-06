@@ -42,9 +42,9 @@ description: CRM endpoints и коллекции MongoDB
 | Ресурс | Path | Основные поля |
 |--------|------|---------------|
 | Автомойки | `/api/crm/washes` | name, description, address, registeredAt, cloudEnabled |
-| Посты | `/api/crm/posts` | washId, postNumber, name, serialNumber, settings |
+| Посты | `/api/crm/posts` | washId, postNumber, name, serialNumber, **settings** (см. ниже) |
 | Состояние постов | `/api/crm/post-states` | postId, washId, mode, modeName, modeNumber, freePause, paidPause, balance, discount, modeTime, equipmentState, lastMessageAt, connected |
-| Карты | `/api/crm/cards` | cardNumber, cardType (`regular`\|`service`\|`unlimited`), balance, discount, discountType (номер 1–5), status (`success`\|`rejected`), washId, postId, createdAt, validFrom, validUntil |
+| Карты | `/api/crm/cards` | cardNumber, cardType (`regular`\|`service`\|`unlimited`\|`collection`), balance, discount, discountType (номер 1–5), status (`success`\|`rejected`), washId, postId, createdAt, validFrom, validUntil |
 | Статистика использования | `/api/crm/usage-stats` | washId, postId, period (`before_collection`\|`after_collection`), category (`regular`\|`service`\|`unlimited`), launchCount, usageTime, avgWashTime, clientCount, recordedAt |
 | Финансы | `/api/crm/finance-stats` | washId, postId, period, cash, cashless, discountOps, totalRevenue, avgCheck, recordedAt |
 | Валюты | `/api/crm/currencies` | code, name, symbol, isDefault |
@@ -67,9 +67,28 @@ description: CRM endpoints и коллекции MongoDB
 
 В картах поле `discountType` хранит номер (`"1"` … `"5"`); Dashboard подставляет название из справочника.
 
+### Поле `posts.settings` (JSON)
+
+| Ключ | Описание |
+|------|----------|
+| `firmwareVersion` | Версия прошивки (с устройства / вручную) |
+| `warrantyUntil` | Дата окончания гарантии |
+| `maintenance` | Заметки по ТО |
+| `features` | Описание возможностей поста |
+| `mqttPrefix` | Префикс MQTT (`dt_pref`), по умолчанию `washpro` |
+| `modePrices` | Цены режимов: `{ "0": 50, "1": 80, … }` (рубли) |
+| `pricesUpdatedAt` | Время последнего сохранения цен из CRM |
+| `pricesSyncedAt` | Время синхронизации цен с устройства |
+| `lastCommand` | Последняя команда (`soft_reset`, `credit_balance`, …) |
+| `lastCommandAt` | Время последней команды |
+
+Управление ценами и командами: Dashboard → пост → **Настройки устройства** или [MQTT HTTP API](mqtt.md).
+
 ## Каскадное удаление
 
-`DELETE /api/crm/posts/:id` удаляет пост и связанные записи: состояния, карты, статистику, уведомления, телеметрию (JS handler в endpoint).
+`DELETE /api/crm/posts/:id` удаляет пост и связанные записи: состояния, карты, статистику использования и финансов, уведомления, MQTT-телеметрию (по `postId` и `postSerial`). Операция пишется в журнал архивирования (`action: delete`).
+
+`DELETE /api/crm/washes/:id` удаляет автомойку, **все посты** объекта и их данные (каскад как при удалении поста), а также уведомления по объекту.
 
 ## RBAC
 
@@ -84,7 +103,7 @@ description: CRM endpoints и коллекции MongoDB
 
 ## Резервное копирование
 
-Файлы: Docker volume `wash_backup_data` → `/backups` в контейнере `wash-backup`.  
+Файлы: bind mount `DATA_DIR/backups` → `/backups` в контейнере `wash-backup`.  
 Формат: `mongodump --archive --gzip`
 
 ## Миграции и seed

@@ -1,14 +1,17 @@
 import { useCallback, useMemo } from 'react';
+import { X } from 'lucide-react';
 import { apiList } from '../api/client';
 import { PageHeader, Loading, StatCard, periodLabel, categoryLabel } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
+import { statsScopeHint, useStatsScopeFilter } from '../hooks/useStatsScopeFilter';
 import { formatDurationHuman, formatDateTime } from '../utils/format';
 import { createExportBulkAction } from '../utils/export';
 import {
   latestUsageByPostAndCategory,
   resolvePostNumber,
+  resolveStatPostId,
   resolveStatWashAddress,
 } from '../utils/statsAggregation';
 import type { Post, UsageStat, Wash } from '../types';
@@ -26,25 +29,19 @@ interface UsagePageData {
 }
 
 function PeriodUsageSection({
+  tableId,
   title,
   stats,
   postById,
   washById,
 }: {
+  tableId: string;
   title: string;
   stats: UsageStat[];
   postById: Map<string, Post>;
   washById: Map<string, Wash>;
 }) {
   const latest = useMemo(() => latestUsageByPostAndCategory(stats), [stats]);
-
-  const totals = useMemo(() => {
-    const result: Record<string, number> = { regular: 0, service: 0, unlimited: 0 };
-    latest.forEach((s) => {
-      result[s.category] = (result[s.category] || 0) + (s.usageTime || 0);
-    });
-    return result;
-  }, [latest]);
 
   const postNumber = useCallback(
     (s: UsageStat) => resolvePostNumber(s.postId, postById),
@@ -54,6 +51,48 @@ function PeriodUsageSection({
   const address = useCallback(
     (s: UsageStat) => resolveStatWashAddress(s.washId, s.postId, postById, washById),
     [postById, washById]
+  );
+
+  const postId = useCallback((s: UsageStat) => resolveStatPostId(s.postId), []);
+
+  const {
+    washFilter,
+    postFilter,
+    filtered,
+    washOptions,
+    hasScope,
+    onWashFilterChange,
+    onPostSelect,
+    clearScope,
+  } = useStatsScopeFilter({
+    rows: latest,
+    getWashAddress: address,
+    getPostId: postId,
+  });
+
+  const totals = useMemo(() => {
+    const result: Record<string, number> = { regular: 0, service: 0, unlimited: 0 };
+    filtered.forEach((s) => {
+      result[s.category] = (result[s.category] || 0) + (s.usageTime || 0);
+    });
+    return result;
+  }, [filtered]);
+
+  const scopeHint = useMemo(() => {
+    const postLabel = postFilter
+      ? postNumber(filtered.find((s) => postId(s) === postFilter) || filtered[0]!)
+      : undefined;
+    return statsScopeHint(washFilter, postFilter, postLabel !== '—' ? postLabel : undefined);
+  }, [washFilter, postFilter, filtered, postNumber, postId]);
+
+  const addressFilter: DataTableFilter<UsageStat> = useMemo(
+    () => ({
+      id: 'address',
+      label: 'Объект',
+      options: washOptions.map((a) => ({ value: a, label: a })),
+      match: (s, v) => address(s) === v,
+    }),
+    [washOptions, address]
   );
 
   const categoryFilter: DataTableFilter<UsageStat> = useMemo(
@@ -140,20 +179,57 @@ function PeriodUsageSection({
     ]),
   ], [title, postNumber, address]);
 
+  const handleFilterChange = useCallback(
+    (id: string, value: string) => {
+      if (id === 'address') onWashFilterChange(value);
+    },
+    [onWashFilterChange]
+  );
+
   return (
     <section className="mb-8">
       <h2 className="mb-4 text-lg font-semibold">{title}</h2>
-      <div className="mb-4 grid gap-4 sm:grid-cols-3">
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {USAGE_CATEGORIES.map((cat) => (
           <StatCard
             key={cat.key}
             label={cat.label}
             value={formatDurationHuman(totals[cat.key])}
-            hint="Сумма последних данных по каждому посту"
+            hint={scopeHint}
           />
         ))}
       </div>
-      <DataTable columns={columns} data={stats} rowKey={(s) => s.id} filters={[categoryFilter]} pageSize={10} emptyMessage="Нет записей" bulkActions={bulkActions} />
+      {hasScope && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-panel-muted dark:text-panel-muted-dark">Фильтр KPI и таблицы:</span>
+          <span className="max-w-full truncate rounded-full bg-brand-500/10 px-3 py-1 font-medium text-brand-800 dark:text-brand-300">
+            {scopeHint}
+          </span>
+          <button
+            type="button"
+            className="btn-secondary !px-2 !py-1"
+            onClick={clearScope}
+            title="Сбросить фильтр"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+      <DataTable
+        tableId={tableId}
+        columns={columns}
+        data={filtered}
+        rowKey={(s) => s.id}
+        filters={[addressFilter, categoryFilter]}
+        filterValues={{ address: washFilter }}
+        onFilterChange={handleFilterChange}
+        onRowClick={onPostSelect}
+        isRowActive={(s) => Boolean(postFilter && postId(s) === postFilter)}
+        pageSize={10}
+        emptyMessage="Нет записей"
+        searchPlaceholder="Поиск…"
+        bulkActions={bulkActions}
+      />
     </section>
   );
 }
@@ -192,9 +268,9 @@ export function UsagePage() {
 
   return (
     <div>
-      <PageHeader title="Статистика использования" subtitle="Время в секундах, отображение в удобном формате" />
-      <PeriodUsageSection title={periodLabel.before_collection} stats={before} postById={postById} washById={washById} />
-      <PeriodUsageSection title={periodLabel.after_collection} stats={after} postById={postById} washById={washById} />
+      <PageHeader title="Статистика использования" subtitle="До и после инкассации · клик по строке — фильтр по посту" />
+      <PeriodUsageSection tableId="usage-before" title={periodLabel.before_collection} stats={before} postById={postById} washById={washById} />
+      <PeriodUsageSection tableId="usage-after" title={periodLabel.after_collection} stats={after} postById={postById} washById={washById} />
     </div>
   );
 }

@@ -1,14 +1,18 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
 import { Pencil } from 'lucide-react';
-import { api, apiList } from '../api/client';
+import { api, apiListDictionary } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
-import { PageHeader, Loading, Modal, Badge } from '../components/UI';
+import { PageHeader, Loading, Modal, Badge, ErrorMessage } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
-import { DISCOUNT_TYPE_STATUS_LABELS, discountTypeStatus } from '../utils/discountTypes';
+import {
+  DISCOUNT_TYPE_STATUS_LABELS,
+  discountTypeStatus,
+  normalizeDiscountTypeCode,
+} from '../utils/discountTypes';
 import type { DiscountType, DiscountTypeStatus } from '../types';
 
 const emptyForm = { name: '', status: 'active' as DiscountTypeStatus };
@@ -19,23 +23,29 @@ export function DiscountTypesPage() {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
-  const [editNumber, setEditNumber] = useState<number | null>(null);
+  const [editCode, setEditCode] = useState('');
 
-  const fetchTypes = useCallback(() => apiList<DiscountType>('/crm/discount-types'), []);
-  const { data: types, loading, refresh } = usePolling(fetchTypes, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
+  const fetchTypes = useCallback(
+    (signal: AbortSignal) => apiListDictionary<DiscountType>('/crm/discount-types', signal),
+    []
+  );
+  const { data: types, loading, error, refresh } = usePolling(fetchTypes, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
 
   const sorted = useMemo(
-    () => [...(types || [])].sort((a, b) => a.number - b.number),
+    () =>
+      [...(types || [])].sort((a, b) =>
+        String(a.code ?? '').localeCompare(String(b.code ?? ''), 'ru', { numeric: true, sensitivity: 'base' })
+      ),
     [types]
   );
 
   const filters: DataTableFilter<DiscountType>[] = useMemo(
     () => [
       {
-        id: 'number',
-        label: 'Номер',
-        options: sorted.map((t) => ({ value: String(t.number), label: `№${t.number}` })),
-        match: (t, value) => String(t.number) === value,
+        id: 'code',
+        label: 'Код',
+        options: sorted.map((t) => ({ value: t.code, label: t.code })),
+        match: (t, value) => t.code === value,
       },
       {
         id: 'status',
@@ -53,16 +63,20 @@ export function DiscountTypesPage() {
   const openEdit = (item: DiscountType) => {
     setForm({ name: item.name, status: discountTypeStatus(item) });
     setEditId(item.id);
-    setEditNumber(item.number);
+    setEditCode(item.code);
     setModal(true);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!editId || editNumber == null) return;
+    if (!editId || !editCode) return;
     await api(`/crm/discount-types/${editId}`, {
       method: 'PUT',
-      body: JSON.stringify({ number: editNumber, name: form.name, status: form.status }),
+      body: JSON.stringify({
+        code: normalizeDiscountTypeCode(editCode),
+        name: form.name,
+        status: form.status,
+      }),
     });
     setModal(false);
     refresh();
@@ -71,12 +85,12 @@ export function DiscountTypesPage() {
   const columns: DataTableColumn<DiscountType>[] = useMemo(
     () => [
       {
-        key: 'number',
-        header: 'Номер',
+        key: 'code',
+        header: 'Код',
         sortable: true,
-        sortValue: (t) => t.number,
-        searchValue: (t) => String(t.number),
-        render: (t) => <span className="font-mono font-medium">{t.number}</span>,
+        sortValue: (t) => t.code,
+        searchValue: (t) => `${t.code} ${t.name}`,
+        render: (t) => <span className="font-mono font-medium">{t.code}</span>,
       },
       {
         key: 'name',
@@ -135,7 +149,7 @@ export function DiscountTypesPage() {
 
   const bulkActions = useMemo((): DataTableBulkAction<DiscountType>[] => [
     createExportBulkAction('discount-types.csv', [
-      { header: 'Номер', value: (t) => String(t.number) },
+      { header: 'Код', value: (t) => t.code },
       { header: 'Название', value: (t) => t.name },
       { header: 'Статус', value: (t) => DISCOUNT_TYPE_STATUS_LABELS[discountTypeStatus(t)] },
       { header: 'Дата создания', value: (t) => t.createdAt || '' },
@@ -143,14 +157,23 @@ export function DiscountTypesPage() {
   ], []);
 
   if (loading && !types) return <Loading />;
+  if (error && !types) {
+    return (
+      <div>
+        <PageHeader title="Типы скидок" />
+        <ErrorMessage message={error} />
+      </div>
+    );
+  }
 
   return (
     <div>
       <PageHeader
         title="Типы скидок"
-        subtitle="Справочник номеров 1–5 и их названий для скидочных карт"
+        subtitle="Справочник кодов и названий типов скидок для скидочных карт"
       />
       <DataTable
+        tableId="discount-types"
         columns={columns}
         data={sorted}
         rowKey={(t) => t.id}
@@ -164,12 +187,12 @@ export function DiscountTypesPage() {
       <Modal
         open={modal}
         onClose={() => setModal(false)}
-        title={editNumber != null ? `Тип скидки №${editNumber}` : 'Тип скидки'}
+        title={editCode ? `Тип скидки ${editCode}` : 'Тип скидки'}
       >
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="label">Номер</label>
-            <input className="input font-mono" value={editNumber ?? ''} readOnly disabled />
+            <label className="label">Код</label>
+            <input className="input font-mono" value={editCode} readOnly disabled />
           </div>
           <div>
             <label className="label">Название</label>

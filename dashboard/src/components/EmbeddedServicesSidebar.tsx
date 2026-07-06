@@ -1,6 +1,7 @@
 import clsx from 'clsx';
-import { BookOpen, Cpu, Github, Workflow } from 'lucide-react';
+import { BookOpen, Cpu, Github, Menu, Workflow } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useState } from 'react';
 import { useEmbeddedServices, type EmbeddedService, type ServiceStatus } from '../hooks/useEmbeddedServices';
 
 const DOC_LINKS = [
@@ -37,9 +38,18 @@ function statusLabel(status: ServiceStatus): string {
 
 interface EmbeddedServicesSidebarProps {
   collapsed: boolean;
+  onNavigate?: () => void;
 }
 
-function ServiceRow({ service, collapsed }: { service: EmbeddedService; collapsed: boolean }) {
+function ServiceRow({
+  service,
+  collapsed,
+  onNavigate,
+}: {
+  service: EmbeddedService;
+  collapsed: boolean;
+  onNavigate?: () => void;
+}) {
   const Icon = SERVICE_ICONS[service.id] ?? Workflow;
   const online = service.status === 'online';
 
@@ -49,6 +59,7 @@ function ServiceRow({ service, collapsed }: { service: EmbeddedService; collapse
       target="_blank"
       rel="noopener noreferrer"
       title={`${service.label} — ${statusLabel(service.status)}`}
+      onClick={onNavigate}
       className={clsx(
         'nav-item group',
         collapsed && 'justify-center px-2',
@@ -59,7 +70,10 @@ function ServiceRow({ service, collapsed }: { service: EmbeddedService; collapse
         <Icon size={18} strokeWidth={1.75} />
         {collapsed && (
           <span
-            className={clsx('absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2 ring-panel-card dark:ring-panel-sidebar', statusDot(service.status))}
+            className={clsx(
+              'absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2 ring-panel-card dark:ring-panel-sidebar',
+              statusDot(service.status)
+            )}
             aria-hidden
           />
         )}
@@ -77,35 +91,59 @@ function ServiceRow({ service, collapsed }: { service: EmbeddedService; collapse
   );
 }
 
-export function EmbeddedServicesSidebar({ collapsed }: EmbeddedServicesSidebarProps) {
+export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServicesSidebarProps) {
+  const [open, setOpen] = useState(false);
   const services = useEmbeddedServices();
 
+  const toggle = () => setOpen((v) => !v);
+
   return (
-    <>
-      {!collapsed && (
-        <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-panel-muted dark:text-slate-500">
-          Resources
+    <div className="space-y-0.5">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-controls="sidebar-resources-panel"
+        title="Ресурсы"
+        className={clsx(
+          'nav-item w-full',
+          collapsed && 'justify-center px-2',
+          open && !collapsed && 'nav-item-active'
+        )}
+      >
+        <Menu size={18} strokeWidth={1.75} className="shrink-0" />
+        {!collapsed && <span className="truncate">Ресурсы</span>}
+      </button>
+
+      {open && (
+        <div id="sidebar-resources-panel" className="space-y-0.5">
+          {services.map((service) => (
+            <ServiceRow
+              key={service.id}
+              service={service}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+            />
+          ))}
+          {!collapsed && (
+            <div className="mx-2 my-1 border-t border-panel-border dark:border-panel-sidebar-border" aria-hidden />
+          )}
+          {DOC_LINKS.map(({ href, label, icon: Icon }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={collapsed ? label : undefined}
+              onClick={onNavigate}
+              className={clsx('nav-item opacity-80', collapsed && 'justify-center px-2')}
+            >
+              <Icon size={18} strokeWidth={1.75} className="shrink-0" />
+              {!collapsed && <span className="truncate">{label}</span>}
+            </a>
+          ))}
         </div>
       )}
-      {services.map((service) => (
-        <ServiceRow key={service.id} service={service} collapsed={collapsed} />
-      ))}
-      {!collapsed && (
-        <div className="mx-2 my-1 border-t border-panel-border dark:border-panel-sidebar-border" aria-hidden />
-      )}
-      {DOC_LINKS.map(({ href, label, icon: Icon }) => (
-        <a
-          key={href}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={collapsed ? label : undefined}
-          className={clsx('nav-item opacity-80', collapsed && 'justify-center px-2')}
-        >
-          <Icon size={18} strokeWidth={1.75} className="shrink-0" />
-          {!collapsed && <span className="truncate">{label}</span>}
-        </a>
-      ))}
-    </>
+    </div>
   );
 }

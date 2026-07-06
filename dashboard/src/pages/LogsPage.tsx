@@ -128,6 +128,7 @@ export function LogsPage() {
       <PageHeader title="Логирование и диагностика" subtitle="Сортировка, фильтры и поиск по всем полям" />
 
       <DataTable
+        tableId="logs"
         columns={columns}
         data={dateFiltered}
         rowKey={(l) => l.id}
@@ -135,24 +136,34 @@ export function LogsPage() {
         pageSize={25}
         searchPlaceholder="Поиск в логах…"
         toolbar={
-          <div className="flex flex-wrap items-end gap-3">
-            <div>
-              <label className="label !mb-1">С</label>
-              <input type="date" className="input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </div>
-            <div>
-              <label className="label !mb-1">По</label>
-              <input type="date" className="input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </div>
-            <div className="flex gap-2">
-              <button type="button" className="btn-secondary" disabled={apiPage <= 1} onClick={() => setApiPage((p) => p - 1)}>
-                API −
-              </button>
-              <span className="flex items-center text-sm text-slate-500">API стр. {apiPage}</span>
-              <button type="button" className="btn-secondary" onClick={() => setApiPage((p) => p + 1)}>
-                API +
-              </button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="date"
+              className="input !h-8 !w-auto !py-1.5 !px-3 text-sm"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              aria-label="С"
+            />
+            <span className="text-sm text-panel-muted">—</span>
+            <input
+              type="date"
+              className="input !h-8 !w-auto !py-1.5 !px-3 text-sm"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              aria-label="По"
+            />
+            <button
+              type="button"
+              className="btn-secondary !h-8 !py-1.5 !px-3 text-sm"
+              disabled={apiPage <= 1}
+              onClick={() => setApiPage((p) => p - 1)}
+            >
+              API −
+            </button>
+            <span className="flex h-8 items-center text-sm text-slate-500">API стр. {apiPage}</span>
+            <button type="button" className="btn-secondary !h-8 !py-1.5 !px-3 text-sm" onClick={() => setApiPage((p) => p + 1)}>
+              API +
+            </button>
           </div>
         }
         bulkActions={bulkActions}

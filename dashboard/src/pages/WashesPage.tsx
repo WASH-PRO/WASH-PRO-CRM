@@ -60,7 +60,7 @@ export function WashesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить объект?')) return;
+    if (!confirm('Удалить объект и все посты с данными (состояние, карты, статистика, MQTT)?')) return;
     try {
       await api(`/crm/washes/${id}`, { method: 'DELETE' });
       refresh();
@@ -120,18 +120,19 @@ export function WashesPage() {
         render: (w) => w.address,
       },
       {
-        key: 'createdAt',
-        header: 'Дата создания',
-        sortable: true,
-        sortValue: (w) => w.createdAt || w.registeredAt || '',
-        render: (w) => formatDateTime(w.createdAt || w.registeredAt),
-      },
-      {
         key: 'posts',
         header: 'Количество постов',
         sortable: true,
         sortValue: (w) => postCountByWash[w.id] || 0,
         render: (w) => postCountByWash[w.id] || 0,
+      },
+      {
+        key: 'createdAt',
+        header: 'Дата создания',
+        sortable: true,
+        sortValue: (w) => w.createdAt || w.registeredAt || '',
+        searchValue: (w) => formatDateTime(w.createdAt || w.registeredAt),
+        render: (w) => formatDateTime(w.createdAt || w.registeredAt),
       },
       ...(canEdit
         ? [
@@ -171,8 +172,8 @@ export function WashesPage() {
         { header: 'Название', value: (w) => w.name },
         { header: 'Адрес', value: (w) => w.address },
         { header: 'Описание', value: (w) => w.description || '' },
-        { header: 'Дата создания', value: (w) => w.createdAt || w.registeredAt || '' },
         { header: 'Постов', value: (w) => String(postCountByWash[w.id] || 0) },
+        { header: 'Дата создания', value: (w) => w.createdAt || w.registeredAt || '' },
       ]),
     ];
     if (canEdit) {
@@ -180,7 +181,8 @@ export function WashesPage() {
         id: 'delete',
         label: 'Удалить',
         variant: 'danger',
-        confirmMessage: (_rows, ids) => `Удалить ${ids.length} автомоек?`,
+        confirmMessage: (_rows, ids) =>
+          `Удалить ${ids.length} автомоек и все посты с данными?`,
         onAction: async (_rows, ids) => {
           await bulkDelete('/crm/washes', ids);
           refresh();
@@ -225,6 +227,7 @@ export function WashesPage() {
       />
       {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
       <DataTable
+        tableId="washes"
         columns={columns}
         data={data?.washes || []}
         rowKey={(w) => w.id}

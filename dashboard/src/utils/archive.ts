@@ -62,8 +62,8 @@ export async function executeArchiveGroup(
     if (!res.ok) {
       throw new Error('Не удалось сохранить файл архива');
     }
-    const json = (await res.json()) as { filename?: string };
-    filename = json.filename;
+    const json = (await res.json()) as { filename?: string; data?: { filename?: string } };
+    filename = json.filename ?? json.data?.filename;
   }
 
   if (group.deleteAfter) {

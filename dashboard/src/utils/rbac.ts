@@ -43,6 +43,16 @@ export function normalizeGroupId(ref: unknown): string {
   return '';
 }
 
+export function resolveGroupLabel(ref: unknown, groups: { id: string; name: string }[]): string {
+  if (ref && typeof ref === 'object') {
+    const obj = ref as { name?: unknown };
+    if (typeof obj.name === 'string' && obj.name) return obj.name;
+  }
+  const id = normalizeGroupId(ref);
+  if (!id) return '—';
+  return groups.find((g) => g.id === id)?.name ?? id.slice(-6);
+}
+
 export function normalizeDapUser(raw: Record<string, unknown>): DapUser {
   const id = entityId(raw as { id?: string; _id?: unknown });
   const groupIds = Array.isArray(raw.groupIds)

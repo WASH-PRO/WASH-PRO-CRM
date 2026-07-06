@@ -10,12 +10,16 @@ description: Компоненты и потоки данных WASH PRO CRM
 Контроллеры постов
        │
        ▼
-   RabbitMQ  (wash.exchange / wash.telemetry)
+   Mosquitto  (wash/telemetry/#  и  +/+/#)
        │
        ▼
- Message Processor ──► Dynamic API ──► MongoDB
-                            ▲
+ Message Processor ◄── HTTP :3022 (команды/цены из Dashboard)
+       │
+       ▼
+ Dynamic API ──► MongoDB
+       ▲
 Dashboard (React) ──────────┤ nginx /api proxy
+                            │  /api/crm/post-device/ → processor
                             │
          pyorch-bridge ─────┤ (Telegram, Admin)
               ▲             │
@@ -36,12 +40,10 @@ Dashboard (React) ──────────┤ nginx /api proxy
 | `dynamic-api-panel` | wash-dynamic-api-panel | Панель Dynamic API | ✅ `:8080` |
 | `dashboard` | wash-dashboard | CRM Dashboard | ✅ `:80` |
 | `init-seed` | wash-init-seed | Одноразовая инициализация CRM | ❌ |
-| `rabbitmq` | wash-rabbitmq | Очередь телеметрии | ❌* |
-| `rabbitmq-init` | wash-rabbitmq-init | Создание пользователя RabbitMQ | ❌ |
-| `message-processor` | wash-message-processor | RabbitMQ → API | ❌ |
+| `mosquitto` | wash-mosquitto | MQTT-брокер телеметрии | ✅ `:1883` (LAN) |
+| `mosquitto-init` | wash-mosquitto-init | Создание пользователя MQTT | ❌ |
+| `message-processor` | wash-message-processor | MQTT ↔ API, HTTP управление постами (`:3022`) | ❌ |
 | `backup` | wash-backup | mongodump + HTTP файлов | ❌ |
-
-\* Порт `:5672` — через `docker-compose.controllers.yml` (`RABBITMQ_EXTERNAL_PORT`).
 
 ### Опциональные сервисы
 
@@ -71,20 +73,33 @@ Dashboard (React) ──────────┤ nginx /api proxy
 
 | Сеть | Тип | Назначение |
 |------|-----|------------|
-| `wash-internal` | internal | MongoDB, RabbitMQ, bridge, runtime, backup |
-| `wash-external` | bridge | Dashboard, API, панели |
+| `wash-internal` | internal | MongoDB, message-processor, backup (без доступа в интернет) |
+| `wash-external` | bridge | Dashboard, API, **Mosquitto** (порт 1883 для LAN) |
 
-MongoDB и RabbitMQ **не публикуются** наружу по умолчанию.
+MongoDB **не публикуется** наружу. MQTT (`:1883`) доступен из локальной сети для контроллеров постов.
 
 ## Поток телеметрии
 
-1. Контроллер публикует JSON в `wash.exchange`, routing key `telemetry.#`.
-2. `message-processor` читает `wash.telemetry`.
-3. По `postSerial` находится пост в `/api/crm/posts`.
-4. Данные пишутся в CRM endpoints (`post-states`, `cards`, статистика…).
-5. Ошибки → DLQ `wash.dlq`.
+### Входящие (пост → CRM)
 
-Типы сообщений: `mode`/`state`, `card`, `statistics`, `finance`, `equipment`, `event`, `settings`.
+1. Контроллер публикует JSON в топик `wash/telemetry/{тип}` (legacy) или `{dt_pref}/{serial}/state/{suffix}` (нативный протокол), QoS 1.
+2. `message-processor` подписан на `wash/telemetry/#` и `+/+/#`.
+3. По серийному номеру находится пост в `/api/crm/posts`.
+4. Данные пишутся в CRM endpoints (`post-states`, `cards`, статистика…).
+5. Каждое сообщение дублируется в журнал `/api/crm/telemetry`.
+6. Ошибки обработки → DLQ `wash/dlq`.
+
+Типы: `mode`/`state`, `card`, `statistics`, `finance`, `equipment`, `event`, `settings`, `prices`, `command`.
+
+### Исходящие (CRM → пост)
+
+1. Dashboard → nginx `/api/crm/post-device/…` → HTTP `message-processor:3022`.
+2. Проверка JWT пользователя через `/api/profile`.
+3. Публикация в `{dt_pref}/{serial}/set/prices` или `set/command`.
+4. Цены и метаданные команд сохраняются в `posts.settings`.
+5. Исходящие сообщения логируются в телеметрию.
+
+Подробнее: [MQTT — управление постом](mqtt.md#set-prices).
 
 ## Инициализация (init-seed)
 
@@ -97,14 +112,18 @@ MongoDB и RabbitMQ **не публикуются** наружу по умолч
 ./scripts/run-init-seed.sh
 ```
 
-## Volumes
+## Каталог данных (`DATA_DIR`)
 
-| Volume | Данные |
-|--------|--------|
-| `wash_mongodb_data` | MongoDB CRM |
-| `wash_backup_data` | Файлы бэкапов |
-| `wash_rabbitmq_data` | RabbitMQ |
-| `wash_pyorch_*` | PostgreSQL, Redis, MinIO PyOrchestrator *(опц.)* |
+По умолчанию `./data` на хосте (bind mount). Пересборка и `docker compose down` не удаляют эти файлы.
+
+| Путь | Данные |
+|------|--------|
+| `mongodb/` | MongoDB CRM |
+| `backups/` | Файлы бэкапов |
+| `mosquitto/` | MQTT-брокер (data + config) |
+| `pyorchestrator/` | PostgreSQL, Redis, MinIO, runtime *(опц.)* |
+
+Подробнее: [data/README.md](../data/README.md).
 
 ## Dynamic API Platform (vendored v1.5.13)
 

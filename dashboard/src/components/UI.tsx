@@ -1,19 +1,48 @@
 import { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import clsx from 'clsx';
+import type { LucideIcon } from 'lucide-react';
+import { resolveRouteIcon } from '../utils/navRoutes';
 export { CARD_STATUS_LABELS as cardStatusLabel } from '../utils/cards';
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  actions,
+  icon,
+  showRouteIcon = true,
+}: {
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  icon?: LucideIcon;
+  showRouteIcon?: boolean;
+}) {
+  const { pathname } = useLocation();
+  const RouteIcon = icon ?? (showRouteIcon ? resolveRouteIcon(pathname) : null);
+
   return (
-    <div className="mb-8 flex flex-col gap-4 border-b border-panel-border pb-6 dark:border-panel-border-dark sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark lg:text-[1.75rem]">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="mt-1.5 text-sm leading-relaxed text-panel-muted dark:text-panel-muted-dark">{subtitle}</p>
+    <div className="mb-6 flex flex-col gap-3 border-b border-panel-border pb-5 dark:border-panel-border-dark sm:mb-8 sm:gap-4 sm:pb-6 md:flex-row md:items-start md:justify-between">
+      <div className="flex min-w-0 flex-1 items-stretch gap-5 pl-1 sm:gap-6 sm:pl-2 md:gap-7">
+        {RouteIcon && (
+          <div className="flex shrink-0 items-stretch" aria-hidden>
+            <div className="flex aspect-square h-full min-h-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-500/10 dark:bg-brand-400/10 dark:text-brand-400 dark:ring-brand-400/20 sm:min-h-12">
+              <RouteIcon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={1.75} />
+            </div>
+          </div>
         )}
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark sm:text-2xl lg:text-[1.75rem]">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-panel-muted dark:text-panel-muted-dark md:line-clamp-none">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2 md:pl-0">{actions}</div>}
     </div>
   );
 }
@@ -80,15 +109,15 @@ export function Table({ children }: { children: ReactNode }) {
 export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-panel border border-panel-border bg-panel-card p-6 shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[min(92vh,100dvh)] w-full max-w-lg flex-col rounded-t-panel border border-panel-border bg-panel-card shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark sm:max-h-[min(90vh,100dvh)] sm:rounded-panel">
+        <div className="flex shrink-0 items-center justify-between border-b border-panel-border px-4 py-4 dark:border-panel-border-dark sm:px-6">
+          <h2 className="pr-4 text-lg font-semibold tracking-tight">{title}</h2>
           <button type="button" onClick={onClose} className="btn-ghost !px-2 !py-1 text-lg leading-none">
             ×
           </button>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">{children}</div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { userRepository, groupRepository, logRepository } from '../repositories'
 import { hashPassword, sanitizeUser } from '../utils';
 import { CreateUserDto, UpdateUserDto } from '../dto';
 import { webhookService } from './webhook.service';
+import { notifyAuthEvent } from './wash-notify.service';
 
 export class UserService {
   async getAll(page = 1, limit = 20, search?: string) {
@@ -45,10 +46,13 @@ export class UserService {
       email: user.email,
     });
 
+    void notifyAuthEvent('user_created', `Создан пользователь: ${user.login} (${user.email})`);
+
     return sanitizeUser(user.toObject());
   }
 
   async update(id: string, dto: UpdateUserDto, updatedBy?: string) {
+    const passwordChanged = Boolean(dto.password);
     const updateData: Record<string, unknown> = { ...dto };
     if (dto.password) {
       updateData.password = await hashPassword(dto.password);
@@ -70,6 +74,12 @@ export class UserService {
 
     void webhookService.dispatch('user.updated', { userId: id, login: user.login });
 
+    if (passwordChanged) {
+      void notifyAuthEvent('user_password_changed', `Изменён пароль пользователя: ${user.login}`);
+    } else {
+      void notifyAuthEvent('user_updated', `Изменён пользователь: ${user.login}`);
+    }
+
     return sanitizeUser(user.toObject());
   }
 
@@ -87,6 +97,7 @@ export class UserService {
     });
 
     void webhookService.dispatch('user.deleted', { userId: id, login: user.login });
+    void notifyAuthEvent('user_deleted', `Удалён пользователь: ${user.login}`);
   }
 
   async getProfile(userId: string) {

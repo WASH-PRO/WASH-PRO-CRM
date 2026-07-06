@@ -10,7 +10,7 @@ import { formatMoney } from '../utils/format';
 import { bulkPatch } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 import { refId } from '../utils/refs';
-import { latestFinanceByPost } from '../utils/statsAggregation';
+import { latestFinanceByPost, latestPostStateByPost, isPostOnline } from '../utils/statsAggregation';
 import type { Wash, Post, PostState, Notification, UsageStat, FinanceStat } from '../types';
 
 interface DashboardData {
@@ -63,7 +63,7 @@ export function DashboardPage() {
 
   const postCounts = useMemo(() => {
     if (!data) return { online: 0, offline: 0, maintenance: 0, errors: 0 };
-    const stateByPost = new Map(data.states.map((s) => [refId(s.postId), s]));
+    const stateByPost = new Map(latestPostStateByPost(data.states).map((s) => [refId(s.postId), s]));
     let online = 0;
     let offline = 0;
     let maintenance = 0;
@@ -77,7 +77,7 @@ export function DashboardPage() {
 
       if (hasError) errors += 1;
       else if (isMaintenance) maintenance += 1;
-      else if (state?.connected === true) online += 1;
+      else if (isPostOnline(state)) online += 1;
       else offline += 1;
     }
 
@@ -197,6 +197,7 @@ export function DashboardPage() {
       <div className="card">
         <h2 className="mb-4 font-semibold">Последние уведомления</h2>
         <DataTable
+          tableId="dashboard-notifications"
           columns={notificationColumns}
           data={recentNotifications}
           rowKey={(n) => n.id}

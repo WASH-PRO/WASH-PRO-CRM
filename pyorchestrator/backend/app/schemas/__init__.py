@@ -129,6 +129,7 @@ class ScriptResponse(BaseModel):
     max_memory_bytes: int
     metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
     active_run: ActiveRunSummary | None = None
+    created_at: datetime
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 

@@ -3,7 +3,7 @@ import { endpointDataRepository } from '../repositories';
 import { JwtPayload } from '../types';
 import { computeExpiresAt } from '../utils/data-retention';
 
-const HANDLER_TIMEOUT_MS = 5000;
+const HANDLER_TIMEOUT_MS = parseInt(process.env.HANDLER_TIMEOUT_MS || '60000', 10);
 
 export type HandlerRequest = {
   method: string;
@@ -80,6 +80,10 @@ function createDbContext(endpointId: string, resourcePath: string, dataRetention
       }
       await endpointDataRepository.delete(id);
       return { success: true };
+    },
+
+    at(otherResourcePath: string) {
+      return createDbContext(endpointId, otherResourcePath, dataRetentionDays);
     },
   };
 }

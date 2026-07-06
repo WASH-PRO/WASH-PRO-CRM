@@ -15,6 +15,7 @@ export interface TelegramBot {
   description: string;
   script_type: string;
   status: string;
+  created_at?: string;
   metadata: {
     wash_telegram_bot?: boolean;
     admin_ids?: number[];

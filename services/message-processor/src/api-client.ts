@@ -56,15 +56,88 @@ export async function apiRequest<T>(
 }
 
 export async function findPostBySerial(serial: string): Promise<{ id: string; washId: string; postId?: string } | null> {
+  const cached = postBySerialCache.get(serial);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.value;
+  }
+
   const posts = await apiRequest<Array<{ id: string; serialNumber: string; washId: string }>>('GET', '/api/crm/posts?limit=500');
   const post = posts.find((p) => p.serialNumber === serial);
-  return post ? { id: post.id, washId: post.washId } : null;
+  const value = post ? { id: post.id, washId: refId(post.washId) } : null;
+  postBySerialCache.set(serial, { value, expiresAt: Date.now() + POST_CACHE_TTL_MS });
+  return value;
 }
 
-export async function findPostState(postId: string): Promise<{ id: string } | null> {
-  const states = await apiRequest<Array<{ id: string; postId: string }>>('GET', '/api/crm/post-states?limit=500');
-  const state = states.find((s) => s.postId === postId);
-  return state ? { id: state.id } : null;
+const POST_CACHE_TTL_MS = 5 * 60_000;
+const postBySerialCache = new Map<string, { value: { id: string; washId: string } | null; expiresAt: number }>();
+
+const postStateIdCache = new Map<string, {
+  id: string;
+  balance?: number;
+  discount?: number;
+  expiresAt: number;
+}>();
+const POST_STATE_CACHE_TTL_MS = 60_000;
+
+export function setCachedPostState(
+  postId: string,
+  stateId: string,
+  snapshot?: { balance?: number; discount?: number }
+): void {
+  postStateIdCache.set(postId, {
+    id: stateId,
+    balance: snapshot?.balance,
+    discount: snapshot?.discount,
+    expiresAt: Date.now() + POST_STATE_CACHE_TTL_MS,
+  });
+}
+
+function refId(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'object') {
+    const obj = value as { id?: string; _id?: string };
+    return String(obj.id ?? obj._id ?? '');
+  }
+  return String(value);
+}
+
+export async function findPostState(postId: string): Promise<{
+  id: string;
+  balance?: number;
+  discount?: number;
+} | null> {
+  const cached = postStateIdCache.get(postId);
+  if (cached && Date.now() < cached.expiresAt) {
+    return { id: cached.id, balance: cached.balance, discount: cached.discount };
+  }
+
+  const states = await apiRequest<Array<{
+    id: string;
+    postId: unknown;
+    balance?: number;
+    discount?: number;
+    lastMessageAt?: string;
+    createdAt?: string;
+  }>>('GET', '/api/crm/post-states?limit=500');
+  const matches = states.filter((s) => refId(s.postId) === postId);
+  if (!matches.length) return null;
+
+  matches.sort((a, b) => stateTime(b) - stateTime(a));
+  const row = matches[0]!;
+  postStateIdCache.set(postId, {
+    id: row.id,
+    balance: row.balance,
+    discount: row.discount,
+    expiresAt: Date.now() + POST_STATE_CACHE_TTL_MS,
+  });
+  return { id: row.id, balance: row.balance, discount: row.discount };
+}
+
+function stateTime(row: { lastMessageAt?: string; createdAt?: string }): number {
+  const raw = row.lastMessageAt ?? row.createdAt;
+  if (!raw) return 0;
+  const t = new Date(raw).getTime();
+  return Number.isNaN(t) ? 0 : t;
 }
 
 let cachedNotificationSettings: NotificationSettingsValue | null = null;

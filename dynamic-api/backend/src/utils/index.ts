@@ -76,14 +76,16 @@ export function generateExamples(schema: SchemaField[]): ExamplePayload {
 
 export function validateDataAgainstSchema(
   data: Record<string, unknown>,
-  schema: SchemaField[]
+  schema: SchemaField[],
+  options?: { partial?: boolean }
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
+  const partial = options?.partial === true;
 
   for (const field of schema) {
     const value = data[field.name];
 
-    if (field.required && (value === undefined || value === null || value === '')) {
+    if (!partial && field.required && (value === undefined || value === null || value === '')) {
       errors.push(`Field "${field.name}" is required`);
       continue;
     }
@@ -187,6 +189,42 @@ export function applyDefaults(data: Record<string, unknown>, schema: SchemaField
     }
   }
 
+  return result;
+}
+
+function schemaHasDatetimeField(schema: SchemaField[], name: string): boolean {
+  return schema.some((field) => field.name === name && field.type === 'datetime');
+}
+
+/** Подставляет createdAt/registeredAt из метки документа, если поле есть в схеме, но не заполнено в data. */
+export function enrichDataFromDocument(
+  data: Record<string, unknown>,
+  schema: SchemaField[],
+  docTimestamps?: { createdAt?: Date }
+): Record<string, unknown> {
+  const result = { ...data };
+  if (!docTimestamps?.createdAt) return result;
+
+  const createdIso = docTimestamps.createdAt.toISOString();
+  if (schemaHasDatetimeField(schema, 'createdAt') && !result.createdAt) {
+    result.createdAt = createdIso;
+  }
+  if (schemaHasDatetimeField(schema, 'registeredAt') && !result.registeredAt) {
+    result.registeredAt = createdIso;
+  }
+  return result;
+}
+
+/** Автозаполнение дат при создании записи по схеме endpoint. */
+export function applyAutoTimestamps(data: Record<string, unknown>, schema: SchemaField[]): Record<string, unknown> {
+  const now = new Date().toISOString();
+  const result = { ...data };
+  if (schemaHasDatetimeField(schema, 'createdAt') && !result.createdAt) {
+    result.createdAt = now;
+  }
+  if (schemaHasDatetimeField(schema, 'registeredAt') && !result.registeredAt) {
+    result.registeredAt = now;
+  }
   return result;
 }
 

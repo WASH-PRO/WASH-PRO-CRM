@@ -4,6 +4,7 @@ import { hashPassword, comparePassword, signToken, verifyToken, sanitizeUser, ge
 import { JwtPayload, Permission } from '../types';
 import { LoginDto, RegisterDto } from '../dto';
 import { IGroup, IUser } from '../models';
+import { notifyAuthEvent } from './wash-notify.service';
 
 function isPopulatedGroup(groupId: unknown): groupId is IGroup {
   return typeof groupId === 'object' && groupId !== null && 'permissions' in groupId && 'name' in groupId;
@@ -62,6 +63,8 @@ export class AuthService {
       ip: getClientIp(req),
       userAgent: req.headers['user-agent'] as string,
     });
+
+    void notifyAuthEvent('user_login', `Вход в систему: ${user.login} (${user.email})`);
 
     return {
       accessToken,
@@ -127,6 +130,7 @@ export class AuthService {
       message: 'User logged out',
       ip: getClientIp(req),
     });
+    void notifyAuthEvent('user_logout', `Выход из системы (userId: ${userId})`);
   }
 
   verifyAccessToken(token: string): JwtPayload {

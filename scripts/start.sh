@@ -14,12 +14,16 @@ set -a
 source .env
 set +a
 
+"$ROOT/scripts/ensure-data-dirs.sh"
+
 COMPOSE_FILES="-f docker-compose.yml"
 if [ "${REDIS_ENABLED:-false}" = "true" ]; then
   COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.redis.yml"
 fi
-if [ -n "${RABBITMQ_EXTERNAL_PORT:-}" ]; then
-  COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.controllers.yml"
+if [ "${MQTT_BIND:-}" = "127.0.0.1" ]; then
+  export MQTT_PORT_PUBLISH="127.0.0.1:${MQTT_EXTERNAL_PORT:-1883}:1883"
+else
+  export MQTT_PORT_PUBLISH="${MQTT_EXTERNAL_PORT:-1883}:1883"
 fi
 if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
   COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.pyorchestrator.yml"
@@ -32,6 +36,9 @@ fi
 
 docker compose $COMPOSE_FILES up -d --build "$@"
 
+# После one-shot init-seed зависимые сервисы могут остаться в Created — поднимаем ещё раз.
+docker compose $COMPOSE_FILES up -d
+
 echo ""
 echo "WASH PRO CRM запущен."
 echo "Dashboard:         http://localhost:${DASHBOARD_PORT:-80}"
@@ -42,3 +49,6 @@ if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
   echo "PyOrchestrator Panel: http://localhost:${PYORCH_PANEL_PORT:-8090}"
 fi
 echo "Логин по умолчанию: ${ADMIN_LOGIN:-admin} / ${ADMIN_PASSWORD:-Admin123!}"
+DATA_DIR_DISPLAY="${DATA_DIR:-./data}"
+echo "Данные на диске:    ${DATA_DIR_DISPLAY} (см. data/README.md)"
+echo "MQTT (контроллеры): mqtt://${MQTT_USER:-wash}@<IP-сервера>:${MQTT_EXTERNAL_PORT:-1883}  топик wash/telemetry/#"

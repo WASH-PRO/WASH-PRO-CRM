@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Pencil, Plus, Settings, Trash2 } from 'lucide-react';
 import { api, apiList } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
@@ -15,6 +16,7 @@ import { createExportBulkAction } from '../utils/export';
 const emptyForm = { washId: '', postNumber: 1, name: '', serialNumber: '' };
 
 export function PostsPage() {
+  const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('create', 'update');
   const canDelete = hasPermission('delete');
@@ -58,7 +60,7 @@ export function PostsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить пост?')) return;
+    if (!confirm('Удалить пост и все связанные данные (состояние, карты, статистика, финансы, MQTT)?')) return;
     try {
       await api(`/crm/posts/${id}`, { method: 'DELETE' });
       refresh();
@@ -114,20 +116,34 @@ export function PostsPage() {
         header: 'Дата создания',
         sortable: true,
         sortValue: (p) => p.createdAt || '',
+        searchValue: (p) => formatDateTime(p.createdAt),
         render: (p) => formatDateTime(p.createdAt),
       },
-      ...((canEdit || canDelete)
-        ? [
+      ...[
             {
               key: 'actions',
               header: '',
               render: (p: Post) => (
                 <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    className="btn-secondary !px-2 !py-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/posts/${p.id}#device-settings`);
+                    }}
+                    title="Настройки устройства"
+                  >
+                    <Settings size={14} />
+                  </button>
                   {canEdit && (
                     <button
                       type="button"
                       className="btn-secondary !px-2 !py-1"
-                      onClick={() => openEdit(p)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEdit(p);
+                      }}
                       title="Изменить"
                     >
                       <Pencil size={14} />
@@ -137,7 +153,10 @@ export function PostsPage() {
                     <button
                       type="button"
                       className="btn-secondary !px-2 !py-1 text-red-600"
-                      onClick={() => handleDelete(p.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(p.id);
+                      }}
                       title="Удалить"
                     >
                       <Trash2 size={14} />
@@ -146,8 +165,7 @@ export function PostsPage() {
                 </div>
               ),
             } as DataTableColumn<Post>,
-          ]
-        : []),
+          ],
     ],
     [washName, canEdit, canDelete]
   );
@@ -168,7 +186,8 @@ export function PostsPage() {
         id: 'delete',
         label: 'Удалить',
         variant: 'danger',
-        confirmMessage: (_rows, ids) => `Удалить ${ids.length} постов?`,
+        confirmMessage: (_rows, ids) =>
+          `Удалить ${ids.length} постов и все связанные данные?`,
         onAction: async (_rows, ids) => {
           await bulkDelete('/crm/posts', ids);
           refresh();
@@ -215,7 +234,16 @@ export function PostsPage() {
         actions={canEdit && <button type="button" className="btn-primary" onClick={openCreate}><Plus size={16} /> Добавить</button>}
       />
       {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
-      <DataTable columns={columns} data={data?.posts || []} rowKey={(p) => p.id} filters={filters} searchPlaceholder="Поиск постов…" bulkActions={bulkActions} />
+      <DataTable
+        tableId="posts"
+        columns={columns}
+        data={data?.posts || []}
+        rowKey={(p) => p.id}
+        filters={filters}
+        searchPlaceholder="Поиск постов…"
+        bulkActions={bulkActions}
+        onRowClick={(p) => navigate(`/posts/${p.id}`)}
+      />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать пост' : 'Новый пост'}>
         <form onSubmit={handleSubmit} className="space-y-3">

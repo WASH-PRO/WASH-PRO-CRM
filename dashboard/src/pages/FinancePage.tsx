@@ -1,15 +1,18 @@
 import { useCallback, useMemo } from 'react';
+import { X } from 'lucide-react';
 import { apiList } from '../api/client';
 import { PageHeader, Loading, StatCard, periodLabel } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
+import { statsScopeHint, useStatsScopeFilter } from '../hooks/useStatsScopeFilter';
 import { formatMoney, formatDateTime } from '../utils/format';
 import { createExportBulkAction } from '../utils/export';
 import {
   latestFinanceByPost,
   resolvePostNumber,
+  resolveStatPostId,
   resolveStatWashAddress,
 } from '../utils/statsAggregation';
 import type { FinanceStat, Post, Wash } from '../types';
@@ -21,12 +24,14 @@ interface FinancePageData {
 }
 
 function PeriodSection({
+  tableId,
   title,
   stats,
   currency,
   postById,
   washById,
 }: {
+  tableId: string;
   title: string;
   stats: FinanceStat[];
   currency: { code: string; symbol?: string };
@@ -34,15 +39,6 @@ function PeriodSection({
   washById: Map<string, Wash>;
 }) {
   const latest = useMemo(() => latestFinanceByPost(stats), [stats]);
-
-  const totals = useMemo(
-    () => ({
-      cash: latest.reduce((s, x) => s + (x.cash || 0), 0),
-      cashless: latest.reduce((s, x) => s + (x.cashless || 0), 0),
-      discount: latest.reduce((s, x) => s + (x.discountOps || 0), 0),
-    }),
-    [latest]
-  );
 
   const postNumber = useCallback(
     (s: FinanceStat) => resolvePostNumber(s.postId, postById),
@@ -54,15 +50,48 @@ function PeriodSection({
     [postById, washById]
   );
 
-  const addressFilter: DataTableFilter<FinanceStat> = useMemo(() => {
-    const addresses = [...new Set(stats.map((s) => address(s)))].filter((a) => a !== '—');
-    return {
+  const postId = useCallback((s: FinanceStat) => resolveStatPostId(s.postId), []);
+
+  const {
+    washFilter,
+    postFilter,
+    filtered,
+    washOptions,
+    hasScope,
+    onWashFilterChange,
+    onPostSelect,
+    clearScope,
+  } = useStatsScopeFilter({
+    rows: latest,
+    getWashAddress: address,
+    getPostId: postId,
+  });
+
+  const totals = useMemo(
+    () => ({
+      cash: filtered.reduce((s, x) => s + (x.cash || 0), 0),
+      cashless: filtered.reduce((s, x) => s + (x.cashless || 0), 0),
+      discount: filtered.reduce((s, x) => s + (x.discountOps || 0), 0),
+    }),
+    [filtered]
+  );
+
+  const scopeHint = useMemo(() => {
+    const postLabel = postFilter
+      ? postNumber(filtered.find((s) => postId(s) === postFilter) || filtered[0]!)
+      : undefined;
+    return statsScopeHint(washFilter, postFilter, postLabel !== '—' ? postLabel : undefined);
+  }, [washFilter, postFilter, filtered, postNumber, postId]);
+
+  const addressFilter: DataTableFilter<FinanceStat> = useMemo(
+    () => ({
       id: 'address',
       label: 'Объект',
-      options: addresses.map((a) => ({ value: a, label: a })),
+      options: washOptions.map((a) => ({ value: a, label: a })),
       match: (s, v) => address(s) === v,
-    };
-  }, [stats, address]);
+    }),
+    [washOptions, address]
+  );
 
   const columns: DataTableColumn<FinanceStat>[] = useMemo(
     () => [
@@ -133,19 +162,47 @@ function PeriodSection({
     ]),
   ], [title, postNumber, address]);
 
+  const handleFilterChange = useCallback(
+    (id: string, value: string) => {
+      if (id === 'address') onWashFilterChange(value);
+    },
+    [onWashFilterChange]
+  );
+
   return (
     <section className="mb-8">
       <h2 className="mb-4 text-lg font-semibold">{title}</h2>
-      <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Наличные средства" value={formatMoney(totals.cash, currency)} hint="Сумма последних данных по каждому посту" />
-        <StatCard label="Внешние средства" value={formatMoney(totals.cashless, currency)} hint="Сумма последних данных по каждому посту" />
-        <StatCard label="Скидочные средства" value={formatMoney(totals.discount, currency)} hint="Сумма последних данных по каждому посту" />
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <StatCard label="Наличные средства" value={formatMoney(totals.cash, currency)} hint={scopeHint} />
+        <StatCard label="Внешние средства" value={formatMoney(totals.cashless, currency)} hint={scopeHint} />
+        <StatCard label="Скидочные средства" value={formatMoney(totals.discount, currency)} hint={scopeHint} />
       </div>
+      {hasScope && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-panel-muted dark:text-panel-muted-dark">Фильтр KPI и таблицы:</span>
+          <span className="max-w-full truncate rounded-full bg-brand-500/10 px-3 py-1 font-medium text-brand-800 dark:text-brand-300">
+            {scopeHint}
+          </span>
+          <button
+            type="button"
+            className="btn-secondary !px-2 !py-1"
+            onClick={clearScope}
+            title="Сбросить фильтр"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
       <DataTable
+        tableId={tableId}
         columns={columns}
-        data={stats}
+        data={filtered}
         rowKey={(s) => s.id}
         filters={addressFilter.options.length ? [addressFilter] : []}
+        filterValues={{ address: washFilter }}
+        onFilterChange={handleFilterChange}
+        onRowClick={onPostSelect}
+        isRowActive={(s) => Boolean(postFilter && postId(s) === postFilter)}
         pageSize={10}
         emptyMessage="Нет записей"
         searchPlaceholder="Поиск…"
@@ -191,9 +248,9 @@ export function FinancePage() {
 
   return (
     <div>
-      <PageHeader title="Финансовая статистика" subtitle="До и после инкассации" />
-      <PeriodSection title={periodLabel.before_collection} stats={before} currency={currency} postById={postById} washById={washById} />
-      <PeriodSection title={periodLabel.after_collection} stats={after} currency={currency} postById={postById} washById={washById} />
+      <PageHeader title="Финансовая статистика" subtitle="До и после инкассации · клик по строке — фильтр по посту" />
+      <PeriodSection tableId="finance-before" title={periodLabel.before_collection} stats={before} currency={currency} postById={postById} washById={washById} />
+      <PeriodSection tableId="finance-after" title={periodLabel.after_collection} stats={after} currency={currency} postById={postById} washById={washById} />
     </div>
   );
 }

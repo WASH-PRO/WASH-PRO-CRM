@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { pino } from 'pino';
 import { WASH_TELEGRAM_BOT_MAIN } from './botTemplate.js';
+import { notifyCrm } from './notify.js';
 
 const logger = pino({ level: 'info' });
 
@@ -20,6 +21,7 @@ interface PyorchScript {
   script_type: string;
   status: string;
   metadata: Record<string, unknown>;
+  created_at?: string;
   active_run?: { id: string; status: string; started_at: string | null; queued_at: string } | null;
 }
 
@@ -287,6 +289,7 @@ export function startServer(): void {
 
         const bots = await listWashBots();
         const created = bots.find((b) => b.id === script.id) ?? script;
+        void notifyCrm('telegram_bot_created', `Создан Telegram-бот: ${created.name}`);
         json(res, 201, { success: true, data: created });
         return;
       }
@@ -362,6 +365,9 @@ export function startServer(): void {
     } catch (err) {
       logger.error({ err, url, method: req.method }, 'Bridge error');
       const message = err instanceof Error ? err.message : 'Internal error';
+      if (req.method === 'POST' && url === '/bots') {
+        void notifyCrm('telegram_bot_error', `Ошибка создания Telegram-бота: ${message}`, 'error');
+      }
       const status = message.includes('login failed') || message.includes('unreachable') ? 503 : 500;
       json(res, status, { success: false, error: message });
     }

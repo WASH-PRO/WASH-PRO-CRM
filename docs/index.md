@@ -17,6 +17,7 @@ layout: default
 <p class="quick-links">
   <a href="{{ '/getting-started/' | relative_url }}">Быстрый старт</a> ·
   <a href="{{ '/architecture/' | relative_url }}">Архитектура</a> ·
+  <a href="{{ '/mqtt/' | relative_url }}">MQTT</a> ·
   <a href="{{ '/embedded-services/' | relative_url }}">Встроенные сервисы</a> ·
   <a href="{{ '/dashboard/' | relative_url }}">Dashboard</a>
 </p>
@@ -27,10 +28,10 @@ layout: default
 |--------|----------|
 | **Обзор** | KPI, графики Recharts, live-уведомления |
 | **SCADA** | Состояние постов, live-таймер, **интерактивный график** |
-| **Объекты** | Автомойки, посты (серийный номер контроллера) |
-| **Карты** | Скидочные / сервисные / VIP, типы скидок 1–5 |
+| **Объекты** | Автомойки, посты, **настройки устройства** (цены, команды MQTT) |
+| **Карты** | Скидочные / сервисные / VIP; журнал применений NFC |
 | **Аналитика** | Использование и финансы до/после инкассации |
-| **Система** | Уведомления, **пользователи**, **группы RBAC**, бэкапы, **Telegram-боты**, справочники, логи |
+| **Система** | Уведомления (web + Telegram), пользователи, группы RBAC, бэкапы, Telegram-боты, справочники, логи |
 | **Resources** | Статус и ссылки на панели Dynamic API и PyOrchestrator |
 | **Live-данные** | Автообновление 3–15 с без перезагрузки |
 
@@ -49,7 +50,7 @@ layout: default
 |-----------|------------|
 | API | Dynamic API Platform v1.5.13 (Node.js + MongoDB) |
 | Dashboard | React 18 + TypeScript + Vite + Tailwind + Recharts |
-| Очередь | RabbitMQ |
+| Очередь | MQTT (Mosquitto) |
 | Телеметрия | message-processor (Node.js) |
 | Python automation | PyOrchestrator v0.1.10 *(опц.)* |
 | Инфраструктура | Docker Compose |
@@ -110,3 +111,7 @@ WASH-PRO-CRM/
 
 WASH PRO CRM — проприетарный проект.  
 Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
+
+## История изменений
+
+См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) в репозитории.

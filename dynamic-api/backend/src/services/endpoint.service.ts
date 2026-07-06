@@ -11,6 +11,8 @@ import {
   applyDefaults,
   pickSchemaData,
   generateExamples,
+  enrichDataFromDocument,
+  applyAutoTimestamps,
   matchDynamicPath,
   getCollectionPath,
   getEndpointMatchPaths,
@@ -31,6 +33,7 @@ import { authService } from './auth.service';
 import { userService, groupService } from './user.service';
 import { handlerRuntime } from './handler-runtime.service';
 import { webhookService } from './webhook.service';
+import { dispatchTelegram, notifyCrmMutation } from './wash-notify.service';
 
 function assertAnyPermission(user: JwtPayload | undefined, ...permissions: Permission[]): asserts user is JwtPayload {
   if (!user) throw new Error('Unauthorized');
@@ -519,6 +522,39 @@ export class DynamicEngine {
     if (!refs.valid) throw new Error(refs.errors.join(', '));
   }
 
+  private schemaFieldsCache = new Map<string, SchemaField[]>();
+
+  private async resolveSchemaFields(endpoint: IEndpoint): Promise<SchemaField[]> {
+    if (endpoint.fields.length > 0) return endpoint.fields;
+
+    const collectionPath = getCollectionPath(endpoint.path);
+    const cached = this.schemaFieldsCache.get(collectionPath);
+    if (cached) return cached;
+
+    const endpoints = await endpointRepository.findDynamicEndpoints();
+    const merged = new Map<string, SchemaField>();
+    for (const ep of endpoints) {
+      if (getCollectionPath(ep.path) !== collectionPath) continue;
+      for (const field of ep.fields) {
+        if (!merged.has(field.name)) merged.set(field.name, field);
+      }
+    }
+    const fields = [...merged.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    this.schemaFieldsCache.set(collectionPath, fields);
+    return fields;
+  }
+
+  private formatRecord(
+    record: { _id: unknown; data: Record<string, unknown>; createdAt?: Date },
+    fields: SchemaField[]
+  ): Record<string, unknown> {
+    return enrichDataFromDocument(
+      { id: record._id, ...record.data },
+      fields,
+      { createdAt: record.createdAt }
+    );
+  }
+
   private async populateReferences(
     data: Record<string, unknown>,
     fields: SchemaField[],
@@ -592,6 +628,7 @@ export class DynamicEngine {
     const hasIdParam = Object.keys(params).length > 0;
     const idParam = params.id || Object.values(params)[0];
     const populate = req.query?.populate;
+    const schemaFields = await this.resolveSchemaFields(endpoint);
 
     switch (endpoint.method) {
       case 'GET':
@@ -601,8 +638,8 @@ export class DynamicEngine {
             throw new Error('Record not found');
           }
           const data = await this.populateReferences(
-            { id: record._id, ...record.data },
-            endpoint.fields,
+            this.formatRecord(record, schemaFields),
+            schemaFields,
             populate
           );
           return { success: true, data };
@@ -613,7 +650,7 @@ export class DynamicEngine {
           const result = await endpointDataRepository.findByPath(collectionPath, page, limit);
           const data = await Promise.all(
             result.data.map((item) =>
-              this.populateReferences({ id: item._id, ...item.data }, endpoint.fields, populate)
+              this.populateReferences(this.formatRecord(item, schemaFields), schemaFields, populate)
             )
           );
           return {
@@ -628,7 +665,10 @@ export class DynamicEngine {
         const validation = validateDataAgainstSchema(rawBody, endpoint.fields);
         if (!validation.valid) throw new Error(validation.errors.join(', '));
 
-        const data = applyDefaults(pickSchemaData(rawBody, endpoint.fields), endpoint.fields);
+        const data = applyAutoTimestamps(
+          applyDefaults(pickSchemaData(rawBody, endpoint.fields), endpoint.fields),
+          endpoint.fields
+        );
         await this.assertReferences(data, endpoint.fields);
         const record = await endpointDataRepository.create(
           endpoint._id.toString(),
@@ -636,7 +676,7 @@ export class DynamicEngine {
           data,
           { expiresAt: computeExpiresAt(endpoint.dataRetentionDays) }
         );
-        return { success: true, data: { id: record._id, ...record.data } };
+        return { success: true, data: this.formatRecord(record, endpoint.fields) };
       }
 
       case 'PUT':
@@ -649,7 +689,7 @@ export class DynamicEngine {
 
         const rawBody = (req.body || {}) as Record<string, unknown>;
         if (endpoint.method === 'PATCH') {
-          const patchValidation = validateDataAgainstSchema(rawBody, endpoint.fields);
+          const patchValidation = validateDataAgainstSchema(rawBody, endpoint.fields, { partial: true });
           if (!patchValidation.valid) throw new Error(patchValidation.errors.join(', '));
         }
 
@@ -664,7 +704,8 @@ export class DynamicEngine {
         const sanitized = pickSchemaData(merged as Record<string, unknown>, endpoint.fields);
         await this.assertReferences(sanitized, endpoint.fields);
         const updated = await endpointDataRepository.update(idParam, sanitized);
-        return { success: true, data: { id: updated!._id, ...updated!.data } };
+        const responseFields = await this.resolveSchemaFields(endpoint);
+        return { success: true, data: this.formatRecord(updated!, responseFields) };
       }
 
       case 'DELETE': {
@@ -752,6 +793,18 @@ export class DynamicEngine {
         statusCode,
         userId: user?.userId,
       });
+
+      if (statusCode < 300) {
+        if (requestPath.startsWith('/api/crm/notifications') && method === 'POST') {
+          const payload = (body ?? {}) as Record<string, unknown>;
+          const delivery = payload.channels as string[] | undefined;
+          if (delivery?.includes('telegram') && typeof payload.message === 'string') {
+            void dispatchTelegram(payload.message);
+          }
+        } else {
+          void notifyCrmMutation(method, requestPath, user, body);
+        }
+      }
 
       return { statusCode, body: responseBody };
     } catch (error) {

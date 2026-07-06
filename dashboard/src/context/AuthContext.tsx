@@ -5,6 +5,9 @@ import {
   getStoredUser,
   login as apiLogin,
   logout as apiLogout,
+  onAuthExpired,
+  setStoredUser,
+  startSessionWatch,
 } from '../api/client';
 import type { Permission, User } from '../types';
 
@@ -13,6 +16,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (login: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   hasPermission: (...perms: Permission[]) => boolean;
   isAdmin: boolean;
 }
@@ -37,6 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => onAuthExpired(() => setUser(null)), []);
+
+  useEffect(() => {
+    if (!user) return;
+    return startSessionWatch();
+  }, [user]);
+
   const login = async (loginName: string, password: string) => {
     const result = await apiLogin(loginName, password);
     setUser(result.user as User);
@@ -47,6 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const profile = await getProfile();
+    setStoredUser({ ...profile, permissions: getStoredPermissions() });
+    setUser({ ...profile, permissions: getStoredPermissions() });
+  };
+
   const hasPermission = (...perms: Permission[]) => {
     if (!user?.permissions) return false;
     return perms.some((p) => user.permissions!.includes(p));
@@ -55,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = hasPermission('manage_users', 'view_logs');
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasPermission, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, hasPermission, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

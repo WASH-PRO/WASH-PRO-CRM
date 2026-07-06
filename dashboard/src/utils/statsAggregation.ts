@@ -1,6 +1,8 @@
 import { refId, resolveWashAddress, UNDEFINED_WASH_LABEL } from './refs';
 import type { FinanceStat, Post, PostIdRef, UsageStat, Wash, WashRef } from '../types';
 
+import { POST_ONLINE_THRESHOLD_MS } from '../constants/live';
+
 function recordTime(item: { recordedAt?: string; lastMessageAt?: string; createdAt?: string }): number {
   const raw = item.recordedAt ?? item.lastMessageAt ?? item.createdAt;
   if (!raw) return 0;
@@ -8,25 +10,26 @@ function recordTime(item: { recordedAt?: string; lastMessageAt?: string; created
   return Number.isNaN(t) ? 0 : t;
 }
 
-/** Последняя запись на каждый пост (финансы). */
+/** Последняя запись на каждый пост и период (финансы). */
 export function latestFinanceByPost(stats: FinanceStat[]): FinanceStat[] {
-  const byPost = new Map<string, FinanceStat>();
+  const byKey = new Map<string, FinanceStat>();
   for (const row of stats) {
     const postKey = refId(row.postId) || row.id;
-    const prev = byPost.get(postKey);
+    const key = `${postKey}:${row.period || 'before_collection'}`;
+    const prev = byKey.get(key);
     if (!prev || recordTime(row) >= recordTime(prev)) {
-      byPost.set(postKey, row);
+      byKey.set(key, row);
     }
   }
-  return [...byPost.values()];
+  return [...byKey.values()];
 }
 
-/** Последняя запись на каждый пост и категорию (использование). */
+/** Последняя запись на каждый пост, период и категорию (использование). */
 export function latestUsageByPostAndCategory(stats: UsageStat[]): UsageStat[] {
   const byKey = new Map<string, UsageStat>();
   for (const row of stats) {
     const postKey = refId(row.postId) || row.id;
-    const key = `${postKey}:${row.category}`;
+    const key = `${postKey}:${row.period || 'before_collection'}:${row.category}`;
     const prev = byKey.get(key);
     if (!prev || recordTime(row) >= recordTime(prev)) {
       byKey.set(key, row);
@@ -36,7 +39,24 @@ export function latestUsageByPostAndCategory(stats: UsageStat[]): UsageStat[] {
 }
 
 /** Последняя запись на каждый пост (состояние). */
-export function latestPostStateByPost(states: Array<{ id: string; postId?: PostIdRef | string; recordedAt?: string; lastMessageAt?: string; createdAt?: string }>) {
+export function latestPostStateByPost(states: Array<{
+  id: string;
+  postId?: PostIdRef | string;
+  recordedAt?: string;
+  lastMessageAt?: string;
+  createdAt?: string;
+  washId?: WashRef | string;
+  mode?: string;
+  modeName?: string;
+  modeNumber?: number;
+  freePause?: number;
+  paidPause?: number;
+  balance?: number;
+  discount?: number;
+  modeTime?: number;
+  equipmentState?: Record<string, unknown>;
+  connected?: boolean;
+}>) {
   const byPost = new Map<string, typeof states[0]>();
   for (const row of states) {
     const postKey = refId(row.postId) || row.id;
@@ -48,6 +68,18 @@ export function latestPostStateByPost(states: Array<{ id: string; postId?: PostI
   return [...byPost.values()];
 }
 
+/** Пост онлайн, если телеметрия приходила в пределах windowMs (по умолчанию 30 с). */
+export function isPostOnline(
+  state: { lastMessageAt?: string; createdAt?: string } | undefined,
+  now = Date.now(),
+  windowMs = POST_ONLINE_THRESHOLD_MS
+): boolean {
+  if (!state) return false;
+  const t = recordTime(state);
+  if (t <= 0) return false;
+  return now - t <= windowMs;
+}
+
 /** ID записей — последний снимок на каждый пост (и категорию для usage). */
 export function protectedLatestStatIds(
   groupKey: 'usageStats' | 'financeStats' | 'postStates',
@@ -57,7 +89,9 @@ export function protectedLatestStatIds(
     return new Set(latestFinanceByPost(items as FinanceStat[]).map((r) => r.id));
   }
   if (groupKey === 'usageStats') {
-    return new Set(latestUsageByPostAndCategory(items as UsageStat[]).map((r) => r.id));
+    return new Set(
+      latestUsageByPostAndCategory(items as UsageStat[]).map((r) => r.id)
+    );
   }
   return new Set(latestPostStateByPost(items).map((r) => r.id));
 }
@@ -73,6 +107,10 @@ export function resolvePostNumber(
   if (!id) return '—';
   const post = postById.get(id);
   return post ? String(post.postNumber) : '—';
+}
+
+export function resolveStatPostId(postId: PostIdRef | string | undefined): string {
+  return refId(postId);
 }
 
 export function resolveStatWashAddress(

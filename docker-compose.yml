@@ -11,7 +11,7 @@ services:
     environment:
       MONGO_INITDB_DATABASE: dynamic_api
     volumes:
-      - mongodb_data:/data/db
+      - ${DATA_DIR:-./data}/mongodb:/data/db
     networks:
       - wash-internal
     healthcheck:
@@ -53,7 +53,7 @@ services:
       mongodb:
         condition: service_healthy
     volumes:
-      - backend_logs:/app/logs
+      - ${DATA_DIR:-./data}/dynamic-api/logs:/app/logs
     networks:
       - wash-internal
       - wash-external
@@ -109,46 +109,46 @@ services:
       - wash-internal
 
   # ===========================================================================
-  # RabbitMQ — приём сообщений от контроллеров
+  # Mosquitto — приём телеметрии от контроллеров (MQTT)
   # ===========================================================================
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: wash-rabbitmq
-    hostname: wash-rabbitmq
-    restart: unless-stopped
+  mosquitto-init:
+    image: eclipse-mosquitto:2
+    container_name: wash-mosquitto-init
+    restart: "no"
+    entrypoint: ["/bin/sh", "/init-user.sh"]
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-wash}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-wash_secret_change_me}
+      MQTT_USER: ${MQTT_USER:-wash}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-wash_secret_change_me}
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-      - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ${DATA_DIR:-./data}/mosquitto/config:/mosquitto/config
+      - ./config/mosquitto/mosquitto.conf:/mosquitto-conf/mosquitto.conf:ro
+      - ./config/mosquitto/init-user.sh:/init-user.sh:ro
     networks:
       - wash-internal
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: wash-mosquitto
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT_PUBLISH:-1883:1883}"
+    volumes:
+      - ${DATA_DIR:-./data}/mosquitto/data:/mosquitto/data
+      - ${DATA_DIR:-./data}/mosquitto/config:/mosquitto/config
+    depends_on:
+      mosquitto-init:
+        condition: service_completed_successfully
+    networks:
+      - wash-internal
+      - wash-external
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD-SHELL", "mosquitto_sub -h 127.0.0.1 -p 1884 -t '$$SYS/broker/version' -C 1 -W 3"]
       interval: 15s
       timeout: 10s
       retries: 5
 
-  rabbitmq-init:
-    image: rabbitmq:3.13-management-alpine
-    container_name: wash-rabbitmq-init
-    restart: "no"
-    entrypoint: ["/bin/sh", "/init-user.sh"]
-    environment:
-      RABBITMQ_USER: ${RABBITMQ_USER:-wash}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-wash_secret_change_me}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-      - ./config/rabbitmq/init-user.sh:/init-user.sh:ro
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    network_mode: "service:rabbitmq"
-
   # ===========================================================================
-  # Message Processor — RabbitMQ → Dynamic API
+  # Message Processor — MQTT → Dynamic API
   # ===========================================================================
   message-processor:
     build:
@@ -157,19 +157,21 @@ services:
     container_name: wash-message-processor
     restart: unless-stopped
     environment:
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-wash}:${RABBITMQ_PASSWORD:-wash_secret_change_me}@rabbitmq:5672
-      RABBITMQ_QUEUE: wash.telemetry
+      MQTT_URL: mqtt://${MQTT_USER:-wash}:${MQTT_PASSWORD:-wash_secret_change_me}@mosquitto:1883
+      MQTT_TOPIC: wash/telemetry/#
+      MQTT_DEVICE_TOPIC: +/+/# 
+      MQTT_DLQ_TOPIC: wash/dlq
       API_URL: http://dynamic-api:3001
+      PROCESSOR_HTTP_PORT: 3022
+      MQTT_DEVICE_PREFIX: ${MQTT_DEVICE_PREFIX:-washpro}
       SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
       SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
       REDIS_ENABLED: ${REDIS_ENABLED:-false}
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
     depends_on:
-      rabbitmq:
+      mosquitto:
         condition: service_healthy
-      rabbitmq-init:
-        condition: service_completed_successfully
       dynamic-api:
         condition: service_healthy
       init-seed:
@@ -195,7 +197,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
-      - redis_data:/data
+      - ${DATA_DIR:-./data}/redis:/data
     networks:
       - wash-internal
     healthcheck:
@@ -223,7 +225,7 @@ services:
       BACKUP_RETENTION_COUNT: ${BACKUP_RETENTION_COUNT:-7}
       BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
     volumes:
-      - backup_data:/backups
+      - ${DATA_DIR:-./data}/backups:/backups
     depends_on:
       mongodb:
         condition: service_healthy
@@ -262,15 +264,3 @@ networks:
     internal: true
   wash-external:
     driver: bridge
-
-volumes:
-  mongodb_data:
-    name: wash_mongodb_data
-  backend_logs:
-    name: wash_backend_logs
-  rabbitmq_data:
-    name: wash_rabbitmq_data
-  redis_data:
-    name: wash_redis_data
-  backup_data:
-    name: wash_backup_data

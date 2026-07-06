@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { apiList } from '../api/client';
+import { apiListDictionary } from '../api/client';
 import { usePolling } from './usePolling';
 import type { Currency } from '../types';
 import type { CurrencyConfig } from '../utils/format';
@@ -11,7 +11,10 @@ function toConfig(c: Currency): CurrencyConfig {
 }
 
 export function useCurrency() {
-  const fetchCurrencies = useCallback(() => apiList<Currency>('/crm/currencies'), []);
+  const fetchCurrencies = useCallback(
+    (signal: AbortSignal) => apiListDictionary<Currency>('/crm/currencies', signal),
+    []
+  );
   const { data: currencies, loading, refresh } = usePolling(fetchCurrencies, [], {
     intervalMs: 30000,
     live: false,

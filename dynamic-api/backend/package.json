@@ -26,6 +26,7 @@
     "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
     "node-cron": "^4.5.0",
+    "node-fetch": "^2.7.0",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.10.2",
     "@types/node-cron": "^3.0.11",
+    "@types/node-fetch": "^2.6.12",
     "@types/uuid": "^10.0.0",
     "autocannon": "^8.0.0",
     "tsx": "^4.19.2",

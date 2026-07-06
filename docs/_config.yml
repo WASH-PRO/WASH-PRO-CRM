@@ -31,8 +31,8 @@ nav:
     url: /dashboard/
   - title: Встроенные сервисы
     url: /embedded-services/
-  - title: RabbitMQ
-    url: /rabbitmq/
+  - title: MQTT
+    url: /mqtt/
   - title: Схема данных
     url: /database-schema/
   - title: Развёртывание

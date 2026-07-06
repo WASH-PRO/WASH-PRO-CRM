@@ -109,17 +109,17 @@ async function deleteAllCards(token) {
   return cards.length;
 }
 
-async function loadDiscountTypeNumbers(token) {
+async function loadDiscountTypeCodes(token) {
   const types = await listAll(token, '/api/crm/discount-types');
-  const numbers = types
-    .map((t) => Number(t.number))
-    .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 5)
-    .sort((a, b) => a - b);
-  if (numbers.length === 0) {
+  const codes = types
+    .map((t) => String(t.code ?? t.number ?? '').trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'ru', { numeric: true, sensitivity: 'base' }));
+  if (codes.length === 0) {
     throw new Error('Справочник типов скидок пуст — сначала запустите init-seed');
   }
-  console.log(`Discount type numbers: ${numbers.join(', ')}`);
-  return numbers;
+  console.log(`Discount type codes: ${codes.join(', ')}`);
+  return codes;
 }
 
 async function generateCards(token, posts, cardType, count, buildBody) {
@@ -142,7 +142,7 @@ async function main() {
   console.log('Admin login OK');
 
   await deleteAllCards(token);
-  const discountTypeNumbers = await loadDiscountTypeNumbers(token);
+  const discountTypeCodes = await loadDiscountTypeCodes(token);
 
   const [posts, washes] = await Promise.all([
     listAll(token, '/api/crm/posts'),
@@ -164,7 +164,7 @@ async function main() {
     cardType: 'regular',
     balance: round2(rand(100, 15000)),
     discount: round2(rand(50, 800)),
-    discountType: String(discountTypeNumbers[(i - 1) % discountTypeNumbers.length]),
+    discountType: discountTypeCodes[(i - 1) % discountTypeCodes.length],
     status: pick(CARD_STATUSES),
     washId,
     postId: post.id,

@@ -2,11 +2,14 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import clsx from 'clsx';
 import { Empty } from './UI';
+import { TableColumnPicker } from './TableColumnPicker';
+import { useTableColumnVisibility } from '../hooks/useTableColumnVisibility';
 
 export interface DataTableColumn<T> {
   key: string;
   header: string;
   sortable?: boolean;
+  hideable?: boolean;
   render?: (row: T) => ReactNode;
   sortValue?: (row: T) => string | number;
   searchValue?: (row: T) => string;
@@ -31,6 +34,7 @@ export interface DataTableBulkAction<T> {
 }
 
 interface DataTableProps<T> {
+  tableId: string;
   columns: DataTableColumn<T>[];
   data: T[];
   rowKey: (row: T) => string;
@@ -38,9 +42,16 @@ interface DataTableProps<T> {
   pageSize?: number;
   emptyMessage?: string;
   toolbar?: ReactNode;
+  toolbarPlacement?: 'start' | 'end';
   filters?: DataTableFilter<T>[];
+  filterValues?: Record<string, string>;
+  onFilterChange?: (id: string, value: string) => void;
   bulkActions?: DataTableBulkAction<T>[];
   isRowSelectable?: (row: T) => boolean;
+  onRowClick?: (row: T) => void;
+  isRowActive?: (row: T) => boolean;
+  defaultSortKey?: string | null;
+  defaultSortDir?: 'asc' | 'desc';
 }
 
 function resolveSortable<T>(col: DataTableColumn<T>): DataTableColumn<T> {
@@ -50,6 +61,7 @@ function resolveSortable<T>(col: DataTableColumn<T>): DataTableColumn<T> {
 }
 
 export function DataTable<T>({
+  tableId,
   columns,
   data,
   rowKey,
@@ -57,15 +69,23 @@ export function DataTable<T>({
   pageSize = 15,
   emptyMessage = 'Нет данных',
   toolbar,
+  toolbarPlacement = 'end',
   filters = [],
+  filterValues: controlledFilterValues,
+  onFilterChange,
   bulkActions = [],
   isRowSelectable,
+  onRowClick,
+  isRowActive,
+  defaultSortKey = null,
+  defaultSortDir = 'asc',
 }: DataTableProps<T>) {
   const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(defaultSortDir);
   const [page, setPage] = useState(1);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [internalFilterValues, setInternalFilterValues] = useState<Record<string, string>>({});
+  const mergedFilterValues = { ...internalFilterValues, ...(controlledFilterValues ?? {}) };
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [runningActionId, setRunningActionId] = useState<string | null>(null);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
@@ -74,13 +94,25 @@ export function DataTable<T>({
   const canSelect = (row: T) => !isRowSelectable || isRowSelectable(row);
 
   const resolvedColumns = useMemo(() => columns.map(resolveSortable), [columns]);
-  const searchableColumns = resolvedColumns.filter((c) => c.searchValue);
+  const {
+    hideableColumns,
+    hiddenKeys,
+    isVisible,
+    setColumnVisible,
+    resetColumns,
+    hasCustomVisibility,
+  } = useTableColumnVisibility(tableId, columns);
+  const displayColumns = useMemo(
+    () => resolvedColumns.filter((col) => isVisible(col.key)),
+    [resolvedColumns, isVisible, hiddenKeys]
+  );
+  const searchableColumns = displayColumns.filter((c) => c.searchValue);
 
   const filtered = useMemo(() => {
     let rows = data;
 
     for (const f of filters) {
-      const val = filterValues[f.id];
+      const val = mergedFilterValues[f.id];
       if (val) rows = rows.filter((row) => f.match(row, val));
     }
 
@@ -92,11 +124,11 @@ export function DataTable<T>({
     }
 
     return rows;
-  }, [data, search, searchableColumns, filters, filterValues]);
+  }, [data, search, searchableColumns, filters, mergedFilterValues]);
 
   const sorted = useMemo(() => {
     if (!sortKey) return filtered;
-    const col = resolvedColumns.find((c) => c.key === sortKey);
+    const col = displayColumns.find((c) => c.key === sortKey);
     if (!col?.sortValue) return filtered;
     return [...filtered].sort((a, b) => {
       const av = col.sortValue!(a);
@@ -105,7 +137,7 @@ export function DataTable<T>({
       if (av > bv) return sortDir === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filtered, sortKey, sortDir, resolvedColumns]);
+  }, [filtered, sortKey, sortDir, displayColumns]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -155,7 +187,13 @@ export function DataTable<T>({
   };
 
   const setFilter = (id: string, value: string) => {
-    setFilterValues((prev) => ({ ...prev, [id]: value }));
+    const isControlled =
+      controlledFilterValues !== undefined &&
+      Object.prototype.hasOwnProperty.call(controlledFilterValues, id);
+    if (!isControlled) {
+      setInternalFilterValues((prev) => ({ ...prev, [id]: value }));
+    }
+    onFilterChange?.(id, value);
     setPage(1);
   };
 
@@ -197,6 +235,8 @@ export function DataTable<T>({
     try {
       await action.onAction(selectedRows, ids);
       clearSelection();
+    } catch (err) {
+      console.error('Bulk action failed:', err);
     } finally {
       setRunningActionId(null);
     }
@@ -211,30 +251,50 @@ export function DataTable<T>({
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-sm flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-panel-muted" />
-            <input
-              className="input pl-9"
-              placeholder={searchPlaceholder}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-stretch md:gap-4">
+          {toolbarPlacement === 'start' && (
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{toolbar}</div>
+          )}
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center md:w-auto md:flex-1">
+            <div
+              className={clsx(
+                'relative min-w-0 flex-1',
+                toolbarPlacement === 'start' ? 'md:max-w-sm lg:ml-auto' : 'md:max-w-md'
+              )}
+            >
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-panel-muted" />
+              <input
+                className="input pl-9"
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <TableColumnPicker
+              columns={hideableColumns}
+              hiddenKeys={hiddenKeys}
+              isVisible={isVisible}
+              onToggle={setColumnVisible}
+              onReset={resetColumns}
+              hasCustomVisibility={hasCustomVisibility}
             />
           </div>
-          {toolbar}
+          {toolbarPlacement === 'end' && (
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{toolbar}</div>
+          )}
         </div>
 
         {filters.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
             {filters.map((f) => (
-              <div key={f.id} className="min-w-[140px]">
+              <div key={f.id} className="min-w-0">
                 <label className="label !mb-1">{f.label}</label>
                 <select
                   className="input"
-                  value={filterValues[f.id] || ''}
+                  value={mergedFilterValues[f.id] || ''}
                   onChange={(e) => setFilter(f.id, e.target.value)}
                 >
                   <option value="">{f.allLabel ?? 'Все'}</option>
@@ -290,7 +350,7 @@ export function DataTable<T>({
                   />
                 </th>
               )}
-              {resolvedColumns.map((col) => (
+              {displayColumns.map((col) => (
                 <th key={col.key} className={clsx('px-4 py-3 font-medium', col.className)}>
                   {col.sortable ? (
                     <button
@@ -311,7 +371,7 @@ export function DataTable<T>({
           <tbody>
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={resolvedColumns.length + (selectable ? 1 : 0)}>
+                <td colSpan={displayColumns.length + (selectable ? 1 : 0)}>
                   <Empty message={emptyMessage} />
                 </td>
               </tr>
@@ -324,8 +384,16 @@ export function DataTable<T>({
                     key={id}
                     className={clsx(
                       'border-b border-panel-border transition-colors hover:bg-panel-canvas/50 dark:border-panel-border-dark dark:hover:bg-white/[0.02]',
-                      selectedIds.has(id) && 'bg-brand-500/5 dark:bg-brand-400/10'
+                      selectedIds.has(id) && 'bg-brand-500/5 dark:bg-brand-400/10',
+                      isRowActive?.(row) && 'bg-brand-500/10 ring-1 ring-inset ring-brand-500/30 dark:bg-brand-400/15',
+                      onRowClick && 'cursor-pointer'
                     )}
+                    onClick={(e) => {
+                      if (!onRowClick) return;
+                      const target = e.target as HTMLElement;
+                      if (target.closest('button, a, input, label, select, textarea')) return;
+                      onRowClick(row);
+                    }}
                   >
                     {selectable && (
                       <td className="px-4 py-3">
@@ -339,7 +407,7 @@ export function DataTable<T>({
                         />
                       </td>
                     )}
-                    {resolvedColumns.map((col) => (
+                    {displayColumns.map((col) => (
                       <td key={col.key} className={clsx('px-4 py-3', col.className)}>
                         {col.render ? col.render(row) : null}
                       </td>

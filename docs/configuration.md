@@ -38,13 +38,23 @@ description: Переменные окружения .env
 | `SERVICE_LOGIN` | `service` | Аккаунт для message-processor, backup, pyorch-bridge |
 | `SERVICE_PASSWORD` | — | Пароль |
 
-## RabbitMQ
+## MQTT
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `RABBITMQ_USER` | `wash` | Пользователь |
-| `RABBITMQ_PASSWORD` | — | Пароль |
-| `RABBITMQ_EXTERNAL_PORT` | пусто | Внешний `:5672` для контроллеров |
+| `MQTT_USER` | `wash` | Пользователь |
+| `MQTT_PASSWORD` | — | Пароль |
+| `MQTT_EXTERNAL_PORT` | `1883` | Порт MQTT на хосте (доступен из LAN) |
+| `MQTT_BIND` | пусто | `127.0.0.1` — только localhost, без LAN |
+| `MQTT_DEVICE_PREFIX` | `washpro` | Префикс топика `dt_pref` для исходящих `set/*` |
+| `MQTT_TOPICS` | — | Список топиков подписки processor (через запятую) |
+| `MQTT_DEVICE_TOPIC` | `+/+/#` | Нативный протокол WASH-PRO |
+
+### message-processor (внутренний HTTP)
+
+| Переменная | По умолчанию | Описание |
+|------------|--------------|----------|
+| `PROCESSOR_HTTP_PORT` | `3022` | HTTP API цен и команд (прокси: `/api/crm/post-device/`) |
 
 ## Redis (опционально)
 
@@ -94,7 +104,7 @@ JWT_SECRET=your-very-long-random-secret-at-least-32-chars
 JWT_REFRESH_SECRET=another-long-random-secret
 ADMIN_PASSWORD=StrongP@ssw0rd!
 SERVICE_PASSWORD=StrongServiceP@ss!
-RABBITMQ_PASSWORD=secure-rabbit-password
+MQTT_PASSWORD=secure-mqtt-password
 PYORCHESTRATOR_ENABLED=true
 PYORCH_JWT_SECRET=change-me-in-production
 PYORCH_SECRET_MASTER_KEY=change-me-in-production-32chars!!

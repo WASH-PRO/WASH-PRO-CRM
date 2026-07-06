@@ -10,7 +10,7 @@ description: Production, обновление и восстановление
 2. Задайте сильный `ADMIN_PASSWORD`
 3. Настройте `CORS_ORIGIN` под реальные домены
 4. Ограничьте порты 80, 3001, 8080 (и 8000, 8090, 8010 при PyOrch) файрволом
-5. Не публикуйте MongoDB и RabbitMQ без необходимости
+5. Не публикуйте MongoDB и Mosquitto без необходимости
 6. Настройте `BACKUP_CRON` и проверьте восстановление
 
 ## Запуск
@@ -19,7 +19,7 @@ description: Production, обновление и восстановление
 ./scripts/start.sh
 ```
 
-Скрипт подключает overlays: Redis, external RabbitMQ, PyOrchestrator — по переменным в `.env`.
+Скрипт подключает overlays: Redis, external MQTT, PyOrchestrator — по переменным в `.env`.
 
 ## Обновление
 
@@ -54,7 +54,14 @@ docker compose up -d --build
 PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 ```
 
-Данные в Docker volumes сохраняются при пересборке.
+Данные хранятся на диске хоста в каталоге `DATA_DIR` (по умолчанию `./data`), а не в Docker volumes. Пересборка образов и `docker compose down` **не удаляют** этот каталог. Подробнее: [data/README.md](../data/README.md).
+
+Миграция со старых named volumes (однократно):
+
+```bash
+./scripts/migrate-volumes-to-data.sh
+./scripts/start.sh
+```
 
 ## Восстановление из бэкапа
 
@@ -100,3 +107,20 @@ curl -s http://localhost/api/telegram-bots/health | jq   # через Dashboard 
 ```
 
 Observability PyOrchestrator: `PYORCH_OBSERVABILITY_ENABLED=true` → Grafana `:3000`, Prometheus `:9090`.
+
+## Обновление компонентов телеметрии
+
+После изменений в `message-processor` или прокси Dashboard:
+
+```bash
+docker compose up -d --build message-processor dashboard
+```
+
+Проверка HTTP API управления постом (нужен JWT):
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H "Authorization: Bearer TOKEN" \
+  http://localhost/api/crm/post-device/posts/SERIAL/command
+# 404 без тела — норма; 401 — нет токена; 400/500 — см. тело ответа
+```

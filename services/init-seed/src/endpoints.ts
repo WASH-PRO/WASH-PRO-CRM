@@ -27,49 +27,130 @@ export interface EndpointDef {
   handlers?: EndpointHandler[];
 }
 
-/** Каскадное удаление поста: состояния, карты, статистика, уведомления, телеметрия. */
-export const POST_DELETE_CASCADE_HANDLER: EndpointHandler = {
-  name: 'Cascade delete post data',
-  type: 'javascript',
-  enabled: true,
-  code: `function refId(value) {
+/** Общие JS-хелперы для каскадного удаления (встраиваются в handlers). */
+const CASCADE_JS_HELPERS = `function refId(value) {
   if (value == null) return '';
   if (typeof value === 'object') return String(value.id || value._id || '');
   return String(value);
 }
 
-const RELATED_PATHS = [
-  '/api/crm/post-states',
-  '/api/crm/cards',
-  '/api/crm/usage-stats',
-  '/api/crm/finance-stats',
-  '/api/crm/notifications',
-  '/api/crm/telemetry',
-];
-
-async function purgeByPostId(db, postId) {
-  for (const path of RELATED_PATHS) {
-    const col = db.at(path);
-    let page = 1;
-    let totalPages = 1;
-    while (page <= totalPages) {
-      const { data, pagination } = await col.find({}, { page, limit: 100 });
-      for (const row of data) {
-        if (refId(row.postId) === postId) {
-          await col.delete(row.id);
-        }
+async function purgeCollection(db, path, matchFn) {
+  const col = db.at(path);
+  let deleted = 0;
+  for (let round = 0; round < 200; round++) {
+    let roundDeleted = 0;
+    const first = await col.find({}, { page: 1, limit: 1 });
+    const totalPages = first.pagination && first.pagination.totalPages ? first.pagination.totalPages : 1;
+    for (let page = 1; page <= totalPages; page++) {
+      const result = await col.find({}, { page: page, limit: 100 });
+      const data = result.data || [];
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        if (!matchFn(row)) continue;
+        await col.delete(row.id);
+        roundDeleted++;
       }
-      totalPages = pagination.totalPages;
-      page += 1;
+    }
+    deleted += roundDeleted;
+    if (roundDeleted === 0) break;
+  }
+  return deleted;
+}
+
+async function findRecordById(col, id) {
+  const first = await col.find({}, { page: 1, limit: 1 });
+  const totalPages = first.pagination && first.pagination.totalPages ? first.pagination.totalPages : 1;
+  for (let page = 1; page <= totalPages; page++) {
+    const result = await col.find({}, { page: page, limit: 100 });
+    const data = result.data || [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].id === id) return data[i];
     }
   }
+  return null;
 }
+
+async function findPostById(db, postId) {
+  return findRecordById(db.at('/api/crm/posts'), postId);
+}
+
+async function listPostsByWashId(db, washId) {
+  const col = db.at('/api/crm/posts');
+  const posts = [];
+  const first = await col.find({}, { page: 1, limit: 1 });
+  const totalPages = first.pagination && first.pagination.totalPages ? first.pagination.totalPages : 1;
+  for (let page = 1; page <= totalPages; page++) {
+    const result = await col.find({}, { page: page, limit: 100 });
+    const data = result.data || [];
+    for (let i = 0; i < data.length; i++) {
+      if (refId(data[i].washId) === washId) posts.push(data[i]);
+    }
+  }
+  return posts;
+}
+
+async function purgeByPostId(db, postId, postSerial) {
+  const serial = String(postSerial || '');
+  let deleted = 0;
+  const byPostId = function(row) { return refId(row.postId) === postId; };
+  const pathsByPostId = [
+    '/api/crm/post-states',
+    '/api/crm/cards',
+    '/api/crm/usage-stats',
+    '/api/crm/finance-stats',
+    '/api/crm/notifications',
+  ];
+  for (let i = 0; i < pathsByPostId.length; i++) {
+    deleted += await purgeCollection(db, pathsByPostId[i], byPostId);
+  }
+  deleted += await purgeCollection(db, '/api/crm/telemetry', function(row) {
+    if (refId(row.postId) === postId) return true;
+    if (serial && String(row.postSerial || '') === serial) return true;
+    return false;
+  });
+  return deleted;
+}
+
+async function purgeByWashId(db, washId) {
+  return purgeCollection(db, '/api/crm/notifications', function(row) {
+    return refId(row.washId) === washId;
+  });
+}
+
+async function writeDeleteLog(db, recordsAffected) {
+  try {
+    await db.at('/api/crm/archive-logs').create({
+      action: 'delete',
+      recordsAffected: recordsAffected,
+      policyDays: 0,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (ignoreErr) {}
+}`;
+
+/** Каскадное удаление поста: состояния, карты, статистика, уведомления, телеметрия. */
+export const POST_DELETE_CASCADE_HANDLER: EndpointHandler = {
+  name: 'Cascade delete post data',
+  type: 'javascript',
+  enabled: true,
+  code: `${CASCADE_JS_HELPERS}
 
 async function handler(req, db) {
   const postId = req.params.id;
+  const post = await findPostById(db, postId);
+  if (!post) {
+    return { status: 404, data: { success: false, error: 'Record not found' } };
+  }
   try {
-    await purgeByPostId(db, postId);
+    const deletedRelated = await purgeByPostId(db, postId, post.serialNumber);
     await db.delete(postId);
+    await writeDeleteLog(db, deletedRelated + 1);
+    return {
+      success: true,
+      message: 'Post and related data deleted',
+      deletedPosts: 1,
+      deletedRelated: deletedRelated,
+    };
   } catch (e) {
     const msg = e && e.message ? String(e.message) : 'Delete failed';
     if (msg.includes('not found')) {
@@ -77,7 +158,47 @@ async function handler(req, db) {
     }
     throw e;
   }
-  return { success: true, message: 'Post and related data deleted' };
+}`,
+};
+
+/** Каскадное удаление автомойки: все посты и их данные. */
+export const WASH_DELETE_CASCADE_HANDLER: EndpointHandler = {
+  name: 'Cascade delete wash and posts',
+  type: 'javascript',
+  enabled: true,
+  code: `${CASCADE_JS_HELPERS}
+
+async function handler(req, db) {
+  const washId = req.params.id;
+  const wash = await findRecordById(db, washId);
+  if (!wash) {
+    return { status: 404, data: { success: false, error: 'Record not found' } };
+  }
+  try {
+    const posts = await listPostsByWashId(db, washId);
+    let deletedRelated = 0;
+    const postsCol = db.at('/api/crm/posts');
+    for (let i = 0; i < posts.length; i++) {
+      const post = posts[i];
+      deletedRelated += await purgeByPostId(db, post.id, post.serialNumber);
+      await postsCol.delete(post.id);
+    }
+    deletedRelated += await purgeByWashId(db, washId);
+    await db.delete(washId);
+    await writeDeleteLog(db, deletedRelated + posts.length + 1);
+    return {
+      success: true,
+      message: 'Wash, posts and related data deleted',
+      deletedPosts: posts.length,
+      deletedRelated: deletedRelated,
+    };
+  } catch (e) {
+    const msg = e && e.message ? String(e.message) : 'Delete failed';
+    if (msg.includes('not found')) {
+      return { status: 404, data: { success: false, error: 'Record not found' } };
+    }
+    throw e;
+  }
 }`,
 };
 
@@ -140,12 +261,20 @@ export const ENDPOINT_GROUPS = [
     order: 16,
   },
   {
+    key: 'work-modes',
+    name: 'Режимы работы',
+    description: 'Справочник номеров программ и их названий для постов',
+    icon: 'sliders-horizontal',
+    color: '#0ea5e9',
+    order: 17,
+  },
+  {
     key: 'settings',
     name: 'Настройки',
     description: 'Сеть, Telegram, уведомления и параметры системы',
     icon: 'settings',
     color: '#64748b',
-    order: 17,
+    order: 18,
   },
   {
     key: 'notifications',
@@ -153,7 +282,7 @@ export const ENDPOINT_GROUPS = [
     description: 'События и оповещения',
     icon: 'bell',
     color: '#ec4899',
-    order: 18,
+    order: 19,
   },
   {
     key: 'backup',
@@ -161,7 +290,7 @@ export const ENDPOINT_GROUPS = [
     description: 'Бэкапы и архивирование данных',
     icon: 'hard-drive',
     color: '#14b8a6',
-    order: 19,
+    order: 20,
   },
   {
     key: 'telemetry',
@@ -169,7 +298,7 @@ export const ENDPOINT_GROUPS = [
     description: 'Внутренний приём данных от контроллеров (message-processor)',
     icon: 'radio',
     color: '#ef4444',
-    order: 20,
+    order: 21,
   },
 ] as const;
 
@@ -215,6 +344,7 @@ const postFields: SchemaField[] = [
   { name: 'name', type: 'string', required: true, order: 2, description: 'Название поста' },
   { name: 'serialNumber', type: 'string', required: true, order: 3, description: 'Серийный номер' },
   { name: 'settings', type: 'json', order: 4, description: 'Настройки поста' },
+  { name: 'createdAt', type: 'datetime', order: 5, description: 'Дата создания' },
 ];
 
 const postStateFields: SchemaField[] = [
@@ -235,10 +365,10 @@ const postStateFields: SchemaField[] = [
 
 const cardFields: SchemaField[] = [
   { name: 'cardNumber', type: 'string', required: true, order: 0 },
-  { name: 'cardType', type: 'string', required: true, order: 1, description: 'regular|unlimited|service' },
+  { name: 'cardType', type: 'string', required: true, order: 1, description: 'regular|unlimited|service|collection' },
   { name: 'balance', type: 'number', order: 2 },
   { name: 'discount', type: 'number', order: 3 },
-  { name: 'discountType', type: 'string', order: 4, description: 'Номер типа скидки (1–5)' },
+  { name: 'discountType', type: 'string', order: 4, description: 'Код типа скидки из справочника' },
   { name: 'status', type: 'string', order: 5, description: 'success|rejected' },
   { name: 'washId', type: 'reference', refEndpointSlug: 'crm-washes-list', order: 6, description: 'Автомойка' },
   { name: 'postId', type: 'reference', refEndpointSlug: 'crm-posts-list', order: 7, description: 'Пост' },
@@ -301,15 +431,17 @@ const archiveLogFields: SchemaField[] = [
   { name: 'recordsAffected', type: 'number', order: 1 },
   { name: 'policyDays', type: 'number', order: 2 },
   { name: 'createdAt', type: 'datetime', order: 3 },
-  { name: 'details', type: 'json', order: 4 },
+  { name: 'filename', type: 'string', order: 4, description: 'Имя файла архива (.json.gz)' },
+  { name: 'details', type: 'json', order: 5 },
 ];
 
 const telemetryFields: SchemaField[] = [
-  { name: 'washSerial', type: 'string', order: 0 },
-  { name: 'postSerial', type: 'string', order: 1 },
-  { name: 'messageType', type: 'string', required: true, order: 2 },
-  { name: 'payload', type: 'json', required: true, order: 3 },
-  { name: 'receivedAt', type: 'datetime', order: 4 },
+  { name: 'mqttTopic', type: 'string', order: 0, description: 'MQTT-топик' },
+  { name: 'washSerial', type: 'string', order: 1 },
+  { name: 'postSerial', type: 'string', order: 2 },
+  { name: 'messageType', type: 'string', required: true, order: 3 },
+  { name: 'payload', type: 'json', required: true, order: 4 },
+  { name: 'receivedAt', type: 'datetime', order: 5 },
 ];
 
 const currencyFields: SchemaField[] = [
@@ -317,13 +449,22 @@ const currencyFields: SchemaField[] = [
   { name: 'name', type: 'string', required: true, order: 1, description: 'Название валюты' },
   { name: 'symbol', type: 'string', required: true, order: 2, description: 'Символ (₽, $, €)' },
   { name: 'isDefault', type: 'boolean', order: 3, description: 'Валюта по умолчанию для отображения' },
+  { name: 'createdAt', type: 'datetime', order: 4, description: 'Дата создания' },
 ];
 
 const discountTypeFields: SchemaField[] = [
-  { name: 'number', type: 'number', required: true, order: 0, description: 'Номер типа скидки (1–5)' },
+  { name: 'code', type: 'string', required: true, order: 0, description: 'Код типа скидки' },
   { name: 'name', type: 'string', required: true, order: 1, description: 'Название типа скидки' },
   { name: 'status', type: 'string', order: 2, description: 'active|inactive' },
   { name: 'createdAt', type: 'datetime', order: 3 },
+];
+
+const workModeFields: SchemaField[] = [
+  { name: 'code', type: 'string', required: true, order: 0, description: 'Код режима работы' },
+  { name: 'name', type: 'string', required: true, order: 1, description: 'Название режима работы' },
+  { name: 'modeType', type: 'string', order: 2, description: 'system|user — системный или пользовательский' },
+  { name: 'status', type: 'string', order: 3, description: 'active|inactive' },
+  { name: 'createdAt', type: 'datetime', order: 4 },
 ];
 
 export const CRM_ENDPOINTS: EndpointDef[] = [
@@ -331,7 +472,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Создать автомойку', slug: 'crm-washes-create', path: '/api/crm/washes', method: 'POST', schema: washFields, accessType: 'group', groupKey: 'washes', description: 'Создать автомойку' },
   { name: 'Автомойка по ID', slug: 'crm-washes-get', path: '/api/crm/washes/:id', method: 'GET', schema: washFields, accessType: 'authenticated', groupKey: 'washes', description: 'Получить автомойку' },
   { name: 'Обновить автомойку', slug: 'crm-washes-update', path: '/api/crm/washes/:id', method: 'PUT', schema: washFields, accessType: 'group', groupKey: 'washes', description: 'Обновить автомойку' },
-  { name: 'Удалить автомойку', slug: 'crm-washes-delete', path: '/api/crm/washes/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'washes', description: 'Удалить автомойку' },
+  { name: 'Удалить автомойку', slug: 'crm-washes-delete', path: '/api/crm/washes/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'washes', description: 'Удалить автомойку, все посты и связанные данные', handlers: [WASH_DELETE_CASCADE_HANDLER] },
 
   { name: 'Список постов', slug: 'crm-posts-list', path: '/api/crm/posts', method: 'GET', schema: postFields, accessType: 'authenticated', groupKey: 'posts', description: 'Получить список постов' },
   { name: 'Создать пост', slug: 'crm-posts-create', path: '/api/crm/posts', method: 'POST', schema: postFields, accessType: 'group', groupKey: 'posts', description: 'Создать пост' },
@@ -354,10 +495,12 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
 
   { name: 'Статистика использования', slug: 'crm-usage-stats-list', path: '/api/crm/usage-stats', method: 'GET', schema: usageStatsFields, accessType: 'authenticated', groupKey: 'statistics', description: 'Статистика использования' },
   { name: 'Записать статистику', slug: 'crm-usage-stats-create', path: '/api/crm/usage-stats', method: 'POST', schema: usageStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Записать статистику' },
+  { name: 'Обновить статистику', slug: 'crm-usage-stats-update', path: '/api/crm/usage-stats/:id', method: 'PATCH', schema: usageStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Обновить статистику использования' },
   { name: 'Удалить статистику использования', slug: 'crm-usage-stats-delete', path: '/api/crm/usage-stats/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'statistics', description: 'Удалить запись статистики' },
 
   { name: 'Финансовая статистика', slug: 'crm-finance-stats-list', path: '/api/crm/finance-stats', method: 'GET', schema: financeStatsFields, accessType: 'authenticated', groupKey: 'statistics', description: 'Финансовая статистика' },
   { name: 'Записать финансы', slug: 'crm-finance-stats-create', path: '/api/crm/finance-stats', method: 'POST', schema: financeStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Записать финансы' },
+  { name: 'Обновить финансы', slug: 'crm-finance-stats-update', path: '/api/crm/finance-stats/:id', method: 'PATCH', schema: financeStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Обновить финансовую статистику' },
   { name: 'Удалить финансовую статистику', slug: 'crm-finance-stats-delete', path: '/api/crm/finance-stats/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'statistics', description: 'Удалить запись финансов' },
 
   { name: 'Список валют', slug: 'crm-currencies-list', path: '/api/crm/currencies', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'currencies', description: 'Справочник валют' },
@@ -371,6 +514,12 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Тип скидки по ID', slug: 'crm-discount-types-get', path: '/api/crm/discount-types/:id', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'discount-types', description: 'Получить тип скидки' },
   { name: 'Обновить тип скидки', slug: 'crm-discount-types-update', path: '/api/crm/discount-types/:id', method: 'PUT', schema: discountTypeFields, accessType: 'group', groupKey: 'discount-types', description: 'Обновить тип скидки' },
   { name: 'Удалить тип скидки', slug: 'crm-discount-types-delete', path: '/api/crm/discount-types/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'discount-types', description: 'Удалить тип скидки' },
+
+  { name: 'Список режимов работы', slug: 'crm-work-modes-list', path: '/api/crm/work-modes', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'work-modes', description: 'Справочник режимов работы постов' },
+  { name: 'Создать режим работы', slug: 'crm-work-modes-create', path: '/api/crm/work-modes', method: 'POST', schema: workModeFields, accessType: 'group', groupKey: 'work-modes', description: 'Добавить режим работы' },
+  { name: 'Режим работы по ID', slug: 'crm-work-modes-get', path: '/api/crm/work-modes/:id', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'work-modes', description: 'Получить режим работы' },
+  { name: 'Обновить режим работы', slug: 'crm-work-modes-update', path: '/api/crm/work-modes/:id', method: 'PUT', schema: workModeFields, accessType: 'group', groupKey: 'work-modes', description: 'Обновить режим работы' },
+  { name: 'Удалить режим работы', slug: 'crm-work-modes-delete', path: '/api/crm/work-modes/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'work-modes', description: 'Удалить режим работы' },
 
   { name: 'Настройки CRM', slug: 'crm-settings-list', path: '/api/crm/settings', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'settings', description: 'Получить настройки' },
   { name: 'Сохранить настройки', slug: 'crm-settings-create', path: '/api/crm/settings', method: 'POST', schema: settingsFields, accessType: 'group', groupKey: 'settings', description: 'Сохранить настройки' },
@@ -387,10 +536,10 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
 
   { name: 'Журнал архивирования', slug: 'crm-archive-logs-list', path: '/api/crm/archive-logs', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'backup', description: 'Журнал архивирования' },
   { name: 'Записать архивирование', slug: 'crm-archive-logs-create', path: '/api/crm/archive-logs', method: 'POST', schema: archiveLogFields, accessType: 'group', groupKey: 'backup', description: 'Записать операцию архива' },
-  { name: 'Удалить запись архива', slug: 'crm-archive-logs-delete', path: '/api/crm/archive-logs/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'backup', description: 'Удалить запись журнала архивирования' },
+  { name: 'Удалить запись архива', slug: 'crm-archive-logs-delete', path: '/api/crm/archive-logs/:id', method: 'DELETE', schema: [], accessType: 'authenticated', groupKey: 'backup', description: 'Удалить запись журнала архивирования' },
 
   { name: 'Телеметрия (внутр.)', slug: 'crm-telemetry-create', path: '/api/crm/telemetry', method: 'POST', schema: telemetryFields, accessType: 'group', groupKey: 'telemetry', description: 'Приём телеметрии от processor' },
-  { name: 'Список телеметрии', slug: 'crm-telemetry-list', path: '/api/crm/telemetry', method: 'GET', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Список телеметрии' },
+  { name: 'Список телеметрии', slug: 'crm-telemetry-list', path: '/api/crm/telemetry', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'telemetry', description: 'Список входящих MQTT-сообщений' },
   { name: 'Удалить телеметрию', slug: 'crm-telemetry-delete', path: '/api/crm/telemetry/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Удаление при архивировании' },
 ];
 
@@ -447,10 +596,37 @@ export const DEFAULT_SETTINGS = [
       telegram: true,
       web: true,
       events: {
-        connectionLost: true,
-        equipmentError: true,
+        connectionLost: false,
+        equipmentError: false,
         queueOverflow: true,
+        backupSuccess: true,
         backupError: true,
+        archiveSuccess: true,
+        archiveError: true,
+        telegramBotCreated: true,
+        telegramBotError: true,
+        userLogin: true,
+        userLogout: true,
+        userPasswordChanged: true,
+        userCreated: true,
+        userUpdated: true,
+        userDeleted: true,
+        washCreated: true,
+        washUpdated: true,
+        washDeleted: true,
+        postCreated: true,
+        postUpdated: true,
+        postDeleted: true,
+        settingsUpdated: true,
+        currencyCreated: true,
+        currencyUpdated: true,
+        currencyDeleted: true,
+        discountTypeUpdated: true,
+        workModeUpdated: true,
+        cardCreated: true,
+        cardUpdated: true,
+        cardDeleted: true,
+        autoTask: true,
       },
     },
   },
@@ -466,9 +642,45 @@ export const DEFAULT_CURRENCIES = [
 ];
 
 export const DEFAULT_DISCOUNT_TYPES = [
-  { number: 1, name: 'Карта такси', status: 'active' },
-  { number: 2, name: 'Постоянный клиент', status: 'active' },
-  { number: 3, name: 'Корпоративный клиент', status: 'active' },
-  { number: 4, name: 'Сотрудник', status: 'active' },
-  { number: 5, name: 'Промоакция', status: 'active' },
+  { code: '1', name: 'Карта такси', status: 'active' },
+  { code: '2', name: 'Постоянный клиент', status: 'active' },
+  { code: '3', name: 'Корпоративный клиент', status: 'active' },
+  { code: '4', name: 'Сотрудник', status: 'active' },
+  { code: '5', name: 'Промоакция', status: 'active' },
 ];
+
+export const DEFAULT_WORK_MODES = [
+  { code: '0', name: 'Вода', modeType: 'system', status: 'active' },
+  { code: '1', name: 'Пена', modeType: 'system', status: 'active' },
+  { code: '2', name: 'Шампунь', modeType: 'system', status: 'active' },
+  { code: '3', name: 'Воск', modeType: 'system', status: 'active' },
+  { code: '4', name: 'Ополаскивание', modeType: 'system', status: 'active' },
+  { code: '5', name: 'Сушка', modeType: 'system', status: 'active' },
+  { code: '6', name: 'Пылесос', modeType: 'system', status: 'active' },
+  { code: '7', name: 'Антибитум', modeType: 'system', status: 'active' },
+  { code: '8', name: 'Резина', modeType: 'system', status: 'active' },
+  { code: '9', name: 'Дворники', modeType: 'system', status: 'active' },
+];
+
+/** Демо-объект, если в БД нет ни одной автомойки (восстановление после удаления). */
+export const DEFAULT_DEMO_WASH = {
+  name: 'Автомойка «Центральная»',
+  description: 'Демо-объект самообслуживания',
+  address: 'г. Москва, ул. Примерная, 1',
+  cloudEnabled: true,
+};
+
+export const DEFAULT_DEMO_POSTS = [
+  {
+    postNumber: 1,
+    name: 'Пост 1',
+    serialNumber: 'WP-POST-001',
+    settings: { firmwareVersion: '1.0.0', warrantyUntil: '2027-12-31' },
+  },
+  {
+    postNumber: 2,
+    name: 'Пост 2',
+    serialNumber: 'WP-POST-002',
+    settings: { firmwareVersion: '1.0.0', warrantyUntil: '2027-12-31' },
+  },
+] as const;

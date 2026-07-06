@@ -11,8 +11,20 @@ const apiRequestCounts = new Map<string, RateEntry>();
 const loginAttempts = new Map<string, { count: number; lockedUntil: number }>();
 
 export function apiRateLimitMiddleware(req: Request, res: Response, next: NextFunction): void {
+  if (req.path === '/health' || req.path === '/api/health') {
+    next();
+    return;
+  }
+
+  // CRM dashboard / service JWT — без общего лимита (телеметрия, live-опрос).
+  if (req.path.startsWith('/api/crm/') && req.headers.authorization?.startsWith('Bearer ')) {
+    next();
+    return;
+  }
+
   const { rateLimitMax, rateLimitWindowMs } = settingsService.getCached();
-  const key = getClientIp(req);
+  const auth = req.headers.authorization;
+  const key = auth ? `auth:${String(auth).slice(-24)}` : getClientIp(req);
   const now = Date.now();
 
   let entry = apiRequestCounts.get(key);

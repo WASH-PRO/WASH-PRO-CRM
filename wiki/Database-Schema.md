@@ -22,6 +22,12 @@
 
 Справочник `/api/crm/discount-types`: номера **1–5** и названия. В картах поле `discountType` — номер; Dashboard показывает название.
 
-## Удаление поста
+## `posts.settings`
 
-`DELETE /api/crm/posts/:id` каскадно удаляет состояния, карты, статистику, уведомления и телеметрию поста.
+JSON с метаданными поста: `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance` и др. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/database-schema/).
+
+## Удаление поста и автомойки
+
+`DELETE /api/crm/posts/:id` — каскадно удаляет состояния, карты, статистику, финансы, уведомления и MQTT-телеметрию поста.
+
+`DELETE /api/crm/washes/:id` — удаляет автомойку, все её посты и их данные.

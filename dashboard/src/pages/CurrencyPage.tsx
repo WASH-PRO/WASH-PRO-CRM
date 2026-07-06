@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { api, apiList } from '../api/client';
+import { api, apiListDictionary } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
@@ -20,7 +20,10 @@ export function CurrencyPage() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
 
-  const fetchCurrencies = useCallback(() => apiList<Currency>('/crm/currencies'), []);
+  const fetchCurrencies = useCallback(
+    (signal: AbortSignal) => apiListDictionary<Currency>('/crm/currencies', signal),
+    []
+  );
   const { data: currencies, loading, refresh } = usePolling(fetchCurrencies, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
 
   const openCreate = () => {
@@ -206,7 +209,7 @@ export function CurrencyPage() {
         subtitle="Справочник валют — название и символ хранятся в /api/crm/currencies"
         actions={canEdit && <button type="button" className="btn-primary" onClick={openCreate}><Plus size={16} /> Добавить</button>}
       />
-      <DataTable columns={columns} data={currencies || []} rowKey={(c) => c.id} filters={filters} searchPlaceholder="Поиск валют…" bulkActions={bulkActions} isRowSelectable={(c) => !c.isDefault} />
+      <DataTable tableId="currency" columns={columns} data={currencies || []} rowKey={(c) => c.id} filters={filters} searchPlaceholder="Поиск валют…" bulkActions={bulkActions} isRowSelectable={(c) => !c.isDefault} />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать валюту' : 'Новая валюта'}>
         <form onSubmit={handleSubmit} className="space-y-3">

@@ -12,7 +12,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
-import WashSoftwareUpdatesSection from '../components/WashSoftwareUpdatesSection';
+import { SoftwareUpdatesSection, componentVersionLabel } from '../components/SoftwareUpdatesSection';
+import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { PageHeader, Loading } from '../components/UI';
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -111,6 +112,7 @@ function legacyDynamicApiFromPyOrch(raw: Record<string, unknown>): DynamicApiCrm
 }
 
 export function SettingsPage() {
+  const updatesCtx = useSoftwareUpdatesContext();
   const [ids, setIds] = useState<Record<string, string | null>>({});
   const [backup, setBackup] = useState<BackupSettings>(DEFAULT_BACKUP);
   const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
@@ -243,6 +245,11 @@ export function SettingsPage() {
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             Учётная запись администратора и порт встроенной панели PyOrchestrator.
           </p>
+          {componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator') && (
+            <p className="mb-3 font-mono text-xs text-brand-700 dark:text-brand-300">
+              Версия: {componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator')}
+            </p>
+          )}
           <Field label="Email администратора">
             <input className="input font-mono" value={pyorch.email} onChange={(e) => setPyorch({ ...pyorch, email: e.target.value })} />
           </Field>
@@ -271,6 +278,11 @@ export function SettingsPage() {
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             Service account и внутренний URL для bridge-сервисов (бот, backup, processor).
           </p>
+          {componentVersionLabel(updatesCtx?.status ?? null, 'dynamic-api') && (
+            <p className="mb-3 font-mono text-xs text-brand-700 dark:text-brand-300">
+              Версия: {componentVersionLabel(updatesCtx?.status ?? null, 'dynamic-api')}
+            </p>
+          )}
           <Field label="Service login" hint="Учётная запись для внутренних сервисов">
             <input
               className="input font-mono"
@@ -355,7 +367,7 @@ export function SettingsPage() {
         </SettingSection>
 
         <SettingSection title="Обновления ПО" icon={ArrowUpCircle}>
-          <WashSoftwareUpdatesSection />
+          <SoftwareUpdatesSection />
         </SettingSection>
       </div>
     </div>

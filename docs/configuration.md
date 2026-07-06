@@ -26,7 +26,10 @@ description: Переменные окружения .env
 | `ADMIN_LOGIN` | `admin` | Логин администратора |
 | `ADMIN_EMAIL` | `admin@wash-pro-crm.local` | Email |
 | `ADMIN_PASSWORD` | `Admin123!` | Пароль |
-| `UPDATE_EXECUTOR_ENABLED` | `false` | In-app updater (**выключен в WASH**) |
+| `UPDATE_EXECUTOR_ENABLED` | `true` | Автообновление через `update-bridge` (GitHub → Docker) |
+| `CRM_GITHUB_REPO` | `WASH-PRO/WASH-PRO-CRM` | Репозиторий CRM для проверки релизов |
+| `DYNAMIC_API_GITHUB_REPO` | `Dynamic-API-Platform/Dynamic-API-Platform` | Upstream Dynamic API |
+| `PYORCHESTRATOR_GITHUB_REPO` | `PyOrchestrator/PyOrchestrator` | Upstream PyOrchestrator |
 | `# DYNAMIC_API_VERSION` | из package.json | Принудительная версия (обычно не нужна) |
 
 Актуальная vendored-версия: **v1.5.13** (`dynamic-api/backend/package.json`).

@@ -19,7 +19,9 @@ import { EmbeddedServicesSidebar } from './EmbeddedServicesSidebar';
 import { breadcrumbsFromPath } from '../utils/breadcrumbs';
 import { navGroups } from '../utils/navRoutes';
 import { BreadcrumbProvider, useBreadcrumbLastLabelOverride } from '../context/BreadcrumbContext';
+import { SoftwareUpdatesProvider } from '../context/SoftwareUpdatesContext';
 import { BrandLogo } from './BrandLogo';
+import { UpdateBanner } from './UpdateBanner';
 
 function LayoutInner() {
   const { user, logout, isAdmin } = useAuth();
@@ -185,6 +187,8 @@ function LayoutInner() {
             </div>
           </header>
 
+          <UpdateBanner />
+
           <main className="page-main">
             <div className="page-body">
               <nav className="breadcrumb-nav" aria-label="Навигация">
@@ -219,9 +223,11 @@ function userInitials(name?: string, login?: string): string {
 export function Layout() {
   return (
     <LiveModeProvider>
-      <BreadcrumbProvider>
-        <LayoutInner />
-      </BreadcrumbProvider>
+      <SoftwareUpdatesProvider>
+        <BreadcrumbProvider>
+          <LayoutInner />
+        </BreadcrumbProvider>
+      </SoftwareUpdatesProvider>
     </LiveModeProvider>
   );
 }

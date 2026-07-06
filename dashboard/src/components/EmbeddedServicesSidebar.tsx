@@ -3,6 +3,8 @@ import { BookOpen, Cpu, Github, Menu, Workflow } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useEmbeddedServices, type EmbeddedService, type ServiceStatus } from '../hooks/useEmbeddedServices';
+import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
+import { componentVersionLabel } from './SoftwareUpdatesSection';
 
 const DOC_LINKS = [
   { href: 'https://wash-pro.github.io/WASH-PRO-CRM/', label: 'Документация', icon: BookOpen },
@@ -45,10 +47,12 @@ function ServiceRow({
   service,
   collapsed,
   onNavigate,
+  versionHint,
 }: {
   service: EmbeddedService;
   collapsed: boolean;
   onNavigate?: () => void;
+  versionHint?: string | null;
 }) {
   const Icon = SERVICE_ICONS[service.id] ?? Workflow;
   const online = service.status === 'online';
@@ -81,9 +85,16 @@ function ServiceRow({
       {!collapsed && (
         <>
           <span className="min-w-0 flex-1 truncate">{service.label}</span>
-          <span className="flex shrink-0 items-center gap-1.5">
-            <span className={clsx('h-1.5 w-1.5 rounded-full', statusDot(service.status))} aria-hidden />
-            <span className="text-[10px] text-panel-muted dark:text-slate-500">{statusLabel(service.status)}</span>
+          <span className="flex shrink-0 flex-col items-end gap-0.5">
+            {versionHint && (
+              <span className="max-w-[5.5rem] truncate font-mono text-[9px] text-amber-700 dark:text-amber-300" title={versionHint}>
+                {versionHint}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <span className={clsx('h-1.5 w-1.5 rounded-full', statusDot(service.status))} aria-hidden />
+              <span className="text-[10px] text-panel-muted dark:text-slate-500">{statusLabel(service.status)}</span>
+            </span>
           </span>
         </>
       )}
@@ -94,6 +105,7 @@ function ServiceRow({
 export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServicesSidebarProps) {
   const [open, setOpen] = useState(false);
   const services = useEmbeddedServices();
+  const updatesCtx = useSoftwareUpdatesContext();
 
   const toggle = () => setOpen((v) => !v);
 
@@ -123,6 +135,13 @@ export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServi
               service={service}
               collapsed={collapsed}
               onNavigate={onNavigate}
+              versionHint={
+                service.id === 'dynamic-api'
+                  ? componentVersionLabel(updatesCtx?.status ?? null, 'dynamic-api')
+                  : service.id === 'pyorchestrator'
+                    ? componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator')
+                    : null
+              }
             />
           ))}
           {!collapsed && (

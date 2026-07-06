@@ -240,6 +240,38 @@ services:
       - wash-internal
 
   # ===========================================================================
+  # Update Bridge — проверка GitHub и оркестрация обновлений WASH / DAP / PyOrch
+  # ===========================================================================
+  update-bridge:
+    build:
+      context: ./services/update-bridge
+      dockerfile: Dockerfile
+    container_name: wash-update-bridge
+    restart: unless-stopped
+    environment:
+      API_URL: http://dynamic-api:3001
+      UPDATE_HTTP_PORT: 3023
+      DEPLOY_ROOT: /deploy
+      STATE_DIR: /data
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      DYNAMIC_API_VERSION: ${DYNAMIC_API_VERSION:-}
+      PYORCHESTRATOR_VERSION: ${PYORCHESTRATOR_VERSION:-}
+      UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
+      CRM_GITHUB_REPO: ${CRM_GITHUB_REPO:-WASH-PRO/WASH-PRO-CRM}
+      DYNAMIC_API_GITHUB_REPO: ${DYNAMIC_API_GITHUB_REPO:-Dynamic-API-Platform/Dynamic-API-Platform}
+      PYORCHESTRATOR_GITHUB_REPO: ${PYORCHESTRATOR_GITHUB_REPO:-PyOrchestrator/PyOrchestrator}
+    volumes:
+      - .:/deploy
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_DIR:-./data}/update-bridge:/data
+    depends_on:
+      dynamic-api:
+        condition: service_healthy
+    networks:
+      - wash-internal
+      - wash-external
+
+  # ===========================================================================
   # Dashboard — единственный сервис, доступный снаружи
   # ===========================================================================
   dashboard:

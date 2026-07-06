@@ -22,41 +22,43 @@ export function PageHeader({
   const RouteIcon = icon ?? (showRouteIcon ? resolveRouteIcon(pathname) : null);
 
   return (
-    <div className="mb-6 flex flex-col gap-3 border-b border-panel-border pb-5 dark:border-panel-border-dark sm:mb-8 sm:gap-4 sm:pb-6 md:flex-row md:items-start md:justify-between">
-      <div className="flex min-w-0 flex-1 items-stretch gap-5 sm:gap-6 sm:pl-2 md:gap-7">
+    <header className="page-header mb-5 flex flex-col gap-3 border-b border-panel-border pb-4 dark:border-panel-border-dark sm:mb-7 sm:gap-4 sm:pb-5 md:flex-row md:items-start md:justify-between">
+      <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-stretch sm:gap-6 md:gap-7">
         {RouteIcon && (
-          <div className="hidden shrink-0 items-stretch sm:flex" aria-hidden>
+          <div className="hidden shrink-0 sm:flex sm:items-stretch" aria-hidden>
             <div className="flex aspect-square h-full min-h-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-500/10 dark:bg-brand-400/10 dark:text-brand-400 dark:ring-brand-400/20 sm:min-h-12">
               <RouteIcon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={1.75} />
             </div>
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-xl font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark sm:text-2xl lg:text-[1.75rem]">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark sm:text-2xl lg:text-[1.75rem] lg:leading-tight">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-panel-muted dark:text-panel-muted-dark md:line-clamp-none">
+            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-panel-muted dark:text-panel-muted-dark sm:line-clamp-3 md:line-clamp-none">
               {subtitle}
             </p>
           )}
         </div>
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2 md:pl-0">{actions}</div>}
-    </div>
+      {actions && (
+        <div className="flex shrink-0 flex-wrap items-center gap-2 md:pt-0.5">{actions}</div>
+      )}
+    </header>
   );
 }
 
 export function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
     <div className="panel-stat">
-      <div className="text-xs font-medium uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-panel-muted dark:text-panel-muted-dark">
         {label}
       </div>
-      <div className="mt-2 font-display text-2xl font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark">
+      <div className="mt-2 font-display text-2xl font-semibold tracking-tight text-panel-ink tabular-nums dark:text-panel-ink-dark sm:text-[1.65rem]">
         {value}
       </div>
-      {hint && <div className="mt-2 text-xs text-panel-muted dark:text-panel-muted-dark">{hint}</div>}
+      {hint && <div className="field-hint mt-2">{hint}</div>}
     </div>
   );
 }

@@ -243,14 +243,14 @@ export function DataTable<T>({
   };
 
   const actionButtonClass = (variant: DataTableBulkAction<T>['variant'] = 'secondary') => {
-    if (variant === 'primary') return 'btn-primary !py-1.5 !px-3 text-sm';
-    if (variant === 'danger') return 'btn-secondary !py-1.5 !px-3 text-sm text-red-600';
-    return 'btn-secondary !py-1.5 !px-3 text-sm';
+    if (variant === 'primary') return 'btn-primary btn-sm';
+    if (variant === 'danger') return 'btn-secondary btn-sm text-red-600 dark:text-red-400';
+    return 'btn-secondary btn-sm';
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-3">
+    <div className="space-y-4">
+      <div className="data-toolbar">
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-stretch md:gap-4">
           {toolbarPlacement === 'start' && (
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{toolbar}</div>
@@ -264,7 +264,7 @@ export function DataTable<T>({
             >
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-panel-muted" />
               <input
-                className="input pl-9"
+                className="input input-sm pl-9"
                 placeholder={searchPlaceholder}
                 value={search}
                 onChange={(e) => {
@@ -309,7 +309,7 @@ export function DataTable<T>({
       </div>
 
       {selectable && selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-sm dark:border-brand-400/20 dark:bg-brand-400/10">
+        <div className="table-selection-bar">
           <span className="font-medium text-brand-800 dark:text-brand-300">
             Выбрано: {selectedIds.size}
           </span>
@@ -328,18 +328,18 @@ export function DataTable<T>({
               </button>
             );
           })}
-          <button type="button" className="btn-secondary !py-1.5 !px-3 text-sm" onClick={clearSelection}>
+          <button type="button" className="btn-secondary btn-sm" onClick={clearSelection}>
             Снять выделение
           </button>
         </div>
       )}
 
       <div className="table-shell overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-panel-border bg-panel-canvas/80 dark:border-panel-border-dark dark:bg-[#0d1218]">
+        <table>
+          <thead>
             <tr>
               {selectable && (
-                <th className="w-10 px-4 py-3">
+                <th className="w-10">
                   <input
                     ref={headerCheckboxRef}
                     type="checkbox"
@@ -351,7 +351,7 @@ export function DataTable<T>({
                 </th>
               )}
               {displayColumns.map((col) => (
-                <th key={col.key} className={clsx('px-4 py-3 font-medium', col.className)}>
+                <th key={col.key} className={col.className}>
                   {col.sortable ? (
                     <button
                       type="button"
@@ -383,7 +383,6 @@ export function DataTable<T>({
                   <tr
                     key={id}
                     className={clsx(
-                      'border-b border-panel-border transition-colors hover:bg-panel-canvas/50 dark:border-panel-border-dark dark:hover:bg-white/[0.02]',
                       selectedIds.has(id) && 'bg-brand-500/5 dark:bg-brand-400/10',
                       isRowActive?.(row) && 'bg-brand-500/10 ring-1 ring-inset ring-brand-500/30 dark:bg-brand-400/15',
                       onRowClick && 'cursor-pointer'
@@ -396,7 +395,7 @@ export function DataTable<T>({
                     }}
                   >
                     {selectable && (
-                      <td className="px-4 py-3">
+                      <td>
                         <input
                           type="checkbox"
                           className="rounded border-slate-300"
@@ -408,7 +407,7 @@ export function DataTable<T>({
                       </td>
                     )}
                     {displayColumns.map((col) => (
-                      <td key={col.key} className={clsx('px-4 py-3', col.className)}>
+                      <td key={col.key} className={col.className}>
                         {col.render ? col.render(row) : null}
                       </td>
                     ))}
@@ -420,7 +419,7 @@ export function DataTable<T>({
         </table>
       </div>
 
-      <div className="flex flex-col gap-2 text-sm text-panel-muted dark:text-panel-muted-dark sm:flex-row sm:items-center sm:justify-between">
+      <div className="table-footer">
         <div className="flex flex-col gap-1">
           <span>
             {sorted.length} записей
@@ -438,10 +437,10 @@ export function DataTable<T>({
         </div>
         {sorted.length > pageSize && (
           <div className="flex gap-2">
-            <button type="button" className="btn-secondary" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
+            <button type="button" className="btn-secondary btn-sm" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
               Назад
             </button>
-            <button type="button" className="btn-secondary" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+            <button type="button" className="btn-secondary btn-sm" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
               Далее
             </button>
           </div>

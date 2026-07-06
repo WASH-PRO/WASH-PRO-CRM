@@ -8,34 +8,90 @@
   }
 
   body {
-    @apply bg-panel-canvas font-sans text-panel-ink antialiased dark:bg-panel-canvas-dark dark:text-panel-ink-dark;
+    @apply bg-panel-canvas font-sans text-[15px] leading-relaxed text-panel-ink antialiased dark:bg-panel-canvas-dark dark:text-panel-ink-dark;
   }
 
   ::selection {
-    @apply bg-brand-500/25 text-brand-900;
+    @apply bg-brand-500/25 text-brand-900 dark:text-brand-100;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500/40 ring-offset-2 ring-offset-panel-canvas dark:ring-brand-400/50 dark:ring-offset-panel-canvas-dark;
   }
 }
 
 @layer components {
+  /* —— Surfaces —— */
   .panel-card {
     @apply rounded-panel border border-panel-border bg-panel-card shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark dark:shadow-none;
   }
 
   .card {
-    @apply panel-card p-4 sm:p-6;
+    @apply panel-card p-4 sm:p-5 lg:p-6;
   }
 
   .panel-stat {
-    @apply relative overflow-hidden rounded-panel border border-panel-border bg-panel-card p-4 shadow-panel transition-shadow hover:shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark sm:p-5;
+    @apply relative overflow-hidden rounded-panel border border-panel-border bg-panel-card p-4 shadow-panel transition-shadow duration-200 hover:shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark sm:p-5;
   }
 
   .panel-stat::before {
     content: '';
-    @apply absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600 opacity-80;
+    @apply absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600 opacity-90;
   }
 
+  .data-toolbar {
+    @apply panel-card flex flex-col gap-3 p-3 sm:p-4;
+  }
+
+  /* —— Page layout —— */
+  .page-shell {
+    @apply animate-slide-up mx-auto w-full max-w-[1600px];
+  }
+
+  .page-main {
+    @apply min-h-0 flex-1 overflow-auto;
+  }
+
+  .page-body {
+    @apply page-shell p-3 sm:p-5 lg:p-8;
+  }
+
+  .breadcrumb-nav {
+    @apply mb-3 flex min-w-0 flex-wrap items-center gap-1 text-xs sm:mb-5 sm:gap-1.5 sm:text-sm;
+  }
+
+  .breadcrumb-link {
+    @apply truncate text-panel-muted transition-colors hover:text-brand-600 dark:text-panel-muted-dark dark:hover:text-brand-400;
+  }
+
+  .breadcrumb-current {
+    @apply truncate font-medium text-panel-ink dark:text-panel-ink-dark;
+  }
+
+  /* —— Tabs (cards, subsections) —— */
+  .tab-bar {
+    @apply mb-5 grid grid-cols-1 gap-1 rounded-panel border border-panel-border bg-panel-card p-1 shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark sm:mb-6;
+  }
+
+  .tab-item {
+    @apply rounded-lg px-3 py-2.5 text-center text-sm font-medium text-panel-muted transition-all duration-200 dark:text-panel-muted-dark;
+  }
+
+  .tab-item:hover {
+    @apply bg-panel-canvas text-panel-ink dark:bg-panel-sidebar-hover dark:text-panel-ink-dark;
+  }
+
+  .tab-item-active {
+    @apply bg-brand-600 text-white shadow-sm hover:bg-brand-600 hover:text-white dark:bg-brand-500 dark:hover:bg-brand-500;
+  }
+
+  /* —— Buttons —— */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-45;
+  }
+
+  .btn-sm {
+    @apply btn !px-3 !py-1.5 text-sm;
   }
 
   .btn-primary {
@@ -43,7 +99,7 @@
   }
 
   .btn-secondary {
-    @apply btn border border-panel-border bg-panel-card text-panel-ink shadow-sm hover:bg-panel-canvas dark:border-panel-border-dark dark:bg-panel-card-dark dark:text-panel-ink-dark dark:hover:bg-panel-sidebar-hover;
+    @apply btn border border-panel-border bg-panel-card text-panel-ink shadow-sm hover:border-brand-500/25 hover:bg-panel-canvas dark:border-panel-border-dark dark:bg-panel-card-dark dark:text-panel-ink-dark dark:hover:bg-panel-sidebar-hover;
   }
 
   .btn-danger {
@@ -58,8 +114,13 @@
     @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-panel-border bg-panel-card text-panel-muted transition-colors hover:border-brand-500/30 hover:text-brand-600 dark:border-panel-border-dark dark:bg-panel-card-dark dark:text-panel-muted-dark dark:hover:text-brand-400;
   }
 
+  /* —— Forms —— */
   .input {
     @apply w-full rounded-lg border border-panel-border bg-panel-card px-3.5 py-2.5 text-sm text-panel-ink shadow-sm placeholder:text-panel-muted focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-panel-border-dark dark:bg-[#0d1218] dark:text-panel-ink-dark dark:placeholder:text-panel-muted-dark dark:focus:border-brand-400 dark:focus:ring-brand-400/20;
+  }
+
+  .input-sm {
+    @apply input !h-9 !py-2 !px-3 text-sm;
   }
 
   .select {
@@ -67,9 +128,14 @@
   }
 
   .label {
-    @apply mb-1.5 block text-xs font-medium text-panel-muted dark:text-panel-muted-dark;
+    @apply mb-1.5 block text-xs font-medium tracking-wide text-panel-muted dark:text-panel-muted-dark;
   }
 
+  .field-hint {
+    @apply mt-1 text-xs text-panel-muted dark:text-panel-muted-dark;
+  }
+
+  /* —— Sidebar navigation —— */
   .nav-item {
     @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-panel-muted transition-all duration-200 dark:text-slate-400;
   }
@@ -87,10 +153,57 @@
     @apply absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-brand-600 dark:bg-brand-400;
   }
 
+  .nav-group-title {
+    @apply mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-panel-muted dark:text-slate-500;
+  }
+
+  /* —— Tables —— */
   .table-shell {
     @apply overflow-hidden rounded-panel border border-panel-border bg-panel-card shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark;
   }
 
+  .table-shell table {
+    @apply w-full text-left text-sm;
+  }
+
+  .table-shell thead {
+    @apply border-b border-panel-border bg-panel-canvas/90 dark:border-panel-border-dark dark:bg-[#0d1218];
+  }
+
+  .table-shell thead th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark;
+  }
+
+  .table-shell tbody tr {
+    @apply border-b border-panel-border transition-colors last:border-b-0 dark:border-panel-border-dark;
+  }
+
+  .table-shell tbody tr:hover {
+    @apply bg-panel-canvas/60 dark:bg-white/[0.02];
+  }
+
+  .table-shell tbody td {
+    @apply px-4 py-3 align-middle;
+  }
+
+  .table-selection-bar {
+    @apply flex flex-wrap items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-sm dark:border-brand-400/20 dark:bg-brand-400/10;
+  }
+
+  .table-footer {
+    @apply flex flex-col gap-2 text-sm text-panel-muted dark:text-panel-muted-dark sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  /* —— App chrome —— */
+  .app-header {
+    @apply sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-panel-border bg-panel-card/90 px-3 backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 sm:h-16 sm:gap-4 sm:px-4 lg:px-6;
+  }
+
+  .app-sidebar {
+    @apply fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-panel-border bg-panel-card text-panel-ink dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300;
+  }
+
+  /* —— Login —— */
   .login-bg-animated {
     @apply overflow-hidden;
   }
@@ -207,6 +320,10 @@
   .login-bg-pan,
   .login-bg-shimmer,
   .login-bg-bubbles .login-bubble {
+    animation: none !important;
+  }
+
+  .animate-slide-up {
     animation: none !important;
   }
 }

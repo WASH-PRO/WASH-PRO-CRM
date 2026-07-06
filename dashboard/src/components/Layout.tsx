@@ -57,7 +57,7 @@ function LayoutInner() {
         <aside
         style={{ '--drawer-width': `${effectiveWidth}px` } as CSSProperties}
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex h-full w-[min(calc(100vw-1rem),var(--drawer-width))] flex-col border-r border-panel-border bg-panel-card text-panel-ink dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300 lg:w-[var(--drawer-width)]',
+          'app-sidebar flex w-[min(calc(100vw-1rem),var(--drawer-width))] flex-col lg:w-[var(--drawer-width)]',
           !resizing && 'transition-[width,transform] duration-300 ease-out',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -81,9 +81,7 @@ function LayoutInner() {
           {filteredGroups.map((group) => (
             <div key={group.title} className="mb-5 last:mb-0">
               {!collapsed && (
-                <div className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-panel-muted dark:text-slate-500">
-                  {group.title}
-                </div>
+                <div className="nav-group-title">{group.title}</div>
               )}
               <div className="space-y-0.5">
                 {group.items.map(({ to, label, shortLabel, icon: Icon }) => (
@@ -145,7 +143,7 @@ function LayoutInner() {
           !resizing && 'transition-[margin-left] duration-300 ease-out'
         )}
       >
-          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-panel-border bg-panel-card/90 px-3 backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 sm:h-16 sm:gap-4 sm:px-4 lg:px-6">
+          <header className="app-header">
             <button
               type="button"
               className="btn-icon lg:hidden"
@@ -187,21 +185,18 @@ function LayoutInner() {
             </div>
           </header>
 
-          <main className="min-h-0 flex-1 overflow-auto">
-            <div className="animate-slide-up mx-auto w-full max-w-[1600px] p-3 sm:p-4 lg:p-8">
-              <nav className="mb-3 flex min-w-0 flex-wrap items-center gap-1.5 text-xs sm:mb-4 sm:text-sm" aria-label="Навигация">
+          <main className="page-main">
+            <div className="page-body">
+              <nav className="breadcrumb-nav" aria-label="Навигация">
                 {crumbs.map((crumb, i) => (
                   <span key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
                     {i > 0 && <ChevronRight size={14} className="shrink-0 text-panel-muted" />}
                     {crumb.path ? (
-                      <Link
-                        to={crumb.path}
-                        className="truncate text-panel-muted transition-colors hover:text-brand-600 dark:text-panel-muted-dark dark:hover:text-brand-400"
-                      >
+                      <Link to={crumb.path} className="breadcrumb-link">
                         {crumb.label}
                       </Link>
                     ) : (
-                      <span className="truncate font-medium text-panel-ink dark:text-panel-ink-dark">{crumb.label}</span>
+                      <span className="breadcrumb-current">{crumb.label}</span>
                     )}
                   </span>
                 ))}

@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import clsx from 'clsx';
+import { Outlet } from 'react-router-dom';
 import { apiList } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, Badge, ErrorMessage } from '../components/UI';
+import { TabNav } from '../components/TabNav';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
@@ -22,11 +22,11 @@ import {
 } from '../utils/cards';
 import type { Card, Post, Wash } from '../types';
 
-const TABS = [
-  { to: '/cards/discount', label: 'Скидочные карты', type: 'regular' as const },
-  { to: '/cards/service', label: 'Сервисные карты', type: 'service' as const },
-  { to: '/cards/vip', label: 'VIP-обслуживание', type: 'unlimited' as const },
-  { to: '/cards/collection', label: 'Инкассация', type: 'collection' as const },
+const CARD_TABS = [
+  { to: '/cards/discount', label: 'Скидочные карты' },
+  { to: '/cards/service', label: 'Сервисные карты' },
+  { to: '/cards/vip', label: 'VIP-обслуживание' },
+  { to: '/cards/collection', label: 'Инкассация' },
 ];
 
 const cardStatusFilter: DataTableFilter<Card> = {
@@ -180,26 +180,10 @@ function periodColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
 }
 
 export function CardsLayout() {
-  const location = useLocation();
   return (
     <div>
       <PageHeader title="Карты" subtitle="Журнал применений: каждое считывание NFC — отдельная строка" />
-      <div className="mb-6 grid grid-cols-1 gap-1 rounded-lg border border-panel-border bg-panel-card p-1 dark:border-panel-border-dark dark:bg-panel-card-dark sm:grid-cols-2 lg:grid-cols-4">
-        {TABS.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            className={clsx(
-              'rounded-md px-3 py-2 text-center text-sm font-medium transition-all sm:px-4',
-              location.pathname.startsWith(tab.to)
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-panel-muted hover:bg-panel-canvas hover:text-panel-ink dark:text-panel-muted-dark dark:hover:bg-panel-sidebar-hover dark:hover:text-white'
-            )}
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </div>
+      <TabNav items={CARD_TABS} columns={4} />
       <Outlet />
     </div>
   );

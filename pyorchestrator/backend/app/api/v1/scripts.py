@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -98,12 +97,9 @@ async def create_script_endpoint(
     meta = body.metadata or {}
     if body.code:
         files = {body.entrypoint: body.code, "requirements.txt": ""}
-    try:
-        script = await create_script(
-            db, body.name, body.description, body.group_id, body.script_type, body.entrypoint, files, metadata=meta
-        )
-    except IntegrityError as exc:
-        raise HTTPException(409, "Script slug already exists; choose a different name") from exc
+    script = await create_script(
+        db, body.name, body.description, body.group_id, body.script_type, body.entrypoint, files, metadata=meta
+    )
     return script
 
 

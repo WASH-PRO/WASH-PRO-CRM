@@ -22,7 +22,6 @@ from app.models.user import Group, User
 from app.seed.demo_scripts import DEMO_SCRIPTS, DEMO_TEMPLATES
 from app.services.update_scheduler import update_scheduler
 from app.services.update_settings_service import update_settings_service
-from app.services.script_service import create_script, storage_service
 from app.ws.logs import router as ws_router
 
 

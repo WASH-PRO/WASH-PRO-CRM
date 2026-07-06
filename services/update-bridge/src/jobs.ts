@@ -14,7 +14,8 @@ import {
   setLastCheck,
   updateJob,
 } from './state.js';
-import { createSteps, getStepCommand, isExecutorAvailable, runShell } from './executor.js';
+import { createSteps, getStepCommand, isExecutorAvailable, runShell, usesCompose } from './executor.js';
+import { composeCommandEnv } from './host-path.js';
 import type { ComponentCheck, UpdateComponentId, UpdateJob, UpdatesStatus } from './types.js';
 
 let running = false;
@@ -53,6 +54,14 @@ export async function checkAllComponents(): Promise<ComponentCheck[]> {
   return results;
 }
 
+function withLiveVersions(cached: ComponentCheck[]): ComponentCheck[] {
+  return cached.map((c) => {
+    const currentVersion = getComponent(c.id).readCurrentVersion();
+    const updateAvailable = c.latestVersion ? isNewerVersion(c.latestVersion, currentVersion) : false;
+    return { ...c, currentVersion, updateAvailable };
+  });
+}
+
 export function buildStatus(components: ComponentCheck[]): UpdatesStatus {
   const state = getState();
   const executor = isExecutorAvailable();
@@ -81,12 +90,7 @@ export async function getUpdatesStatus(refresh = false): Promise<UpdatesStatus> 
   }
   const cached = getCachedComponents();
   if (cached.length) {
-    return buildStatus(
-      cached.map((c) => ({
-        ...c,
-        currentVersion: getComponent(c.id).readCurrentVersion(),
-      }))
-    );
+    return buildStatus(withLiveVersions(cached));
   }
   const components = await checkAllComponents();
   return buildStatus(components);
@@ -156,7 +160,11 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
       const cmd = getStepCommand(job.component, step.id, targetTag);
       appendLog(`$ ${cmd}`);
       try {
-        await runShell(cmd, appendLog);
+        const env = usesCompose(step.id) ? composeCommandEnv() : undefined;
+        if (env) {
+          appendLog(`DATA_DIR=${env.DATA_DIR}`);
+        }
+        await runShell(cmd, appendLog, env);
         step.status = 'completed';
         step.message = 'Готово';
       } catch (err) {
@@ -172,6 +180,7 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
 
     job.status = 'completed';
     job.finishedAt = new Date().toISOString();
+    await checkAllComponents();
   } catch (err) {
     job.status = 'failed';
     job.error = err instanceof Error ? err.message : 'Update failed';

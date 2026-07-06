@@ -14,11 +14,12 @@ function stepBarClass(status: string): string {
 }
 
 export function UpdateBanner() {
-  const { isAdmin } = useAuth();
+  const { hasPermission } = useAuth();
+  const canManageUpdates = hasPermission('manage_users', 'manage_api');
   const ctx = useSoftwareUpdatesContext();
   const [applying, setApplying] = useState(false);
 
-  if (!isAdmin || !ctx?.status) return null;
+  if (!canManageUpdates || !ctx?.status) return null;
 
   const { status, refresh } = ctx;
 

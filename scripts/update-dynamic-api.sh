@@ -7,6 +7,16 @@ DA="$ROOT/dynamic-api"
 UPSTREAM_REPO="${DYNAMIC_API_UPSTREAM:-https://github.com/Dynamic-API-Platform/Dynamic-API-Platform.git}"
 UPSTREAM_REF="${DYNAMIC_API_REF:-origin/main}"
 
+replace_tree() {
+  local target="$1"
+  if [ -d "$target" ]; then
+    chmod -R u+w "$target" 2>/dev/null || true
+    find "$target" -mindepth 1 -delete 2>/dev/null || rm -rf "${target:?}/"*
+    rmdir "$target" 2>/dev/null || rm -rf "$target"
+  fi
+  mkdir -p "$target"
+}
+
 echo "==> Fetch upstream: $UPSTREAM_REPO ($UPSTREAM_REF)"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
@@ -17,8 +27,7 @@ git -C "$tmpdir" remote add origin "$UPSTREAM_REPO"
 git -C "$tmpdir" fetch -q origin "${UPSTREAM_REF#origin/}" --depth 1
 
 echo "==> Replace $DA"
-rm -rf "$DA"
-mkdir -p "$DA"
+replace_tree "$DA"
 git -C "$tmpdir" archive FETCH_HEAD | tar -x -C "$DA"
 
 echo "==> Apply WASH-PRO-CRM patches (see patches/dynamic-api-wash.patch)"
@@ -51,6 +60,13 @@ fi
 DA_VERSION="$(node -p "require('$DA/backend/package.json').version" 2>/dev/null || echo '?')"
 if [ -f "$ROOT/.env.example" ] && [ "$DA_VERSION" != '?' ]; then
   perl -i -pe "s/^DYNAMIC_API_VERSION=.*/DYNAMIC_API_VERSION=$DA_VERSION/" "$ROOT/.env.example"
+fi
+if [ -f "$ROOT/.env" ] && [ "$DA_VERSION" != '?' ]; then
+  if grep -q '^DYNAMIC_API_VERSION=' "$ROOT/.env"; then
+    perl -i -pe "s/^DYNAMIC_API_VERSION=.*/DYNAMIC_API_VERSION=$DA_VERSION/" "$ROOT/.env"
+  else
+    echo "DYNAMIC_API_VERSION=$DA_VERSION" >> "$ROOT/.env"
+  fi
 fi
 
 echo "==> Dynamic API Platform v$DA_VERSION"

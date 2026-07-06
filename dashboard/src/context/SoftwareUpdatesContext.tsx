@@ -12,16 +12,17 @@ interface SoftwareUpdatesContextValue {
 const SoftwareUpdatesContext = createContext<SoftwareUpdatesContextValue | null>(null);
 
 export function SoftwareUpdatesProvider({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth();
-  const { status, loading, refresh, fastPoll } = useSoftwareUpdates(isAdmin);
+  const { hasPermission } = useAuth();
+  const canManageUpdates = hasPermission('manage_users', 'manage_api');
+  const { status, loading, refresh, fastPoll } = useSoftwareUpdates(canManageUpdates);
 
   useEffect(() => {
-    if (!isAdmin || !fastPoll) return;
+    if (!canManageUpdates || !fastPoll) return;
     const id = setInterval(() => {
       void refresh();
     }, 3000);
     return () => clearInterval(id);
-  }, [isAdmin, fastPoll, refresh]);
+  }, [canManageUpdates, fastPoll, refresh]);
 
   return (
     <SoftwareUpdatesContext.Provider value={{ status, loading, refresh }}>

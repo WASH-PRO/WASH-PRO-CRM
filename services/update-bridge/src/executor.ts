@@ -47,7 +47,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose up -d --build dashboard update-bridge message-processor backup`;
+      return `cd ${root} && docker compose up -d --build --no-deps dashboard update-bridge message-processor backup`;
     }
     if (stepId === 'health') {
       return `wget -qO- http://dynamic-api:3001/api/health >/dev/null`;
@@ -59,7 +59,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && DYNAMIC_API_REF=${tag} ./scripts/update-dynamic-api.sh`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose up -d --build dynamic-api dynamic-api-panel`;
+      return `cd ${root} && docker compose up -d --build --no-deps dynamic-api dynamic-api-panel`;
     }
     if (stepId === 'seed') {
       return `cd ${root} && docker compose run --rm init-seed`;
@@ -86,12 +86,13 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
 
 export async function runShell(
   command: string,
-  onLog: (line: string) => void
+  onLog: (line: string) => void,
+  extraEnv?: NodeJS.ProcessEnv
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn('sh', ['-c', command], {
       cwd: DEPLOY_ROOT,
-      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...extraEnv },
     });
 
     const handle = (chunk: Buffer) => {
@@ -114,4 +115,8 @@ export async function runShell(
 
 export function getStepCommand(component: UpdateComponentId, stepId: string, targetTag: string): string {
   return stepCommand(component, stepId, targetTag);
+}
+
+export function usesCompose(stepId: string): boolean {
+  return stepId === 'build' || stepId === 'seed';
 }

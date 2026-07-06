@@ -1,5 +1,5 @@
 FROM node:20-alpine
-RUN apk add --no-cache git bash docker-cli docker-cli-compose wget
+RUN apk add --no-cache git bash docker-cli docker-cli-compose wget perl patch tar
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

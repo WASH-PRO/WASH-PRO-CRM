@@ -119,7 +119,7 @@ services:
       INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
     volumes:
       - ${DATA_DIR:-./data}/pyorchestrator/runtime-workspaces:/workspaces
-      - ./pyorchestrator/runtime/engine:/app/engine:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/pyorchestrator/runtime/engine:/app/engine:ro
     depends_on:
       pyorch-postgres:
         condition: service_healthy
@@ -211,7 +211,7 @@ services:
       POSTGRES_PASSWORD: ${PYORCH_POSTGRES_PASSWORD:-pyorch_secret}
     volumes:
       - ${DATA_DIR:-./data}/pyorchestrator/postgres:/var/lib/postgresql/data
-      - ./pyorchestrator/infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/pyorchestrator/infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
     networks:
       - wash-internal
     healthcheck:
@@ -290,7 +290,7 @@ services:
     ports:
       - "${PYORCH_PROMETHEUS_PORT:-9090}:9090"
     volumes:
-      - ./config/pyorchestrator/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/config/pyorchestrator/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ${DATA_DIR:-./data}/pyorchestrator/prometheus:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -312,7 +312,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${PYORCH_GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./pyorchestrator/infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/pyorchestrator/infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
       - ${DATA_DIR:-./data}/pyorchestrator/grafana:/var/lib/grafana
     depends_on:
       - pyorch-prometheus
@@ -329,7 +329,7 @@ services:
     profiles:
       - pyorch-observability
     volumes:
-      - ./pyorchestrator/infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/pyorchestrator/infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       - ${DATA_DIR:-./data}/pyorchestrator/loki:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
@@ -342,7 +342,7 @@ services:
     profiles:
       - pyorch-observability
     volumes:
-      - ./config/pyorchestrator/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/config/pyorchestrator/promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:

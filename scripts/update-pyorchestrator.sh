@@ -7,6 +7,16 @@ PO="$ROOT/pyorchestrator"
 UPSTREAM_REPO="${PYORCHESTRATOR_UPSTREAM:-https://github.com/PyOrchestrator/PyOrchestrator.git}"
 UPSTREAM_REF="${PYORCHESTRATOR_REF:-v0.1.11}"
 
+replace_tree() {
+  local target="$1"
+  if [ -d "$target" ]; then
+    chmod -R u+w "$target" 2>/dev/null || true
+    find "$target" -mindepth 1 -delete 2>/dev/null || rm -rf "${target:?}/"*
+    rmdir "$target" 2>/dev/null || rm -rf "$target"
+  fi
+  mkdir -p "$target"
+}
+
 echo "==> Fetch upstream: $UPSTREAM_REPO ($UPSTREAM_REF)"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
@@ -16,8 +26,7 @@ git -C "$tmpdir" remote add origin "$UPSTREAM_REPO"
 git -C "$tmpdir" fetch -q origin "${UPSTREAM_REF#origin/}" --depth 1
 
 echo "==> Replace $PO"
-rm -rf "$PO"
-mkdir -p "$PO"
+replace_tree "$PO"
 git -C "$tmpdir" archive FETCH_HEAD | tar -x -C "$PO"
 
 echo "==> Apply WASH-PRO-CRM patches"
@@ -40,6 +49,13 @@ bash "$ROOT/patches/pyorchestrator-wash/apply-wash-patches.sh" "$PO"
 PO_VERSION="$(grep -E '^APP_VERSION=' "$PO/.env.example" 2>/dev/null | cut -d= -f2 || echo '?')"
 if [ -f "$ROOT/.env.example" ] && [ "$PO_VERSION" != '?' ]; then
   perl -i -pe "s/^PYORCHESTRATOR_VERSION=.*/PYORCHESTRATOR_VERSION=$PO_VERSION/" "$ROOT/.env.example"
+fi
+if [ -f "$ROOT/.env" ] && [ "$PO_VERSION" != '?' ]; then
+  if grep -q '^PYORCHESTRATOR_VERSION=' "$ROOT/.env"; then
+    perl -i -pe "s/^PYORCHESTRATOR_VERSION=.*/PYORCHESTRATOR_VERSION=$PO_VERSION/" "$ROOT/.env"
+  else
+    echo "PYORCHESTRATOR_VERSION=$PO_VERSION" >> "$ROOT/.env"
+  fi
 fi
 
 echo "==> PyOrchestrator v$PO_VERSION"

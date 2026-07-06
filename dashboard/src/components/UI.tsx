@@ -23,9 +23,9 @@ export function PageHeader({
 
   return (
     <div className="mb-6 flex flex-col gap-3 border-b border-panel-border pb-5 dark:border-panel-border-dark sm:mb-8 sm:gap-4 sm:pb-6 md:flex-row md:items-start md:justify-between">
-      <div className="flex min-w-0 flex-1 items-stretch gap-5 pl-1 sm:gap-6 sm:pl-2 md:gap-7">
+      <div className="flex min-w-0 flex-1 items-stretch gap-5 sm:gap-6 sm:pl-2 md:gap-7">
         {RouteIcon && (
-          <div className="flex shrink-0 items-stretch" aria-hidden>
+          <div className="hidden shrink-0 items-stretch sm:flex" aria-hidden>
             <div className="flex aspect-square h-full min-h-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-500/10 dark:bg-brand-400/10 dark:text-brand-400 dark:ring-brand-400/20 sm:min-h-12">
               <RouteIcon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={1.75} />
             </div>

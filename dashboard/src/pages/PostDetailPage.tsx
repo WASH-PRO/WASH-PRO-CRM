@@ -420,10 +420,10 @@ export function PostDetailPage() {
         toolbarPlacement="start"
         bulkActions={historyBulkActions}
         toolbar={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="toolbar-cluster">
             <input
               type="date"
-              className="input !h-8 !w-auto !py-1.5 !px-3 text-sm"
+              className="input-inline"
               value={historyDateFrom}
               onChange={(e) => setHistoryDateFrom(e.target.value)}
               aria-label="С"
@@ -431,21 +431,21 @@ export function PostDetailPage() {
             <span className="text-sm text-panel-muted">—</span>
             <input
               type="date"
-              className="input !h-8 !w-auto !py-1.5 !px-3 text-sm"
+              className="input-inline"
               value={historyDateTo}
               onChange={(e) => setHistoryDateTo(e.target.value)}
               aria-label="По"
             />
-            <button type="button" className="btn-secondary !h-8 !py-1.5 !px-3 text-sm" onClick={() => applyHistoryPeriod(null)}>
+            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(null)}>
               Все
             </button>
-            <button type="button" className="btn-secondary !h-8 !py-1.5 !px-3 text-sm" onClick={() => applyHistoryPeriod(0)}>
+            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(0)}>
               Сегодня
             </button>
-            <button type="button" className="btn-secondary !h-8 !py-1.5 !px-3 text-sm" onClick={() => applyHistoryPeriod(7)}>
+            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(7)}>
               7 дн.
             </button>
-            <button type="button" className="btn-secondary !h-8 !py-1.5 !px-3 text-sm" onClick={() => applyHistoryPeriod(30)}>
+            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(30)}>
               30 дн.
             </button>
           </div>

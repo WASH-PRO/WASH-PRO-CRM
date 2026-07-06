@@ -528,6 +528,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Уведомления', slug: 'crm-notifications-list', path: '/api/crm/notifications', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'notifications', description: 'Список уведомлений' },
   { name: 'Создать уведомление', slug: 'crm-notifications-create', path: '/api/crm/notifications', method: 'POST', schema: notificationFields, accessType: 'group', groupKey: 'notifications', description: 'Создать уведомление' },
   { name: 'Обновить уведомление', slug: 'crm-notifications-update', path: '/api/crm/notifications/:id', method: 'PATCH', schema: notificationFields, accessType: 'group', groupKey: 'notifications', description: 'Обновить уведомление' },
+  { name: 'Удалить уведомление', slug: 'crm-notifications-delete', path: '/api/crm/notifications/:id', method: 'DELETE', schema: [], accessType: 'authenticated', groupKey: 'notifications', description: 'Удалить уведомление' },
 
   { name: 'Резервные копии', slug: 'crm-backups-list', path: '/api/crm/backups', method: 'GET', schema: [], accessType: 'group', groupKey: 'backup', description: 'Список резервных копий' },
   { name: 'Создать запись бэкапа', slug: 'crm-backups-create', path: '/api/crm/backups', method: 'POST', schema: backupFields, accessType: 'group', groupKey: 'backup', description: 'Зарегистрировать бэкап' },
@@ -675,12 +676,22 @@ export const DEFAULT_DEMO_POSTS = [
     postNumber: 1,
     name: 'Пост 1',
     serialNumber: 'WP-POST-001',
-    settings: { firmwareVersion: '1.0.0', warrantyUntil: '2027-12-31' },
+    settings: {
+      firmwareVersion: '1.0.0',
+      warrantyUntil: '2027-12-31',
+      mqttLogin: 'WP-POST-001',
+      mqttPassword: 'demo_mqtt_wp001',
+    },
   },
   {
     postNumber: 2,
     name: 'Пост 2',
     serialNumber: 'WP-POST-002',
-    settings: { firmwareVersion: '1.0.0', warrantyUntil: '2027-12-31' },
+    settings: {
+      firmwareVersion: '1.0.0',
+      warrantyUntil: '2027-12-31',
+      mqttLogin: 'WP-POST-002',
+      mqttPassword: 'demo_mqtt_wp002',
+    },
   },
 ] as const;

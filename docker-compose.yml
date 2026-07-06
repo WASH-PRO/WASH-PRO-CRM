@@ -164,6 +164,7 @@ services:
       API_URL: http://dynamic-api:3001
       PROCESSOR_HTTP_PORT: 3022
       MQTT_DEVICE_PREFIX: ${MQTT_DEVICE_PREFIX:-washpro}
+      MQTT_PASSWD_FILE: /mosquitto-config/passwd
       SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
       SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
       REDIS_ENABLED: ${REDIS_ENABLED:-false}
@@ -178,6 +179,8 @@ services:
         condition: service_completed_successfully
     networks:
       - wash-internal
+    volumes:
+      - ${DATA_DIR:-./data}/mosquitto/config:/mosquitto-config
 
   # ===========================================================================
   # Redis — опциональный кеш (profile: redis)

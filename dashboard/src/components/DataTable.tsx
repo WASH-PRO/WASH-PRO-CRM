@@ -258,13 +258,13 @@ export function DataTable<T>({
           <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center md:w-auto md:flex-1">
             <div
               className={clsx(
-                'relative min-w-0 flex-1',
+                'search-field',
                 toolbarPlacement === 'start' ? 'md:max-w-sm lg:ml-auto' : 'md:max-w-md'
               )}
             >
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-panel-muted" />
+              <Search size={16} className="search-field-icon" />
               <input
-                className="input input-sm pl-9"
+                className="input-search"
                 placeholder={searchPlaceholder}
                 value={search}
                 onChange={(e) => {
@@ -293,7 +293,7 @@ export function DataTable<T>({
               <div key={f.id} className="min-w-0">
                 <label className="label !mb-1">{f.label}</label>
                 <select
-                  className="input"
+                  className="input input-sm"
                   value={mergedFilterValues[f.id] || ''}
                   onChange={(e) => setFilter(f.id, e.target.value)}
                 >

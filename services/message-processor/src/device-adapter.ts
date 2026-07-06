@@ -171,56 +171,35 @@ function mapFinanceTotals(data: Record<string, unknown>, serial: string): WashMe
 function mapUsages(data: Record<string, unknown>, serial: string): WashMessage[] {
   const ts = nowIso();
 
-  return [
-    {
-      postSerial: serial,
-      messageType: 'statistics',
-      payload: {
-        period: 'before_collection',
-        category: 'regular',
-        clientCount: Number(data.aclients ?? 0),
-        launchCount: Number(data.aservices ?? 0),
-        source: 'washpro',
-      },
-      timestamp: ts,
-    },
-    {
-      postSerial: serial,
-      messageType: 'statistics',
-      payload: {
-        period: 'before_collection',
-        category: 'unlimited',
-        clientCount: Number(data.aunlims ?? 0),
-        launchCount: 0,
-        source: 'washpro',
-      },
-      timestamp: ts,
-    },
-    {
-      postSerial: serial,
-      messageType: 'statistics',
-      payload: {
-        period: 'after_collection',
-        category: 'regular',
-        clientCount: Number(data.tclients ?? 0),
-        launchCount: Number(data.tservices ?? 0),
-        source: 'washpro',
-      },
-      timestamp: ts,
-    },
-    {
-      postSerial: serial,
-      messageType: 'statistics',
-      payload: {
-        period: 'after_collection',
-        category: 'unlimited',
-        clientCount: Number(data.tunlims ?? 0),
-        launchCount: 0,
-        source: 'washpro',
-      },
-      timestamp: ts,
-    },
+  const rows: Array<{
+    key: keyof typeof data;
+    period: 'before_collection' | 'after_collection';
+    category: 'regular' | 'service' | 'unlimited';
+  }> = [
+    { key: 'aclients', period: 'before_collection', category: 'regular' },
+    { key: 'aservices', period: 'before_collection', category: 'service' },
+    { key: 'aunlims', period: 'before_collection', category: 'unlimited' },
+    { key: 'tclients', period: 'after_collection', category: 'regular' },
+    { key: 'tservices', period: 'after_collection', category: 'service' },
+    { key: 'tunlims', period: 'after_collection', category: 'unlimited' },
   ];
+
+  return rows.map(({ key, period, category }) => {
+    const minutes = Number(data[key] ?? 0);
+    return {
+      postSerial: serial,
+      messageType: 'statistics',
+      payload: {
+        period,
+        category,
+        usageTime: minutes * 60,
+        clientCount: minutes,
+        launchCount: 0,
+        source: 'washpro',
+      },
+      timestamp: ts,
+    };
+  });
 }
 
 const CREDIT_TYPE_LABELS = ['наличные', 'безнал', 'скидка'] as const;

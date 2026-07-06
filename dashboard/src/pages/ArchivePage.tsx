@@ -370,7 +370,7 @@ export function ArchivePage() {
                 {canRun && (
                   <button
                     type="button"
-                    className="btn-secondary !py-1.5 !px-3 text-xs"
+                    className="btn-secondary btn-sm text-xs"
                     disabled={runningGroup === key}
                     onClick={() => runArchive(key)}
                   >

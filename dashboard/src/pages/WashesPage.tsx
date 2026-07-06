@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { api, apiList } from '../api/client';
+import { api, apiListCatalog, clearCatalogCache } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
@@ -24,8 +24,8 @@ export function WashesPage() {
 
   const fetchData = useCallback(async () => {
     const [washes, posts] = await Promise.all([
-      apiList<Wash>('/crm/washes'),
-      apiList<Post>('/crm/posts'),
+      apiListCatalog<Wash>('/crm/washes'),
+      apiListCatalog<Post>('/crm/posts'),
     ]);
     return { washes, posts };
   }, []);
@@ -63,6 +63,8 @@ export function WashesPage() {
     if (!confirm('Удалить объект и все посты с данными (состояние, карты, статистика, MQTT)?')) return;
     try {
       await api(`/crm/washes/${id}`, { method: 'DELETE' });
+      clearCatalogCache('/api/crm/washes');
+      clearCatalogCache('/api/crm/posts');
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления');
@@ -185,6 +187,8 @@ export function WashesPage() {
           `Удалить ${ids.length} автомоек и все посты с данными?`,
         onAction: async (_rows, ids) => {
           await bulkDelete('/crm/washes', ids);
+          clearCatalogCache('/api/crm/washes');
+          clearCatalogCache('/api/crm/posts');
           refresh();
         },
       });
@@ -210,6 +214,7 @@ export function WashesPage() {
         await api('/crm/washes', { method: 'POST', body: JSON.stringify(body) });
       }
       setModal(false);
+      clearCatalogCache('/api/crm/washes');
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка сохранения');

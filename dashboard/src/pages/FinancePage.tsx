@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
-import { apiList } from '../api/client';
+import { apiListBounded, apiListCatalog } from '../api/client';
 import { PageHeader, Loading, StatCard, periodLabel } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
@@ -217,9 +217,9 @@ export function FinancePage() {
 
   const fetchData = useCallback(async (): Promise<FinancePageData> => {
     const [stats, posts, washes] = await Promise.all([
-      apiList<FinanceStat>('/crm/finance-stats'),
-      apiList<Post>('/crm/posts'),
-      apiList<Wash>('/crm/washes'),
+      apiListBounded<FinanceStat>('/crm/finance-stats'),
+      apiListCatalog<Post>('/crm/posts'),
+      apiListCatalog<Wash>('/crm/washes'),
     ]);
     return { stats, posts, washes };
   }, []);

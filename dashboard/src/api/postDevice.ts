@@ -37,3 +37,8 @@ export async function sendPostCommand(
   });
   return parseJson(res);
 }
+
+export async function syncMqttUsers(): Promise<{ postUsers: number }> {
+  const res = await fetchWithAuth('/api/crm/post-device/mqtt/sync-users', { method: 'POST' });
+  return parseJson(res);
+}

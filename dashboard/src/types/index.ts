@@ -77,6 +77,10 @@ export interface PostSettings {
   features?: string;
   /** Префикс MQTT топика (dt_pref), по умолчанию washpro */
   mqttPrefix?: string;
+  /** Логин MQTT для панели (rm_login) */
+  mqttLogin?: string;
+  /** Пароль MQTT для панели (rm_pass) */
+  mqttPassword?: string;
   /** Цены режимов: ключ — код режима (0–9) */
   modePrices?: Record<string, number>;
   pricesUpdatedAt?: string;

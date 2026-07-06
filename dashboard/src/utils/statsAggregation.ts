@@ -24,6 +24,28 @@ export function latestFinanceByPost(stats: FinanceStat[]): FinanceStat[] {
   return [...byKey.values()];
 }
 
+/** Секунды использования: usageTime или legacy clientCount/launchCount (минуты с панели). */
+export function resolveUsageSeconds(stat: UsageStat): number {
+  if (stat.usageTime != null && stat.usageTime > 0) return stat.usageTime;
+  if (stat.clientCount != null && stat.clientCount > 0) return stat.clientCount * 60;
+  if (stat.launchCount != null && stat.launchCount > 0) return stat.launchCount * 60;
+  return 0;
+}
+
+/** Сумма секунд по категории с учётом legacy-маппинга aservices → regular.launchCount. */
+export function resolveCategoryUsageSeconds(
+  stats: UsageStat[],
+  category: UsageStat['category']
+): number {
+  const total = stats
+    .filter((s) => s.category === category)
+    .reduce((sum, s) => sum + resolveUsageSeconds(s), 0);
+  if (total > 0 || category !== 'service') return total;
+  return stats
+    .filter((s) => s.category === 'regular')
+    .reduce((sum, s) => sum + (s.launchCount || 0) * 60, 0);
+}
+
 /** Последняя запись на каждый пост, период и категорию (использование). */
 export function latestUsageByPostAndCategory(stats: UsageStat[]): UsageStat[] {
   const byKey = new Map<string, UsageStat>();

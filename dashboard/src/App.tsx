@@ -1,45 +1,50 @@
+import { Suspense, lazy, type ComponentType, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
 import { Loading } from './components/UI';
 import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { WashesPage } from './pages/WashesPage';
-import { PostsPage } from './pages/PostsPage';
-import { PostDetailPage } from './pages/PostDetailPage';
-import { StatesPage } from './pages/StatesPage';
-import {
-  CardsLayout,
-  CardsDiscountPage,
-  CardsServicePage,
-  CardsVipPage,
-  CardsCollectionPage,
-} from './pages/CardsPage';
-import { UsagePage } from './pages/UsagePage';
-import { FinancePage } from './pages/FinancePage';
-import { ArchivePage } from './pages/ArchivePage';
-import { BackupsPage } from './pages/BackupsPage';
-import { TelegramPage } from './pages/TelegramPage';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { CurrencyPage } from './pages/CurrencyPage';
-import { DiscountTypesPage } from './pages/DiscountTypesPage';
-import { WorkModesPage } from './pages/WorkModesPage';
-import { LogsPage } from './pages/LogsPage';
-import { MqttPage } from './pages/MqttPage';
-import { UsersPage } from './pages/UsersPage';
-import { GroupsPage } from './pages/GroupsPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { ProfilePage } from './pages/ProfilePage';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function lazyPage<T extends Record<string, ComponentType>>(loader: () => Promise<T>, name: keyof T) {
+  return lazy(() => loader().then((m) => ({ default: m[name] as ComponentType })));
+}
+
+const DashboardPage = lazyPage(() => import('./pages/DashboardPage'), 'DashboardPage');
+const WashesPage = lazyPage(() => import('./pages/WashesPage'), 'WashesPage');
+const PostsPage = lazyPage(() => import('./pages/PostsPage'), 'PostsPage');
+const PostDetailPage = lazyPage(() => import('./pages/PostDetailPage'), 'PostDetailPage');
+const StatesPage = lazyPage(() => import('./pages/StatesPage'), 'StatesPage');
+const UsagePage = lazyPage(() => import('./pages/UsagePage'), 'UsagePage');
+const FinancePage = lazyPage(() => import('./pages/FinancePage'), 'FinancePage');
+const ArchivePage = lazyPage(() => import('./pages/ArchivePage'), 'ArchivePage');
+const BackupsPage = lazyPage(() => import('./pages/BackupsPage'), 'BackupsPage');
+const TelegramPage = lazyPage(() => import('./pages/TelegramPage'), 'TelegramPage');
+const NotificationsPage = lazyPage(() => import('./pages/NotificationsPage'), 'NotificationsPage');
+const CurrencyPage = lazyPage(() => import('./pages/CurrencyPage'), 'CurrencyPage');
+const DiscountTypesPage = lazyPage(() => import('./pages/DiscountTypesPage'), 'DiscountTypesPage');
+const WorkModesPage = lazyPage(() => import('./pages/WorkModesPage'), 'WorkModesPage');
+const LogsPage = lazyPage(() => import('./pages/LogsPage'), 'LogsPage');
+const MqttPage = lazyPage(() => import('./pages/MqttPage'), 'MqttPage');
+const UsersPage = lazyPage(() => import('./pages/UsersPage'), 'UsersPage');
+const GroupsPage = lazyPage(() => import('./pages/GroupsPage'), 'GroupsPage');
+const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPage');
+const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'ProfilePage');
+
+const CardsLayout = lazyPage(() => import('./pages/CardsPage'), 'CardsLayout');
+const CardsDiscountPage = lazyPage(() => import('./pages/CardsPage'), 'CardsDiscountPage');
+const CardsServicePage = lazyPage(() => import('./pages/CardsPage'), 'CardsServicePage');
+const CardsVipPage = lazyPage(() => import('./pages/CardsPage'), 'CardsVipPage');
+const CardsCollectionPage = lazyPage(() => import('./pages/CardsPage'), 'CardsCollectionPage');
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
-function AdminRoute({ children }: { children: React.ReactNode }) {
+function AdminRoute({ children }: { children: ReactNode }) {
   const { isAdmin } = useAuth();
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -95,7 +100,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <Suspense fallback={<Loading />}>
+            <AppRoutes />
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

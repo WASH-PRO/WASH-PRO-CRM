@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
-import { apiList } from '../api/client';
+import { apiListBounded, apiListCatalog } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, Badge, ErrorMessage } from '../components/UI';
 import { TabNav } from '../components/TabNav';
@@ -223,9 +223,9 @@ function CardsTable({
 
   const fetchData = useCallback(async (signal: AbortSignal) => {
     const [cards, posts, washes] = await Promise.all([
-      apiList<Card>('/crm/cards?populate=postId,washId', signal),
-      apiList<Post>('/crm/posts', signal),
-      apiList<Wash>('/crm/washes', signal),
+      apiListBounded<Card>('/crm/cards?populate=postId,washId', signal, 20),
+      apiListCatalog<Post>('/crm/posts', signal),
+      apiListCatalog<Wash>('/crm/washes', signal),
     ]);
     return {
       cards: cards.map((c) => ({ ...c, status: normalizeCardStatus(c.status) })),

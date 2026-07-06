@@ -15,7 +15,7 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { categoryLabel } from './UI';
 import { formatMoney, type CurrencyConfig } from '../utils/format';
-import { latestUsageByPostAndCategory } from '../utils/statsAggregation';
+import { latestUsageByPostAndCategory, resolveCategoryUsageSeconds } from '../utils/statsAggregation';
 import type { FinanceStat, Post, UsageStat } from '../types';
 
 const CATEGORY_COLORS = ['#0891b2', '#6366f1', '#0f766e'];
@@ -89,9 +89,7 @@ export function DashboardCharts({
     const latest = latestUsageByPostAndCategory(usageStats);
     const cats = ['regular', 'service', 'unlimited'] as const;
     return cats.map((category, i) => {
-      const usageTime = latest
-        .filter((s) => s.category === category)
-        .reduce((sum, s) => sum + (s.usageTime || 0), 0);
+      const usageTime = resolveCategoryUsageSeconds(latest, category);
       return {
         name: usageChartLabel[category],
         value: usageTime,

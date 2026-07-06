@@ -1,8 +1,8 @@
-import { api, apiList } from './client';
+import { api, apiListCatalog, clearCatalogCache } from './client';
 import type { CrmSetting } from '../types';
 
 export async function listCrmSettings(): Promise<CrmSetting[]> {
-  return apiList<CrmSetting>('/crm/settings');
+  return apiListCatalog<CrmSetting>('/crm/settings');
 }
 
 export async function saveCrmSetting(
@@ -11,15 +11,19 @@ export async function saveCrmSetting(
   id: string | null
 ): Promise<CrmSetting> {
   if (id) {
-    return api<CrmSetting>(`/crm/settings/${id}`, {
+    const result = await api<CrmSetting>(`/crm/settings/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ key, value }),
     });
+    clearCatalogCache('/api/crm/settings');
+    return result;
   }
-  return api<CrmSetting>('/crm/settings', {
+  const result = await api<CrmSetting>('/crm/settings', {
     method: 'POST',
     body: JSON.stringify({ key, value }),
   });
+  clearCatalogCache('/api/crm/settings');
+  return result;
 }
 
 export function findCrmSetting(settings: CrmSetting[], key: string): CrmSetting | undefined {

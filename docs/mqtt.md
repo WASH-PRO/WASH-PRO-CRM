@@ -93,7 +93,7 @@ MQTT_BIND=127.0.0.1
 |--------|----------|-------------------|
 | `process` | Состояние поста (~1 с) | `state` |
 | `totals` | Счётчики финансов (~30 с) | `finance` (2 записи: до/после инкассации) |
-| `usages` | Счётчики использования (~30 с) | `statistics` (4 записи по period/category) |
+| `usages` | Счётчики использования (~30 с) | `statistics` (6 записей: regular/service/unlimited × до/после инкассации) |
 | `credit` | Зачисление (панель) | `event` (`eventType: credit`) |
 | `card` | NFC / инкассация (панель) | `card` |
 
@@ -148,6 +148,19 @@ MQTT_BIND=127.0.0.1
   "aunlims": 3
 }
 ```
+
+Значения — **минуты** использования по категориям карт:
+
+| Поле | Период | Категория CRM |
+|------|--------|----------------|
+| `aclients` | до инкассации | `regular` (скидочные клиенты) |
+| `aservices` | до инкассации | `service` (сервисное обслуживание) |
+| `aunlims` | до инкассации | `unlimited` (VIP) |
+| `tclients` | после инкассации | `regular` |
+| `tservices` | после инкассации | `service` |
+| `tunlims` | после инкассации | `unlimited` |
+
+В CRM сохраняются как `usageTime` (секунды = минуты × 60) и `clientCount` (минуты с панели).
 
 ### state/credit (панель)
 
@@ -232,6 +245,7 @@ CRM отправляет команды и цены в топики:
 |-------|------------------------|------------|
 | `POST` | `/api/crm/post-device/posts/{serial}/prices` | Сохранить цены и/или отправить на пост |
 | `POST` | `/api/crm/post-device/posts/{serial}/command` | Отправить команду на пост |
+| `POST` | `/api/crm/post-device/mqtt/sync-users` | Применить учётные записи постов в Mosquitto |
 
 Авторизация: заголовок `Authorization: Bearer <JWT>` (тот же токен, что у Dashboard).
 
@@ -326,7 +340,7 @@ curl -s -X POST http://localhost/api/crm/post-device/posts/SN123/command \
 | `rm_en` | `1` |
 | `rm_addr` | IP сервера CRM |
 | `rm_port` | `1883` |
-| `rm_login` / `rm_pass` | `MQTT_USER` / `MQTT_PASSWORD` из `.env` |
+| `rm_login` / `rm_pass` | Логин и пароль из карточки поста в CRM (`settings.mqttLogin` / `settings.mqttPassword`) |
 | `dt_pref` | например `washpro` |
 
 ## Legacy envelope (wash/telemetry)

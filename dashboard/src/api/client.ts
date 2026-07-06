@@ -188,6 +188,40 @@ export async function apiListDictionary<T>(path: string, signal?: AbortSignal): 
   return data;
 }
 
+const catalogCache = new Map<string, { expires: number; data: unknown[] }>();
+const CATALOG_CACHE_MS = 45_000;
+
+export function clearCatalogCache(pathPrefix?: string): void {
+  if (!pathPrefix) {
+    catalogCache.clear();
+    return;
+  }
+  for (const key of catalogCache.keys()) {
+    if (key.startsWith(pathPrefix)) catalogCache.delete(key);
+  }
+}
+
+/** Справочники (мойки, посты, настройки) — одна страница + краткий кэш в сессии. */
+export async function apiListCatalog<T>(path: string, signal?: AbortSignal): Promise<T[]> {
+  const cacheKey = path.split('?')[0]!;
+  const hit = catalogCache.get(cacheKey);
+  if (hit && Date.now() < hit.expires) {
+    return hit.data as T[];
+  }
+  const data = await apiListDictionary<T>(path, signal);
+  catalogCache.set(cacheKey, { data, expires: Date.now() + CATALOG_CACHE_MS });
+  return data;
+}
+
+/** Крупные коллекции — ограниченное число страниц вместо полного обхода. */
+export async function apiListBounded<T>(
+  path: string,
+  signal?: AbortSignal,
+  maxPages = 15
+): Promise<T[]> {
+  return apiListAll<T>(path, 100, maxPages, signal);
+}
+
 export async function apiList<T>(path: string, signal?: AbortSignal): Promise<T[]> {
   return apiListAll<T>(path, 100, 100, signal);
 }

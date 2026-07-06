@@ -3,6 +3,7 @@ import { processMessage, WashMessage } from './processor.js';
 import { apiRequest, logger } from './api-client.js';
 import { connectMqtt, DLQ_TOPIC, getMqttClient } from './mqtt-client.js';
 import { startProcessorHttpServer } from './http.js';
+import { syncMqttUsersFromPosts } from './mqtt-users.js';
 import { syncPricesFromDevice } from './post-settings.js';
 
 function normalizeIncoming(topic: string, raw: unknown): WashMessage[] {
@@ -97,6 +98,11 @@ function main(): void {
     void handleMessage(topic, payload);
   });
   startProcessorHttpServer();
+  setTimeout(() => {
+    void syncMqttUsersFromPosts().catch((err) => {
+      logger.warn({ err }, 'Startup MQTT user sync failed (non-fatal)');
+    });
+  }, 8000);
 }
 
 main();

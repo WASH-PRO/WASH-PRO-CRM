@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiList } from '../api/client';
+import { apiListBounded, apiListCatalog } from '../api/client';
 import { PageHeader, Loading, ErrorMessage } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { usePolling } from '../hooks/usePolling';
@@ -49,10 +49,10 @@ export function StatesPage() {
 
   const fetchData = useCallback(async (signal: AbortSignal) => {
     const [states, posts, washes, cards] = await Promise.all([
-      apiList<PostState>('/crm/post-states', signal),
-      apiList<Post>('/crm/posts?populate=washId', signal),
-      apiList<Wash>('/crm/washes', signal),
-      apiList<Card>('/crm/cards', signal),
+      apiListBounded<PostState>('/crm/post-states', signal, 5),
+      apiListCatalog<Post>('/crm/posts?populate=washId', signal),
+      apiListCatalog<Wash>('/crm/washes', signal),
+      apiListBounded<Card>('/crm/cards', signal, 5),
     ]);
     const stateByPost = new Map(latestPostStateByPost(states).map((s) => [refId(s.postId), s]));
     const washById = new Map(washes.map((w) => [w.id, w]));

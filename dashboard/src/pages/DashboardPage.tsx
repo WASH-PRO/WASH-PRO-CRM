@@ -1,14 +1,20 @@
 import { useCallback, useMemo } from 'react';
-import { apiList } from '../api/client';
-import { PageHeader, StatCard, Loading, Badge } from '../components/UI';
-import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
+import { api, apiListBounded, apiListCatalog } from '../api/client';
+import { PageHeader, StatCard, Loading } from '../components/UI';
+import { DataTable } from '../components/DataTable';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { LIVE_INTERVAL_DASHBOARD_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
 import { formatMoney } from '../utils/format';
-import { bulkPatch } from '../utils/bulk';
-import { createExportBulkAction } from '../utils/export';
+import { bulkDelete } from '../utils/bulk';
+import {
+  NOTIFICATIONS_DASHBOARD_LIMIT,
+  createNotificationBulkActions,
+  createNotificationColumns,
+  fetchRecentNotifications,
+  notificationFilters,
+} from '../utils/notificationsTable';
 import { refId } from '../utils/refs';
 import { latestFinanceByPost, latestPostStateByPost, isPostOnline } from '../utils/statsAggregation';
 import type { Wash, Post, PostState, Notification, UsageStat, FinanceStat } from '../types';
@@ -18,6 +24,7 @@ interface DashboardData {
   posts: Post[];
   states: PostState[];
   notifications: Notification[];
+  notificationTotal: number;
   usageStats: UsageStat[];
   financeStats: FinanceStat[];
 }
@@ -25,19 +32,49 @@ interface DashboardData {
 export function DashboardPage() {
   const { currency } = useCurrency();
 
-  const fetchData = useCallback(async (): Promise<DashboardData> => {
-    const [washes, posts, states, notifications, usageStats, financeStats] = await Promise.all([
-      apiList<Wash>('/crm/washes'),
-      apiList<Post>('/crm/posts'),
-      apiList<PostState>('/crm/post-states'),
-      apiList<Notification>('/crm/notifications'),
-      apiList<UsageStat>('/crm/usage-stats'),
-      apiList<FinanceStat>('/crm/finance-stats'),
+  const fetchData = useCallback(async (signal: AbortSignal): Promise<DashboardData> => {
+    const [washes, posts, states, notificationPage, usageStats, financeStats] = await Promise.all([
+      apiListCatalog<Wash>('/crm/washes', signal),
+      apiListCatalog<Post>('/crm/posts', signal),
+      apiListBounded<PostState>('/crm/post-states', signal, 5),
+      fetchRecentNotifications(NOTIFICATIONS_DASHBOARD_LIMIT, signal),
+      apiListBounded<UsageStat>('/crm/usage-stats', signal, 10),
+      apiListBounded<FinanceStat>('/crm/finance-stats', signal, 10),
     ]);
-    return { washes, posts, states, notifications, usageStats, financeStats };
+    return {
+      washes,
+      posts,
+      states,
+      notifications: notificationPage.items,
+      notificationTotal: notificationPage.total,
+      usageStats,
+      financeStats,
+    };
   }, []);
 
   const { data, loading, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_DASHBOARD_MS });
+
+  const markRead = async (id: string) => {
+    await api(`/crm/notifications/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ read: true }),
+    });
+    refresh();
+  };
+
+  const deleteOne = async (id: string) => {
+    if (!confirm('Удалить уведомление?')) return;
+    await bulkDelete('/crm/notifications', [id]);
+    refresh();
+  };
+
+  const notificationColumns = useMemo(
+    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, compact: true }),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+    [refresh]
+  );
+
+  const notificationBulkActions = useMemo(() => createNotificationBulkActions(refresh), [refresh]);
 
   const finance = useMemo(() => {
     if (!data) return { cash: 0, cashless: 0, revenue: 0, discounts: 0 };
@@ -84,93 +121,13 @@ export function DashboardPage() {
     return { online, offline, maintenance, errors };
   }, [data]);
 
-  const notificationFilters: DataTableFilter<Notification>[] = useMemo(
-    () => [
-      {
-        id: 'severity',
-        label: 'Важность',
-        options: [
-          { value: 'error', label: 'Ошибка' },
-          { value: 'warning', label: 'Предупреждение' },
-          { value: 'info', label: 'Информация' },
-        ],
-        match: (n, v) => n.severity === v,
-      },
-      {
-        id: 'read',
-        label: 'Статус',
-        options: [
-          { value: 'unread', label: 'Непрочитанные' },
-          { value: 'read', label: 'Прочитанные' },
-        ],
-        match: (n, v) => (v === 'read' ? n.read : !n.read),
-      },
-    ],
-    []
-  );
-
-  const notificationColumns: DataTableColumn<Notification>[] = useMemo(
-    () => [
-      {
-        key: 'type',
-        header: 'Тип',
-        sortable: true,
-        searchValue: (n) => n.type,
-        sortValue: (n) => n.type,
-        render: (n) => (
-          <Badge variant={n.severity === 'error' ? 'error' : n.severity === 'warning' ? 'warning' : 'default'}>
-            {n.type}
-          </Badge>
-        ),
-      },
-      {
-        key: 'message',
-        header: 'Сообщение',
-        sortable: true,
-        searchValue: (n) => n.message,
-        sortValue: (n) => n.message,
-        render: (n) => <span className="text-sm">{n.message}</span>,
-      },
-      {
-        key: 'date',
-        header: 'Дата',
-        sortable: true,
-        sortValue: (n) => n.createdAt || '',
-        render: (n) => (
-          <span className="text-sm text-panel-muted dark:text-panel-muted-dark">
-            {n.createdAt ? new Date(n.createdAt).toLocaleString('ru') : '—'}
-          </span>
-        ),
-      },
-    ],
-    []
-  );
-
-  const notificationBulkActions = useMemo((): DataTableBulkAction<Notification>[] => [
-    createExportBulkAction('notifications.csv', [
-      { header: 'Тип', value: (n) => n.type },
-      { header: 'Важность', value: (n) => n.severity || '' },
-      { header: 'Сообщение', value: (n) => n.message },
-      { header: 'Дата', value: (n) => n.createdAt || '' },
-    ]),
-    {
-      id: 'mark-read',
-      label: 'Отметить прочитанными',
-      disabled: (rows) => rows.every((n) => n.read),
-      onAction: async (rows) => {
-        const unread = rows.filter((n) => !n.read);
-        await bulkPatch('/crm/notifications', unread, (n) => n.id, { read: true });
-        refresh();
-      },
-    },
-  ], [refresh]);
-
   if (loading && !data) return <Loading />;
   if (!data) return <Loading />;
 
-  const recentNotifications = [...data.notifications]
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-    .slice(0, 50);
+  const notificationHint =
+    data.notificationTotal > NOTIFICATIONS_DASHBOARD_LIMIT
+      ? ` · последние ${NOTIFICATIONS_DASHBOARD_LIMIT} из ${data.notificationTotal}`
+      : '';
 
   return (
     <div>
@@ -195,16 +152,22 @@ export function DashboardPage() {
       />
 
       <div className="card">
-        <h2 className="mb-4 font-semibold">Последние уведомления</h2>
+        <h2 className="mb-1 font-semibold text-panel-ink dark:text-panel-ink-dark">Последние уведомления</h2>
+        {notificationHint && (
+          <p className="field-hint mb-4">Показаны{notificationHint}</p>
+        )}
+        {!notificationHint && <div className="mb-4" />}
         <DataTable
           tableId="dashboard-notifications"
           columns={notificationColumns}
-          data={recentNotifications}
+          data={data.notifications}
           rowKey={(n) => n.id}
-          filters={notificationFilters}
+          filters={notificationFilters(false)}
           searchPlaceholder="Поиск уведомлений…"
           pageSize={10}
           emptyMessage="Нет уведомлений"
+          defaultSortKey="date"
+          defaultSortDir="desc"
           bulkActions={notificationBulkActions}
         />
       </div>

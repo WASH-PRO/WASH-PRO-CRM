@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
-import { apiList } from '../api/client';
+import { apiListBounded, apiListCatalog } from '../api/client';
 import { PageHeader, Loading, StatCard, periodLabel, categoryLabel } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
@@ -13,6 +13,8 @@ import {
   resolvePostNumber,
   resolveStatPostId,
   resolveStatWashAddress,
+  resolveCategoryUsageSeconds,
+  resolveUsageSeconds,
 } from '../utils/statsAggregation';
 import type { Post, UsageStat, Wash } from '../types';
 
@@ -21,6 +23,11 @@ const USAGE_CATEGORIES = [
   { key: 'service', label: 'Сервисное использование' },
   { key: 'unlimited', label: 'VIP-использование' },
 ] as const;
+
+const usageCategoryLabel: Record<string, string> = {
+  ...categoryLabel,
+  regular: 'Обычные клиенты',
+};
 
 interface UsagePageData {
   stats: UsageStat[];
@@ -72,8 +79,8 @@ function PeriodUsageSection({
 
   const totals = useMemo(() => {
     const result: Record<string, number> = { regular: 0, service: 0, unlimited: 0 };
-    filtered.forEach((s) => {
-      result[s.category] = (result[s.category] || 0) + (s.usageTime || 0);
+    (['regular', 'service', 'unlimited'] as const).forEach((category) => {
+      result[category] = resolveCategoryUsageSeconds(filtered, category);
     });
     return result;
   }, [filtered]);
@@ -100,9 +107,9 @@ function PeriodUsageSection({
       id: 'category',
       label: 'Категория',
       options: [
-        { value: 'regular', label: categoryLabel.regular },
-        { value: 'service', label: categoryLabel.service },
-        { value: 'unlimited', label: categoryLabel.unlimited },
+        { value: 'regular', label: usageCategoryLabel.regular },
+        { value: 'service', label: usageCategoryLabel.service },
+        { value: 'unlimited', label: usageCategoryLabel.unlimited },
       ],
       match: (s, v) => s.category === v,
     }),
@@ -131,16 +138,16 @@ function PeriodUsageSection({
         key: 'category',
         header: 'Категория',
         sortable: true,
-        searchValue: (s) => categoryLabel[s.category] || s.category,
+        searchValue: (s) => usageCategoryLabel[s.category] || s.category,
         sortValue: (s) => s.category,
-        render: (s) => categoryLabel[s.category] || s.category,
+        render: (s) => usageCategoryLabel[s.category] || s.category,
       },
       {
         key: 'usageTime',
         header: 'Время использования',
         sortable: true,
-        sortValue: (s) => s.usageTime,
-        render: (s) => formatDurationHuman(s.usageTime),
+        sortValue: (s) => resolveUsageSeconds(s),
+        render: (s) => formatDurationHuman(resolveUsageSeconds(s)),
       },
       {
         key: 'launchCount',
@@ -171,8 +178,8 @@ function PeriodUsageSection({
     createExportBulkAction(`usage-${title}.csv`, [
       { header: 'Пост', value: (s) => postNumber(s) },
       { header: 'Адрес объекта', value: (s) => address(s) },
-      { header: 'Категория', value: (s) => categoryLabel[s.category] || s.category },
-      { header: 'Время (сек)', value: (s) => String(s.usageTime ?? 0) },
+      { header: 'Категория', value: (s) => usageCategoryLabel[s.category] || s.category },
+      { header: 'Время (сек)', value: (s) => String(resolveUsageSeconds(s)) },
       { header: 'Запуски', value: (s) => String(s.launchCount ?? 0) },
       { header: 'Клиенты', value: (s) => String(s.clientCount ?? 0) },
       { header: 'Дата и время', value: (s) => s.recordedAt || '' },
@@ -237,9 +244,9 @@ function PeriodUsageSection({
 export function UsagePage() {
   const fetchData = useCallback(async (): Promise<UsagePageData> => {
     const [stats, posts, washes] = await Promise.all([
-      apiList<UsageStat>('/crm/usage-stats'),
-      apiList<Post>('/crm/posts'),
-      apiList<Wash>('/crm/washes'),
+      apiListBounded<UsageStat>('/crm/usage-stats'),
+      apiListCatalog<Post>('/crm/posts'),
+      apiListCatalog<Wash>('/crm/washes'),
     ]);
     return { stats, posts, washes };
   }, []);

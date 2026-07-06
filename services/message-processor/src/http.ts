@@ -14,6 +14,7 @@ import {
   sanitizeSerial,
 } from './post-device.js';
 import { mergePostSettings } from './post-settings.js';
+import { syncMqttUsersFromPosts } from './mqtt-users.js';
 
 const logger = pino({ level: 'info' });
 const PORT = parseInt(process.env.PROCESSOR_HTTP_PORT || '3022', 10);
@@ -65,6 +66,21 @@ export function startProcessorHttpServer(): void {
     const url = req.url?.split('?')[0] ?? '';
     const pricesMatch = url.match(/^\/posts\/([^/]+)\/prices$/);
     const commandMatch = url.match(/^\/posts\/([^/]+)\/command$/);
+    const syncUsersPath = url === '/mqtt/sync-users';
+
+    if (req.method === 'POST' && syncUsersPath) {
+      try {
+        const result = await syncMqttUsersFromPosts();
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, data: result }));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'MQTT user sync failed';
+        logger.error({ err }, 'MQTT user sync failed');
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, error: message }));
+      }
+      return;
+    }
 
     if (req.method === 'POST' && pricesMatch) {
       const serial = sanitizeSerial(decodeURIComponent(pricesMatch[1]!));

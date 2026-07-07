@@ -240,6 +240,11 @@ export interface DynamicApiCrmSettings {
   apiBaseUrl: string;
 }
 
+export interface MqttBrokerSettings {
+  systemLogin: string;
+  systemPassword: string;
+}
+
 export interface SetupSettings {
   complete: boolean;
   completedAt?: string;

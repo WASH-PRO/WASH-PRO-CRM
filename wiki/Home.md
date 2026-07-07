@@ -14,7 +14,7 @@
 - Уведомления web + Telegram, настраиваемые типы событий
 - Пользователи и группы RBAC в Dashboard, профиль пользователя
 - **Telegram-боты** (несколько) через PyOrchestrator + pyorch-bridge
-- MQTT (Mosquitto): изоляция постов по serial, `superadmin` для CRM
+- MQTT (Mosquitto): изоляция постов по serial, `system` для CRM
 - Live-обновление 3–15 с
 
 ## Быстрый старт

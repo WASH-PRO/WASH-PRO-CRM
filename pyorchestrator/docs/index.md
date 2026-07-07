@@ -9,8 +9,8 @@ layout: default
     <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/actions/workflows/ci.yml" target="_blank" rel="noopener">
       <img src="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/actions/workflows/ci.yml/badge.svg" alt="CI" width="88" height="20">
     </a>
-    <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/releases/tag/v0.1.0" target="_blank" rel="noopener">
-      <img src="https://img.shields.io/github/v/release/{{ site.github_org }}/{{ site.github_repo }}?label=release&amp;color=22d3ee" alt="Release v0.1.0" width="88" height="20">
+    <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/releases/latest" target="_blank" rel="noopener">
+      <img src="https://img.shields.io/github/v/release/{{ site.github_org }}/{{ site.github_repo }}?label=release&amp;color=22d3ee" alt="Latest release" width="88" height="20">
     </a>
     <a href="https://github.com/{{ site.github_org }}/{{ site.github_repo }}/blob/main/LICENSE" target="_blank" rel="noopener">
       <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache License 2.0" width="120" height="20">
@@ -25,7 +25,7 @@ layout: default
   </p>
 </div>
 
-> **27 июня 2026** — опубликован [первый релиз v0.1.0](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0).
+> **7 июля 2026** — опубликован [релиз v0.1.12](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12): исправления API скриптов, удаление с уведомлениями, устойчивость runtime к Redis.
 > См. [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
 
 **PyOrchestrator** — платформа для создания, планирования, запуска и мониторинга Python-автоматизации в фиксированном стеке Docker Compose: веб-интерфейс, API, планировщик, изолированный runtime, наблюдаемость и MCP-сервер для AI-агентов.
@@ -51,7 +51,7 @@ layout: default
 | **Секреты** | Шифрованное хранилище на скрипт, инъекция в runtime |
 | **Бэкапы** | Ручные и по расписанию, восстановление |
 | **Оповещения** | In-app уведомления по событиям runs |
-| **Наблюдаемость** | Prometheus, Grafana, Loki |
+| **Наблюдаемость** | Prometheus, Grafana, Loki (блок в UI — только при доступной Grafana) |
 | **MCP** | 24+ инструментов для Cursor и других AI-агентов |
 | **RBAC** | Administrator / Developer / Operator / Viewer |
 
@@ -81,9 +81,10 @@ docker compose up --build
 |--------|-----|
 | Панель управления | http://localhost:5173 |
 | API + Swagger | http://localhost:8000/docs |
-| Grafana | http://localhost:3000 |
+| Grafana | http://localhost:3000 (если `GRAFANA_ENABLED=true` и сервис запущен) |
 | Prometheus | http://localhost:9090 |
-| MinIO Console | http://localhost:9001 |
+| MinIO S3 API | http://localhost:9000 |
+| MinIO Console | http://localhost:9001 (только при `MINIO_CONSOLE_ENABLED=true`) |
 | MCP (HTTP) | http://localhost:8010/mcp |
 
 **Логин по умолчанию:** `admin@pyorchestrator.local` / `admin` — смените пароль и секреты в `.env` перед production.

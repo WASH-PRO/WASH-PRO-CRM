@@ -38,7 +38,7 @@ docker compose up --build
 | backend | 8000 | REST API |
 | postgres | 5432 | Метаданные |
 | redis | 6379 | Очередь jobs |
-| minio | 9000 / 9001 | S3 API / Console |
+| minio | 9000 (+ 9001 при `MINIO_CONSOLE_ENABLED=true`) | S3 API / опциональная Console |
 | grafana | 3000 | Дашборды |
 | prometheus | 9090 | Метрики |
 | mcp | 8010 | MCP HTTP |

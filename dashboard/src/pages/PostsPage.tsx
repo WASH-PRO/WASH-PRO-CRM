@@ -375,7 +375,7 @@ export function PostsPage() {
                 Укажите на панели в NVS: <span className="font-mono">rm_addr</span> — IP сервера CRM,{' '}
                 <span className="font-mono">rm_port</span> — {brokerEndpoint.split(':')[1] || '1883'},{' '}
                 <span className="font-mono">rm_login</span> / <span className="font-mono">rm_pass</span> — значения ниже.
-                Не используйте логин <span className="font-mono">superadmin</span> — он только для CRM.
+                Не используйте логин <span className="font-mono">system</span> — он только для CRM.
               </p>
             </div>
             <div>

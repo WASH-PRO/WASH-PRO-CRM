@@ -16,6 +16,7 @@ from pathlib import Path
 
 import httpx
 import redis.asyncio as aioredis
+import redis.exceptions as redis_exc
 from prometheus_client import start_http_server
 
 from engine.sandbox import SandboxConfig, SandboxPool
@@ -75,24 +76,36 @@ async def backend_get(path: str) -> dict:
 
 async def publish_log(redis: aioredis.Redis, run_id: str, level: str, message: str) -> None:
     data = json.dumps({"level": level, "message": message})
-    await redis.publish(f"run:{run_id}:logs", data)
-    await backend_post("/internal/runs/log", {"run_id": run_id, "level": level, "message": message})
+    try:
+        await redis.publish(f"run:{run_id}:logs", data)
+    except Exception as exc:
+        logger.warning("Redis log publish failed run_id=%s: %s", run_id, exc)
+    try:
+        await backend_post("/internal/runs/log", {"run_id": run_id, "level": level, "message": message})
+    except Exception as exc:
+        logger.warning("Backend log publish failed run_id=%s: %s", run_id, exc)
 
 
 async def watch_stop(redis: aioredis.Redis, run_id: str, pool: SandboxPool) -> None:
     pubsub = redis.pubsub()
     channel = f"run:{run_id}:control"
-    await pubsub.subscribe(channel)
     try:
+        await pubsub.subscribe(channel)
         while True:
-            msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+            try:
+                msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+            except Exception as exc:
+                logger.warning("Redis control channel read failed run_id=%s: %s", run_id, exc)
+                await asyncio.sleep(1)
+                continue
             if msg and msg.get("type") == "message" and msg.get("data") == "stop":
                 pool.stop_run(run_id)
                 return
             await asyncio.sleep(0.1)
     finally:
-        await pubsub.unsubscribe(channel)
-        await pubsub.aclose()
+        with contextlib.suppress(Exception):
+            await pubsub.unsubscribe(channel)
+            await pubsub.aclose()
 
 
 async def process_job(pool: SandboxPool, redis: aioredis.Redis, job: dict) -> None:
@@ -171,15 +184,22 @@ async def process_job(pool: SandboxPool, redis: aioredis.Redis, job: dict) -> No
         logger.info("Finished run_id=%s status=%s", run_id, status)
     except Exception as exc:
         logger.exception("Job failed run_id=%s", run_id)
-        await backend_post("/internal/runs/complete", {
-            "run_id": run_id,
-            "status": "failed",
-            "exit_code": -1,
-            "duration_ms": 0,
-            "stdout": "",
-            "stderr": str(exc),
-            "hostname": HOSTNAME,
-        })
+        try:
+            await backend_post("/internal/runs/complete", {
+                "run_id": run_id,
+                "status": "failed",
+                "exit_code": -1,
+                "duration_ms": 0,
+                "stdout": "",
+                "stderr": str(exc),
+                "hostname": HOSTNAME,
+            })
+        except Exception as complete_exc:
+            logger.error("Failed to report run completion run_id=%s: %s", run_id, complete_exc)
+
+
+async def create_redis_client() -> aioredis.Redis:
+    return aioredis.from_url(REDIS_URL, decode_responses=True, health_check_interval=30)
 
 
 async def main_loop() -> None:
@@ -187,8 +207,8 @@ async def main_loop() -> None:
     start_health_server()
     start_http_server(9093)
 
-    client = aioredis.from_url(REDIS_URL, decode_responses=True)
-    logger.info("Runtime listening queue=%s host=%s", QUEUE_KEY, HOSTNAME)
+    client = await create_redis_client()
+    logger.info("Runtime listening queue=%s redis=%s host=%s", QUEUE_KEY, REDIS_URL, HOSTNAME)
 
     while True:
         try:
@@ -198,6 +218,12 @@ async def main_loop() -> None:
             _, payload = item
             job = json.loads(payload)
             asyncio.create_task(process_job(pool, client, job))
+        except (redis_exc.ConnectionError, OSError, TimeoutError) as exc:
+            logger.warning("Redis connection lost, reconnecting: %s", exc)
+            with contextlib.suppress(Exception):
+                await client.aclose()
+            await asyncio.sleep(2)
+            client = await create_redis_client()
         except Exception:
             logger.exception("Main loop error")
             await asyncio.sleep(1)

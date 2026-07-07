@@ -13,6 +13,7 @@ const PYORCH_PASSWORD = process.env.PYORCH_PASSWORD || 'admin';
 const SERVICE_LOGIN = process.env.SERVICE_LOGIN || 'service';
 const SERVICE_PASSWORD = process.env.SERVICE_PASSWORD || 'ServiceInternal123!';
 const CRM_API_BASE = process.env.CRM_API_BASE_URL || 'http://dynamic-api:3001';
+const PROCESSOR_API_BASE = process.env.PROCESSOR_API_BASE_URL || 'http://message-processor:3022';
 
 interface PyorchScript {
   id: string;
@@ -20,6 +21,7 @@ interface PyorchScript {
   description: string;
   script_type: string;
   status: string;
+  entrypoint?: string;
   metadata: Record<string, unknown>;
   created_at?: string;
   active_run?: { id: string; status: string; started_at: string | null; queued_at: string } | null;
@@ -104,10 +106,20 @@ async function applySecrets(
     await setSecret(scriptId, 'TELEGRAM_TOKEN', input.token.trim());
   }
   await setSecret(scriptId, 'API_BASE_URL', CRM_API_BASE);
+  await setSecret(scriptId, 'PROCESSOR_API_BASE_URL', PROCESSOR_API_BASE);
   await setSecret(scriptId, 'API_LOGIN', SERVICE_LOGIN);
   await setSecret(scriptId, 'API_PASSWORD', SERVICE_PASSWORD);
   await setSecret(scriptId, 'ADMIN_IDS', input.adminIds.join(','));
   await setSecret(scriptId, 'ALLOWED_COMMANDS', input.commands.join(','));
+}
+
+/** Всегда подтягиваем актуальный шаблон бота в main.py перед запуском. */
+async function syncBotCode(script: PyorchScript): Promise<void> {
+  const entrypoint = script.entrypoint || 'main.py';
+  await pyorchFetch(`/scripts/${script.id}/files/${entrypoint}`, {
+    method: 'PUT',
+    body: JSON.stringify({ content: WASH_TELEGRAM_BOT_MAIN }),
+  });
 }
 
 function decodeJwtPermissions(token: string): string[] {
@@ -327,11 +339,18 @@ export function startServer(): void {
               },
             }),
           });
+          await syncBotCode(existing);
           await applySecrets(
             botId,
             { token: body.token, adminIds, commands },
             Boolean(body.token?.trim())
           );
+          const wasRunning = existing.active_run?.status === 'running';
+          if (wasRunning) {
+            await pyorchFetch(`/runs/scripts/${botId}/stop`, { method: 'POST' }).catch(() => undefined);
+            await pyorchFetch(`/scripts/${botId}/enable`, { method: 'POST' }).catch(() => undefined);
+            await pyorchFetch(`/runs/scripts/${botId}/run`, { method: 'POST' });
+          }
           const updated = (await listWashBots()).find((b) => b.id === botId);
           json(res, 200, { success: true, data: updated });
           return;
@@ -339,12 +358,27 @@ export function startServer(): void {
 
         if (req.method === 'DELETE') {
           await pyorchFetch(`/runs/scripts/${botId}/stop`, { method: 'POST' }).catch(() => undefined);
-          await pyorchFetch(`/scripts/${botId}`, { method: 'DELETE' });
+          try {
+            await pyorchFetch(`/scripts/${botId}`, { method: 'DELETE' });
+          } catch (err) {
+            const message = err instanceof Error ? err.message : 'Delete failed';
+            if (!message.includes('404')) throw err;
+          }
           json(res, 200, { success: true });
           return;
         }
 
         if (req.method === 'POST' && botMatch[2] === '/start') {
+          const existing = (await listWashBots()).find((b) => b.id === botId);
+          if (!existing) {
+            json(res, 404, { success: false, error: 'Bot not found' });
+            return;
+          }
+          const adminIds = (existing.metadata.admin_ids as number[]) ?? [];
+          const commands = (existing.metadata.allowed_commands as string[]) ?? [];
+          await syncBotCode(existing);
+          await applySecrets(botId, { adminIds, commands }, false);
+          await pyorchFetch(`/runs/scripts/${botId}/stop`, { method: 'POST' }).catch(() => undefined);
           await pyorchFetch(`/scripts/${botId}/enable`, { method: 'POST' });
           await pyorchFetch(`/runs/scripts/${botId}/run`, { method: 'POST' });
           const updated = (await listWashBots()).find((b) => b.id === botId);

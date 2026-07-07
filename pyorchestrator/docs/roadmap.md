@@ -4,9 +4,9 @@ title: Дорожная карта
 description: План развития PyOrchestrator — фазы MVP и Production
 ---
 
-## Статус v0.1.0
+## Статус v0.1.12
 
-**Релиз опубликован:** [v0.1.0](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0) (27 июня 2026) · [заметки о выпуске]({{ '/release-notes/' | relative_url }})
+**Последний релиз:** [v0.1.12](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12) (7 июля 2026)
 
 | Фаза | Статус | Примечания |
 |------|--------|------------|
@@ -15,7 +15,7 @@ description: План развития PyOrchestrator — фазы MVP и Produc
 | MVP-2 Scheduler + Dashboard | ✅ | Cron/interval, KPI dashboard, webhooks |
 | MVP-3 Editor + RBAC | ✅ | Monaco editor, JWT auth, 4 роли, группы |
 | Production-1 | ✅ | Vault секретов, уведомления, бэкапы |
-| Production-2 | ✅ | OTA stub, UpdateProvider, multi-runtime compose prod, метрики |
+| Production-2 | ✅ | OTA updates, UpdateProvider, multi-runtime compose prod, метрики |
 | Production-3 | 🔜 | MQTT, HA Postgres, продвинутая изоляция — backlog |
 
 ---

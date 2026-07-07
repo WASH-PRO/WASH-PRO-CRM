@@ -51,4 +51,4 @@ fi
 echo "Логин по умолчанию: ${ADMIN_LOGIN:-admin} / ${ADMIN_PASSWORD:-Admin123!}"
 DATA_DIR_DISPLAY="${DATA_DIR:-./data}"
 echo "Данные на диске:    ${DATA_DIR_DISPLAY} (см. data/README.md)"
-echo "MQTT (посты):      mqtt://<логин-поста>@<IP-сервера>:${MQTT_EXTERNAL_PORT:-1883}  (superadmin — только CRM)"
+echo "MQTT (посты):      mqtt://<логин-поста>@<IP-сервера>:${MQTT_EXTERNAL_PORT:-1883}  (system — только CRM)"

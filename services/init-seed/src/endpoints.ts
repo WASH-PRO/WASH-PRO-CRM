@@ -582,6 +582,13 @@ export const DEFAULT_SETTINGS = [
     },
   },
   {
+    key: 'mqtt-broker',
+    value: {
+      systemLogin: 'system',
+      systemPassword: 'washpro',
+    },
+  },
+  {
     key: 'notifications',
     value: {
       telegram: true,

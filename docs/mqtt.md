@@ -18,9 +18,9 @@ redirect_from:
 | Порт | `1883` (по умолчанию на всех интерфейсах хоста) |
 | Адрес | `<IP-сервера-CRM>:1883` из локальной сети |
 | Пользователь (пост) | `settings.mqttLogin` / `settings.mqttPassword` из карточки поста в CRM |
-| Пользователь (CRM) | `superadmin` — `MQTT_USER` / `MQTT_PASSWORD` в `.env` (пример в `.env.example`: `washpro`) |
+| Пользователь (CRM) | `system` — пароль в **Настройки → MQTT (CRM)**; при первом запуске также `MQTT_PASSWORD` в `.env` |
 
-Внутри Docker: `mosquitto:1883` (CRM подключается как `superadmin`).  
+Внутри Docker: `mosquitto:1883` (CRM подключается как `system`).  
 С локальной сети пост: `mqtt://<mqttLogin>:<mqttPassword>@192.168.1.10:1883` (IP сервера с CRM).
 
 Порт **1883** публикуется автоматически при `./scripts/start.sh`. Контроллеры в той же LAN могут подключаться без дополнительных overlay-файлов.
@@ -292,22 +292,22 @@ CRM отправляет команды и цены в топики:
 
 ```bash
 # Цены режимов
-mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' -q 1 \
+mosquitto_pub -h localhost -p 1883 -u system -P 'PASSWORD' -q 1 \
   -t 'washpro/SN123/set/prices' \
   -m '{"0":50,"1":80,"2":120,"3":40}'
 
 # Мягкая перезагрузка
-mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' -q 1 \
+mosquitto_pub -h localhost -p 1883 -u system -P 'PASSWORD' -q 1 \
   -t 'washpro/SN123/set/command' \
   -m '{"cmd":1}'
 
 # Зачисление 100 ₽
-mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' -q 1 \
+mosquitto_pub -h localhost -p 1883 -u system -P 'PASSWORD' -q 1 \
   -t 'washpro/SN123/set/command' \
   -m '{"cmd":3,"summ":100}'
 
 # Режим инкассации
-mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' -q 1 \
+mosquitto_pub -h localhost -p 1883 -u system -P 'PASSWORD' -q 1 \
   -t 'washpro/SN123/set/command' \
   -m '{"cmd":7}'
 ```
@@ -366,7 +366,7 @@ curl -s -X POST http://localhost/api/crm/post-device/posts/SN123/command \
 ```javascript
 import mqtt from 'mqtt';
 
-const client = mqtt.connect('mqtt://superadmin:PASSWORD@192.168.1.10:1883');
+const client = mqtt.connect('mqtt://system:PASSWORD@192.168.1.10:1883');
 
 client.on('connect', () => {
   const msg = {
@@ -386,12 +386,12 @@ client.on('connect', () => {
 
 ```bash
 # С самого сервера CRM
-mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' \
+mosquitto_pub -h localhost -p 1883 -u system -P 'PASSWORD' \
   -t 'wash/telemetry/mode' -q 1 \
   -m '{"postSerial":"POST-001","messageType":"mode","payload":{"mode":"idle"},"timestamp":"2024-06-22T12:00:00Z"}'
 
 # С другого устройства в локальной сети
-mosquitto_pub -h 192.168.1.10 -p 1883 -u superadmin -P 'PASSWORD' \
+mosquitto_pub -h 192.168.1.10 -p 1883 -u system -P 'PASSWORD' \
   -t 'wash/telemetry/mode' -q 1 \
   -m '{"postSerial":"POST-001","messageType":"mode","payload":{"mode":"idle"},"timestamp":"2024-06-22T12:00:00Z"}'
 ```
@@ -409,10 +409,10 @@ MQTT_EXTERNAL_PORT=1883
 Порт 1883 доступен устройствам в локальной сети. В `mosquitto.conf` обязательно `per_listener_settings true`: иначе `allow_anonymous true` на healthcheck-порту 1884 отключает авторизацию на 1883.
 
 - Панель поста подключается с **логином/паролем из карточки поста** (`settings.mqttLogin` / `settings.mqttPassword`).
-- В passwd Mosquitto допускаются только **superadmin** (из `.env`) и учётные записи постов. Анонимный доступ на 1883 запрещён.
+- В passwd Mosquitto допускаются только **system** (CRM) и учётные записи постов. Анонимный доступ на 1883 запрещён.
 - **Изоляция постов:** ACL разрешает каждому посту публиковать и читать только топики со **своим серийным номером** (`washpro/{serial}/#`). Подмена serial в payload не влияет на CRM — учитывается serial из топика.
-- `superadmin` имеет полный доступ ко всем топикам (CRM и отладка).
-- Логин `superadmin` нельзя назначать посту — он зарезервирован для CRM.
+- `system` имеет полный доступ ко всем топикам (CRM и отладка).
+- Логины `system`, `superadmin` и `wash` нельзя назначать посту — они зарезервированы.
 - После смены пароля или serial в CRM нажмите «Синхронизировать MQTT» в мастере или сохраните пост (синхронизация выполняется автоматически).
 
 Задайте надёжный `MQTT_PASSWORD` в `.env` и при необходимости ограничьте доступ файрволом.

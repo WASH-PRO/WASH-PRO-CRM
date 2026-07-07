@@ -5,7 +5,7 @@ interface PostAclRow {
   serialNumber: string;
 }
 
-/** ACL Mosquitto: superadmin — всё; пост — только топики своего serial. */
+/** ACL Mosquitto: system — всё; пост — только топики своего serial. */
 export function buildMqttAclFile(crmUser: string, posts: PostAclRow[], devicePrefix: string): string {
   const prefix = devicePrefix.trim() || 'washpro';
   const lines = [

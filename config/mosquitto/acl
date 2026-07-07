@@ -1,3 +1,3 @@
-# superadmin — полный доступ (перезаписывается при синхронизации постов)
-user superadmin
+# system — полный доступ CRM (перезаписывается при синхронизации постов)
+user system
 topic readwrite #

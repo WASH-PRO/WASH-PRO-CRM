@@ -9,9 +9,11 @@ import {
   Workflow,
   ArrowUpCircle,
   RefreshCw,
+  Radio,
   type LucideIcon,
 } from 'lucide-react';
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
+import { syncMqttUsers } from '../api/postDevice';
 import { SoftwareUpdatesSection, componentVersionLabel } from '../components/SoftwareUpdatesSection';
 import { useAuth } from '../context/AuthContext';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
@@ -21,10 +23,16 @@ import {
   NOTIFICATION_EVENT_GROUPS,
   parseNotificationSettings,
 } from '../utils/notificationSettings';
+import {
+  DEFAULT_MQTT_BROKER,
+  MQTT_SYSTEM_LOGIN,
+  parseMqttBrokerSettings,
+} from '../utils/mqttBrokerSettings';
 import type {
   BackupSettings,
   CrmSetting,
   DynamicApiCrmSettings,
+  MqttBrokerSettings,
   NotificationSettings,
   PyOrchestratorCrmSettings,
 } from '../types';
@@ -49,6 +57,8 @@ const DEFAULT_DAP: DynamicApiCrmSettings = {
   servicePassword: 'ServiceInternal123!',
   apiBaseUrl: 'http://dynamic-api:3001',
 };
+
+const DEFAULT_MQTT = DEFAULT_MQTT_BROKER;
 
 function SettingSection({
   title,
@@ -121,6 +131,7 @@ export function SettingsPage() {
   const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
   const [pyorch, setPyorch] = useState<PyOrchestratorCrmSettings>(DEFAULT_PYORCH);
   const [dynamicApi, setDynamicApi] = useState<DynamicApiCrmSettings>(DEFAULT_DAP);
+  const [mqttBroker, setMqttBroker] = useState<MqttBrokerSettings>(DEFAULT_MQTT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -130,6 +141,7 @@ export function SettingsPage() {
       notifications: null,
       pyorchestrator: null,
       'dynamic-api': null,
+      'mqtt-broker': null,
     };
 
     let legacyPyOrchRaw: Record<string, unknown> | null = null;
@@ -144,6 +156,7 @@ export function SettingsPage() {
         setPyorch(parsePyOrch(v));
       }
       if (row.key === 'dynamic-api') setDynamicApi(parseDynamicApi(v));
+      if (row.key === 'mqtt-broker') setMqttBroker(parseMqttBrokerSettings(v));
     }
 
     if (!idMap['dynamic-api'] && legacyPyOrchRaw) {
@@ -175,7 +188,21 @@ export function SettingsPage() {
         saveCrmSetting('notifications', notifications as unknown as Record<string, unknown>, ids.notifications ?? null),
         saveCrmSetting('pyorchestrator', pyorch as unknown as Record<string, unknown>, ids.pyorchestrator ?? null),
         saveCrmSetting('dynamic-api', dynamicApi as unknown as Record<string, unknown>, ids['dynamic-api'] ?? null),
+        saveCrmSetting('mqtt-broker', mqttBroker as unknown as Record<string, unknown>, ids['mqtt-broker'] ?? null),
       ]);
+      try {
+        await syncMqttUsers();
+      } catch (syncErr) {
+        console.error(syncErr);
+        alert(
+          syncErr instanceof Error
+            ? `Настройки сохранены, но синхронизация MQTT не удалась: ${syncErr.message}`
+            : 'Настройки сохранены, но синхронизация MQTT не удалась'
+        );
+        const rows = await listCrmSettings();
+        applySettings(rows);
+        return;
+      }
       const rows = await listCrmSettings();
       applySettings(rows);
       alert('Настройки сохранены');
@@ -324,6 +351,29 @@ export function SettingsPage() {
               disabled={!canEdit}
               value={dynamicApi.apiBaseUrl}
               onChange={(e) => setDynamicApi({ ...dynamicApi, apiBaseUrl: e.target.value })}
+            />
+          </Field>
+        </SettingSection>
+
+        <SettingSection title="MQTT (CRM)" icon={Radio}>
+          <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
+            Учётная запись <span className="font-mono">system</span> для подключения{' '}
+            <span className="font-mono">message-processor</span> к Mosquitto. Пароль постов задаётся в карточке поста.
+          </p>
+          <Field label="Логин CRM в брокере">
+            <input className="input font-mono" value={MQTT_SYSTEM_LOGIN} readOnly disabled />
+          </Field>
+          <Field
+            label="Пароль system"
+            hint="После сохранения пароль применяется в Mosquitto и переподключает processor"
+          >
+            <input
+              className="input font-mono"
+              type="password"
+              autoComplete="new-password"
+              disabled={!canEdit}
+              value={mqttBroker.systemPassword}
+              onChange={(e) => setMqttBroker({ ...mqttBroker, systemPassword: e.target.value })}
             />
           </Field>
         </SettingSection>

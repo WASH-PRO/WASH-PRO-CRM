@@ -1,7 +1,8 @@
 import { convertDeviceMessage, inferMqttLogEntry, isLegacyEnvelope } from './device-adapter.js';
 import { processMessage, WashMessage } from './processor.js';
 import { apiRequest, logger } from './api-client.js';
-import { connectMqtt, DLQ_TOPIC, getMqttClient } from './mqtt-client.js';
+import { connectMqtt, DLQ_TOPIC, getMqttClient, reconnectMqttBroker } from './mqtt-client.js';
+import { incDlqLogged, incMessagesProcessed } from './metrics.js';
 import { startProcessorHttpServer } from './http.js';
 import { syncMqttUsersFromPosts } from './mqtt-users.js';
 import { syncPricesFromDevice } from './post-settings.js';
@@ -65,6 +66,7 @@ async function handleMessage(topic: string, payload: Buffer): Promise<void> {
       raw = { _raw: payload.toString(), _error: 'invalid_json' };
     }
     await logDlqMessage('wash/dlq', raw);
+    incDlqLogged();
     return;
   }
 
@@ -107,10 +109,12 @@ async function handleMessage(topic: string, payload: Buffer): Promise<void> {
     for (const content of messages) {
       await processMessage(content, topic);
     }
+    incMessagesProcessed(messages.length);
   } catch (err) {
     logger.error({ err, topic }, 'Failed to process message');
 
     await logDlqMessage(topic, raw, err);
+    incDlqLogged();
 
     try {
       const client = getMqttClient();
@@ -143,9 +147,11 @@ function main(): void {
   });
   startProcessorHttpServer();
   setTimeout(() => {
-    void syncMqttUsersFromPosts().catch((err) => {
-      logger.warn({ err }, 'Startup MQTT user sync failed (non-fatal)');
-    });
+    void syncMqttUsersFromPosts()
+      .then(() => reconnectMqttBroker())
+      .catch((err) => {
+        logger.warn({ err }, 'Startup MQTT user sync failed (non-fatal)');
+      });
   }, 8000);
 }
 

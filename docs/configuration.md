@@ -45,8 +45,8 @@ description: Переменные окружения .env
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `MQTT_USER` | `superadmin` | Учётная запись CRM (message-processor); не назначайте постам |
-| `MQTT_PASSWORD` | `washpro` в `.env.example` | Пароль superadmin (обязателен в `.env`, смените в production) |
+| `MQTT_USER` | `system` | Учётная запись CRM (message-processor); не назначайте постам |
+| `MQTT_PASSWORD` | `washpro` в `.env.example` | Пароль при первом запуске; далее — **Настройки → MQTT (CRM)** |
 | `MQTT_EXTERNAL_PORT` | `1883` | Порт MQTT на хосте (доступен из LAN) |
 | `MQTT_BIND` | пусто | `127.0.0.1` — только localhost, без LAN |
 | `MQTT_DEVICE_PREFIX` | `washpro` | Префикс топика `dt_pref` для исходящих `set/*` |

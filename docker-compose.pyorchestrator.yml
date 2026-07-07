@@ -91,6 +91,7 @@ services:
       PYORCH_PASSWORD: ${PYORCH_DASHBOARD_PASSWORD:-admin}
       CRM_API_URL: http://dynamic-api:3001
       CRM_API_BASE_URL: http://dynamic-api:3001
+      PROCESSOR_API_BASE_URL: http://message-processor:3022
       SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
       SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
     depends_on:
@@ -121,6 +122,8 @@ services:
       - ${DATA_DIR:-./data}/pyorchestrator/runtime-workspaces:/workspaces
       - ${WASH_HOST_PROJECT_ROOT:-.}/pyorchestrator/runtime/engine:/app/engine:ro
     depends_on:
+      pyorch-backend:
+        condition: service_healthy
       pyorch-postgres:
         condition: service_healthy
       pyorch-redis:
@@ -131,6 +134,7 @@ services:
       wash-internal:
         aliases:
           - runtime
+      wash-external: {}
     cgroup: host
     privileged: false
     healthcheck:

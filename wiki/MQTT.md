@@ -13,8 +13,8 @@
 
 ## CRM (внутри Docker)
 
-- Пользователь: `superadmin` (`MQTT_USER` / `MQTT_PASSWORD` в `.env`)
-- Не используйте `superadmin` на панелях постов
+- Пользователь: `system` (пароль — **Настройки → MQTT (CRM)**; bootstrap — `MQTT_PASSWORD` в `.env`)
+- Не используйте `system` на панелях постов
 
 ## Изоляция постов
 
@@ -60,7 +60,7 @@ POST /api/crm/post-device/mqtt/sync-users
 ### mosquitto_pub (отладка с сервера CRM)
 
 ```bash
-mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASS' -q 1 \
+mosquitto_pub -h localhost -p 1883 -u system -P 'PASS' -q 1 \
   -t 'washpro/SN123/set/prices' -m '{"0":50,"1":80}'
 ```
 

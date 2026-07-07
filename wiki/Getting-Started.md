@@ -37,7 +37,7 @@ chmod +x scripts/*.sh
 ## MQTT
 
 - Пост: `mqtt://<mqttLogin>:<mqttPassword>@<IP>:1883`
-- CRM: `superadmin` в `.env` (`MQTT_USER` / `MQTT_PASSWORD`)
+- CRM: `system` — пароль в **Настройки → MQTT (CRM)** (`MQTT_USER` / `MQTT_PASSWORD` в `.env` при первом запуске)
 - Подробнее: [MQTT](MQTT)
 
 ## Миграция с RabbitMQ

@@ -7,7 +7,7 @@ description: Production, обновление и восстановление
 ## Production checklist
 
 1. Смените все секреты в `.env` (JWT, CSRF, пароли, PyOrch keys)
-2. Задайте сильный `ADMIN_PASSWORD` и **`MQTT_PASSWORD`** для `superadmin`
+2. Задайте сильный `ADMIN_PASSWORD` и **`MQTT_PASSWORD`** для `system` (до настройки в CRM)
 3. Настройте `CORS_ORIGIN` под реальные домены
 4. Ограничьте порты 80, 3001, 8080 (и 8000, 8090, 8010 при PyOrch) файрволом
 5. Не публикуйте MongoDB и Mosquitto без необходимости

@@ -50,13 +50,19 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
 
 export function startBackupHttpServer(): void {
   const server = http.createServer(async (req, res) => {
+    const url = req.url?.split('?')[0] ?? '';
+
+    if (req.method === 'GET' && url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, service: 'wash-backup' }));
+      return;
+    }
+
     if (!(await verifyToken(req.headers.authorization))) {
       res.writeHead(401, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Unauthorized');
       return;
     }
-
-    const url = req.url?.split('?')[0] ?? '';
 
     if (req.method === 'POST' && url === '/archives') {
       try {

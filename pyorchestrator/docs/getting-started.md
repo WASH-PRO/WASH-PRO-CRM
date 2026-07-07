@@ -15,14 +15,14 @@ description: Установка PyOrchestrator через Docker Compose и пе
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
-git checkout v0.1.0   # первый стабильный релиз
+git checkout v0.1.12   # или последний тег: git describe --tags --abbrev=0
 cp .env.example .env
 docker compose up --build
 ```
 
 Первый запуск занимает несколько минут: сборка образов, инициализация PostgreSQL, MinIO, seed демо-скриптов.
 
-Стабильная версия: [**v0.1.0**](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0) — [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
+Актуальная версия: [**v0.1.12**](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12) — [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
 
 ## Вход в систему
 
@@ -47,7 +47,7 @@ docker compose up --build
 | backend | 8000 | REST API |
 | postgres | 5432 | Метаданные |
 | redis | 6379 | Очередь jobs |
-| minio | 9000 / 9001 | S3 API / Console |
+| minio | 9000 (+ 9001 при `MINIO_CONSOLE_ENABLED=true`) | S3 API / опциональная Console |
 | grafana | 3000 | Дашборды |
 | prometheus | 9090 | Метрики |
 | mcp | 8010 | MCP HTTP |

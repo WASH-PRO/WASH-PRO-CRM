@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Пересоздаёт конфиг Mosquitto, ACL, superadmin и перезапускает брокер.
+# Пересоздаёт конфиг Mosquitto, ACL, system и перезапускает брокер.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

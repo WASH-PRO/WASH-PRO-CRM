@@ -36,12 +36,18 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 ## Обновление
 
+### OTA из панели управления (рекомендуется)
+
+1. **Настройки → Обновления ПО → Проверить**
+2. **Обновить** — загрузка релиза с GitHub, пересборка Compose-стека
+
+### Ручное обновление
+
 ```bash
-git pull
+git fetch --tags
+git checkout v0.1.12
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
-
-OTA через UI (`UpdateProvider`) — заглушка для GitHub releases в v0.1.
 
 ## Ресурсы
 

@@ -2,7 +2,9 @@ import http from 'node:http';
 import fetch from 'node-fetch';
 import { pino } from 'pino';
 import { apiRequest } from './api-client.js';
-import { publishMqtt } from './mqtt-client.js';
+import { publishMqtt, reconnectMqttBroker, isMqttConnected } from './mqtt-client.js';
+import { invalidateMqttBrokerSettingsCache } from './mqtt-broker-settings.js';
+import { getProcessorMetrics } from './metrics.js';
 import {
   buildSetTopic,
   commandPayload,
@@ -58,7 +60,9 @@ async function logOutbound(topic: string, serial: string, messageType: string, p
 
 async function handleMqttUserSync(res: http.ServerResponse): Promise<void> {
   try {
+    invalidateMqttBrokerSettingsCache();
     const result = await syncMqttUsersFromPosts();
+    await reconnectMqttBroker();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ success: true, data: result }));
   } catch (err) {
@@ -72,6 +76,21 @@ async function handleMqttUserSync(res: http.ServerResponse): Promise<void> {
 export function startProcessorHttpServer(): void {
   const server = http.createServer(async (req, res) => {
     const url = req.url?.split('?')[0] ?? '';
+
+    if (req.method === 'GET' && url === '/health') {
+      const metrics = getProcessorMetrics();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(
+        JSON.stringify({
+          ok: true,
+          service: 'message-processor',
+          mqttConnected: isMqttConnected(),
+          ...metrics,
+        })
+      );
+      return;
+    }
+
     const pricesMatch = url.match(/^\/posts\/([^/]+)\/prices$/);
     const commandMatch = url.match(/^\/posts\/([^/]+)\/command$/);
     const syncUsersPath = url === '/mqtt/sync-users';

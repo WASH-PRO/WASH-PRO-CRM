@@ -1,5 +1,5 @@
 <div class="hero">
-  <span class="hero-badge">v0.1.0 · Docker Compose · Apache 2.0</span>
+  <span class="hero-badge">v0.1.12 · Docker Compose · Apache 2.0</span>
   <p class="hero-lead">
     SCADA/CMS-платформа управления для тысяч изолированных Python-скриптов и ботов —
     один Runtime Engine, множество sandbox, без отдельного контейнера на скрипт.
@@ -28,7 +28,7 @@
 | **Секреты** | Шифрованное хранилище на скрипт, инъекция в runtime |
 | **Бэкапы** | Ручные и по расписанию, восстановление |
 | **Оповещения** | In-app уведомления по событиям runs |
-| **Наблюдаемость** | Prometheus, Grafana, Loki |
+| **Наблюдаемость** | Prometheus, Grafana, Loki (блок в UI — только при доступной Grafana) |
 | **MCP** | 24+ инструментов для Cursor и других AI-агентов |
 | **RBAC** | Administrator / Developer / Operator / Viewer |
 
@@ -58,9 +58,10 @@ docker compose up --build
 |--------|-----|
 | Панель управления | http://localhost:5173 |
 | API + Swagger | http://localhost:8000/docs |
-| Grafana | http://localhost:3000 |
+| Grafana | http://localhost:3000 (если `GRAFANA_ENABLED=true`) |
 | Prometheus | http://localhost:9090 |
-| MinIO Console | http://localhost:9001 |
+| MinIO S3 API | http://localhost:9000 |
+| MinIO Console | http://localhost:9001 (при `MINIO_CONSOLE_ENABLED=true`) |
 | MCP (HTTP) | http://localhost:8010/mcp |
 
 **Логин по умолчанию:** `admin@pyorchestrator.local` / `admin` — смените пароль и секреты в `.env` перед production.

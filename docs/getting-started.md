@@ -88,7 +88,7 @@ docker compose up -d --build message-processor
 
 `mqtt://<mqttLogin>:<mqttPassword>@<IP-сервера>:1883`
 
-CRM (`message-processor`) использует `superadmin` из `.env` (`MQTT_USER` / `MQTT_PASSWORD`). См. [MQTT](mqtt.md).
+CRM (`message-processor`) использует `system`; пароль — **Настройки → MQTT (CRM)** (при первом запуске — `MQTT_PASSWORD` в `.env`). См. [MQTT](mqtt.md).
 
 Нативный протокол панели: `{dt_pref}/{serial}/state/*`. Управление из CRM: [MQTT](mqtt.md).
 

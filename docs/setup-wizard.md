@@ -44,7 +44,7 @@ description: Первичная настройка CRM после установ
 
 Кнопка **«Синхронизировать MQTT»** вызывает `POST /api/crm/post-device/mqtt/sync-users`:
 
-- пересоздаёт `passwd` Mosquitto (`superadmin` + логины постов);
+- пересоздаёт `passwd` Mosquitto (`system` + логины постов);
 - генерирует **ACL** — каждый пост только в топиках своего `serialNumber`;
 - Mosquitto подхватывает изменения автоматически (перезагрузка passwd/ACL).
 

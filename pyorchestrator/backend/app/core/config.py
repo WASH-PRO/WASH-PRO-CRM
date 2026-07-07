@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     app_env: str = "development"
-    app_version: str = "0.1.11"
+    app_version: str = "0.1.12"
 
     postgres_host: str = "postgres"
     postgres_port: int = 5432
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     minio_bucket: str = "pyorchestrator"
     minio_secure: bool = False
     minio_console_port: int = 9001
-    minio_console_enabled: bool = True
+    minio_console_enabled: bool = False
     minio_console_public_url: str = ""
 
     grafana_public_url: str = ""

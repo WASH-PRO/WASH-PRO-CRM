@@ -15,6 +15,7 @@ const STEP_DEFS: Record<UpdateComponentId, Array<{ id: string; label: string }>>
   crm: [
     { id: 'pull', label: 'Загрузка из GitHub' },
     { id: 'build', label: 'Сборка и перезапуск CRM' },
+    { id: 'seed', label: 'Синхронизация CRM (init-seed)' },
     { id: 'health', label: 'Проверка доступности' },
   ],
   'dynamic-api': [
@@ -47,10 +48,13 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose up -d --build --no-deps dashboard update-bridge message-processor backup`;
+      return `cd ${root} && docker compose up -d --build --no-deps dashboard update-bridge message-processor backup mosquitto`;
+    }
+    if (stepId === 'seed') {
+      return `cd ${root} && docker compose run --rm init-seed`;
     }
     if (stepId === 'health') {
-      return `wget -qO- http://dynamic-api:3001/api/health >/dev/null`;
+      return `wget -qO- http://dynamic-api:3001/api/health >/dev/null && wget -qO- http://message-processor:3022/health >/dev/null`;
     }
   }
 
@@ -74,7 +78,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && PYORCHESTRATOR_REF=${tag} ./scripts/update-pyorchestrator.sh`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-backend pyorchestrator-panel`;
+      return `cd ${root} && docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-backend pyorchestrator-panel pyorch-bridge`;
     }
     if (stepId === 'health') {
       return `wget -qO- http://pyorch-backend:8000/health >/dev/null || wget -qO- http://pyorch-backend:8000/api/v1/health >/dev/null`;

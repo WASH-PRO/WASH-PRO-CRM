@@ -48,14 +48,14 @@ docker compose up -d --build message-processor
 docker compose up -d message-processor
 ```
 
-Скрипт пересоздаёт `superadmin` в passwd. Учётные записи **постов** — через «Синхронизировать MQTT» в мастере или сохранение поста.
+Скрипт пересоздаёт `system` в passwd. Учётные записи **постов** — через «Синхронизировать MQTT» в мастере или сохранение поста.
 
 ### Пост не может подключиться / «not authorised»
 
-1. Логин/пароль на панели = `settings.mqttLogin` / `settings.mqttPassword` из CRM (не `superadmin`).
+1. Логин/пароль на панели = `settings.mqttLogin` / `settings.mqttPassword` из CRM (не `system`).
 2. Топик публикации: `washpro/{serial}/state/...`, где `{serial}` = `posts.serialNumber`.
 3. После смены MQTT-данных в CRM — синхронизация MQTT.
-4. `./scripts/fix-mqtt.sh` — если сбился `superadmin` для CRM.
+4. `./scripts/fix-mqtt.sh` — если сбился `system` для CRM.
 
 ### ACL / чужой serial в топике
 
@@ -100,6 +100,36 @@ curl -s http://localhost:8000/health
 
 Учётные данные bridge: `PYORCH_DASHBOARD_EMAIL` / `PYORCH_DASHBOARD_PASSWORD`.
 
+## Telegram-бот молчит / runtime: `redis ConnectionError`
+
+После пересборки `pyorch-redis` или `pyorch-backend` runtime может остаться со старым соединением к Redis.
+
+```bash
+chmod +x ./scripts/fix-pyorch.sh
+./scripts/fix-pyorch.sh
+```
+
+Или вручную:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml restart pyorch-runtime pyorch-scheduler pyorch-bridge
+```
+
+Затем Dashboard → **Telegram** — **Стоп** → **Запуск** у бота.
+
+**Бот молчит, в логах run: `Temporary failure in name resolution`:** sandbox runtime был только в сети `wash-internal` (без интернета) и не мог достучаться до `api.telegram.org`. После обновления `docker-compose.pyorchestrator.yml` пересоздайте runtime:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-runtime pyorch-backend pyorch-bridge
+```
+
+**Удаление бота падает с 500:** в PyOrchestrator оставались уведомления, ссылающиеся на run. Исправлено в `delete_script_record` — пересоберите `pyorch-backend`.
+
+```bash
+docker exec wash-pyorch-runtime python -c "import urllib.request; urllib.request.urlopen('https://api.telegram.org', timeout=10); print('telegram ok')"
+docker logs wash-pyorch-runtime --tail 30
+```
+
 ## PyOrchestrator MCP: «unreachable» / не стартует
 
 В WASH сервис называется `pyorch-mcp`, а backend по умолчанию обращается к `http://mcp:8010`. В overlay заданы `MCP_INTERNAL_URL` и сетевой alias `mcp`.
@@ -142,7 +172,7 @@ curl -s http://localhost:8000/api/v1/mcp/info -H "Authorization: Bearer TOKEN" |
 2. `docker logs wash-message-processor` — ошибки публикации
 3. Проверка с сервера:
    ```bash
-   mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' -q 1 \
+   mosquitto_pub -h localhost -p 1883 -u system -P 'PASSWORD' -q 1 \
      -t 'washpro/SERIAL/set/command' -m '{"cmd":1}'
    ```
 4. HTTP API: `curl http://localhost/api/crm/post-device/posts/SERIAL/command` с JWT (см. [MQTT](mqtt.md))

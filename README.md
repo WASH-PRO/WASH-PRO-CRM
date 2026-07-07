@@ -206,7 +206,7 @@ docker compose up -d --build
 2. Наружу — только Dashboard, Dynamic API и (опционально) PyOrchestrator
 3. MongoDB и Mosquitto — внутренняя сеть Docker
 4. RBAC через группы Dynamic API
-5. MQTT: смените `MQTT_PASSWORD` для `superadmin`; у каждого поста свой логин/пароль
+5. MQTT: смените пароль `system` в **Настройки → MQTT (CRM)**; у каждого поста свой логин/пароль
 
 ## Лицензия
 

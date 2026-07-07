@@ -3,7 +3,7 @@
 ![PyOrchestrator](docs/assets/banner.png)
 
 [![CI](https://github.com/PyOrchestrator/PyOrchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/PyOrchestrator/PyOrchestrator/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/PyOrchestrator/PyOrchestrator?label=release&color=22d3ee)](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0)
+[![Release](https://img.shields.io/github/v/release/PyOrchestrator/PyOrchestrator?label=release&color=22d3ee)](https://github.com/PyOrchestrator/PyOrchestrator/releases/latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-22d3ee)](https://pyorchestrator.github.io/PyOrchestrator/)
 
@@ -38,7 +38,7 @@ PyOrchestrator exposes an [MCP server](mcp/README.md) so Cursor and other agents
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
-git checkout v0.1.0   # first stable release
+git checkout v0.1.12
 cp .env.example .env
 docker compose up --build
 ```
@@ -48,9 +48,10 @@ docker compose up --build
 | http://localhost:5173 | Control Plane UI |
 | http://localhost:8000/docs | API (Swagger) |
 | http://localhost:8000/health | Health check |
-| http://localhost:3000 | Grafana (admin/admin) |
+| http://localhost:3000 | Grafana (`GRAFANA_ENABLED=true`) |
 | http://localhost:9090 | Prometheus |
-| http://localhost:9001 | MinIO Console |
+| http://localhost:9000 | MinIO S3 API |
+| http://localhost:9001 | MinIO Console (`MINIO_CONSOLE_ENABLED=true`) |
 | http://localhost:8010/mcp | MCP server (streamable HTTP) |
 
 **Default login:** `admin@pyorchestrator.local` / `admin` — change password and `.env` secrets before production.

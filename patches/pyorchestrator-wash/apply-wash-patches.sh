@@ -47,6 +47,53 @@ if ! grep -q 'metadata_=metadata or' "$SCRIPT_SVC" 2>/dev/null; then
   echo "    Patched create_script for metadata"
 fi
 
+# ─── Upstream-worthy fixes (also in patches/*.patch for PR to PyOrchestrator) ─
+
+CODE_PATCH="$PATCH_DIR/script-update-code.patch"
+DELETE_PATCH="$PATCH_DIR/delete-script-notifications.patch"
+REDIS_PATCH="$PATCH_DIR/runtime-redis-reconnect.patch"
+RUNTIME_MAIN="$PO/runtime/engine/main.py"
+
+# ScriptUpdate.code — symmetry with ScriptCreate
+if ! grep -A 15 'class ScriptUpdate' "$SCHEMAS" | grep -q 'code: str'; then
+  perl -i -pe 's/(    entrypoint: str \| None = None\n)(    max_concurrent_runs)/$1    code: str | None = None\n$2/' "$SCHEMAS"
+  echo "    Extended ScriptUpdate with code"
+fi
+
+# update_script — persist code to entrypoint (metadata-aware loop after WASH metadata patch)
+if ! grep -q 'code = update_data.pop' "$SCRIPTS_API" 2>/dev/null; then
+  if grep -q 'script.metadata_' "$SCRIPTS_API" 2>/dev/null; then
+    perl -i -0pe 's/    for field, value in body\.model_dump\(exclude_unset=True\)\.items\(\):\n        if field == "metadata" and value is not None:\n            script\.metadata_ = value\n        elif field != "metadata":\n            setattr\(script, field, value\)\n    script\.version \+= 1/    update_data = body.model_dump(exclude_unset=True)\n    code = update_data.pop("code", None)\n    for field, value in update_data.items():\n        if field == "metadata" and value is not None:\n            script.metadata_ = value\n        elif field != "metadata":\n            setattr(script, field, value)\n    if code is not None:\n        entrypoint = script.entrypoint or "main.py"\n        sf = next((f for f in script.files if f.path == entrypoint), None)\n        if not sf:\n            sf = ScriptFile(script_id=script.id, path=entrypoint, file_type="source")\n            script.files.append(sf)\n            db.add(sf)\n        sf.content = code\n        sf.size_bytes = len(code.encode())\n        storage_service.put_file(script.id, entrypoint, code.encode())\n    script.version += 1/s' "$SCRIPTS_API"
+    echo "    Patched update_script for code field (with metadata)"
+  elif [[ -f "$CODE_PATCH" ]]; then
+    echo "    Applying script-update-code.patch"
+    (cd "$PO" && patch -p1 --forward < "$CODE_PATCH") || {
+      echo "    ERROR: script-update-code.patch failed — fix conflicts manually" >&2
+      exit 1
+    }
+  fi
+fi
+
+if [[ -f "$DELETE_PATCH" ]] && ! grep -q 'NotificationDismissal' "$SCRIPT_SVC" 2>/dev/null; then
+  echo "    Applying delete-script-notifications.patch"
+  (cd "$PO" && patch -p1 --forward < "$DELETE_PATCH") || {
+    echo "    ERROR: delete-script-notifications.patch failed — fix conflicts manually" >&2
+    exit 1
+  }
+elif [[ -f "$DELETE_PATCH" ]]; then
+  echo "    Delete-script notifications patch already present"
+fi
+
+if [[ -f "$RUNTIME_MAIN" ]] && [[ -f "$REDIS_PATCH" ]] && ! grep -q 'create_redis_client' "$RUNTIME_MAIN" 2>/dev/null; then
+  echo "    Applying runtime-redis-reconnect.patch"
+  (cd "$PO" && patch -p1 --forward < "$REDIS_PATCH") || {
+    echo "    ERROR: runtime-redis-reconnect.patch failed — fix conflicts manually" >&2
+    exit 1
+  }
+elif [[ -f "$RUNTIME_MAIN" ]] && grep -q 'create_redis_client' "$RUNTIME_MAIN" 2>/dev/null; then
+  echo "    Runtime Redis reconnect patch already present"
+fi
+
 if ! grep -q 'WASH PRO CRM Telegram' "$DEMO" 2>/dev/null; then
   cat >> "$DEMO" <<'PYEOF'
 
@@ -235,5 +282,7 @@ if ! grep -q 'VITE_WASH_EMBEDDED' "$BANNER" 2>/dev/null; then
   perl -i -pe 's/^export default function UpdateBanner\(\) \{/export default function UpdateBanner() {\n  if (import.meta.env.VITE_WASH_EMBEDDED === '\''true'\'') return null;\n/' "$BANNER"
   echo "    Patched UpdateBanner.tsx — hidden in WASH embedded mode"
 fi
+
+cp "$PATCH_DIR/WASH-OVERLAYS.md" "$PO/WASH-OVERLAYS.md"
 
 echo "==> PyOrchestrator WASH patches applied"

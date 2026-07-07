@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Play, Plus, RefreshCw, Square, Trash2 } from 'lucide-react';
 import {
+  WASH_TELEGRAM_COMMAND_GROUPS,
   WASH_TELEGRAM_COMMANDS,
   checkTelegramBridgeHealth,
   createTelegramBot,
@@ -465,15 +466,22 @@ export function TelegramPage() {
 
           <div>
             <label className="label mb-2">Разрешённые команды</label>
-            <div className="flex flex-wrap gap-2">
-              {WASH_TELEGRAM_COMMANDS.map((cmd) => (
-                <label
-                  key={cmd}
-                  className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-1.5 text-sm dark:border-panel-border-dark"
-                >
-                  <input type="checkbox" checked={form.commands.includes(cmd)} onChange={() => toggleCommand(cmd)} />
-                  {cmd}
-                </label>
+            <div className="space-y-3">
+              {WASH_TELEGRAM_COMMAND_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <p className="mb-1 text-xs font-medium text-panel-muted dark:text-panel-muted-dark">{group.label}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {group.commands.map((cmd) => (
+                      <label
+                        key={cmd}
+                        className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-1.5 text-sm dark:border-panel-border-dark"
+                      >
+                        <input type="checkbox" checked={form.commands.includes(cmd)} onChange={() => toggleCommand(cmd)} />
+                        {cmd}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

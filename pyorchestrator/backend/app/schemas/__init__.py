@@ -90,7 +90,6 @@ class ScriptCreate(BaseModel):
     script_type: str = "script"
     entrypoint: str = "main.py"
     code: str | None = None
-    metadata: dict = Field(default_factory=dict)
 
 
 class ScriptUpdate(BaseModel):
@@ -99,10 +98,11 @@ class ScriptUpdate(BaseModel):
     group_id: UUID | None = None
     status: str | None = None
     entrypoint: str | None = None
+    code: str | None = None
+    metadata: dict = Field(default_factory=dict)
     max_concurrent_runs: int | None = None
     max_runtime_seconds: int | None = None
     max_memory_bytes: int | None = None
-    metadata: dict | None = None
 
 
 class ActiveRunSummary(BaseModel):

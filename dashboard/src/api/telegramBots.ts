@@ -1,13 +1,23 @@
 import { fetchWithAuth } from './client';
 
-export const WASH_TELEGRAM_COMMANDS = [
-  '/status',
-  '/washes',
-  '/posts',
-  '/revenue',
-  '/statistics',
-  '/cards',
+export const WASH_TELEGRAM_COMMAND_GROUPS = [
+  {
+    label: 'Справка и мониторинг',
+    commands: ['/help', '/start', '/menu', '/status', '/washes', '/wash', '/posts', '/post', '/revenue', '/statistics', '/cards'],
+  },
+  {
+    label: 'Автомойки',
+    commands: ['/wash_add', '/wash_edit', '/wash_del'],
+  },
+  {
+    label: 'Посты и устройства',
+    commands: ['/post_add', '/post_edit', '/post_del', '/post_cmd'],
+  },
 ] as const;
+
+export const WASH_TELEGRAM_COMMANDS = WASH_TELEGRAM_COMMAND_GROUPS.flatMap((group) => [
+  ...group.commands,
+]);
 
 export interface TelegramBot {
   id: string;

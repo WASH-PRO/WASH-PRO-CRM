@@ -1,0 +1,20 @@
+--- a/backend/app/services/script_service.py
++++ b/backend/app/services/script_service.py
+@@ -18,6 +18,7 @@ from app.core.crypto import decrypt_secret, encrypt_secret
+ from app.models.enums import RunStatus, ScriptStatus, TriggerType
+ from app.models.run import Run, RunLog, Schedule
+ from app.models.script import Script, ScriptFile, ScriptSecret
++from app.models.user import Notification, NotificationDismissal
+ from app.services.notification_service import dispatch_run_event_notifications
+ 
+ 
+@@ -302,6 +303,9 @@ async def import_script_zip(db: AsyncSession, data: bytes, group_id: UUID | None
+ 
+ 
+ async def delete_script_record(db: AsyncSession, script: Script) -> None:
++    run_ids = select(Run.id).where(Run.script_id == script.id)
++    await db.execute(delete(NotificationDismissal).where(NotificationDismissal.run_id.in_(run_ids)))
++    await db.execute(delete(Notification).where(Notification.run_id.in_(run_ids)))
+     await db.execute(delete(Run).where(Run.script_id == script.id))
+     await db.delete(script)
+     await redis_service.publish(settings.script_updated_channel, str(script.id))

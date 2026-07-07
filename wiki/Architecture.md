@@ -38,7 +38,7 @@ Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 
 - **Входящая:** `{dt_pref}/{serial}/state/*` (нативный) и `wash/telemetry/#` (legacy)
 - **Исходящая:** Dashboard → processor HTTP → `{dt_pref}/{serial}/set/*`
-- **Авторизация:** пост — свой логин; CRM — `superadmin`
+- **Авторизация:** пост — свой логин; CRM — `system`
 - **Изоляция:** ACL по serial; CRM доверяет serial из топика
 - Журнал: `/api/crm/telemetry`
 - DLQ: `wash/dlq`

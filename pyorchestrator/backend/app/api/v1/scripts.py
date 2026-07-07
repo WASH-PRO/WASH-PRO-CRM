@@ -135,11 +135,20 @@ async def update_script(
         script = await get_script_or_404(db, script_id)
     except ValueError:
         raise HTTPException(404, "Script not found")
-    for field, value in body.model_dump(exclude_unset=True).items():
-        if field == "metadata" and value is not None:
-            script.metadata_ = value
-        elif field != "metadata":
-            setattr(script, field, value)
+    update_data = body.model_dump(exclude_unset=True)
+    code = update_data.pop("code", None)
+    for field, value in update_data.items():
+        setattr(script, field, value)
+    if code is not None:
+        entrypoint = script.entrypoint or "main.py"
+        sf = next((f for f in script.files if f.path == entrypoint), None)
+        if not sf:
+            sf = ScriptFile(script_id=script.id, path=entrypoint, file_type="source")
+            script.files.append(sf)
+            db.add(sf)
+        sf.content = code
+        sf.size_bytes = len(code.encode())
+        storage_service.put_file(script.id, entrypoint, code.encode())
     script.version += 1
     await redis_service.publish(settings.script_updated_channel, str(script.id))
     return script

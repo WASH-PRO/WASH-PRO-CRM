@@ -12,7 +12,7 @@
 - **Статус поста онлайн/оффлайн** — индикатор на страницах «Посты», «Текущее состояние» и карточке поста (порог 30 с по `lastMessageAt`)
 - **Учётные записи MQTT постов** — `settings.mqttLogin` / `settings.mqttPassword` в карточке поста; синхронизация passwd и ACL через `POST /api/crm/post-device/mqtt/sync-users`
 - **Изоляция постов в MQTT** — динамический ACL по `serialNumber`; подмена serial в payload игнорируется CRM
-- Учётная запись **`superadmin`** для CRM (`MQTT_USER` / `MQTT_PASSWORD` в `.env`) вместо `wash`
+- Учётная запись **`system`** для CRM; пароль в **Настройки → MQTT (CRM)** (`mqtt-broker`); bootstrap — `MQTT_PASSWORD` в `.env`
 - **Настройки устройства поста** в Dashboard: цены режимов (0–9), команды MQTT (перезагрузки, зачисление баланса, сервисные режимы), префикс `dt_pref`
 - HTTP API `message-processor` (`:3022`) → nginx `/api/crm/post-device/` для публикации `set/prices` и `set/command`
 - Нативный протокол WASH-PRO: топики `{dt_pref}/{serial}/state/*` (process, totals, usages, credit, card)

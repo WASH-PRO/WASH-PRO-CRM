@@ -16,6 +16,7 @@ import {
   defaultMqttLogin,
   generateMqttPassword,
   mqttBrokerEndpoint,
+  needsMqttUserSync,
   readPostMqttSettings,
 } from '../utils/postMqtt';
 import type { Post, PostSettings, PostState, Wash } from '../types';
@@ -307,7 +308,15 @@ export function PostsPage() {
         await api('/crm/posts', { method: 'POST', body: JSON.stringify(body) });
       }
 
-      await applyMqttSync();
+      if (
+        needsMqttUserSync(existing, {
+          serialNumber: body.serialNumber,
+          mqttLogin: form.mqttLogin,
+          mqttPassword: form.mqttPassword,
+        })
+      ) {
+        await applyMqttSync();
+      }
       clearCatalogCache('/crm/posts');
       setModal(false);
       refresh();

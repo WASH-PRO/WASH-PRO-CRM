@@ -1,6 +1,6 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { apiListBounded, apiListCatalog } from '../api/client';
+import { apiListCatalog, apiListPage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, Badge, ErrorMessage } from '../components/UI';
 import { TabNav } from '../components/TabNav';
@@ -205,6 +205,8 @@ export function CardsCollectionPage() {
   return <CardsTable cardType="collection" title="Инкассация" collection />;
 }
 
+const CARDS_PAGE_SIZE = 100;
+
 function CardsTable({
   cardType,
   title,
@@ -220,21 +222,37 @@ function CardsTable({
   const canEdit = hasPermission('update');
   const { currency } = useCurrency();
   const { label: discountTypeLabel } = useDiscountTypes();
+  const [cardPages, setCardPages] = useState(5);
 
   const fetchData = useCallback(async (signal: AbortSignal) => {
-    const [cards, posts, washes] = await Promise.all([
-      apiListBounded<Card>('/crm/cards?populate=postId,washId', signal, 20),
+    const all: Card[] = [];
+    let totalPages = 1;
+    let cardsTotal = 0;
+    for (let page = 1; page <= cardPages; page++) {
+      const { data, pagination } = await apiListPage<Card>(
+        '/crm/cards?populate=postId,washId',
+        page,
+        CARDS_PAGE_SIZE,
+        signal
+      );
+      all.push(...data);
+      totalPages = pagination.totalPages;
+      cardsTotal = pagination.total;
+    }
+    const [posts, washes] = await Promise.all([
       apiListCatalog<Post>('/crm/posts', signal),
       apiListCatalog<Wash>('/crm/washes', signal),
     ]);
     return {
-      cards: cards.map((c) => ({ ...c, status: normalizeCardStatus(c.status) })),
+      cards: all.map((c) => ({ ...c, status: normalizeCardStatus(c.status) })),
       posts,
       washes,
+      hasMoreCards: cardPages < totalPages,
+      cardsTotal,
     };
-  }, []);
+  }, [cardPages]);
 
-  const { data, loading, error, refresh } = usePolling(fetchData, [], { intervalMs: DEFAULT_LIVE_INTERVAL_MS });
+  const { data, loading, error, refresh } = usePolling(fetchData, [cardPages], { intervalMs: DEFAULT_LIVE_INTERVAL_MS });
 
   const postById = useMemo(
     () => new Map((data?.posts || []).map((p) => [p.id, p])),
@@ -340,7 +358,20 @@ function CardsTable({
   }
 
   return (
-    <DataTable
+    <>
+      {data?.hasMoreCards && (
+        <div className="mb-4">
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setCardPages((p) => p + 5)}>
+            Загрузить ещё карты (+{5 * CARDS_PAGE_SIZE} макс.)
+          </button>
+          {data.cardsTotal != null && (
+            <span className="ml-3 text-sm text-panel-muted dark:text-panel-muted-dark">
+              Загружено {data.cards.length} из {data.cardsTotal}
+            </span>
+          )}
+        </div>
+      )}
+      <DataTable
       tableId={`cards-${cardType}`}
       columns={columns}
       data={filtered}
@@ -351,6 +382,7 @@ function CardsTable({
       defaultSortKey="createdAt"
       defaultSortDir="desc"
     />
+    </>
   );
 }
 

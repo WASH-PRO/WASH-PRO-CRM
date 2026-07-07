@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { apiListPage } from '../api/client';
 import { PageHeader, Loading, Badge } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
@@ -32,6 +32,7 @@ const MESSAGE_TYPE_LABELS: Record<string, string> = {
   prices: 'Цены',
   equipment: 'Оборудование',
   event: 'Событие',
+  dlq: 'DLQ (ошибка)',
   unknown: 'Неизвестно',
 };
 
@@ -48,6 +49,7 @@ const MESSAGE_TYPE_VARIANT: Record<string, 'default' | 'success' | 'warning' | '
   command: 'warning',
   prices: 'warning',
   event: 'error',
+  dlq: 'error',
   unknown: 'error',
 };
 
@@ -70,17 +72,39 @@ function topicSuffix(topic?: string): string {
   return parts[parts.length - 1] || '';
 }
 
+const MQTT_PAGE_SIZE = 100;
+
 export function MqttPage() {
+  const [pages, setPages] = useState(1);
+  const [totalRows, setTotalRows] = useState<number | null>(null);
+
   const fetchData = useCallback(async (signal: AbortSignal) => {
-    const { data } = await apiListPage<MqttTelemetryRow>('/crm/telemetry', 1, 100, signal);
-    return data.sort((a, b) => {
+    const all: MqttTelemetryRow[] = [];
+    let totalPages = 1;
+    let total = 0;
+    for (let page = 1; page <= pages; page++) {
+      const { data, pagination } = await apiListPage<MqttTelemetryRow>(
+        '/crm/telemetry',
+        page,
+        MQTT_PAGE_SIZE,
+        signal
+      );
+      all.push(...data);
+      totalPages = pagination.totalPages;
+      total = pagination.total;
+    }
+    const rows = all.sort((a, b) => {
       const ta = new Date(a.receivedAt || 0).getTime();
       const tb = new Date(b.receivedAt || 0).getTime();
       return tb - ta;
     });
-  }, []);
+    setTotalRows(total);
+    return { rows, hasMore: pages < totalPages };
+  }, [pages]);
 
-  const { data: rows, loading, lastUpdatedAt } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_FAST_MS });
+  const { data, loading, lastUpdatedAt } = usePolling(fetchData, [pages], { intervalMs: LIVE_INTERVAL_FAST_MS });
+  const rows = data?.rows;
+  const hasMore = data?.hasMore ?? false;
 
   const typeOptions = useMemo(() => {
     const types = new Set((rows || []).map((r) => r.messageType).filter(Boolean));
@@ -199,9 +223,11 @@ export function MqttPage() {
     <div>
       <PageHeader
         title="MQTT"
-        subtitle={`Все входящие сообщения брокера · ${rows?.length ?? 0} записей${
-          countSummary ? ` · ${countSummary}` : ''
-        } · обновлено ${lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'}`}
+        subtitle={`Все входящие сообщения брокера · показано ${rows?.length ?? 0}${
+          totalRows != null ? ` из ${totalRows}` : ''
+        }${countSummary ? ` · ${countSummary}` : ''} · обновлено ${
+          lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'
+        }`}
       />
       <p className="mb-4 text-sm text-panel-muted dark:text-panel-muted-dark">
         Журнал фиксирует <strong>каждое</strong> MQTT-сообщение как есть:{' '}
@@ -209,9 +235,17 @@ export function MqttPage() {
         <code className="text-xs">state/totals</code> (финансы),{' '}
         <code className="text-xs">state/usages</code> (использование),{' '}
         <code className="text-xs">state/credit</code>, <code className="text-xs">state/card</code>,{' '}
-        <code className="text-xs">set/*</code> (настройки, команды, цены) и legacy{' '}
+        <code className="text-xs">set/*</code> (настройки, команды, цены),{' '}
+        <code className="text-xs">dlq</code> (ошибки обработки) и legacy{' '}
         <code className="text-xs">wash/telemetry/*</code>.
       </p>
+      {hasMore && (
+        <div className="mb-4">
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setPages((p) => p + 1)}>
+            Загрузить ещё ({MQTT_PAGE_SIZE} записей)
+          </button>
+        </div>
+      )}
       <DataTable
         tableId="mqtt"
         columns={columns}

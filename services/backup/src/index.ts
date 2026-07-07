@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import { pino } from 'pino';
 
 import { startBackupHttpServer } from './http.js';
+import { runScheduledArchives } from './archive-runner.js';
 import {
   channelsFromSettings,
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -24,6 +25,7 @@ const SERVICE_PASSWORD = process.env.SERVICE_PASSWORD || 'ServiceInternal123!';
 const BACKUP_DIR = process.env.BACKUP_DIR || '/backups';
 const RETENTION = parseInt(process.env.BACKUP_RETENTION_COUNT || '7', 10);
 const CRON = process.env.BACKUP_CRON || '0 2 * * *';
+const ARCHIVE_CRON = process.env.ARCHIVE_CRON || '0 3 * * *';
 
 async function getToken(): Promise<string> {
   const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -187,78 +189,15 @@ export async function restoreBackup(filename: string): Promise<void> {
   logger.info({ filename }, 'Restore completed');
 }
 
-async function runArchive(): Promise<void> {
-  let token = '';
+async function runArchiveJob(): Promise<void> {
   try {
-    token = await getToken();
-
-    const settingsRes = await fetch(`${API_URL}/api/crm/settings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const settingsJson = (await settingsRes.json()) as {
-      success: boolean;
-      data?: Array<{ key: string; id: string }>;
-    };
-
-    const archiveSetting = settingsJson.data?.find((s) => s.key === 'archive');
-    if (!archiveSetting) return;
-
-    const detailRes = await fetch(`${API_URL}/api/crm/settings/${archiveSetting.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const detail = (await detailRes.json()) as { data?: { value?: { retentionDays?: number; autoArchive?: boolean } } };
-    const retentionDays = detail.data?.value?.retentionDays ?? 90;
-    if (!detail.data?.value?.autoArchive) return;
-
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - retentionDays);
-
-    const telemetry = await fetch(`${API_URL}/api/crm/telemetry?limit=500`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const telemetryJson = (await telemetry.json()) as {
-      success: boolean;
-      data?: Array<{ id: string; receivedAt?: string }>;
-    };
-
-    let affected = 0;
-    for (const record of telemetryJson.data || []) {
-      if (record.receivedAt && new Date(record.receivedAt) < cutoff) {
-        await fetch(`${API_URL}/api/crm/telemetry/${record.id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        affected++;
-      }
-    }
-
-    if (affected > 0) {
-      await fetch(`${API_URL}/api/crm/archive-logs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: 'archive',
-          recordsAffected: affected,
-          policyDays: retentionDays,
-          createdAt: new Date().toISOString(),
-          details: { entity: 'telemetry' },
-        }),
-      });
-      logger.info({ affected, retentionDays }, 'Archive run completed');
-      await notifyCrm(
-        token,
-        'auto_archive',
-        `Автоархивирование: удалено ${affected} записей телеметрии (политика ${retentionDays} дн.)`
-      );
-    }
+    const token = await getToken();
+    await runScheduledArchives(token);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown archive error';
     logger.error({ err }, 'Archive run failed');
     try {
-      if (!token) token = await getToken();
+      const token = await getToken();
       await notifyCrm(token, 'archive_error', `Ошибка автоархивирования: ${message}`, 'error');
     } catch {
       // best effort
@@ -291,14 +230,18 @@ async function checkManualBackups(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  logger.info({ cron: CRON, retention: RETENTION }, 'Backup service starting');
+  logger.info({ cron: CRON, archiveCron: ARCHIVE_CRON, retention: RETENTION }, 'Backup service starting');
   startBackupHttpServer();
 
   if (cron.validate(CRON)) {
     cron.schedule(CRON, () => runBackup('auto'));
   }
 
-  cron.schedule('0 3 * * *', () => runArchive());
+  if (cron.validate(ARCHIVE_CRON)) {
+    cron.schedule(ARCHIVE_CRON, () => {
+      void runArchiveJob();
+    });
+  }
   void checkManualBackups();
   setInterval(() => checkManualBackups(), 15000);
 }

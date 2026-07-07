@@ -17,6 +17,22 @@ export function readPostMqttSettings(settings?: PostSettings): { mqttLogin: stri
   };
 }
 
+/** Нужна ли синхронизация Mosquitto после сохранения поста. */
+export function needsMqttUserSync(
+  existing: { serialNumber: string; settings?: PostSettings } | undefined,
+  next: { serialNumber: string; mqttLogin: string; mqttPassword: string }
+): boolean {
+  if (!existing) return true;
+  const prev = readPostMqttSettings(existing.settings);
+  const nextLogin = next.mqttLogin.trim() || defaultMqttLogin(next.serialNumber);
+  const prevLogin = prev.mqttLogin || defaultMqttLogin(existing.serialNumber);
+  return (
+    existing.serialNumber.trim() !== next.serialNumber.trim() ||
+    prevLogin !== nextLogin ||
+    prev.mqttPassword !== next.mqttPassword
+  );
+}
+
 /** Адрес брокера для подсказки оператору (панель подключается к IP сервера CRM). */
 export function mqttBrokerEndpoint(hostname?: string): string {
   const host = hostname?.trim() || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');

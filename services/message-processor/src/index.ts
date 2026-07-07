@@ -37,7 +37,37 @@ async function logRawMqtt(topic: string, raw: unknown): Promise<void> {
   }
 }
 
+async function logDlqMessage(sourceTopic: string, raw: unknown, error?: unknown): Promise<void> {
+  try {
+    const entry = inferMqttLogEntry(sourceTopic, raw);
+    await apiRequest('POST', '/api/crm/telemetry', {
+      mqttTopic: DLQ_TOPIC,
+      postSerial: entry.postSerial,
+      messageType: 'dlq',
+      payload: {
+        sourceTopic,
+        error: error != null ? String(error) : undefined,
+        body: raw,
+      },
+      receivedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.warn({ err, sourceTopic }, 'DLQ telemetry log failed (non-fatal)');
+  }
+}
+
 async function handleMessage(topic: string, payload: Buffer): Promise<void> {
+  if (topic === DLQ_TOPIC) {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(payload.toString()) as unknown;
+    } catch {
+      raw = { _raw: payload.toString(), _error: 'invalid_json' };
+    }
+    await logDlqMessage('wash/dlq', raw);
+    return;
+  }
+
   let raw: unknown;
   try {
     raw = JSON.parse(payload.toString()) as unknown;
@@ -79,6 +109,8 @@ async function handleMessage(topic: string, payload: Buffer): Promise<void> {
     }
   } catch (err) {
     logger.error({ err, topic }, 'Failed to process message');
+
+    await logDlqMessage(topic, raw, err);
 
     try {
       const client = getMqttClient();

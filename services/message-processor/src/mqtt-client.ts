@@ -8,8 +8,8 @@ export const DLQ_TOPIC = process.env.MQTT_DLQ_TOPIC || 'wash/dlq';
 
 function parseSubscribeTopics(): string[] {
   const extra = process.env.MQTT_TOPICS?.split(',').map((t) => t.trim()).filter(Boolean);
-  if (extra?.length) return [...new Set(extra)];
-  return [...new Set([MQTT_TOPIC, MQTT_DEVICE_TOPIC].filter(Boolean))];
+  if (extra?.length) return [...new Set([...extra, DLQ_TOPIC])];
+  return [...new Set([MQTT_TOPIC, MQTT_DEVICE_TOPIC, DLQ_TOPIC].filter(Boolean))];
 }
 
 export const SUBSCRIBE_TOPICS = parseSubscribeTopics();

@@ -399,6 +399,9 @@ export function ArchivePage() {
                   />
                   Автозапуск архивирования
                 </label>
+                <p className="text-xs text-panel-muted dark:text-panel-muted-dark md:col-span-2">
+                  Автозапуск выполняет сервис <span className="font-mono">wash-backup</span> по расписанию (по умолчанию 03:00).
+                </p>
                 <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
                     type="checkbox"

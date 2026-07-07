@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     app_env: str = "development"
-    app_version: str = "0.1.12"
+    app_version: str = "0.1.13"
 
     postgres_host: str = "postgres"
     postgres_port: int = 5432

@@ -86,7 +86,7 @@ export async function createTelegramBot(input: {
   name: string;
   description?: string;
   token: string;
-  adminIds: number[];
+  adminIds?: number[];
   commands: string[];
   start?: boolean;
 }): Promise<TelegramBot> {
@@ -117,9 +117,13 @@ export async function deleteTelegramBot(id: string): Promise<void> {
 }
 
 export async function startTelegramBot(id: string): Promise<TelegramBot> {
-  return bridgeFetch<TelegramBot>(`/bots/${id}/start`, { method: 'POST' });
+  const bot = await bridgeFetch<TelegramBot>(`/bots/${id}/start`, { method: 'POST' });
+  if (!bot?.id) throw new Error('Сервис не вернул данные бота');
+  return bot;
 }
 
 export async function stopTelegramBot(id: string): Promise<TelegramBot> {
-  return bridgeFetch<TelegramBot>(`/bots/${id}/stop`, { method: 'POST' });
+  const bot = await bridgeFetch<TelegramBot>(`/bots/${id}/stop`, { method: 'POST' });
+  if (!bot?.id) throw new Error('Сервис не вернул данные бота');
+  return bot;
 }

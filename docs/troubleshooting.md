@@ -117,6 +117,27 @@ docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml restar
 
 Затем Dashboard → **Telegram** — **Стоп** → **Запуск** у бота.
 
+## Telegram: дублирующиеся ответы (старый + новый формат)
+
+Причина — два процесса polling одного токена (старый demo-скрипт PyOrchestrator + новый шаблон bridge).
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-bridge
+# через API или Dashboard: POST /api/telegram-bots/bots/refresh
+```
+
+Bridge останавливает legacy-боты и применяет lock по токену. В подвале ответа бота должно быть `Шаблон бота v2.7`.
+
+## Telegram: «Частный бот» для сотрудника
+
+1. **Dashboard → Пользователи** — укажите **Telegram user_id** (число от [@userinfobot](https://t.me/userinfobot))
+2. Пользователь должен быть **active**, с назначенной группой (Viewer / Operator / Administrator)
+3. Перезапустите бота или дождитесь обновления кэша сессии (до 5 мин)
+
+## Telegram: Viewer не может создать объект
+
+Ожидаемое поведение RBAC — группа **Viewer** имеет только `view`. Для создания автомоек и команд постов назначьте **Operator** или **Administrator**.
+
 **Бот молчит, в логах run: `Temporary failure in name resolution`:** sandbox runtime был только в сети `wash-internal` (без интернета) и не мог достучаться до `api.telegram.org`. После обновления `docker-compose.pyorchestrator.yml` пересоздайте runtime:
 
 ```bash

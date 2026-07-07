@@ -7,6 +7,7 @@ export interface CreateUserDto {
   name: string;
   groupIds?: string[];
   status?: UserStatus;
+  telegramUserId?: number | null;
 }
 
 export interface UpdateUserDto {
@@ -16,6 +17,7 @@ export interface UpdateUserDto {
   name?: string;
   groupIds?: string[];
   status?: UserStatus;
+  telegramUserId?: number | null;
 }
 
 export interface LoginDto {

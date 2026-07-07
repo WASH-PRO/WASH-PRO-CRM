@@ -38,7 +38,7 @@ PyOrchestrator exposes an [MCP server](mcp/README.md) so Cursor and other agents
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
-git checkout v0.1.12
+git checkout v0.1.13
 cp .env.example .env
 docker compose up --build
 ```
@@ -93,7 +93,7 @@ PyOrchestrator/
 
 | Topic | Link |
 |-------|------|
-| Release notes (v0.1.0) | [release-notes](https://pyorchestrator.github.io/PyOrchestrator/release-notes/) |
+| Release notes | [release-notes](https://pyorchestrator.github.io/PyOrchestrator/release-notes/) |
 | Quick start | [getting-started](https://pyorchestrator.github.io/PyOrchestrator/getting-started/) |
 | Architecture | [architecture](https://pyorchestrator.github.io/PyOrchestrator/architecture/) |
 | Control Plane UI | [control-plane](https://pyorchestrator.github.io/PyOrchestrator/control-plane/) |
@@ -122,7 +122,10 @@ PyOrchestrator/
 
 | Version | Date | Notes |
 |---------|------|-------|
-| [v0.1.0](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0) | 2026-06-27 | First public release — see [CHANGELOG.md](CHANGELOG.md) and [docs](https://pyorchestrator.github.io/PyOrchestrator/release-notes/) |
+| [v0.1.13](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13) | 2026-07-07 | Backend dependency updates, docs sync |
+| [v0.1.12](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12) | 2026-07-07 | Script API fixes, runtime Redis resilience |
+| [v0.1.11](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.11) | 2026-06-30 | Optional Grafana/MinIO UI, OTA |
+| [v0.1.0](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.0) | 2026-06-27 | First public release |
 
 ## Contributing
 

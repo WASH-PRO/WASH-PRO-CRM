@@ -21,7 +21,6 @@ import { formatDateTime } from '../utils/format';
 interface BotForm {
   name: string;
   token: string;
-  adminIds: string;
   commands: string[];
   description: string;
   startAfterCreate: boolean;
@@ -30,7 +29,6 @@ interface BotForm {
 const EMPTY_FORM: BotForm = {
   name: '',
   token: '',
-  adminIds: '',
   commands: [...WASH_TELEGRAM_COMMANDS],
   description: '',
   startAfterCreate: true,
@@ -53,6 +51,25 @@ function botRunState(bot: TelegramBot): 'running' | 'queued' | 'stopped' {
   return 'stopped';
 }
 
+function mergeTelegramBots(base: TelegramBot[], patch: TelegramBot): TelegramBot[] {
+  const patchId = String(patch.id);
+  const index = base.findIndex((bot) => String(bot.id) === patchId);
+  if (index >= 0) {
+    const next = [...base];
+    next[index] = { ...next[index], ...patch };
+    return next;
+  }
+  return [...base, patch];
+}
+
+function applyTelegramBotPatches(base: TelegramBot[], patches: Map<string, TelegramBot>): TelegramBot[] {
+  let list = base;
+  for (const patch of patches.values()) {
+    list = mergeTelegramBots(list, patch);
+  }
+  return list;
+}
+
 export function TelegramPage() {
   const [pageState, setPageState] = useState<PageState>('loading');
   const [serviceError, setServiceError] = useState<string | null>(null);
@@ -62,6 +79,8 @@ export function TelegramPage() {
   const [saving, setSaving] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [botPatches, setBotPatches] = useState<Map<string, TelegramBot>>(() => new Map());
 
   const checkService = useCallback(async () => {
     setPageState('loading');
@@ -96,6 +115,7 @@ export function TelegramPage() {
 
   const {
     data: bots,
+    setData: setBots,
     loading: botsLoading,
     error: botsError,
     refresh,
@@ -103,6 +123,37 @@ export function TelegramPage() {
     intervalMs: LIVE_INTERVAL_SLOW_MS,
     enabled: pageState === 'ready',
   });
+
+  useEffect(() => {
+    if (!bots) return;
+    setBotPatches((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Map(prev);
+      let changed = false;
+      for (const id of prev.keys()) {
+        if (bots.some((bot) => String(bot.id) === id)) {
+          next.delete(id);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [bots]);
+
+  const rememberBot = useCallback((bot: TelegramBot) => {
+    setBotPatches((prev) => new Map(prev).set(String(bot.id), bot));
+    setBots((prev) => mergeTelegramBots(prev ?? [], bot));
+  }, [setBots]);
+
+  const forgetBot = useCallback((botId: string) => {
+    const id = String(botId);
+    setBotPatches((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -116,7 +167,6 @@ export function TelegramPage() {
     setForm({
       name: bot.name,
       token: '',
-      adminIds: (bot.metadata.admin_ids ?? []).join(', '),
       commands: bot.metadata.allowed_commands?.length
         ? [...bot.metadata.allowed_commands]
         : [...WASH_TELEGRAM_COMMANDS],
@@ -139,40 +189,31 @@ export function TelegramPage() {
     setFormError(null);
     setSaving(true);
     try {
-      const adminIds = form.adminIds
-        .split(',')
-        .map((s) => parseInt(s.trim(), 10))
-        .filter((n) => !Number.isNaN(n));
-
       if (editing) {
-        await updateTelegramBot(editing.id, {
+        const updated = await updateTelegramBot(editing.id, {
           name: form.name,
           description: form.description,
           token: form.token.trim() || undefined,
-          adminIds,
           commands: form.commands,
         });
+        rememberBot(updated);
       } else {
         if (!form.token.trim()) {
           setFormError('Укажите токен бота от @BotFather');
           return;
         }
-        if (!adminIds.length) {
-          setFormError('Укажите хотя бы один Telegram ID администратора');
-          return;
-        }
-        await createTelegramBot({
+        const created = await createTelegramBot({
           name: form.name,
           description: form.description,
           token: form.token.trim(),
-          adminIds,
           commands: form.commands,
           start: form.startAfterCreate,
         });
+        rememberBot(created);
       }
 
       setModalOpen(false);
-      await refresh();
+      void refresh();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Ошибка сохранения');
     } finally {
@@ -182,9 +223,11 @@ export function TelegramPage() {
 
   const handleStart = async (bot: TelegramBot) => {
     setActionId(bot.id);
+    setStatusFilter('');
     try {
-      await startTelegramBot(bot.id);
-      await refresh();
+      const updated = await startTelegramBot(bot.id);
+      rememberBot(updated);
+      void refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Не удалось запустить');
     } finally {
@@ -194,9 +237,11 @@ export function TelegramPage() {
 
   const handleStop = async (bot: TelegramBot) => {
     setActionId(bot.id);
+    setStatusFilter('');
     try {
-      await stopTelegramBot(bot.id);
-      await refresh();
+      const updated = await stopTelegramBot(bot.id);
+      rememberBot(updated);
+      void refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Не удалось остановить');
     } finally {
@@ -209,7 +254,9 @@ export function TelegramPage() {
     setActionId(bot.id);
     try {
       await deleteTelegramBot(bot.id);
-      await refresh();
+      forgetBot(bot.id);
+      setBots((prev) => (prev ?? []).filter((item) => String(item.id) !== String(bot.id)));
+      void refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Не удалось удалить');
     } finally {
@@ -217,7 +264,10 @@ export function TelegramPage() {
     }
   };
 
-  const botList = bots ?? [];
+  const botList = useMemo(
+    () => applyTelegramBotPatches(bots ?? [], botPatches),
+    [bots, botPatches]
+  );
 
   const filters: DataTableFilter<TelegramBot>[] = useMemo(
     () => [
@@ -374,7 +424,7 @@ export function TelegramPage() {
     <div>
       <PageHeader
         title="Telegram боты"
-        subtitle="Создавайте несколько ботов, настраивайте команды и управляйте ими прямо здесь"
+        subtitle="Доступ в бот — по Telegram user_id в карточке пользователя CRM (Пользователи → Telegram ID)"
         actions={
           <button type="button" className="btn-primary" onClick={openCreate}>
             <Plus size={16} className="mr-1.5 inline" />
@@ -408,8 +458,16 @@ export function TelegramPage() {
           data={botList}
           rowKey={(bot) => bot.id}
           filters={filters}
+          filterValues={{ status: statusFilter }}
+          onFilterChange={(id, value) => {
+            if (id === 'status') setStatusFilter(value);
+          }}
           searchPlaceholder="Поиск ботов…"
-          emptyMessage="Telegram-ботов пока нет"
+          emptyMessage={
+            botList.length > 0 && statusFilter
+              ? 'Нет ботов с выбранным статусом'
+              : 'Telegram-ботов пока нет'
+          }
         />
       )}
 
@@ -450,17 +508,6 @@ export function TelegramPage() {
               onChange={(e) => setForm({ ...form, token: e.target.value })}
               placeholder="123456789:ABCdefGHI..."
               required={!editing}
-            />
-          </div>
-
-          <div>
-            <label className="label">ID администраторов Telegram (через запятую)</label>
-            <input
-              className="input"
-              value={form.adminIds}
-              onChange={(e) => setForm({ ...form, adminIds: e.target.value })}
-              placeholder="123456789, 987654321"
-              required
             />
           </div>
 

@@ -1,5 +1,12 @@
 # PyOrchestrator — Development Roadmap (status)
 
+## Completed in v0.1.13
+
+| Item | Status |
+|------|--------|
+| Backend deps: uvicorn, alembic, python-jose, psutil | ✅ |
+| Documentation and wiki sync | ✅ |
+
 ## Completed in v0.1.12
 
 | Item | Status |

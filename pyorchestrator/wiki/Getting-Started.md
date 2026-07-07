@@ -9,9 +9,12 @@
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
+git checkout v0.1.13   # или последний тег: git describe --tags --abbrev=0
 cp .env.example .env
 docker compose up --build
 ```
+
+Актуальная версия: [**v0.1.13**](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13) — [заметки о выпуске](https://pyorchestrator.github.io/PyOrchestrator/release-notes/).
 
 Первый запуск занимает несколько минут: сборка образов, инициализация PostgreSQL, MinIO, seed демо-скриптов.
 

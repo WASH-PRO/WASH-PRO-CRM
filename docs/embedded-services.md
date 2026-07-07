@@ -121,10 +121,12 @@ PYORCHESTRATOR_ENABLED=true
 
 ### Интеграция с Dashboard: Telegram-боты
 
-При включённом PyOrchestrator администратор управляет ботами в **Dashboard → Система → Telegram** без обязательного входа в панель `:8090`.
+При включённом PyOrchestrator администратор управляет ботами в **Dashboard → Система → Telegram** без обязательного входа в панель `:8090`. Полная документация: [Telegram-боты](telegram.md).
 
 ```
 Dashboard  →  /api/telegram-bots/*  →  pyorch-bridge  →  PyOrchestrator API
+                                                      ↓
+                              Dynamic API  GET /api/users/telegram/{id}/auth
 ```
 
 | Endpoint bridge | Действие |
@@ -134,8 +136,11 @@ Dashboard  →  /api/telegram-bots/*  →  pyorch-bridge  →  PyOrchestrator AP
 | `POST /bots` | Создать бота (script_type `bot` + secrets) |
 | `PUT/DELETE /bots/:id` | Изменить / удалить |
 | `POST /bots/:id/start\|stop` | Запуск / остановка |
+| `POST /bots/refresh` | Синхронизация шаблона v2.7 + restart всех ботов |
 
 Команды бота (настраиваются при создании): `/status`, `/washes`, `/posts`, `/revenue`, `/statistics`, `/cards`.
+
+**Доступ сотрудников:** поле **Telegram user_id** в **Dashboard → Пользователи** + группа RBAC. Viewer — только отчёты; Operator — создание объектов и команды постов; Administrator — полный доступ. Поле admin Telegram IDs в форме бота **удалено** (с v1.1.0).
 
 Учётные данные bridge → PyOrchestrator: `PYORCH_DASHBOARD_EMAIL` / `PYORCH_DASHBOARD_PASSWORD` (по умолчанию `admin@pyorchestrator.local` / `admin`).
 

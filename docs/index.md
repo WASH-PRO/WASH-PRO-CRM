@@ -19,6 +19,7 @@ layout: default
   <a href="{{ '/setup-wizard/' | relative_url }}">Мастер настройки</a> ·
   <a href="{{ '/architecture/' | relative_url }}">Архитектура</a> ·
   <a href="{{ '/mqtt/' | relative_url }}">MQTT</a> ·
+  <a href="{{ '/telegram/' | relative_url }}">Telegram</a> ·
   <a href="{{ '/embedded-services/' | relative_url }}">Встроенные сервисы</a> ·
   <a href="{{ '/dashboard/' | relative_url }}">Dashboard</a>
 </p>
@@ -27,13 +28,13 @@ layout: default
 
 | Модуль | Описание |
 |--------|----------|
-| **Обзор** | KPI, графики Recharts, live-уведомления |
+| **Обзор** | KPI, круговые диаграммы использования и оплаты, live-уведомления |
 | **SCADA** | Состояние постов, **онлайн/оффлайн**, live-таймер, **интерактивный график** |
 | **Мастер настройки** | Первичная настройка после установки (`/setup`) |
 | **Объекты** | Автомойки, посты, **MQTT-учётки**, **настройки устройства** (цены, команды) |
 | **Карты** | Скидочные / сервисные / VIP; журнал применений NFC |
 | **Аналитика** | Использование и финансы до/после инкассации |
-| **Система** | Уведомления (web + Telegram), пользователи, группы RBAC, бэкапы, Telegram-боты, справочники, логи |
+| **Система** | Уведомления (web + Telegram), пользователи (Telegram ID), группы RBAC, бэкапы, Telegram-боты v2.7, справочники, логи |
 | **Resources** | Статус и ссылки на панели Dynamic API и PyOrchestrator |
 | **Live-данные** | Автообновление 3–15 с без перезагрузки |
 
@@ -42,7 +43,7 @@ layout: default
 | Платформа | Версия | Панель | В WASH |
 |-----------|--------|--------|--------|
 | [Dynamic API Platform](https://dynamic-api-platform.github.io/Dynamic-API-Platform/) | **v1.5.13** | `:8080` | Backend CRM, endpoints, RBAC, automation |
-| [PyOrchestrator](https://pyorchestrator.github.io/PyOrchestrator/) | **v0.1.10** *(опц.)* | `:8090` | Telegram-боты, Python scripts |
+| [PyOrchestrator](https://pyorchestrator.github.io/PyOrchestrator/) | **v0.1.13** *(опц.)* | `:8090` | Telegram-боты, Python scripts |
 
 Подробно: [Встроенные сервисы](embedded-services.md).
 
@@ -54,7 +55,7 @@ layout: default
 | Dashboard | React 18 + TypeScript + Vite + Tailwind + Recharts |
 | Очередь | MQTT (Mosquitto) |
 | Телеметрия | message-processor (Node.js) |
-| Python automation | PyOrchestrator v0.1.10 *(опц.)* |
+| Python automation | PyOrchestrator v0.1.13 *(опц.)* |
 | Инфраструктура | Docker Compose |
 
 ## Быстрый старт

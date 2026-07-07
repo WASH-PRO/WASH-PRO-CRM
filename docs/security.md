@@ -38,11 +38,16 @@ Admin-разделы Dashboard (пользователи, группы, бэка
 CORS_ORIGIN=http://localhost,http://localhost:3001,http://localhost:8080,https://crm.example.com
 ```
 
-## pyorch-bridge
+## pyorch-bridge и Telegram-боты
 
 - Доступен только через Dashboard nginx `/api/telegram-bots/`
 - Проверяет CRM JWT + права admin
 - Хранит учётные данные PyOrchestrator в env (`PYORCH_DASHBOARD_*`)
+- **Авторизация в боте** — по `telegramUserId` пользователя CRM (`GET /api/users/telegram/{id}/auth`); права из групп RBAC
+- Посторонние Telegram ID получают только сообщение «Частный бот» без данных CRM
+- Шаблон бота v2.7: lock по токену, дедупликация, остановка legacy-скриптов PyOrchestrator
+
+См. [Telegram-боты](telegram.md).
 
 ## Управление постом (post-device API)
 

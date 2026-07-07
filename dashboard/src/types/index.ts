@@ -25,6 +25,7 @@ export interface DapUser {
   name: string;
   status: 'active' | 'inactive' | 'suspended';
   groupIds: string[];
+  telegramUserId?: number | null;
   createdAt?: string;
   lastLoginAt?: string;
 }
@@ -149,7 +150,8 @@ export interface UsageStat {
   washId: WashRef | string;
   postId?: PostIdRef | string;
   period: 'before_collection' | 'after_collection';
-  category: 'regular' | 'unlimited' | 'service';
+  category: 'regular' | 'unlimited' | 'service' | 'collection';
+  discountType?: string;
   launchCount: number;
   usageTime: number;
   avgWashTime: number;

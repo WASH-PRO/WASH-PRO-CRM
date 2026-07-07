@@ -45,7 +45,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 ```bash
 git fetch --tags
-git checkout v0.1.12
+git checkout v0.1.13
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 

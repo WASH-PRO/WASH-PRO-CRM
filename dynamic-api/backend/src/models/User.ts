@@ -8,6 +8,7 @@ export interface IUser extends Document {
   name: string;
   status: UserStatus;
   groupIds: mongoose.Types.ObjectId[];
+  telegramUserId?: number;
   refreshToken?: string;
   lastLoginAt?: Date;
   createdAt: Date;
@@ -22,6 +23,7 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true, trim: true },
     status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
     groupIds: [{ type: Schema.Types.ObjectId, ref: 'Group' }],
+    telegramUserId: { type: Number, unique: true, sparse: true, index: true },
     refreshToken: { type: String },
     lastLoginAt: { type: Date },
   },

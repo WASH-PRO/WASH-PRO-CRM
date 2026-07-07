@@ -371,12 +371,13 @@ const usageStatsFields: SchemaField[] = [
   { name: 'washId', type: 'reference', refEndpointSlug: 'crm-washes-list', required: true, order: 0, description: 'Автомойка' },
   { name: 'postId', type: 'reference', refEndpointSlug: 'crm-posts-list', order: 1, description: 'Пост' },
   { name: 'period', type: 'string', required: true, order: 2, description: 'before_collection|after_collection' },
-  { name: 'category', type: 'string', required: true, order: 3, description: 'regular|unlimited|service' },
-  { name: 'launchCount', type: 'number', order: 4 },
-  { name: 'usageTime', type: 'number', order: 5, description: 'Секунды' },
-  { name: 'avgWashTime', type: 'number', order: 6 },
-  { name: 'clientCount', type: 'number', order: 7 },
-  { name: 'recordedAt', type: 'datetime', order: 8 },
+  { name: 'category', type: 'string', required: true, order: 3, description: 'regular|unlimited|service|collection' },
+  { name: 'discountType', type: 'string', order: 4, description: 'Код типа скидки (1–5) для category=regular' },
+  { name: 'launchCount', type: 'number', order: 5 },
+  { name: 'usageTime', type: 'number', order: 6, description: 'Секунды' },
+  { name: 'avgWashTime', type: 'number', order: 7 },
+  { name: 'clientCount', type: 'number', order: 8 },
+  { name: 'recordedAt', type: 'datetime', order: 9 },
 ];
 
 const financeStatsFields: SchemaField[] = [

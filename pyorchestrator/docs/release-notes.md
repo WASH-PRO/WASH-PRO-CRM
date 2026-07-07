@@ -4,6 +4,19 @@ title: Заметки о выпуске
 description: История релизов PyOrchestrator
 ---
 
+## v0.1.13 — обновление backend-зависимостей и синхронизация документации
+
+**Дата:** 7 июля 2026  
+**Тег:** [`v0.1.13`](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13)
+
+### Изменено
+
+- **Backend:** uvicorn 0.49.0, alembic 1.18.5, python-jose 3.5.0, psutil 7.2.2
+- **Runtime:** psutil 7.2.2 (в образе runtime)
+- Документация, wiki, CHANGELOG и README приведены к актуальному стеку
+
+---
+
 ## v0.1.12 — исправления API скриптов и устойчивость runtime
 
 **Дата:** 7 июля 2026  
@@ -17,7 +30,9 @@ description: История релизов PyOrchestrator
 
 ### Изменено
 
-- Обновлены зависимости backend и frontend (см. [CHANGELOG](https://github.com/PyOrchestrator/PyOrchestrator/blob/main/CHANGELOG.md))
+- **Backend:** SQLAlchemy 2.0.51, Pydantic 2.13.4, pydantic-settings 2.14.2, redis 8.0.1, python-multipart 0.0.32
+- **Frontend:** react-router-dom 7.18.1, @tailwindcss/vite 4.3.2
+- **CI:** actions/checkout v7
 
 ---
 
@@ -69,7 +84,7 @@ description: История релизов PyOrchestrator
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
-git checkout v0.1.12
+git checkout v0.1.13
 cp .env.example .env
 docker compose up --build
 ```

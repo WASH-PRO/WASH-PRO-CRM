@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 2026-07-07
+
+### Changed
+
+- Backend dependencies: uvicorn 0.49.0, alembic 1.18.5, python-jose 3.5.0, psutil 7.2.2 (runtime image aligned)
+- Documentation, wiki, and release notes synced with current stack and dependency versions
+
+[0.1.13]: https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13
+
 ## [0.1.12] - 2026-07-07
 
 ### Fixed
@@ -15,8 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Backend dependencies: SQLAlchemy 2.0.51, Pydantic 2.13.4, pydantic-settings 2.14.2, redis 8.0.1, python-multipart 0.0.32
-- Frontend dependencies: react-router-dom 7.18.1, @tailwindcss/vite 4.3.2
+- Backend: SQLAlchemy 2.0.51, Pydantic 2.13.4, pydantic-settings 2.14.2, redis 8.0.1, python-multipart 0.0.32
+- Frontend: react-router-dom 7.18.1, @tailwindcss/vite 4.3.2
 - CI: actions/checkout v7
 
 [0.1.12]: https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12

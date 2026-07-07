@@ -25,7 +25,7 @@ layout: default
   </p>
 </div>
 
-> **7 июля 2026** — опубликован [релиз v0.1.12](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12): исправления API скриптов, удаление с уведомлениями, устойчивость runtime к Redis.
+> **7 июля 2026** — опубликован [релиз v0.1.13](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13): обновление backend-зависимостей и синхронизация документации. Предыдущий [v0.1.12](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12) — исправления API скриптов и устойчивость runtime к Redis.
 > См. [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
 
 **PyOrchestrator** — платформа для создания, планирования, запуска и мониторинга Python-автоматизации в фиксированном стеке Docker Compose: веб-интерфейс, API, планировщик, изолированный runtime, наблюдаемость и MCP-сервер для AI-агентов.
@@ -59,9 +59,9 @@ layout: default
 
 | Компонент | Технология |
 |-----------|------------|
-| API | FastAPI 0.115, SQLAlchemy 2, asyncpg, PostgreSQL 16 |
-| UI | React 18, TypeScript, Vite 5, Tailwind CSS 4, Monaco, Recharts |
-| Runtime | Python 3.12, subprocess, venv, psutil, Prometheus |
+| API | FastAPI 0.115, Uvicorn 0.49, SQLAlchemy 2.0, Alembic, asyncpg, PostgreSQL 16 |
+| UI | React 18, TypeScript 5, Vite 5, Tailwind CSS 4, react-router-dom 7, Monaco, Recharts |
+| Runtime | Python 3.12, subprocess, venv, psutil 7, Prometheus |
 | Scheduler | APScheduler 3.10 |
 | Очередь / pub-sub | Redis 7 |
 | Файлы | MinIO (S3-compatible) |
@@ -73,6 +73,7 @@ layout: default
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
+git checkout v0.1.13
 cp .env.example .env
 docker compose up --build
 ```

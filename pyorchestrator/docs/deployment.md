@@ -53,7 +53,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 ```bash
 git fetch --tags
-git checkout v0.1.12   # или нужный тег
+git checkout v0.1.13   # или нужный тег
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 

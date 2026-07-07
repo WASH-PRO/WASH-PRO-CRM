@@ -1,6 +1,6 @@
 # WASH PRO CRM / SCADA
 
-Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.10**.
+Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
 **Документация (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/
 
@@ -12,8 +12,8 @@
 - Карты (regular/service/VIP), журнал применений NFC
 - Аналитика до/после инкассации, архив, бэкапы MongoDB
 - Уведомления web + Telegram, настраиваемые типы событий
-- Пользователи и группы RBAC в Dashboard, профиль пользователя
-- **Telegram-боты** (несколько) через PyOrchestrator + pyorch-bridge
+- Пользователи и группы RBAC в Dashboard, **Telegram user_id**, профиль пользователя
+- **Telegram-боты v2.7** (несколько) через PyOrchestrator + pyorch-bridge; CRM RBAC в боте
 - MQTT (Mosquitto): изоляция постов по serial, `system` для CRM
 - Live-обновление 3–15 с
 
@@ -44,6 +44,7 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [Dashboard](Dashboard)
 - [Архитектура](Architecture)
 - [MQTT и управление постами](MQTT)
+- [Telegram-боты](Telegram)
 - [Встроенные сервисы](Embedded-Services)
 - [Схема данных](Database-Schema)
 

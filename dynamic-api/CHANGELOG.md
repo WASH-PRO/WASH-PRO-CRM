@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- Multi-tenant workspace support
+### Added (WASH CRM patch)
+- **`telegramUserId`** on User model — unique sparse field for Telegram bot CRM auth
+- **`GET /api/users/telegram/:telegramUserId/auth`** — resolve permissions for pyorch-bridge bot template
 
 ## [1.5.13] - 2026-06-30
 

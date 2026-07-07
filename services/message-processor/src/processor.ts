@@ -274,15 +274,22 @@ async function upsertUsageStat(
 ): Promise<void> {
   const period = String(payload.period || 'before_collection');
   const category = String(payload.category || 'regular');
-  const stats = await apiRequest<Array<{ id: string; postId: unknown; period: string; category: string }>>(
-    'GET',
-    '/api/crm/usage-stats?limit=500'
-  );
+  const discountType =
+    payload.discountType != null && String(payload.discountType).trim()
+      ? String(payload.discountType).trim()
+      : undefined;
+  const stats = await apiRequest<
+    Array<{ id: string; postId: unknown; period: string; category: string; discountType?: string }>
+  >('GET', '/api/crm/usage-stats?limit=500');
   const existing = stats.find(
-    (s) => refId(s.postId) === postId && s.period === period && s.category === category
+    (s) =>
+      refId(s.postId) === postId &&
+      s.period === period &&
+      s.category === category &&
+      (s.discountType?.trim() || '') === (discountType || '')
   );
 
-  const data = {
+  const data: Record<string, unknown> = {
     washId,
     postId,
     period,
@@ -293,6 +300,7 @@ async function upsertUsageStat(
     clientCount: Number(payload.clientCount ?? payload.client_count ?? 0),
     recordedAt,
   };
+  if (discountType) data.discountType = discountType;
 
   if (existing) {
     await apiRequest('PATCH', `/api/crm/usage-stats/${existing.id}`, data);

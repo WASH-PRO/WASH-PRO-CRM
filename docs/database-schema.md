@@ -12,7 +12,7 @@ description: CRM endpoints и коллекции MongoDB
 
 | Коллекция | Назначение |
 |-----------|------------|
-| `users` | Пользователи Dashboard |
+| `users` | Пользователи Dashboard (`telegramUserId` — привязка Telegram для бота) |
 | `groups` | RBAC-группы (Administrator, Operator, Viewer, Service) |
 | `endpoints` | Определения CRM API endpoints |
 | `endpointdatas` | Все бизнес-данные CRM |
@@ -101,7 +101,13 @@ description: CRM endpoints и коллекции MongoDB
 | Viewer | Viewer | view |
 | Service | Service | view, create, update, delete, manage_api (внутренние сервисы) |
 
-Внутренний service account используется message-processor, backup и telegram-bot.
+Внутренний service account используется message-processor, backup и pyorch-bridge (JWT для `GET /api/users/telegram/{id}/auth`).
+
+### Telegram auth API
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/api/users/telegram/:telegramUserId/auth` | Разрешения пользователя по Telegram ID (для бота) |
 
 ## Резервное копирование
 

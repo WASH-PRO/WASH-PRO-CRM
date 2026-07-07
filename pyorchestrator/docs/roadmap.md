@@ -4,9 +4,9 @@ title: Дорожная карта
 description: План развития PyOrchestrator — фазы MVP и Production
 ---
 
-## Статус v0.1.12
+## Статус v0.1.13
 
-**Последний релиз:** [v0.1.12](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12) (7 июля 2026)
+**Последний релиз:** [v0.1.13](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13) (7 июля 2026)
 
 | Фаза | Статус | Примечания |
 |------|--------|------------|

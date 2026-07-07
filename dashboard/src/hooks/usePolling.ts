@@ -73,5 +73,11 @@ export function usePolling<T>(
 
   useRegisterLiveMode(intervalMs, lastUpdatedAt, enabled && live);
 
-  return { data, loading, error, refresh, lastUpdatedAt };
+  const setDataSafe = useCallback((value: T | null | ((prev: T | null) => T | null)) => {
+    if (!mounted.current) return;
+    setData(value);
+    setLastUpdatedAt(Date.now());
+  }, []);
+
+  return { data, setData: setDataSafe, loading, error, refresh, lastUpdatedAt };
 }

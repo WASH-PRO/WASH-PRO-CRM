@@ -17,6 +17,10 @@ export class UserRepository {
     return User.findOne({ email: email.toLowerCase() });
   }
 
+  async findByTelegramUserId(telegramUserId: number): Promise<IUser | null> {
+    return User.findOne({ telegramUserId }).populate('groupIds');
+  }
+
   async findAll(page = 1, limit = 20, search?: string): Promise<PaginatedResult<IUser>> {
     const skip = (page - 1) * limit;
     const filter = buildTextSearchFilter(search, ['name', 'login', 'email', 'status']) || {};

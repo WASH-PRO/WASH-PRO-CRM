@@ -66,6 +66,10 @@ export function normalizeDapUser(raw: Record<string, unknown>): DapUser {
     name: String(raw.name ?? ''),
     status: (raw.status as DapUser['status']) || 'active',
     groupIds,
+    telegramUserId:
+      raw.telegramUserId == null || raw.telegramUserId === ''
+        ? null
+        : Number(raw.telegramUserId),
     createdAt: raw.createdAt as string | undefined,
     lastLoginAt: raw.lastLoginAt as string | undefined,
   };

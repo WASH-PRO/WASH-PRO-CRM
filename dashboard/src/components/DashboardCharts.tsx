@@ -1,9 +1,6 @@
 import { useMemo } from 'react';
 import {
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,25 +8,26 @@ import {
   Legend,
   LineChart,
   Line,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
-import { categoryLabel } from './UI';
 import { formatMoney, type CurrencyConfig } from '../utils/format';
-import { latestUsageByPostAndCategory, resolveCategoryUsageSeconds } from '../utils/statsAggregation';
+import { buildDashboardPaymentShareSeries, buildDashboardUsageShareSeries } from '../utils/statsAggregation';
 import type { FinanceStat, Post, UsageStat } from '../types';
-
-const CATEGORY_COLORS = ['#0891b2', '#6366f1', '#0f766e'];
-
-const usageChartLabel: Record<string, string> = {
-  regular: 'Скидочные карты',
-  service: categoryLabel.service,
-  unlimited: categoryLabel.unlimited,
-};
 
 function formatUsageSeconds(seconds: number): string {
   if (seconds >= 3600) return `${(seconds / 3600).toFixed(1)} ч`;
   if (seconds >= 60) return `${Math.round(seconds / 60)} мин`;
   return `${seconds} сек`;
+}
+
+interface ShareSlice {
+  key: string;
+  name: string;
+  value: number;
+  fill: string;
 }
 
 interface DashboardChartsProps {
@@ -53,6 +51,53 @@ function ChartCard({ title, children, empty }: { title: string; children: React.
         <div className="h-64 sm:h-80">{children}</div>
       )}
     </div>
+  );
+}
+
+function ShareDonutChart({
+  data,
+  total,
+  axisColor,
+  tooltipStyle,
+  formatValue,
+}: {
+  data: ShareSlice[];
+  total: number;
+  axisColor: string;
+  tooltipStyle: React.CSSProperties;
+  formatValue: (value: number, total: number) => string;
+}) {
+  const visible = data.filter((item) => item.value > 0);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+        <Pie
+          data={visible}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="48%"
+          innerRadius={56}
+          outerRadius={92}
+          paddingAngle={2}
+        >
+          {visible.map((entry) => (
+            <Cell key={entry.key} fill={entry.fill} stroke="transparent" />
+          ))}
+        </Pie>
+        <Tooltip
+          contentStyle={tooltipStyle}
+          formatter={(value: number, name: string) => [formatValue(value, total), name]}
+        />
+        <Legend
+          verticalAlign="bottom"
+          iconType="circle"
+          iconSize={8}
+          wrapperStyle={{ fontSize: '11px', color: axisColor, paddingTop: '8px' }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -85,18 +130,25 @@ export function DashboardCharts({
     { label: 'Постов в ошибке', value: errorCount, color: 'text-red-600', bg: 'panel-stat' },
   ];
 
-  const usageByCategory = useMemo(() => {
-    const latest = latestUsageByPostAndCategory(usageStats);
-    const cats = ['regular', 'service', 'unlimited'] as const;
-    return cats.map((category, i) => {
-      const usageTime = resolveCategoryUsageSeconds(latest, category);
-      return {
-        name: usageChartLabel[category],
-        value: usageTime,
-        fill: CATEGORY_COLORS[i],
-      };
-    }).filter((x) => x.value > 0);
-  }, [usageStats]);
+  const usageShare = useMemo(
+    () => buildDashboardUsageShareSeries(usageStats),
+    [usageStats]
+  );
+
+  const usageShareTotal = useMemo(
+    () => usageShare.reduce((sum, item) => sum + item.value, 0),
+    [usageShare]
+  );
+
+  const paymentShare = useMemo(
+    () => buildDashboardPaymentShareSeries(financeStats),
+    [financeStats]
+  );
+
+  const paymentShareTotal = useMemo(
+    () => paymentShare.reduce((sum, item) => sum + item.value, 0),
+    [paymentShare]
+  );
 
   const revenueTimeline = useMemo(() => {
     const byDate: Record<string, { revenue: number; ts: number }> = {};
@@ -115,11 +167,6 @@ export function DashboardCharts({
       .map(({ name, revenue }) => ({ name, revenue }));
   }, [financeStats]);
 
-  const usageTotal = useMemo(
-    () => usageByCategory.reduce((sum, item) => sum + item.value, 0),
-    [usageByCategory]
-  );
-
   return (
     <div className="mb-6 space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -135,54 +182,48 @@ export function DashboardCharts({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="Использование типов карт" empty={usageByCategory.length === 0}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-              <Pie
-                data={usageByCategory}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius="42%"
-                outerRadius="62%"
-                paddingAngle={3}
-              >
-                {usageByCategory.map((entry) => (
-                  <Cell key={entry.name} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={tooltipStyle}
-                formatter={(value: number, _name, item) => {
-                  const percent = usageTotal ? ((value / usageTotal) * 100).toFixed(0) : '0';
-                  const label = (item as { payload?: { name?: string } })?.payload?.name || 'Категория';
-                  return [`${formatUsageSeconds(value)} · ${percent}%`, label];
-                }}
-              />
-              <Legend
-                verticalAlign="bottom"
-                layout="horizontal"
-                wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <ChartCard title="Использование" empty={usageShareTotal <= 0}>
+          <ShareDonutChart
+            data={usageShare}
+            total={usageShareTotal}
+            axisColor={axisColor}
+            tooltipStyle={tooltipStyle}
+            formatValue={(value, total) => {
+              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+              return `${formatUsageSeconds(value)} (${pct}%)`;
+            }}
+          />
         </ChartCard>
 
-        <ChartCard title="Выручка" empty={revenueTimeline.length === 0}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={revenueTimeline} margin={{ top: 8, right: 12, left: 4, bottom: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} width={56} />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                formatter={(value: number) => [formatMoney(value, currency), 'Выручка']}
-              />
-              <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+        <ChartCard title="Доли поступлений" empty={paymentShareTotal <= 0}>
+          <ShareDonutChart
+            data={paymentShare}
+            total={paymentShareTotal}
+            axisColor={axisColor}
+            tooltipStyle={tooltipStyle}
+            formatValue={(value, total) => {
+              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+              return `${formatMoney(value, currency)} (${pct}%)`;
+            }}
+          />
         </ChartCard>
+
+        <div className="lg:col-span-2">
+          <ChartCard title="Выручка" empty={revenueTimeline.length === 0}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={revenueTimeline} margin={{ top: 8, right: 12, left: 4, bottom: 24 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} width={56} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value: number) => [formatMoney(value, currency), 'Выручка']}
+                />
+                <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
       </div>
     </div>
   );

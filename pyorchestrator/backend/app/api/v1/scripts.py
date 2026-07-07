@@ -138,7 +138,10 @@ async def update_script(
     update_data = body.model_dump(exclude_unset=True)
     code = update_data.pop("code", None)
     for field, value in update_data.items():
-        setattr(script, field, value)
+        if field == "metadata":
+            script.metadata_ = value
+        else:
+            setattr(script, field, value)
     if code is not None:
         entrypoint = script.entrypoint or "main.py"
         sf = next((f for f in script.files if f.path == entrypoint), None)

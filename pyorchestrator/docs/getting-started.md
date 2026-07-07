@@ -15,14 +15,14 @@ description: Установка PyOrchestrator через Docker Compose и пе
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
-git checkout v0.1.12   # или последний тег: git describe --tags --abbrev=0
+git checkout v0.1.13   # или последний тег: git describe --tags --abbrev=0
 cp .env.example .env
 docker compose up --build
 ```
 
 Первый запуск занимает несколько минут: сборка образов, инициализация PostgreSQL, MinIO, seed демо-скриптов.
 
-Актуальная версия: [**v0.1.12**](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.12) — [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
+Актуальная версия: [**v0.1.13**](https://github.com/PyOrchestrator/PyOrchestrator/releases/tag/v0.1.13) — [заметки о выпуске]({{ '/release-notes/' | relative_url }}).
 
 ## Вход в систему
 

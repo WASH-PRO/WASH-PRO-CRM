@@ -19,6 +19,7 @@ const emptyForm = {
   password: '',
   status: 'active' as DapUser['status'],
   groupIds: [] as string[],
+  telegramUserId: '',
 };
 
 export function UsersPage() {
@@ -61,6 +62,7 @@ export function UsersPage() {
       password: '',
       status: u.status,
       groupIds: u.groupIds ?? [],
+      telegramUserId: u.telegramUserId ? String(u.telegramUserId) : '',
     });
     setEditId(entityId(u));
     setFormError(null);
@@ -110,6 +112,17 @@ export function UsersPage() {
         status: form.status,
         groupIds: form.groupIds,
       };
+      const telegramRaw = form.telegramUserId.trim();
+      if (telegramRaw) {
+        const telegramUserId = Number(telegramRaw);
+        if (!Number.isInteger(telegramUserId) || telegramUserId <= 0) {
+          setFormError('Telegram user_id должен быть положительным целым числом');
+          return;
+        }
+        body.telegramUserId = telegramUserId;
+      } else if (editId) {
+        body.telegramUserId = null;
+      }
       if (form.password.trim()) body.password = form.password;
 
       if (editId) {
@@ -174,6 +187,19 @@ export function UsersPage() {
         sortValue: (u) => u.email,
         searchValue: (u) => u.email,
         render: (u) => u.email,
+      },
+      {
+        key: 'telegramUserId',
+        header: 'Telegram ID',
+        sortable: true,
+        sortValue: (u) => u.telegramUserId ?? 0,
+        searchValue: (u) => (u.telegramUserId ? String(u.telegramUserId) : ''),
+        render: (u) =>
+          u.telegramUserId ? (
+            <code className="text-xs">{u.telegramUserId}</code>
+          ) : (
+            <span className="text-panel-muted">—</span>
+          ),
       },
       {
         key: 'status',
@@ -304,6 +330,18 @@ export function UsersPage() {
           <div>
             <label className="label">Имя</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div>
+            <label className="label">Telegram user_id</label>
+            <input
+              className="input font-mono text-sm"
+              value={form.telegramUserId}
+              onChange={(e) => setForm({ ...form, telegramUserId: e.target.value.replace(/[^\d]/g, '') })}
+              placeholder="Например: 123456789"
+            />
+            <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+              ID пользователя Telegram для входа в бота. Узнать можно у @userinfobot.
+            </p>
           </div>
           <div>
             <label className="label">Пароль {editId ? '(оставьте пустым, чтобы не менять)' : ''}</label>

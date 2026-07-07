@@ -15,6 +15,11 @@ router.get('/', requirePermission('manage_users', 'view'), asyncHandler(async (r
   res.json({ success: true, data: result });
 }));
 
+router.get('/telegram/:telegramUserId/auth', requirePermission('manage_users', 'view'), asyncHandler(async (req, res) => {
+  const result = await userService.resolveTelegramAuth(String(req.params.telegramUserId ?? ''));
+  res.json({ success: true, data: result });
+}));
+
 router.get('/:id', requirePermission('manage_users', 'view'), asyncHandler(async (req, res) => {
   const user = await userService.getById(paramId(req));
   res.json({ success: true, data: user });

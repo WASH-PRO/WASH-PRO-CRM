@@ -172,33 +172,53 @@ function mapUsages(data: Record<string, unknown>, serial: string): WashMessage[]
   const ts = nowIso();
 
   const rows: Array<{
-    key: keyof typeof data;
+    key: keyof typeof data | string;
     period: 'before_collection' | 'after_collection';
-    category: 'regular' | 'service' | 'unlimited';
+    category: 'regular' | 'service' | 'unlimited' | 'collection';
+    discountType?: string;
   }> = [
     { key: 'aclients', period: 'before_collection', category: 'regular' },
     { key: 'aservices', period: 'before_collection', category: 'service' },
     { key: 'aunlims', period: 'before_collection', category: 'unlimited' },
+    { key: 'acollections', period: 'before_collection', category: 'collection' },
+    { key: 'acollection', period: 'before_collection', category: 'collection' },
     { key: 'tclients', period: 'after_collection', category: 'regular' },
     { key: 'tservices', period: 'after_collection', category: 'service' },
     { key: 'tunlims', period: 'after_collection', category: 'unlimited' },
+    { key: 'tcollections', period: 'after_collection', category: 'collection' },
+    { key: 'tcollection', period: 'after_collection', category: 'collection' },
   ];
 
-  return rows.map(({ key, period, category }) => {
-    const minutes = Number(data[key] ?? 0);
-    return {
-      postSerial: serial,
-      messageType: 'statistics',
-      payload: {
-        period,
-        category,
-        usageTime: minutes * 60,
-        clientCount: minutes,
-        launchCount: 0,
-        source: 'washpro',
+  for (let i = 1; i <= 5; i += 1) {
+    rows.push(
+      { key: `aclient${i}`, period: 'before_collection', category: 'regular', discountType: String(i) },
+      { key: `adt${i}`, period: 'before_collection', category: 'regular', discountType: String(i) },
+      { key: `tclient${i}`, period: 'after_collection', category: 'regular', discountType: String(i) },
+      { key: `tdt${i}`, period: 'after_collection', category: 'regular', discountType: String(i) }
+    );
+  }
+
+  return rows.flatMap(({ key, period, category, discountType }) => {
+    const raw = data[key];
+    if (raw == null || raw === '') return [];
+    const minutes = Number(raw);
+    if (!Number.isFinite(minutes) || minutes < 0) return [];
+    return [
+      {
+        postSerial: serial,
+        messageType: 'statistics',
+        payload: {
+          period,
+          category,
+          ...(discountType ? { discountType } : {}),
+          usageTime: minutes * 60,
+          clientCount: minutes,
+          launchCount: 0,
+          source: 'washpro',
+        },
+        timestamp: ts,
       },
-      timestamp: ts,
-    };
+    ];
   });
 }
 

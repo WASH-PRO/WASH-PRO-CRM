@@ -1,5 +1,5 @@
 <div class="hero">
-  <span class="hero-badge">v0.1.12 · Docker Compose · Apache 2.0</span>
+  <span class="hero-badge">v0.1.13 · Docker Compose · Apache 2.0</span>
   <p class="hero-lead">
     SCADA/CMS-платформа управления для тысяч изолированных Python-скриптов и ботов —
     один Runtime Engine, множество sandbox, без отдельного контейнера на скрипт.
@@ -36,9 +36,9 @@
 
 | Компонент | Технология |
 |-----------|------------|
-| API | FastAPI 0.115, SQLAlchemy 2, asyncpg, PostgreSQL 16 |
-| UI | React 18, TypeScript, Vite 5, Tailwind CSS 4, Monaco, Recharts |
-| Runtime | Python 3.12, subprocess, venv, psutil, Prometheus |
+| API | FastAPI 0.115, Uvicorn 0.49, SQLAlchemy 2.0, Alembic, asyncpg, PostgreSQL 16 |
+| UI | React 18, TypeScript 5, Vite 5, Tailwind CSS 4, react-router-dom 7, Monaco, Recharts |
+| Runtime | Python 3.12, subprocess, venv, psutil 7, Prometheus |
 | Scheduler | APScheduler 3.10 |
 | Очередь / pub-sub | Redis 7 |
 | Файлы | MinIO (S3-compatible) |
@@ -50,6 +50,7 @@
 ```bash
 git clone https://github.com/PyOrchestrator/PyOrchestrator.git
 cd PyOrchestrator
+git checkout v0.1.13
 cp .env.example .env
 docker compose up --build
 ```

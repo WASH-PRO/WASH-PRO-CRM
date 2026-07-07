@@ -46,18 +46,79 @@ export function resolveCategoryUsageSeconds(
     .reduce((sum, s) => sum + (s.launchCount || 0) * 60, 0);
 }
 
-/** Последняя запись на каждый пост, период и категорию (использование). */
+/** Последняя запись на каждый пост, период, категорию и тип скидки (использование). */
 export function latestUsageByPostAndCategory(stats: UsageStat[]): UsageStat[] {
   const byKey = new Map<string, UsageStat>();
   for (const row of stats) {
     const postKey = refId(row.postId) || row.id;
-    const key = `${postKey}:${row.period || 'before_collection'}:${row.category}`;
+    const discountKey = row.discountType?.trim() || '';
+    const key = `${postKey}:${row.period || 'before_collection'}:${row.category}:${discountKey}`;
     const prev = byKey.get(key);
     if (!prev || recordTime(row) >= recordTime(prev)) {
       byKey.set(key, row);
     }
   }
   return [...byKey.values()];
+}
+
+export interface CardUsageChartItem {
+  key: string;
+  name: string;
+  value: number;
+  fill: string;
+}
+
+function sumUsageSeconds(stats: UsageStat[], match: (s: UsageStat) => boolean): number {
+  return stats.filter(match).reduce((sum, s) => sum + resolveUsageSeconds(s), 0);
+}
+
+const USAGE_SHARE_COLORS = {
+  clients: '#0891b2',
+  service: '#6366f1',
+  vip: '#0f766e',
+} as const;
+
+/** Секции круговой диаграммы «Использование» на главной (до инкассации). */
+export function buildDashboardUsageShareSeries(stats: UsageStat[]): CardUsageChartItem[] {
+  const latest = latestUsageByPostAndCategory(stats);
+  const before = latest.filter((s) => s.period === 'before_collection');
+
+  const clients = sumUsageSeconds(before, (s) => s.category === 'regular');
+  const service = resolveCategoryUsageSeconds(before, 'service');
+  const vip = resolveCategoryUsageSeconds(before, 'unlimited');
+
+  return [
+    { key: 'clients', name: 'Использование клиентами', value: clients, fill: USAGE_SHARE_COLORS.clients },
+    { key: 'service', name: 'Сервисное использование', value: service, fill: USAGE_SHARE_COLORS.service },
+    { key: 'vip', name: 'VIP-использование', value: vip, fill: USAGE_SHARE_COLORS.vip },
+  ];
+}
+
+export interface PaymentShareChartItem {
+  key: string;
+  name: string;
+  value: number;
+  fill: string;
+}
+
+const PAYMENT_SHARE_COLORS = {
+  cash: '#059669',
+  cashless: '#6366f1',
+  discount: '#f59e0b',
+} as const;
+
+/** Секции круговой диаграммы поступлений на главной (до инкассации). */
+export function buildDashboardPaymentShareSeries(stats: FinanceStat[]): PaymentShareChartItem[] {
+  const latest = latestFinanceByPost(stats);
+  const cash = latest.reduce((sum, row) => sum + (row.cash || 0), 0);
+  const cashless = latest.reduce((sum, row) => sum + (row.cashless || 0), 0);
+  const discounts = latest.reduce((sum, row) => sum + (row.discountOps || 0), 0);
+
+  return [
+    { key: 'cash', name: 'Наличные', value: cash, fill: PAYMENT_SHARE_COLORS.cash },
+    { key: 'cashless', name: 'Внешние (безналичные)', value: cashless, fill: PAYMENT_SHARE_COLORS.cashless },
+    { key: 'discount', name: 'Скидки', value: discounts, fill: PAYMENT_SHARE_COLORS.discount },
+  ];
 }
 
 /** Последняя запись на каждый пост (состояние). */

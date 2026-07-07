@@ -35,6 +35,8 @@ nav:
     url: /embedded-services/
   - title: MQTT
     url: /mqtt/
+  - title: Telegram-боты
+    url: /telegram/
   - title: Схема данных
     url: /database-schema/
   - title: Развёртывание

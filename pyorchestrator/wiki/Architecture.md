@@ -259,11 +259,11 @@ MVP: **1 реплика runtime**. Production: **N реплик** с общей 
 
 | Слой | Выбор |
 |------|-------|
-| API | FastAPI + SQLAlchemy 2 + Alembic |
+| API | FastAPI + SQLAlchemy 2 + Alembic 1.18 + Uvicorn 0.49 |
 | База данных | PostgreSQL 16 |
 | Кэш и очередь | Redis 7 |
 | Планировщик | APScheduler (отдельный сервис) |
-| Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
+| Frontend | React 18 + TypeScript 5 + Vite 5 + Tailwind CSS 4 + react-router-dom 7 |
 | Редактор | Monaco Editor |
 | Метрики | Prometheus + Grafana |
 | Логи | Loki + Promtail |

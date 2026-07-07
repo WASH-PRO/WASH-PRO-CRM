@@ -24,16 +24,21 @@ chmod +x scripts/*.sh
 | http://localhost:8080 | Dynamic API Panel |
 | http://localhost:8090 | PyOrchestrator *(если `PYORCHESTRATOR_ENABLED=true`)* |
 
+Первый вход → **мастер настройки** (`/setup`).
+
 ## Настройка
 
-1. Автомойка + посты (**серийный номер** = `{serial}` в MQTT-топиках).
-2. На странице поста: **цены режимов**, префикс MQTT (`washpro`).
-3. Admin: пользователи, группы, Telegram-боты.
-4. Справочники валют и типов скидок.
+1. Пройдите **мастер настройки** или вручную: автомойка + посты (**serial**, **MQTT login/password**).
+2. **Синхронизировать MQTT** в мастере.
+3. На странице поста: **цены режимов**, префикс `washpro`.
+4. Admin: пользователи, группы, Telegram-боты.
+5. Справочники валют и типов скидок.
 
 ## MQTT
 
-Порт **1883** в LAN. Нативный протокол и команды: [MQTT](MQTT).
+- Пост: `mqtt://<mqttLogin>:<mqttPassword>@<IP>:1883`
+- CRM: `superadmin` в `.env` (`MQTT_USER` / `MQTT_PASSWORD`)
+- Подробнее: [MQTT](MQTT)
 
 ## Миграция с RabbitMQ
 
@@ -45,10 +50,6 @@ chmod +x scripts/*.sh
 
 ```env
 PYORCHESTRATOR_ENABLED=true
-```
-
-```bash
-./scripts/start.sh
 ```
 
 ## Демо

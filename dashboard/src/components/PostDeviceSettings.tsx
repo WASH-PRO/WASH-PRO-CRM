@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { apiListPage } from '../api/client';
 import { sendPostCommand, sendPostPrices } from '../api/postDevice';
 import { useWorkModes } from '../hooks/useWorkModes';
@@ -42,13 +42,22 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
     [modes]
   );
 
+  const prevSerial = useRef(serialNumber);
+  const formDirty = useRef(false);
+
   useEffect(() => {
+    if (prevSerial.current !== serialNumber) {
+      prevSerial.current = serialNumber;
+      formDirty.current = false;
+    }
+    if (formDirty.current) return;
     setMqttPrefix(settings?.mqttPrefix || 'washpro');
     setPrices(parseModePrices(settings?.modePrices));
-  }, [settings?.mqttPrefix, settings?.modePrices, serialNumber]);
+  }, [serialNumber, settings?.mqttPrefix, settings?.modePrices]);
 
   const setPrice = (code: string, value: string) => {
     if (isModePriceReadonly(code)) return;
+    formDirty.current = true;
     setPrices((prev) => {
       const next = { ...prev };
       if (value === '') {
@@ -92,6 +101,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         return;
       }
       setPrices(parsed);
+      formDirty.current = true;
       setPricesMsg(`Подтянуто из MQTT (${new Date(row.receivedAt || '').toLocaleString('ru')}). Нажмите «Сохранить цены», чтобы записать в CRM.`);
     } catch (err) {
       setPricesErr(err instanceof Error ? err.message : 'Не удалось загрузить из MQTT');
@@ -117,6 +127,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
       });
       const sent = result.topic ? ` Топик: ${result.topic}.` : ' Только в CRM.';
       setPricesMsg(`Цены сохранены.${sent}`);
+      formDirty.current = false;
       onSaved?.();
     } catch (err) {
       setPricesErr(err instanceof Error ? err.message : 'Не удалось сохранить цены');
@@ -164,7 +175,10 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         <input
           className="input font-mono"
           value={mqttPrefix}
-          onChange={(e) => setMqttPrefix(e.target.value)}
+          onChange={(e) => {
+            formDirty.current = true;
+            setMqttPrefix(e.target.value);
+          }}
           disabled={!canEdit}
           placeholder="washpro"
         />
@@ -223,7 +237,10 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
               <input
                 type="checkbox"
                 checked={sendToDevice}
-                onChange={(e) => setSendToDevice(e.target.checked)}
+                onChange={(e) => {
+                  formDirty.current = true;
+                  setSendToDevice(e.target.checked);
+                }}
               />
               Отправить на пост после сохранения в CRM
             </label>

@@ -190,10 +190,6 @@
     @apply border-b border-panel-border bg-panel-canvas/90 dark:border-panel-border-dark dark:bg-[#0d1218];
   }
 
-  .table-shell thead th {
-    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark;
-  }
-
   .table-shell tbody tr {
     @apply border-b border-panel-border transition-colors last:border-b-0 dark:border-panel-border-dark;
   }
@@ -202,8 +198,56 @@
     @apply bg-panel-canvas/60 dark:bg-white/[0.02];
   }
 
+  .table-shell thead th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark;
+  }
+
   .table-shell tbody td {
     @apply px-4 py-3 align-middle;
+  }
+
+  @media (max-width: 639px) {
+    .table-shell table {
+      width: max-content;
+      min-width: 100%;
+      table-layout: auto;
+    }
+
+    .table-shell thead th,
+    .table-shell tbody td {
+      @apply px-2 py-2 align-top text-xs;
+      width: 1%;
+    }
+
+    .table-shell thead th {
+      @apply normal-case tracking-normal;
+      vertical-align: bottom;
+    }
+
+    .table-shell .table-cell-content {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      word-break: break-word;
+      line-height: 1.35;
+      max-width: min(44vw, 11.5rem);
+      white-space: normal;
+    }
+
+    .table-shell .table-cell-nowrap {
+      width: 1%;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .table-shell .table-cell-nowrap .table-cell-content {
+      display: block;
+      -webkit-line-clamp: unset;
+      overflow: visible;
+      max-width: none;
+      white-space: nowrap;
+    }
   }
 
   .table-selection-bar {

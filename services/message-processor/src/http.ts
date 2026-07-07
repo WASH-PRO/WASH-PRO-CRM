@@ -19,6 +19,7 @@ import { syncMqttUsersFromPosts } from './mqtt-users.js';
 const logger = pino({ level: 'info' });
 const PORT = parseInt(process.env.PROCESSOR_HTTP_PORT || '3022', 10);
 const API_URL = process.env.API_URL || 'http://dynamic-api:3001';
+const INTERNAL_SYNC_TOKEN = process.env.MQTT_SYNC_INTERNAL_TOKEN || process.env.SERVICE_PASSWORD || '';
 
 async function verifyToken(authHeader: string | undefined): Promise<boolean> {
   if (!authHeader?.startsWith('Bearer ')) return false;
@@ -55,30 +56,46 @@ async function logOutbound(topic: string, serial: string, messageType: string, p
   }
 }
 
+async function handleMqttUserSync(res: http.ServerResponse): Promise<void> {
+  try {
+    const result = await syncMqttUsersFromPosts();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ success: true, data: result }));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'MQTT user sync failed';
+    logger.error({ err }, 'MQTT user sync failed');
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ success: false, error: message }));
+  }
+}
+
 export function startProcessorHttpServer(): void {
   const server = http.createServer(async (req, res) => {
+    const url = req.url?.split('?')[0] ?? '';
+    const pricesMatch = url.match(/^\/posts\/([^/]+)\/prices$/);
+    const commandMatch = url.match(/^\/posts\/([^/]+)\/command$/);
+    const syncUsersPath = url === '/mqtt/sync-users';
+    const internalSyncPath = url === '/internal/mqtt/sync-users';
+
+    if (req.method === 'POST' && internalSyncPath) {
+      const token = req.headers['x-internal-token'];
+      if (!INTERNAL_SYNC_TOKEN || token !== INTERNAL_SYNC_TOKEN) {
+        res.writeHead(401, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Unauthorized');
+        return;
+      }
+      await handleMqttUserSync(res);
+      return;
+    }
+
     if (!(await verifyToken(req.headers.authorization))) {
       res.writeHead(401, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Unauthorized');
       return;
     }
 
-    const url = req.url?.split('?')[0] ?? '';
-    const pricesMatch = url.match(/^\/posts\/([^/]+)\/prices$/);
-    const commandMatch = url.match(/^\/posts\/([^/]+)\/command$/);
-    const syncUsersPath = url === '/mqtt/sync-users';
-
     if (req.method === 'POST' && syncUsersPath) {
-      try {
-        const result = await syncMqttUsersFromPosts();
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true, data: result }));
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'MQTT user sync failed';
-        logger.error({ err }, 'MQTT user sync failed');
-        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: message }));
-      }
+      await handleMqttUserSync(res);
       return;
     }
 

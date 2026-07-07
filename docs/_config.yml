@@ -25,6 +25,8 @@ nav:
     url: /
   - title: Быстрый старт
     url: /getting-started/
+  - title: Мастер настройки
+    url: /setup-wizard/
   - title: Архитектура
     url: /architecture/
   - title: Dashboard

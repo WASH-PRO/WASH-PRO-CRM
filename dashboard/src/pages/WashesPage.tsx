@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { api, apiListCatalog, clearCatalogCache } from '../api/client';
+import { api, apiListCatalog, bulkDeleteWashes, clearCatalogCache, deleteWash, formatWashDeleteSummary } from '../api/client';
+import { syncMqttUsers } from '../api/postDevice';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
@@ -9,7 +10,6 @@ import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTab
 import type { Wash, Post } from '../types';
 import { refId } from '../utils/refs';
 import { formatDateTime } from '../utils/format';
-import { bulkDelete } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 
 const emptyForm = { name: '', description: '', address: '', registeredAt: undefined as string | undefined, cloudEnabled: false };
@@ -18,6 +18,8 @@ export function WashesPage() {
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('create', 'update', 'delete');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [deleteProgress, setDeleteProgress] = useState('');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
@@ -41,6 +43,15 @@ export function WashesPage() {
     return map;
   }, [data?.posts]);
 
+  const applyMqttSync = async () => {
+    try {
+      await syncMqttUsers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось применить учётные записи MQTT');
+      throw err;
+    }
+  };
+
   const openCreate = () => {
     setForm(emptyForm);
     setEditId(null);
@@ -60,13 +71,24 @@ export function WashesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить объект и все посты с данными (состояние, карты, статистика, MQTT)?')) return;
+    if (
+      !confirm(
+        'Удалить объект и все связанные данные?\n\nБудут удалены посты, состояния, карты, статистика, телеметрия и уведомления.'
+      )
+    ) {
+      return;
+    }
+    setError('');
+    setNotice('');
+    setDeleteProgress('Удаление объекта и связанных данных…');
     try {
-      await api(`/crm/washes/${id}`, { method: 'DELETE' });
-      clearCatalogCache('/api/crm/washes');
-      clearCatalogCache('/api/crm/posts');
-      refresh();
+      const result = await deleteWash(id);
+      setDeleteProgress('');
+      setNotice(formatWashDeleteSummary([result]));
+      await applyMqttSync();
+      await refresh();
     } catch (err) {
+      setDeleteProgress('');
       setError(err instanceof Error ? err.message : 'Ошибка удаления');
     }
   };
@@ -184,12 +206,23 @@ export function WashesPage() {
         label: 'Удалить',
         variant: 'danger',
         confirmMessage: (_rows, ids) =>
-          `Удалить ${ids.length} автомоек и все посты с данными?`,
+          `Удалить ${ids.length} автомоек и все связанные данные?\n\nПосты, состояния, карты, статистика, телеметрия и уведомления будут удалены безвозвратно.`,
         onAction: async (_rows, ids) => {
-          await bulkDelete('/crm/washes', ids);
-          clearCatalogCache('/api/crm/washes');
-          clearCatalogCache('/api/crm/posts');
-          refresh();
+          setError('');
+          setNotice('');
+          try {
+            const results = await bulkDeleteWashes(ids, (current, total) => {
+              setDeleteProgress(`Удаление ${current} из ${total}…`);
+            });
+            setDeleteProgress('');
+            setNotice(formatWashDeleteSummary(results));
+            await applyMqttSync();
+            await refresh();
+          } catch (err) {
+            setDeleteProgress('');
+            setError(err instanceof Error ? err.message : 'Ошибка удаления');
+            throw err;
+          }
         },
       });
     }
@@ -214,7 +247,7 @@ export function WashesPage() {
         await api('/crm/washes', { method: 'POST', body: JSON.stringify(body) });
       }
       setModal(false);
-      clearCatalogCache('/api/crm/washes');
+      clearCatalogCache('/crm/washes');
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка сохранения');
@@ -231,6 +264,17 @@ export function WashesPage() {
         actions={canEdit && <button className="btn-primary" onClick={openCreate}><Plus size={16} /> Добавить</button>}
       />
       {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
+      {deleteProgress && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-panel-border bg-panel-canvas/80 px-4 py-3 text-sm text-panel-muted dark:border-panel-border-dark dark:bg-white/[0.03]">
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+          {deleteProgress}
+        </div>
+      )}
+      {notice && !deleteProgress && (
+        <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-100">
+          {notice}
+        </div>
+      )}
       <DataTable
         tableId="washes"
         columns={columns}

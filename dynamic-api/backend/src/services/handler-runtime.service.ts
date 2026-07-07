@@ -82,6 +82,10 @@ function createDbContext(endpointId: string, resourcePath: string, dataRetention
       return { success: true };
     },
 
+    async deleteMany(dataFilter: Record<string, unknown> = {}) {
+      return endpointDataRepository.deleteManyByPathAndDataFilter(resourcePath, dataFilter);
+    },
+
     at(otherResourcePath: string) {
       return createDbContext(endpointId, otherResourcePath, dataRetentionDays);
     },

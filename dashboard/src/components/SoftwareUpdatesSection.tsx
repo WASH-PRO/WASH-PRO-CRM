@@ -105,6 +105,8 @@ function ComponentCard({
     await onChanged();
   };
 
+  const githubHref = component.releaseUrl ?? `https://github.com/${component.githubRepo}`;
+
   return (
     <div className="rounded-panel border border-panel-border bg-panel-card p-4 shadow-panel dark:border-panel-border-dark dark:bg-panel-card-dark">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -112,11 +114,9 @@ function ComponentCard({
           <h4 className="font-semibold text-panel-ink dark:text-panel-ink-dark">{component.label}</h4>
           <p className="mt-1 font-mono text-[11px] text-panel-muted">{component.githubRepo}</p>
         </div>
-        {component.releaseUrl && (
-          <a href={component.releaseUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary btn-sm">
-            GitHub <ExternalLink size={12} />
-          </a>
-        )}
+        <a href={githubHref} target="_blank" rel="noopener noreferrer" className="btn-secondary btn-sm">
+          GitHub <ExternalLink size={12} />
+        </a>
       </div>
 
       <div className="mt-3">

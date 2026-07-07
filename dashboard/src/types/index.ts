@@ -240,6 +240,13 @@ export interface DynamicApiCrmSettings {
   apiBaseUrl: string;
 }
 
+export interface SetupSettings {
+  complete: boolean;
+  completedAt?: string;
+  completedBy?: { userId: string; login: string };
+  skippedSteps?: string[];
+}
+
 export interface Currency {
   id: string;
   code: string;

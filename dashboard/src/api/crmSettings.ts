@@ -15,7 +15,7 @@ export async function saveCrmSetting(
       method: 'PUT',
       body: JSON.stringify({ key, value }),
     });
-    clearCatalogCache('/api/crm/settings');
+    clearCatalogCache('/crm/settings');
     return result;
   }
   const result = await api<CrmSetting>('/crm/settings', {

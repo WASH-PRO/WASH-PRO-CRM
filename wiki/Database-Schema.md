@@ -24,7 +24,7 @@
 
 ## `posts.settings`
 
-JSON с метаданными поста: `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance` и др. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/database-schema/).
+JSON с метаданными поста: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance` и др. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/database-schema/).
 
 ## Удаление поста и автомойки
 

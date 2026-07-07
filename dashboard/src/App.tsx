@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
+import { SetupGuard } from './components/SetupGuard';
 import { Loading } from './components/UI';
 import { LoginPage } from './pages/LoginPage';
 
@@ -30,6 +31,8 @@ const UsersPage = lazyPage(() => import('./pages/UsersPage'), 'UsersPage');
 const GroupsPage = lazyPage(() => import('./pages/GroupsPage'), 'GroupsPage');
 const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPage');
 const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'ProfilePage');
+const SetupWizardPage = lazyPage(() => import('./pages/SetupWizardPage'), 'SetupWizardPage');
+const WelcomePage = lazyPage(() => import('./pages/WelcomePage'), 'WelcomePage');
 
 const CardsLayout = lazyPage(() => import('./pages/CardsPage'), 'CardsLayout');
 const CardsDiscountPage = lazyPage(() => import('./pages/CardsPage'), 'CardsDiscountPage');
@@ -55,10 +58,28 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route
+        path="/setup"
+        element={
+          <ProtectedRoute>
+            <SetupWizardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/welcome"
+        element={
+          <ProtectedRoute>
+            <WelcomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/"
         element={
           <ProtectedRoute>
-            <Layout />
+            <SetupGuard>
+              <Layout />
+            </SetupGuard>
           </ProtectedRoute>
         }
       >

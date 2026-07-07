@@ -5,6 +5,7 @@ import { connectMqtt, DLQ_TOPIC, getMqttClient } from './mqtt-client.js';
 import { startProcessorHttpServer } from './http.js';
 import { syncMqttUsersFromPosts } from './mqtt-users.js';
 import { syncPricesFromDevice } from './post-settings.js';
+import { extractNativeTopicSerial, getBindingBySerial, resolveTrustedPostSerial, bindingsBySerialSize } from './mqtt-post-bindings.js';
 
 function normalizeIncoming(topic: string, raw: unknown): WashMessage[] {
   if (isLegacyEnvelope(raw)) {
@@ -45,11 +46,22 @@ async function handleMessage(topic: string, payload: Buffer): Promise<void> {
   }
 
   const entry = inferMqttLogEntry(topic, raw);
+  const trustedSerial = resolveTrustedPostSerial(topic, isLegacyEnvelope(raw) ? raw : { payload: raw as Record<string, unknown> });
+
+  if (trustedSerial) {
+    const binding = getBindingBySerial(trustedSerial);
+    const topicSerial = extractNativeTopicSerial(topic);
+    if (topicSerial && bindingsBySerialSize() > 0 && !binding) {
+      logger.warn({ topic, trustedSerial }, 'Unknown post serial in MQTT topic — ignored');
+      return;
+    }
+  }
+
   await logRawMqtt(topic, raw);
 
-  if (entry.messageType === 'prices' && entry.postSerial && raw && typeof raw === 'object') {
+  if (entry.messageType === 'prices' && trustedSerial && raw && typeof raw === 'object') {
     try {
-      await syncPricesFromDevice(entry.postSerial, raw as Record<string, unknown>);
+      await syncPricesFromDevice(trustedSerial, raw as Record<string, unknown>);
     } catch (err) {
       logger.warn({ err, topic }, 'Device prices sync failed (non-fatal)');
     }

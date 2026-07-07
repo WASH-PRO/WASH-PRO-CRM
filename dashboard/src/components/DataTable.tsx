@@ -60,6 +60,16 @@ function resolveSortable<T>(col: DataTableColumn<T>): DataTableColumn<T> {
   return { ...col, sortValue, sortable };
 }
 
+function isCompactColumn<T>(col: DataTableColumn<T>): boolean {
+  if (col.key === 'actions') return true;
+  const className = col.className ?? '';
+  return className.includes('whitespace-nowrap') || className.includes('w-0');
+}
+
+function tableCellClass<T>(col: DataTableColumn<T>): string | undefined {
+  return clsx(col.className, isCompactColumn(col) ? 'table-cell-nowrap' : undefined);
+}
+
 export function DataTable<T>({
   tableId,
   columns,
@@ -339,7 +349,7 @@ export function DataTable<T>({
           <thead>
             <tr>
               {selectable && (
-                <th className="w-10">
+                <th className="table-cell-nowrap w-10">
                   <input
                     ref={headerCheckboxRef}
                     type="checkbox"
@@ -351,18 +361,24 @@ export function DataTable<T>({
                 </th>
               )}
               {displayColumns.map((col) => (
-                <th key={col.key} className={col.className}>
+                <th key={col.key} className={tableCellClass(col)}>
                   {col.sortable ? (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 hover:text-brand-600"
+                      className="inline-flex max-w-full items-center gap-1 hover:text-brand-600"
                       onClick={() => toggleSort(col.key)}
                     >
-                      {col.header}
+                      {isCompactColumn(col) ? (
+                        col.header
+                      ) : (
+                        <span className="table-cell-content">{col.header}</span>
+                      )}
                       {sortKey === col.key && (sortDir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                     </button>
-                  ) : (
+                  ) : isCompactColumn(col) ? (
                     col.header
+                  ) : (
+                    <span className="table-cell-content">{col.header}</span>
                   )}
                 </th>
               ))}
@@ -395,7 +411,7 @@ export function DataTable<T>({
                     }}
                   >
                     {selectable && (
-                      <td>
+                      <td className="table-cell-nowrap w-10">
                         <input
                           type="checkbox"
                           className="rounded border-slate-300"
@@ -407,8 +423,14 @@ export function DataTable<T>({
                       </td>
                     )}
                     {displayColumns.map((col) => (
-                      <td key={col.key} className={col.className}>
-                        {col.render ? col.render(row) : null}
+                      <td key={col.key} className={tableCellClass(col)}>
+                        {isCompactColumn(col) ? (
+                          col.render ? col.render(row) : null
+                        ) : (
+                          <div className="table-cell-content">
+                            {col.render ? col.render(row) : null}
+                          </div>
+                        )}
                       </td>
                     ))}
                   </tr>

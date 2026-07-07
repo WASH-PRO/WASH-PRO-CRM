@@ -1,7 +1,7 @@
 import mqtt, { type MqttClient } from 'mqtt';
 import { logger } from './api-client.js';
 
-const MQTT_URL = process.env.MQTT_URL || 'mqtt://wash:wash_secret_change_me@mosquitto:1883';
+const MQTT_URL = process.env.MQTT_URL || 'mqtt://superadmin@mosquitto:1883';
 const MQTT_TOPIC = process.env.MQTT_TOPIC || 'wash/telemetry/#';
 const MQTT_DEVICE_TOPIC = process.env.MQTT_DEVICE_TOPIC || '+/+/#';
 export const DLQ_TOPIC = process.env.MQTT_DLQ_TOPIC || 'wash/dlq';

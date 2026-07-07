@@ -23,7 +23,7 @@ DATA_DIR=/var/lib/wash-pro-crm
 |------|--------|------------|
 | `mongodb/` | MongoDB | CRM, Dynamic API (endpoint data, users, …) |
 | `mosquitto/data/` | Mosquitto | MQTT persistence |
-| `mosquitto/config/` | Mosquitto | `passwd`, `mosquitto.conf` (генерируется init) |
+| `mosquitto/config/` | Mosquitto | `passwd`, `acl`, `mosquitto.conf` (генерируется init + sync) |
 | `redis/` | Redis *(опц.)* | Кеш message-processor |
 | `backups/` | backup | Архивы `mongodump` |
 | `dynamic-api/logs/` | dynamic-api | Логи API |

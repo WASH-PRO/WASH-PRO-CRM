@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading } from '../components/UI';
 import { DataTable } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
@@ -14,6 +15,8 @@ import {
 } from '../utils/notificationsTable';
 
 export function NotificationsPage() {
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('update');
   const [totalCount, setTotalCount] = useState<number | null>(null);
 
   const fetchItems = useCallback(async (signal: AbortSignal) => {
@@ -25,6 +28,7 @@ export function NotificationsPage() {
   const { data: items, loading, refresh } = usePolling(fetchItems, [], { intervalMs: DEFAULT_LIVE_INTERVAL_MS });
 
   const markRead = async (id: string) => {
+    if (!canEdit) return;
     await api(`/crm/notifications/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ read: true }),
@@ -33,18 +37,19 @@ export function NotificationsPage() {
   };
 
   const deleteOne = async (id: string) => {
+    if (!canEdit) return;
     if (!confirm('Удалить уведомление?')) return;
     await bulkDelete('/crm/notifications', [id]);
     refresh();
   };
 
   const columns = useMemo(
-    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne }),
+    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, canEdit }),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refresh]
+    [refresh, canEdit]
   );
 
-  const bulkActions = useMemo(() => createNotificationBulkActions(refresh), [refresh]);
+  const bulkActions = useMemo(() => createNotificationBulkActions(refresh, canEdit), [refresh, canEdit]);
 
   const limitHint =
     totalCount != null && totalCount > NOTIFICATIONS_PAGE_LIMIT
@@ -59,7 +64,7 @@ export function NotificationsPage() {
     <div>
       <PageHeader
         title="Уведомления"
-        subtitle={`Telegram и Web Notifications${limitHint}`}
+        subtitle={`Telegram и Web Notifications${limitHint}${!canEdit ? ' · только просмотр' : ''}`}
       />
       <DataTable
         tableId="notifications"

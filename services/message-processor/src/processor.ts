@@ -1,4 +1,5 @@
 import { apiRequest, createNotification, findPostBySerial, findPostState, setCachedPostState, logger } from './api-client.js';
+import { resolveTrustedPostSerial } from './mqtt-post-bindings.js';
 
 export interface WashMessage {
   washSerial?: string;
@@ -8,18 +9,21 @@ export interface WashMessage {
   timestamp?: string;
 }
 
-export async function processMessage(msg: WashMessage, _mqttTopic?: string): Promise<void> {
+export async function processMessage(msg: WashMessage, mqttTopic?: string): Promise<void> {
   const receivedAt = msg.timestamp || new Date().toISOString();
 
-  const postSerial = msg.postSerial || String(msg.payload.postSerial || '');
+  const postSerial = mqttTopic
+    ? resolveTrustedPostSerial(mqttTopic, msg)
+    : (msg.postSerial || String(msg.payload.postSerial || ''));
+
   if (!postSerial) {
-    logger.warn({ msg }, 'Message without post serial');
+    logger.warn({ msg, mqttTopic }, 'Message without post serial');
     return;
   }
 
   const post = await findPostBySerial(postSerial);
   if (!post) {
-    logger.warn({ postSerial }, 'Post not found for serial');
+    logger.warn({ postSerial, mqttTopic }, 'Post not found for serial — message ignored');
     return;
   }
 
@@ -378,6 +382,16 @@ async function handleEquipment(
   } else {
     await apiRequest('POST', '/api/crm/post-states', patch);
   }
+
+  if (hasError) {
+    await createNotification({
+      type: 'equipment_error',
+      severity: 'error',
+      washId,
+      postId,
+      message: String(payload.message || payload.error || 'Ошибка оборудования на посте'),
+    });
+  }
 }
 
 async function handleEvent(
@@ -428,6 +442,22 @@ async function handleEvent(
         connected: false,
         lastMessageAt: new Date().toISOString(),
       });
+    } else {
+      await apiRequest('POST', '/api/crm/post-states', {
+        postId,
+        washId,
+        connected: false,
+        lastMessageAt: new Date().toISOString(),
+      });
     }
+
+    await createNotification({
+      type: 'connection_lost',
+      severity: 'warning',
+      washId,
+      postId,
+      message: String(payload.message || 'Потеря связи с постом'),
+    });
+    return;
   }
 }

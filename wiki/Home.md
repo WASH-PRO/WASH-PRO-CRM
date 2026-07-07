@@ -6,14 +6,15 @@
 
 ## Возможности
 
-- SCADA: состояние постов, live-таймер, интерактивный график
-- Автомойки, посты, **настройки устройства** (цены режимов, команды MQTT)
+- **Мастер настройки** — первичная настройка после установки (`/setup`)
+- SCADA: состояние постов, **онлайн/оффлайн** (30 с), live-таймер, интерактивный график
+- Автомойки, посты, **учётные записи MQTT**, настройки устройства (цены, команды)
 - Карты (regular/service/VIP), журнал применений NFC
 - Аналитика до/после инкассации, архив, бэкапы MongoDB
 - Уведомления web + Telegram, настраиваемые типы событий
 - Пользователи и группы RBAC в Dashboard, профиль пользователя
 - **Telegram-боты** (несколько) через PyOrchestrator + pyorch-bridge
-- MQTT (Mosquitto) вместо RabbitMQ для телеметрии
+- MQTT (Mosquitto): изоляция постов по serial, `superadmin` для CRM
 - Live-обновление 3–15 с
 
 ## Быстрый старт
@@ -32,13 +33,14 @@ chmod +x scripts/*.sh
 | Dynamic API Panel | http://localhost:8080 |
 | PyOrchestrator Panel *(опц.)* | http://localhost:8090 |
 
-Логин Dashboard: `admin` / `Admin123!`
+Логин Dashboard: `admin` / `Admin123!` → мастер настройки при первом входе.
 
 PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 
 ## Wiki
 
 - [Быстрый старт](Getting-Started)
+- [Мастер настройки](Setup-Wizard)
 - [Dashboard](Dashboard)
 - [Архитектура](Architecture)
 - [MQTT и управление постами](MQTT)
@@ -48,7 +50,7 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 ## Архитектура
 
 ```
-Контроллеры ⇄ MQTT (Mosquitto) ⇄ Message Processor ⇄ Dynamic API ⇄ MongoDB
+Контроллеры ⇄ MQTT (Mosquitto, ACL по serial) ⇄ Message Processor ⇄ Dynamic API ⇄ MongoDB
 Dashboard ──nginx──► Dynamic API, post-device API, backup, telegram-bots
 Dashboard ──pyorch-bridge──► PyOrchestrator (Telegram, опц.)
 ```

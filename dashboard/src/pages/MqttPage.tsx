@@ -124,15 +124,15 @@ export function MqttPage() {
       {
         key: 'receivedAt',
         header: 'Получено',
+        className: 'table-cell-nowrap',
         sortable: true,
         sortValue: (r) => r.receivedAt || '',
-        render: (r) => (
-          <span className="whitespace-nowrap text-sm">{formatDateTime(r.receivedAt)}</span>
-        ),
+        render: (r) => <span className="text-sm">{formatDateTime(r.receivedAt)}</span>,
       },
       {
         key: 'messageType',
         header: 'Тип',
+        className: 'table-cell-nowrap',
         sortable: true,
         searchValue: (r) => `${r.messageType} ${messageTypeLabel(r.messageType)}`,
         sortValue: (r) => r.messageType,
@@ -155,6 +155,7 @@ export function MqttPage() {
       {
         key: 'postSerial',
         header: 'Пост',
+        className: 'table-cell-nowrap',
         sortable: true,
         searchValue: (r) => r.postSerial || '',
         sortValue: (r) => r.postSerial || '',

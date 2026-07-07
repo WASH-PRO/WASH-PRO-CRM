@@ -16,6 +16,7 @@ layout: default
 
 <p class="quick-links">
   <a href="{{ '/getting-started/' | relative_url }}">Быстрый старт</a> ·
+  <a href="{{ '/setup-wizard/' | relative_url }}">Мастер настройки</a> ·
   <a href="{{ '/architecture/' | relative_url }}">Архитектура</a> ·
   <a href="{{ '/mqtt/' | relative_url }}">MQTT</a> ·
   <a href="{{ '/embedded-services/' | relative_url }}">Встроенные сервисы</a> ·
@@ -27,8 +28,9 @@ layout: default
 | Модуль | Описание |
 |--------|----------|
 | **Обзор** | KPI, графики Recharts, live-уведомления |
-| **SCADA** | Состояние постов, live-таймер, **интерактивный график** |
-| **Объекты** | Автомойки, посты, **настройки устройства** (цены, команды MQTT) |
+| **SCADA** | Состояние постов, **онлайн/оффлайн**, live-таймер, **интерактивный график** |
+| **Мастер настройки** | Первичная настройка после установки (`/setup`) |
+| **Объекты** | Автомойки, посты, **MQTT-учётки**, **настройки устройства** (цены, команды) |
 | **Карты** | Скидочные / сервисные / VIP; журнал применений NFC |
 | **Аналитика** | Использование и финансы до/после инкассации |
 | **Система** | Уведомления (web + Telegram), пользователи, группы RBAC, бэкапы, Telegram-боты, справочники, логи |
@@ -72,7 +74,8 @@ chmod +x scripts/*.sh
 | Dynamic API health | http://localhost:3001/api/health |
 | PyOrchestrator Panel *(если включён)* | http://localhost:8090 |
 
-**Логин Dashboard:** `admin` / `Admin123!`
+**Логин Dashboard:** `admin` / `Admin123!`  
+При первом входе откроется **мастер настройки** — см. [Мастер настройки](setup-wizard.md).
 
 ### PyOrchestrator (опционально)
 

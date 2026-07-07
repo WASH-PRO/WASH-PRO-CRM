@@ -5,9 +5,9 @@
 ## Поток данных
 
 ```
-Контроллеры ⇄ MQTT (Mosquitto) ⇄ Message Processor ⇄ Dynamic API ⇄ MongoDB
+Контроллеры ⇄ MQTT (Mosquitto, ACL по serial) ⇄ Message Processor ⇄ Dynamic API ⇄ MongoDB
 Dashboard ──► Dynamic API (nginx /api)
-Dashboard ──► /api/crm/post-device/ ──► message-processor:3022 (команды/цены)
+Dashboard ──► /api/crm/post-device/ ──► message-processor:3022 (команды/цены/sync MQTT)
 Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 ```
 
@@ -21,7 +21,7 @@ Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 | mosquitto | 1883 | ✅ LAN |
 | mongodb, backup, message-processor | — | internal |
 
-`message-processor`: подписка MQTT + HTTP `:3022` для исходящих `set/prices` и `set/command`.
+`message-processor`: подписка MQTT + HTTP `:3022` + синхронизация passwd/ACL.
 
 ## PyOrchestrator (опц.)
 
@@ -36,11 +36,13 @@ Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
 
 ## Телеметрия
 
-- **Входящая:** `wash/telemetry/#` (legacy) и `+/+/#` (нативный `{dt_pref}/{serial}/state/*`)
+- **Входящая:** `{dt_pref}/{serial}/state/*` (нативный) и `wash/telemetry/#` (legacy)
 - **Исходящая:** Dashboard → processor HTTP → `{dt_pref}/{serial}/set/*`
-- Журнал: `/api/crm/telemetry` (все сообщения)
+- **Авторизация:** пост — свой логин; CRM — `superadmin`
+- **Изоляция:** ACL по serial; CRM доверяет serial из топика
+- Журнал: `/api/crm/telemetry`
 - DLQ: `wash/dlq`
 
 ## init-seed
 
-11 групп endpoints, 52 CRM-маршрута, RBAC, RUB, типы скидок 1–5.
+11 групп endpoints, 52 CRM-маршрута, RBAC, RUB, типы скидок 1–5, `setup.complete: false`.

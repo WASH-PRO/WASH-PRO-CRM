@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { api, apiListBounded, apiListCatalog } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { PageHeader, StatCard, Loading } from '../components/UI';
 import { DataTable } from '../components/DataTable';
 import { DashboardCharts } from '../components/DashboardCharts';
@@ -30,6 +31,8 @@ interface DashboardData {
 }
 
 export function DashboardPage() {
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('update');
   const { currency } = useCurrency();
 
   const fetchData = useCallback(async (signal: AbortSignal): Promise<DashboardData> => {
@@ -55,6 +58,7 @@ export function DashboardPage() {
   const { data, loading, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_DASHBOARD_MS });
 
   const markRead = async (id: string) => {
+    if (!canEdit) return;
     await api(`/crm/notifications/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ read: true }),
@@ -63,18 +67,19 @@ export function DashboardPage() {
   };
 
   const deleteOne = async (id: string) => {
+    if (!canEdit) return;
     if (!confirm('Удалить уведомление?')) return;
     await bulkDelete('/crm/notifications', [id]);
     refresh();
   };
 
   const notificationColumns = useMemo(
-    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, compact: true }),
+    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, compact: true, canEdit }),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refresh]
+    [refresh, canEdit]
   );
 
-  const notificationBulkActions = useMemo(() => createNotificationBulkActions(refresh), [refresh]);
+  const notificationBulkActions = useMemo(() => createNotificationBulkActions(refresh, canEdit), [refresh, canEdit]);
 
   const finance = useMemo(() => {
     if (!data) return { cash: 0, cashless: 0, revenue: 0, discounts: 0 };

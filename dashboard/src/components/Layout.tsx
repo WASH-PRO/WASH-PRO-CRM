@@ -7,6 +7,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  Wand2,
 } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import clsx from 'clsx';
@@ -18,6 +19,7 @@ import { LiveModeIndicator } from './LiveModeIndicator';
 import { EmbeddedServicesSidebar } from './EmbeddedServicesSidebar';
 import { breadcrumbsFromPath } from '../utils/breadcrumbs';
 import { navGroups } from '../utils/navRoutes';
+import { canManageSystemSetup, setupRoleHint } from '../utils/setupPermissions';
 import { BreadcrumbProvider, useBreadcrumbLastLabelOverride } from '../context/BreadcrumbContext';
 import { SoftwareUpdatesProvider } from '../context/SoftwareUpdatesContext';
 import { BrandLogo } from './BrandLogo';
@@ -30,6 +32,9 @@ function LayoutInner() {
   const sidebarUserKey = user?.id || user?.login;
   const { collapsed, setCollapsed, effectiveWidth, resizing, startResize, canResize } =
     useSidebarSize(sidebarUserKey);
+
+  const canReopenSetup = canManageSystemSetup(user?.permissions);
+  const setupHref = canReopenSetup ? '/setup?restart=1' : '/setup';
 
   const filteredGroups = useMemo(
     () =>
@@ -107,6 +112,16 @@ function LayoutInner() {
         </nav>
 
         <div className="shrink-0 space-y-2 border-t border-panel-border p-2 dark:border-panel-sidebar-border">
+          <Link
+            to={setupHref}
+            onClick={() => setMobileOpen(false)}
+            className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
+            title={collapsed ? 'Мастер настроек' : undefined}
+          >
+            <Wand2 size={18} strokeWidth={1.75} className="shrink-0" />
+            {!collapsed && <span className="truncate">Мастер настроек</span>}
+          </Link>
+
           <EmbeddedServicesSidebar collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
 
           <button
@@ -168,7 +183,7 @@ function LayoutInner() {
                   {user?.name || user?.login}
                 </div>
                 <div className="truncate text-[11px] text-panel-muted dark:text-panel-muted-dark">
-                  {isAdmin ? 'Администратор' : 'Оператор'}
+                  {isAdmin ? 'Администратор' : setupRoleHint(user)}
                 </div>
               </div>
             </Link>

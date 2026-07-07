@@ -208,6 +208,32 @@ export class EndpointDataRepository {
     return !!result;
   }
 
+  async deleteManyByPathAndDataFilter(
+    resourcePath: string,
+    dataFilter: Record<string, unknown>
+  ): Promise<number> {
+    const buildQuery = (filter: Record<string, unknown>): Record<string, unknown> => {
+      if ('$or' in filter && Array.isArray(filter.$or)) {
+        return { $or: filter.$or.map((item) => buildQuery(item as Record<string, unknown>)) };
+      }
+      const query: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(filter)) {
+        if (key.startsWith('$')) {
+          query[key] = value;
+          continue;
+        }
+        query[`data.${key}`] = value;
+      }
+      return query;
+    };
+
+    const result = await EndpointData.deleteMany({
+      resourcePath,
+      ...buildQuery(dataFilter),
+    });
+    return result.deletedCount ?? 0;
+  }
+
   async migrateResourcePathForEndpoint(endpointId: string, resourcePath: string): Promise<number> {
     const result = await EndpointData.updateMany({ endpointId }, { $set: { resourcePath } });
     return result.modifiedCount ?? 0;

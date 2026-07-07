@@ -1,22 +1,24 @@
 import { FormEvent, useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Plus, RefreshCw, Settings, Trash2 } from 'lucide-react';
-import { api, apiListCatalog, clearCatalogCache } from '../api/client';
+import { api, apiListBounded, apiListCatalog, clearCatalogCache } from '../api/client';
 import { syncMqttUsers } from '../api/postDevice';
 import { useAuth } from '../context/AuthContext';
-import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
+import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, ErrorMessage } from '../components/UI';
+import { PostOnlineStatus } from '../components/PostOnlineStatus';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { refId, resolveWashName } from '../utils/refs';
 import { formatDateTime } from '../utils/format';
+import { latestPostStateByPost, isPostOnline } from '../utils/statsAggregation';
 import {
   defaultMqttLogin,
   generateMqttPassword,
   mqttBrokerEndpoint,
   readPostMqttSettings,
 } from '../utils/postMqtt';
-import type { Post, PostSettings, Wash } from '../types';
+import type { Post, PostSettings, PostState, Wash } from '../types';
 import { bulkDelete } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 
@@ -63,15 +65,17 @@ export function PostsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const brokerEndpoint = useMemo(() => mqttBrokerEndpoint(), []);
 
-  const fetchData = useCallback(async () => {
-    const [posts, washes] = await Promise.all([
-      apiListCatalog<Post>('/crm/posts?populate=washId'),
-      apiListCatalog<Wash>('/crm/washes'),
+  const fetchData = useCallback(async (signal?: AbortSignal) => {
+    const [posts, washes, states] = await Promise.all([
+      apiListCatalog<Post>('/crm/posts?populate=washId', signal),
+      apiListCatalog<Wash>('/crm/washes', signal),
+      apiListBounded<PostState>('/crm/post-states', signal, 5),
     ]);
-    return { posts, washes };
+    const stateByPost = new Map(latestPostStateByPost(states).map((s) => [refId(s.postId), s]));
+    return { posts, washes, stateByPost };
   }, []);
 
-  const { data, loading, refresh } = usePolling(fetchData, [], { intervalMs: DEFAULT_LIVE_INTERVAL_MS });
+  const { data, loading, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_FAST_MS });
 
   const washById = useMemo(() => new Map((data?.washes || []).map((w) => [w.id, w])), [data?.washes]);
 
@@ -127,7 +131,7 @@ export function PostsPage() {
     try {
       await api(`/crm/posts/${id}`, { method: 'DELETE' });
       await applyMqttSync();
-      clearCatalogCache('/api/crm/posts');
+      clearCatalogCache('/crm/posts');
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления');
@@ -148,6 +152,14 @@ export function PostsPage() {
 
   const columns: DataTableColumn<Post>[] = useMemo(
     () => [
+      {
+        key: 'status',
+        header: 'Статус',
+        sortable: true,
+        sortValue: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? 1 : 0),
+        searchValue: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? 'онлайн' : 'оффлайн'),
+        render: (p) => <PostOnlineStatus state={data?.stateByPost.get(p.id)} />,
+      },
       {
         key: 'postNumber',
         header: 'Номер поста',
@@ -239,12 +251,13 @@ export function PostsPage() {
         ),
       },
     ],
-    [washName, canEdit, canDelete, navigate]
+    [washName, canEdit, canDelete, navigate, data?.stateByPost]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<Post>[] => {
     const actions: DataTableBulkAction<Post>[] = [
       createExportBulkAction('posts.csv', [
+        { header: 'Статус', value: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? 'Онлайн' : 'Офлайн') },
         { header: 'Номер', value: (p) => String(p.postNumber) },
         { header: 'Объект', value: (p) => washName(p.washId) },
         { header: 'Название', value: (p) => p.name },
@@ -270,7 +283,7 @@ export function PostsPage() {
     }
 
     return actions;
-  }, [canDelete, washName, refresh]);
+  }, [canDelete, washName, refresh, data?.stateByPost]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -295,7 +308,7 @@ export function PostsPage() {
       }
 
       await applyMqttSync();
-      clearCatalogCache('/api/crm/posts');
+      clearCatalogCache('/crm/posts');
       setModal(false);
       refresh();
     } catch (err) {
@@ -352,7 +365,8 @@ export function PostsPage() {
               <p className="field-hint mt-1">
                 Укажите на панели в NVS: <span className="font-mono">rm_addr</span> — IP сервера CRM,{' '}
                 <span className="font-mono">rm_port</span> — {brokerEndpoint.split(':')[1] || '1883'},{' '}
-                <span className="font-mono">rm_login</span> / <span className="font-mono">rm_pass</span> — ниже.
+                <span className="font-mono">rm_login</span> / <span className="font-mono">rm_pass</span> — значения ниже.
+                Не используйте логин <span className="font-mono">superadmin</span> — он только для CRM.
               </p>
             </div>
             <div>

@@ -76,6 +76,8 @@ description: CRM endpoints и коллекции MongoDB
 | `maintenance` | Заметки по ТО |
 | `features` | Описание возможностей поста |
 | `mqttPrefix` | Префикс MQTT (`dt_pref`), по умолчанию `washpro` |
+| `mqttLogin` | Логин MQTT для панели поста (по умолчанию = `serialNumber`) |
+| `mqttPassword` | Пароль MQTT для панели поста |
 | `modePrices` | Цены режимов: `{ "0": 50, "1": 80, … }` (рубли) |
 | `pricesUpdatedAt` | Время последнего сохранения цен из CRM |
 | `pricesSyncedAt` | Время синхронизации цен с устройства |
@@ -112,5 +114,5 @@ description: CRM endpoints и коллекции MongoDB
 
 - создаёт группы endpoints и CRM endpoints;
 - настраивает RBAC;
-- добавляет настройки по умолчанию, валюту RUB и типы скидок 1–5;
+- добавляет настройки по умолчанию, валюту RUB, типы скидок 1–5, **`setup.complete: false`** для мастера настройки;
 - идемпотентен — безопасно запускать повторно (`./scripts/run-init-seed.sh`).

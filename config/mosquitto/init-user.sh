@@ -1,18 +1,17 @@
 #!/bin/sh
 set -e
 
-USER="${MQTT_USER:-wash}"
-PASS="${MQTT_PASSWORD:-wash_secret_change_me}"
+USER="${MQTT_USER:-superadmin}"
+PASS="${MQTT_PASSWORD:?MQTT_PASSWORD is required}"
 PASSWD_FILE="/mosquitto/config/passwd"
 
 cp /mosquitto-conf/mosquitto.conf /mosquitto/config/mosquitto.conf
+sed "s/^user superadmin/user $USER/" /mosquitto-conf/acl > /mosquitto/config/acl
 
-if [ -f "$PASSWD_FILE" ]; then
-  mosquitto_passwd -b "$PASSWD_FILE" "$USER" "$PASS"
-else
-  mosquitto_passwd -b -c "$PASSWD_FILE" "$USER" "$PASS"
-fi
+rm -f "$PASSWD_FILE"
+mosquitto_passwd -b -c "$PASSWD_FILE" "$USER" "$PASS"
 
-chmod 644 "$PASSWD_FILE"
+chmod 600 "$PASSWD_FILE"
+chmod 644 /mosquitto/config/acl
 
 echo "MQTT user '$USER' ready."

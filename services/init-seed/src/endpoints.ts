@@ -34,30 +34,21 @@ const CASCADE_JS_HELPERS = `function refId(value) {
   return String(value);
 }
 
-async function purgeCollection(db, path, matchFn) {
-  const col = db.at(path);
-  let deleted = 0;
-  for (let round = 0; round < 200; round++) {
-    let roundDeleted = 0;
-    const first = await col.find({}, { page: 1, limit: 1 });
-    const totalPages = first.pagination && first.pagination.totalPages ? first.pagination.totalPages : 1;
-    for (let page = 1; page <= totalPages; page++) {
-      const result = await col.find({}, { page: page, limit: 100 });
-      const data = result.data || [];
-      for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-        if (!matchFn(row)) continue;
-        await col.delete(row.id);
-        roundDeleted++;
-      }
-    }
-    deleted += roundDeleted;
-    if (roundDeleted === 0) break;
-  }
-  return deleted;
+async function deleteByRefField(col, field, value) {
+  const id = String(value || '');
+  if (!id) return 0;
+  return await col.deleteMany({
+    $or: [
+      { [field]: id },
+      { [field + '.id']: id },
+      { [field + '._id']: id },
+    ],
+  });
 }
 
 async function findRecordById(col, id) {
+  const direct = await col.findOne({ id: id });
+  if (direct) return direct;
   const first = await col.find({}, { page: 1, limit: 1 });
   const totalPages = first.pagination && first.pagination.totalPages ? first.pagination.totalPages : 1;
   for (let page = 1; page <= totalPages; page++) {
@@ -90,9 +81,7 @@ async function listPostsByWashId(db, washId) {
 }
 
 async function purgeByPostId(db, postId, postSerial) {
-  const serial = String(postSerial || '');
   let deleted = 0;
-  const byPostId = function(row) { return refId(row.postId) === postId; };
   const pathsByPostId = [
     '/api/crm/post-states',
     '/api/crm/cards',
@@ -101,20 +90,22 @@ async function purgeByPostId(db, postId, postSerial) {
     '/api/crm/notifications',
   ];
   for (let i = 0; i < pathsByPostId.length; i++) {
-    deleted += await purgeCollection(db, pathsByPostId[i], byPostId);
+    deleted += await deleteByRefField(db.at(pathsByPostId[i]), 'postId', postId);
   }
-  deleted += await purgeCollection(db, '/api/crm/telemetry', function(row) {
-    if (refId(row.postId) === postId) return true;
-    if (serial && String(row.postSerial || '') === serial) return true;
-    return false;
-  });
+  deleted += await deleteByRefField(db.at('/api/crm/telemetry'), 'postId', postId);
+  const serial = String(postSerial || '').trim();
+  if (serial) {
+    deleted += await db.at('/api/crm/telemetry').deleteMany({ postSerial: serial });
+  }
   return deleted;
 }
 
 async function purgeByWashId(db, washId) {
-  return purgeCollection(db, '/api/crm/notifications', function(row) {
-    return refId(row.washId) === washId;
-  });
+  return deleteByRefField(db.at('/api/crm/notifications'), 'washId', washId);
+}
+
+async function deletePostsByWashId(db, washId) {
+  return deleteByRefField(db.at('/api/crm/posts'), 'washId', washId);
 }
 
 async function writeDeleteLog(db, recordsAffected) {
@@ -177,19 +168,18 @@ async function handler(req, db) {
   try {
     const posts = await listPostsByWashId(db, washId);
     let deletedRelated = 0;
-    const postsCol = db.at('/api/crm/posts');
     for (let i = 0; i < posts.length; i++) {
       const post = posts[i];
       deletedRelated += await purgeByPostId(db, post.id, post.serialNumber);
-      await postsCol.delete(post.id);
     }
+    const deletedPosts = await deletePostsByWashId(db, washId);
     deletedRelated += await purgeByWashId(db, washId);
     await db.delete(washId);
-    await writeDeleteLog(db, deletedRelated + posts.length + 1);
+    await writeDeleteLog(db, deletedRelated + deletedPosts + 1);
     return {
       success: true,
       message: 'Wash, posts and related data deleted',
-      deletedPosts: posts.length,
+      deletedPosts: deletedPosts,
       deletedRelated: deletedRelated,
     };
   } catch (e) {
@@ -631,15 +621,32 @@ export const DEFAULT_SETTINGS = [
       },
     },
   },
+  {
+    key: 'setup',
+    value: {
+      complete: false,
+      skippedSteps: [],
+    },
+  },
 ];
 
 export const DEFAULT_CURRENCIES = [
-  {
-    code: 'RUB',
-    name: 'Российский рубль',
-    symbol: '₽',
-    isDefault: true,
-  },
+  { code: 'RUB', name: 'Российский рубль', symbol: '₽', isDefault: true },
+  { code: 'BYN', name: 'Белорусский рубль', symbol: 'Br', isDefault: false },
+  { code: 'KZT', name: 'Казахстанский тенге', symbol: '₸', isDefault: false },
+  { code: 'UAH', name: 'Украинская гривна', symbol: '₴', isDefault: false },
+  { code: 'UZS', name: 'Узбекский сум', symbol: 'сум', isDefault: false },
+  { code: 'TJS', name: 'Таджикский сомони', symbol: 'SM', isDefault: false },
+  { code: 'KGS', name: 'Киргизский сом', symbol: 'с', isDefault: false },
+  { code: 'AMD', name: 'Армянский драм', symbol: '֏', isDefault: false },
+  { code: 'AZN', name: 'Азербайджанский манат', symbol: '₼', isDefault: false },
+  { code: 'MDL', name: 'Молдавский лей', symbol: 'L', isDefault: false },
+  { code: 'TMT', name: 'Туркменский манат', symbol: 'm', isDefault: false },
+  { code: 'GEL', name: 'Грузинский лари', symbol: '₾', isDefault: false },
+  { code: 'TRY', name: 'Турецкая лира', symbol: '₺', isDefault: false },
+  { code: 'EUR', name: 'Евро', symbol: '€', isDefault: false },
+  { code: 'USD', name: 'Доллар США', symbol: '$', isDefault: false },
+  { code: 'CNY', name: 'Китайский юань', symbol: '¥', isDefault: false },
 ];
 
 export const DEFAULT_DISCOUNT_TYPES = [

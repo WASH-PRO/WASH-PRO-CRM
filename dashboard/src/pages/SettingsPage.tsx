@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
 import { SoftwareUpdatesSection, componentVersionLabel } from '../components/SoftwareUpdatesSection';
+import { useAuth } from '../context/AuthContext';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { PageHeader, Loading } from '../components/UI';
 import {
@@ -112,6 +113,8 @@ function legacyDynamicApiFromPyOrch(raw: Record<string, unknown>): DynamicApiCrm
 }
 
 export function SettingsPage() {
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('update');
   const updatesCtx = useSoftwareUpdatesContext();
   const [ids, setIds] = useState<Record<string, string | null>>({});
   const [backup, setBackup] = useState<BackupSettings>(DEFAULT_BACKUP);
@@ -164,6 +167,7 @@ export function SettingsPage() {
   }, [load]);
 
   const save = async () => {
+    if (!canEdit) return;
     setSaving(true);
     try {
       await Promise.all([
@@ -194,12 +198,20 @@ export function SettingsPage() {
             <button type="button" className="btn-secondary" onClick={load}>
               <RefreshCw className="h-4 w-4" /> Обновить
             </button>
-            <button type="button" className="btn-primary" onClick={save} disabled={saving}>
-              <Save className="h-4 w-4" /> {saving ? 'Сохранение…' : 'Сохранить'}
-            </button>
+            {canEdit && (
+              <button type="button" className="btn-primary" onClick={save} disabled={saving}>
+                <Save className="h-4 w-4" /> {saving ? 'Сохранение…' : 'Сохранить'}
+              </button>
+            )}
           </>
         }
       />
+
+      {!canEdit && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+          Режим просмотра: изменение настроек доступно операторам и администраторам.
+        </p>
+      )}
 
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -215,12 +227,13 @@ export function SettingsPage() {
             <input
               type="checkbox"
               checked={backup.enabled}
+              disabled={!canEdit}
               onChange={(e) => setBackup({ ...backup, enabled: e.target.checked })}
             />
             Автоматическое резервное копирование
           </label>
           <Field label="Расписание (cron)" hint="Формат cron, например 0 2 * * * — каждый день в 02:00">
-            <input className="input font-mono" value={backup.cron} onChange={(e) => setBackup({ ...backup, cron: e.target.value })} />
+            <input className="input font-mono" value={backup.cron} disabled={!canEdit} onChange={(e) => setBackup({ ...backup, cron: e.target.value })} />
           </Field>
           <Field label="Количество хранимых копий">
             <input
@@ -228,6 +241,7 @@ export function SettingsPage() {
               className="input"
               min={1}
               max={30}
+              disabled={!canEdit}
               value={backup.retentionCount}
               onChange={(e) => setBackup({ ...backup, retentionCount: Number(e.target.value) || 7 })}
             />
@@ -235,6 +249,7 @@ export function SettingsPage() {
           <Field label="Путь хранения" hint="Каталог внутри контейнера backup">
             <input
               className="input font-mono"
+              disabled={!canEdit}
               value={backup.storagePath ?? '/backups'}
               onChange={(e) => setBackup({ ...backup, storagePath: e.target.value })}
             />
@@ -251,13 +266,14 @@ export function SettingsPage() {
             </p>
           )}
           <Field label="Email администратора">
-            <input className="input font-mono" value={pyorch.email} onChange={(e) => setPyorch({ ...pyorch, email: e.target.value })} />
+            <input className="input font-mono" disabled={!canEdit} value={pyorch.email} onChange={(e) => setPyorch({ ...pyorch, email: e.target.value })} />
           </Field>
           <Field label="Пароль администратора">
             <input
               className="input font-mono"
               type="password"
               autoComplete="off"
+              disabled={!canEdit}
               value={pyorch.password}
               onChange={(e) => setPyorch({ ...pyorch, password: e.target.value })}
             />
@@ -268,6 +284,7 @@ export function SettingsPage() {
               className="input"
               min={1}
               max={65535}
+              disabled={!canEdit}
               value={pyorch.panelPort}
               onChange={(e) => setPyorch({ ...pyorch, panelPort: Number(e.target.value) || 8090 })}
             />
@@ -286,6 +303,7 @@ export function SettingsPage() {
           <Field label="Service login" hint="Учётная запись для внутренних сервисов">
             <input
               className="input font-mono"
+              disabled={!canEdit}
               value={dynamicApi.serviceLogin}
               onChange={(e) => setDynamicApi({ ...dynamicApi, serviceLogin: e.target.value })}
             />
@@ -295,6 +313,7 @@ export function SettingsPage() {
               className="input font-mono"
               type="password"
               autoComplete="off"
+              disabled={!canEdit}
               value={dynamicApi.servicePassword}
               onChange={(e) => setDynamicApi({ ...dynamicApi, servicePassword: e.target.value })}
             />
@@ -302,6 +321,7 @@ export function SettingsPage() {
           <Field label="API base URL" hint="Базовый URL Dynamic API внутри Docker-сети">
             <input
               className="input font-mono"
+              disabled={!canEdit}
               value={dynamicApi.apiBaseUrl}
               onChange={(e) => setDynamicApi({ ...dynamicApi, apiBaseUrl: e.target.value })}
             />
@@ -323,6 +343,7 @@ export function SettingsPage() {
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
+                disabled={!canEdit}
                 checked={notifications.web}
                 onChange={(e) => setNotifications({ ...notifications, web: e.target.checked })}
               />
@@ -331,6 +352,7 @@ export function SettingsPage() {
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
+                disabled={!canEdit}
                 checked={notifications.telegram}
                 onChange={(e) => setNotifications({ ...notifications, telegram: e.target.checked })}
               />
@@ -348,6 +370,7 @@ export function SettingsPage() {
                         <input
                           type="checkbox"
                           className="mt-0.5 shrink-0"
+                          disabled={!canEdit}
                           checked={notifications.events[key] !== false}
                           onChange={(e) =>
                             setNotifications({

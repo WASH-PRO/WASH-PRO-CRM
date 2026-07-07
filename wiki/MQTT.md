@@ -2,12 +2,25 @@
 
 Полная документация: [docs/mqtt.md](https://wash-pro.github.io/WASH-PRO-CRM/mqtt/)
 
-## Подключение контроллера
+## Подключение контроллера (пост)
 
-- Брокер: `mqtt://wash:PASSWORD@<IP-CRM>:1883`
+- Брокер: `mqtt://<mqttLogin>:<mqttPassword>@<IP-CRM>:1883`
+- Логин/пароль — из карточки поста в CRM (`settings.mqttLogin` / `settings.mqttPassword`)
+- По умолчанию логин = `serialNumber`
 - Нативный протокол: `{dt_pref}/{serial}/state/{suffix}`
 - По умолчанию `dt_pref` = `washpro`
-- `serial` = `posts.serialNumber` в CRM (точное совпадение)
+- `serial` = `posts.serialNumber` в CRM (точное совпадение в топике)
+
+## CRM (внутри Docker)
+
+- Пользователь: `superadmin` (`MQTT_USER` / `MQTT_PASSWORD` в `.env`)
+- Не используйте `superadmin` на панелях постов
+
+## Изоляция постов
+
+- ACL Mosquitto: пост пишет только в `washpro/{свой-serial}/#`
+- Подмена serial в JSON не влияет на чужую статистику
+- Синхронизация: мастер настроек → MQTT или сохранение поста
 
 ## Телеметрия (пост → CRM)
 
@@ -36,37 +49,29 @@
 {dt_pref}/{serial}/set/command
 ```
 
-### Команды (`cmd`)
-
-| cmd | Действие |
-|-----|----------|
-| 1 | Мягкая перезагрузка |
-| 2 | Жёсткая перезагрузка |
-| 3 | Зачисление (`summ` в рублях) |
-| 4 | Режим неисправности |
-| 5 | Обслуживание бокса |
-| 6 | VIP |
-| 7 | Инкассация |
-
 ### HTTP API (JWT)
 
 ```
 POST /api/crm/post-device/posts/{serial}/prices
 POST /api/crm/post-device/posts/{serial}/command
+POST /api/crm/post-device/mqtt/sync-users
 ```
 
-### mosquitto_pub
+### mosquitto_pub (отладка с сервера CRM)
 
 ```bash
-mosquitto_pub -h localhost -p 1883 -u wash -P 'PASS' -q 1 \
+mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASS' -q 1 \
   -t 'washpro/SN123/set/prices' -m '{"0":50,"1":80}'
-
-mosquitto_pub -h localhost -p 1883 -u wash -P 'PASS' -q 1 \
-  -t 'washpro/SN123/set/command' -m '{"cmd":3,"summ":100}'
 ```
 
 ## Миграция с RabbitMQ
 
 ```bash
 ./scripts/migrate-to-mqtt.sh
+```
+
+## Сброс MQTT
+
+```bash
+./scripts/fix-mqtt.sh
 ```

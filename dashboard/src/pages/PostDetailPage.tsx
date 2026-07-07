@@ -1,20 +1,22 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { api } from '../api/client';
+import { api, apiListBounded } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, ErrorMessage } from '../components/UI';
+import { PostOnlineStatus } from '../components/PostOnlineStatus';
 import { PostDeviceSettings } from '../components/PostDeviceSettings';
 import { DataTable, type DataTableBulkAction, type DataTableColumn } from '../components/DataTable';
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
 import { useWorkModes } from '../hooks/useWorkModes';
-import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
+import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatPause, formatDateTime, formatMoney } from '../utils/format';
 import { refId } from '../utils/refs';
+import { latestPostStateByPost } from '../utils/statsAggregation';
 import { createExportBulkAction } from '../utils/export';
 import { useBreadcrumbLastLabel } from '../context/BreadcrumbContext';
-import type { Post, PostSettings, Wash } from '../types';
+import type { Post, PostSettings, PostState, Wash } from '../types';
 import { parseModePrices } from '../utils/postDevice';
 
 import { fetchPostStateHistory, type PostStateHistoryRow } from '../utils/postTelemetry';
@@ -22,6 +24,7 @@ import { fetchPostStateHistory, type PostStateHistoryRow } from '../utils/postTe
 interface PostDetailData {
   post: Post;
   wash: Wash;
+  currentState: PostState | null;
   stateHistory: PostStateHistoryRow[];
   historyTruncated: boolean;
 }
@@ -72,10 +75,13 @@ export function PostDetailPage() {
     }
 
     const stopBefore = historyDateFrom ? new Date(historyDateFrom).getTime() : undefined;
-    const { rows: stateHistory, truncated } = await fetchPostStateHistory(post.serialNumber, {
-      signal,
-      stopBefore,
-    });
+    const [stateHistoryResult, states] = await Promise.all([
+      fetchPostStateHistory(post.serialNumber, { signal, stopBefore }),
+      apiListBounded<PostState>('/crm/post-states', signal, 5),
+    ]);
+    const { rows: stateHistory, truncated } = stateHistoryResult;
+    const currentState =
+      latestPostStateByPost(states).find((s) => refId(s.postId) === post.id) ?? null;
 
     const washId = refId(post.washId);
     const wash =
@@ -86,13 +92,14 @@ export function PostDetailPage() {
     return {
       post,
       wash,
+      currentState,
       stateHistory,
       historyTruncated: truncated,
     };
   }, [postId, historyDateFrom]);
 
   const { data, loading, refresh, lastUpdatedAt } = usePolling(fetchData, [postId, historyDateFrom], {
-    intervalMs: LIVE_INTERVAL_SLOW_MS,
+    intervalMs: LIVE_INTERVAL_FAST_MS,
   });
 
   useBreadcrumbLastLabel(data?.post.serialNumber);
@@ -278,7 +285,7 @@ export function PostDetailPage() {
     );
   }
 
-  const { post, wash } = data;
+  const { post, wash, currentState } = data;
 
   return (
     <div>
@@ -297,6 +304,7 @@ export function PostDetailPage() {
         subtitle={`${wash?.name || '—'} · SN ${post.serialNumber} · обновлено ${
           lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'
         }`}
+        actions={<PostOnlineStatus state={currentState ?? undefined} />}
       />
 
       {error && (

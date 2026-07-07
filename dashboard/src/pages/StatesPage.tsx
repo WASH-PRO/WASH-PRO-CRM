@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiListBounded, apiListCatalog } from '../api/client';
 import { PageHeader, Loading, ErrorMessage } from '../components/UI';
+import { PostOnlineStatus } from '../components/PostOnlineStatus';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
@@ -9,7 +10,7 @@ import { useWorkModes } from '../hooks/useWorkModes';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatPause, formatDateTime, formatMoney } from '../utils/format';
 import { refId, resolveWashAddress } from '../utils/refs';
-import { latestPostStateByPost } from '../utils/statsAggregation';
+import { latestPostStateByPost, isPostOnline } from '../utils/statsAggregation';
 import { createExportBulkAction } from '../utils/export';
 import type { PostState, Post, Wash, Card } from '../types';
 
@@ -25,6 +26,7 @@ interface StateRow {
   modeName?: string;
   lastMessageAt?: string;
   hasData: boolean;
+  isOnline: boolean;
 }
 
 function latestCardByPost(cards: Card[]): Map<string, Card> {
@@ -74,6 +76,7 @@ export function StatesPage() {
         modeName: state?.modeName || state?.mode,
         lastMessageAt: state?.lastMessageAt,
         hasData,
+        isOnline: isPostOnline(state),
       };
     });
 
@@ -84,6 +87,15 @@ export function StatesPage() {
 
   const filters: DataTableFilter<StateRow>[] = useMemo(
     () => [
+      {
+        id: 'status',
+        label: 'Статус',
+        options: [
+          { value: 'online', label: 'Онлайн' },
+          { value: 'offline', label: 'Офлайн' },
+        ],
+        match: (r, v) => (v === 'online' ? r.isOnline : !r.isOnline),
+      },
       {
         id: 'hasData',
         label: 'Данные',
@@ -99,6 +111,14 @@ export function StatesPage() {
 
   const columns: DataTableColumn<StateRow>[] = useMemo(
     () => [
+      {
+        key: 'status',
+        header: 'Статус',
+        sortable: true,
+        sortValue: (r) => (r.isOnline ? 1 : 0),
+        searchValue: (r) => (r.isOnline ? 'онлайн' : 'оффлайн'),
+        render: (r) => <PostOnlineStatus state={{ lastMessageAt: r.lastMessageAt }} />,
+      },
       {
         key: 'address',
         header: 'Адрес объекта',
@@ -167,6 +187,7 @@ export function StatesPage() {
 
   const bulkActions = useMemo((): DataTableBulkAction<StateRow>[] => [
     createExportBulkAction('post-states.csv', [
+      { header: 'Статус', value: (r) => (r.isOnline ? 'Онлайн' : 'Офлайн') },
       { header: 'Адрес', value: (r) => r.address },
       { header: 'Пост', value: (r) => String(r.postNumber) },
       { header: 'Текущий баланс', value: (r) => String(r.balance ?? '') },

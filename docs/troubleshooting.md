@@ -45,8 +45,21 @@ docker compose up -d --build message-processor
 
 ```bash
 ./scripts/fix-mqtt.sh
-docker restart wash-message-processor
+docker compose up -d message-processor
 ```
+
+Скрипт пересоздаёт `superadmin` в passwd. Учётные записи **постов** — через «Синхронизировать MQTT» в мастере или сохранение поста.
+
+### Пост не может подключиться / «not authorised»
+
+1. Логин/пароль на панели = `settings.mqttLogin` / `settings.mqttPassword` из CRM (не `superadmin`).
+2. Топик публикации: `washpro/{serial}/state/...`, где `{serial}` = `posts.serialNumber`.
+3. После смены MQTT-данных в CRM — синхронизация MQTT.
+4. `./scripts/fix-mqtt.sh` — если сбился `superadmin` для CRM.
+
+### ACL / чужой serial в топике
+
+Пост не может публиковать в топик с чужим serial — Mosquitto отклонит. Если CRM получает сообщение с несовпадающим payload — учитывается только serial из топика.
 
 Полный сброс MQTT (данные в `DATA_DIR`, не в Docker volume):
 
@@ -108,6 +121,14 @@ curl -s http://localhost:8000/api/v1/mcp/info -H "Authorization: Bearer TOKEN" |
 
 Индикатор проверяет `/api/telegram-bots/health`. Если PyOrch выключен — это ожидаемо. Dynamic API проверяется через `/api/health`.
 
+## Статус поста «Офлайн» при работающей панели
+
+Пост **онлайн**, если `lastMessageAt` в `/api/crm/post-states` не старше **30 секунд**. Проверьте:
+
+1. Телеметрия приходит в топик `washpro/{serial}/state/process` (или другой suffix).
+2. `docker logs wash-message-processor` — ошибки обработки.
+3. Серийный номер в топике = `serialNumber` в CRM.
+
 ## Телеметрия не обновляется
 
 1. Серийный номер в топике (`{dt_pref}/{serial}/state/...`) или `postSerial` в legacy JSON = `serialNumber` поста в CRM
@@ -121,7 +142,7 @@ curl -s http://localhost:8000/api/v1/mcp/info -H "Authorization: Bearer TOKEN" |
 2. `docker logs wash-message-processor` — ошибки публикации
 3. Проверка с сервера:
    ```bash
-   mosquitto_pub -h localhost -p 1883 -u wash -P 'PASSWORD' -q 1 \
+   mosquitto_pub -h localhost -p 1883 -u superadmin -P 'PASSWORD' -q 1 \
      -t 'washpro/SERIAL/set/command' -m '{"cmd":1}'
    ```
 4. HTTP API: `curl http://localhost/api/crm/post-device/posts/SERIAL/command` с JWT (см. [MQTT](mqtt.md))

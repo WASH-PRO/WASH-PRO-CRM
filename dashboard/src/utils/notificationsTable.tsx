@@ -62,12 +62,14 @@ interface NotificationColumnOptions {
   onMarkRead: (id: string) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   compact?: boolean;
+  canEdit?: boolean;
 }
 
 export function createNotificationColumns({
   onMarkRead,
   onDelete,
   compact = false,
+  canEdit = true,
 }: NotificationColumnOptions): DataTableColumn<Notification>[] {
   const columns: DataTableColumn<Notification>[] = [
     {
@@ -112,39 +114,42 @@ export function createNotificationColumns({
   columns.push({
     key: 'date',
     header: 'Дата и время',
+    className: 'table-cell-nowrap',
     sortValue: (n) => n.createdAt || '',
     render: (n) => formatDateTime(n.createdAt),
   });
 
-  columns.push({
-    key: 'actions',
-    header: '',
-    className: 'w-0 whitespace-nowrap',
-    render: (n) => (
-      <div className="flex items-center justify-end gap-1.5">
-        {!n.read && (
-          <button type="button" className="btn-secondary btn-sm" onClick={() => onMarkRead(n.id)}>
-            Прочитано
+  if (canEdit) {
+    columns.push({
+      key: 'actions',
+      header: '',
+      className: 'w-0 whitespace-nowrap',
+      render: (n) => (
+        <div className="flex items-center justify-end gap-1.5">
+          {!n.read && (
+            <button type="button" className="btn-secondary btn-sm" onClick={() => onMarkRead(n.id)}>
+              Прочитано
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn-icon !h-8 !w-8 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            title="Удалить"
+            aria-label="Удалить уведомление"
+            onClick={() => onDelete(n.id)}
+          >
+            <Trash2 size={14} />
           </button>
-        )}
-        <button
-          type="button"
-          className="btn-icon !h-8 !w-8 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-          title="Удалить"
-          aria-label="Удалить уведомление"
-          onClick={() => onDelete(n.id)}
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
-    ),
-  });
+        </div>
+      ),
+    });
+  }
 
   return columns;
 }
 
-export function createNotificationBulkActions(refresh: () => void): DataTableBulkAction<Notification>[] {
-  return [
+export function createNotificationBulkActions(refresh: () => void, canEdit = true): DataTableBulkAction<Notification>[] {
+  const actions: DataTableBulkAction<Notification>[] = [
     createExportBulkAction('notifications.csv', [
       { header: 'Тип', value: (n) => n.type },
       { header: 'Важность', value: (n) => n.severity || '' },
@@ -153,26 +158,33 @@ export function createNotificationBulkActions(refresh: () => void): DataTableBul
       { header: 'Прочитано', value: (n) => (n.read ? 'да' : 'нет') },
       { header: 'Дата и время', value: (n) => n.createdAt || '' },
     ]),
-    {
-      id: 'mark-read',
-      label: 'Отметить прочитанными',
-      confirmMessage: (_rows, ids) => `Отметить ${ids.length} уведомлений как прочитанные?`,
-      disabled: (rows) => rows.every((n) => n.read),
-      onAction: async (rows) => {
-        const unread = rows.filter((n) => !n.read);
-        await bulkPatch('/crm/notifications', unread, (n) => n.id, { read: true });
-        refresh();
-      },
-    },
-    {
-      id: 'delete',
-      label: 'Удалить',
-      variant: 'danger',
-      confirmMessage: (_rows, ids) => `Удалить ${ids.length} уведомлений? Это действие необратимо.`,
-      onAction: async (_rows, ids) => {
-        await bulkDelete('/crm/notifications', ids);
-        refresh();
-      },
-    },
   ];
+
+  if (canEdit) {
+    actions.push(
+      {
+        id: 'mark-read',
+        label: 'Отметить прочитанными',
+        confirmMessage: (_rows, ids) => `Отметить ${ids.length} уведомлений как прочитанные?`,
+        disabled: (rows) => rows.every((n) => n.read),
+        onAction: async (rows) => {
+          const unread = rows.filter((n) => !n.read);
+          await bulkPatch('/crm/notifications', unread, (n) => n.id, { read: true });
+          refresh();
+        },
+      },
+      {
+        id: 'delete',
+        label: 'Удалить',
+        variant: 'danger',
+        confirmMessage: (_rows, ids) => `Удалить ${ids.length} уведомлений? Это действие необратимо.`,
+        onAction: async (_rows, ids) => {
+          await bulkDelete('/crm/notifications', ids);
+          refresh();
+        },
+      }
+    );
+  }
+
+  return actions;
 }

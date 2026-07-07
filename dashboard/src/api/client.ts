@@ -125,7 +125,7 @@ async function fetchApi<T>(
   if (!json.success) {
     throw new Error(json.error || `Ошибка запроса: ${res.status}`);
   }
-  return json;
+  return json as ApiResult<T> & Record<string, unknown>;
 }
 
 export async function api<T>(
@@ -191,14 +191,68 @@ export async function apiListDictionary<T>(path: string, signal?: AbortSignal): 
 const catalogCache = new Map<string, { expires: number; data: unknown[] }>();
 const CATALOG_CACHE_MS = 45_000;
 
+function normalizeCatalogCachePrefix(pathPrefix: string): string {
+  return pathPrefix.replace(/^\/api(?=\/)/, '');
+}
+
 export function clearCatalogCache(pathPrefix?: string): void {
   if (!pathPrefix) {
     catalogCache.clear();
     return;
   }
+  const normalized = normalizeCatalogCachePrefix(pathPrefix);
   for (const key of catalogCache.keys()) {
-    if (key.startsWith(pathPrefix)) catalogCache.delete(key);
+    if (key === normalized || key.startsWith(`${normalized}?`)) {
+      catalogCache.delete(key);
+    }
   }
+}
+
+export interface WashDeleteResult {
+  success: boolean;
+  message?: string;
+  deletedPosts?: number;
+  deletedRelated?: number;
+}
+
+export function clearWashCatalogCaches(): void {
+  for (const path of ['/crm/washes', '/crm/posts', '/crm/post-states', '/crm/cards']) {
+    clearCatalogCache(path);
+  }
+}
+
+export function formatWashDeleteSummary(
+  results: WashDeleteResult[],
+  options?: { objectLabel?: string }
+): string {
+  const objects = results.length;
+  const posts = results.reduce((sum, row) => sum + (row.deletedPosts ?? 0), 0);
+  const related = results.reduce((sum, row) => sum + (row.deletedRelated ?? 0), 0);
+  const label = options?.objectLabel ?? 'объект(ов)';
+  return `Удалено: ${objects} ${label}, ${posts} постов, ${related} связанных записей (состояния, карты, статистика, телеметрия, уведомления).`;
+}
+
+export async function deleteWash(id: string): Promise<WashDeleteResult> {
+  const json = (await fetchApi(`/crm/washes/${id}`, { method: 'DELETE' })) as WashDeleteResult;
+  clearWashCatalogCaches();
+  return {
+    success: true,
+    message: json.message,
+    deletedPosts: json.deletedPosts,
+    deletedRelated: json.deletedRelated,
+  };
+}
+
+export async function bulkDeleteWashes(
+  ids: string[],
+  onProgress?: (current: number, total: number) => void
+): Promise<WashDeleteResult[]> {
+  const results: WashDeleteResult[] = [];
+  for (let index = 0; index < ids.length; index++) {
+    onProgress?.(index + 1, ids.length);
+    results.push(await deleteWash(ids[index]!));
+  }
+  return results;
 }
 
 /** Справочники (мойки, посты, настройки) — одна страница + краткий кэш в сессии. */

@@ -48,7 +48,10 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose up -d --build --no-deps dashboard update-bridge message-processor backup mosquitto`;
+      // NB: update-bridge исключён намеренно — пересборка самого себя убивает
+      // процесс, ведущий обновление (exit 137), из-за чего UI зависает на этом
+      // шаге. Сам бридж обновляется при полном `docker compose up -d --build`.
+      return `cd ${root} && docker compose up -d --build --no-deps dashboard message-processor backup mosquitto`;
     }
     if (stepId === 'seed') {
       return `cd ${root} && docker compose run --rm init-seed`;

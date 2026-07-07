@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.1] — 2026-07-08
+
+### Исправлено
+
+- **Апдейтер зависал на «Сборка и перезапуск CRM»** — шаг `build` пересобирал сам `update-bridge`, из-за чего процесс обновления убивался (exit 137) и UI зависал навсегда; `update-bridge` исключён из этого шага (обновляется при полном `docker compose up -d --build`)
+- **Незавершённые задачи обновления** после перезапуска сервиса больше не блокируют UI и новые запуски: при старте `update-bridge` помечает прерванные задачи как failed и очищает `activeJobId` (`recoverInterruptedJobs`)
+
 ## [1.1.0] — 2026-07-07
 
 ### Добавлено
@@ -59,6 +66,7 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.1
 [1.1.0]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.0
 [1.0.0]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.0.0

@@ -66,6 +66,37 @@ export function getActiveJob(): UpdateJob | null {
   return cache.jobs.find((j) => j.id === cache.activeJobId) ?? null;
 }
 
+/**
+ * При старте процесса помечает незавершённые задачи как прерванные.
+ * Задача выполняется в памяти (runJob) и не возобновляется после рестарта,
+ * поэтому оставшийся в состоянии `running`/`queued` job навсегда блокирует
+ * UI («зависло на шаге») и запуск новых обновлений. Возвращает true, если
+ * что-то было сброшено (нужно сохранить состояние).
+ */
+export function recoverInterruptedJobs(): boolean {
+  let changed = false;
+  for (const job of cache.jobs) {
+    if (job.status === 'running' || job.status === 'queued') {
+      job.status = 'failed';
+      job.error = 'Обновление прервано (перезапуск сервиса). Запустите заново.';
+      job.finishedAt = new Date().toISOString();
+      for (const step of job.steps) {
+        if (step.status === 'running' || step.status === 'pending') {
+          step.status = step.status === 'running' ? 'failed' : 'skipped';
+          if (step.status === 'failed') step.message = 'Прервано перезапуском';
+          step.finishedAt = step.finishedAt ?? new Date().toISOString();
+        }
+      }
+      changed = true;
+    }
+  }
+  if (cache.activeJobId) {
+    cache.activeJobId = null;
+    changed = true;
+  }
+  return changed;
+}
+
 export function getRecentJobs(limit = 10): UpdateJob[] {
   return cache.jobs.slice(0, limit);
 }

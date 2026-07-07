@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { CheckCheck, Trash2 } from 'lucide-react';
 import { apiListPage } from '../api/client';
 import { Badge } from '../components/UI';
 import type { DataTableBulkAction, DataTableColumn, DataTableFilter } from '../components/DataTable';
@@ -127,8 +127,14 @@ export function createNotificationColumns({
       render: (n) => (
         <div className="flex items-center justify-end gap-1.5">
           {!n.read && (
-            <button type="button" className="btn-secondary btn-sm" onClick={() => onMarkRead(n.id)}>
-              Прочитано
+            <button
+              type="button"
+              className="btn-icon !h-8 !w-8 text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+              title="Прочитано"
+              aria-label="Отметить как прочитанное"
+              onClick={() => onMarkRead(n.id)}
+            >
+              <CheckCheck size={14} />
             </button>
           )}
           <button

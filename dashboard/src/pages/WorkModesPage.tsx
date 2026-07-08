@@ -210,7 +210,7 @@ export function WorkModesPage() {
         filters={filters}
         searchPlaceholder="Поиск режимов…"
         bulkActions={bulkActions}
-        pageSize={15}
+        pageSize={200}
         emptyMessage="Режимы работы не настроены"
       />
 

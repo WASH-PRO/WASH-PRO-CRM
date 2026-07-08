@@ -180,7 +180,7 @@ export function DiscountTypesPage() {
         filters={filters}
         searchPlaceholder="Поиск типов скидок…"
         bulkActions={bulkActions}
-        pageSize={10}
+        pageSize={200}
         emptyMessage="Типы скидок не настроены"
       />
 

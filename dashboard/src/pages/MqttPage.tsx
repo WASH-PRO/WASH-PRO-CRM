@@ -253,7 +253,7 @@ export function MqttPage() {
         rowKey={(r) => r.id}
         filters={filters}
         searchPlaceholder="Поиск по топику, посту, типу, данным…"
-        pageSize={25}
+        pageSize={200}
         bulkActions={bulkActions}
       />
     </div>

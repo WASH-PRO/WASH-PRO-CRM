@@ -203,7 +203,7 @@ function PeriodSection({
         onFilterChange={handleFilterChange}
         onRowClick={onPostSelect}
         isRowActive={(s) => Boolean(postFilter && postId(s) === postFilter)}
-        pageSize={10}
+        pageSize={200}
         emptyMessage="Нет записей"
         searchPlaceholder="Поиск…"
         bulkActions={bulkActions}

@@ -221,7 +221,7 @@ export function StatesPage() {
         rowKey={(r) => r.postId}
         filters={filters}
         searchPlaceholder="Поиск по адресу или номеру поста…"
-        pageSize={20}
+        pageSize={200}
         bulkActions={bulkActions}
         onRowClick={(r) => navigate(`/posts/${r.postId}`)}
       />

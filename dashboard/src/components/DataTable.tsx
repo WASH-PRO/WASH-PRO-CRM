@@ -76,7 +76,7 @@ export function DataTable<T>({
   data,
   rowKey,
   searchPlaceholder = 'Поиск…',
-  pageSize = 15,
+  pageSize = 200,
   emptyMessage = 'Нет данных',
   toolbar,
   toolbarPlacement = 'end',
@@ -93,7 +93,7 @@ export function DataTable<T>({
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(defaultSortDir);
-  const [page, setPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
   const [internalFilterValues, setInternalFilterValues] = useState<Record<string, string>>({});
   const mergedFilterValues = { ...internalFilterValues, ...(controlledFilterValues ?? {}) };
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -149,9 +149,13 @@ export function DataTable<T>({
     });
   }, [filtered, sortKey, sortDir, displayColumns]);
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const paged = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paged = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+  const hasMore = sorted.length > paged.length;
+  const nextChunk = Math.min(pageSize, sorted.length - paged.length);
+
+  useEffect(() => {
+    setVisibleCount(pageSize);
+  }, [pageSize]);
 
   const rowById = useMemo(() => new Map(data.map((row) => [rowKey(row), row])), [data, rowKey]);
   const selectableFilteredIds = useMemo(
@@ -204,7 +208,7 @@ export function DataTable<T>({
       setInternalFilterValues((prev) => ({ ...prev, [id]: value }));
     }
     onFilterChange?.(id, value);
-    setPage(1);
+    setVisibleCount(pageSize);
   };
 
   const toggleRow = (id: string) => {
@@ -279,7 +283,7 @@ export function DataTable<T>({
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPage(1);
+                  setVisibleCount(pageSize);
                 }}
               />
             </div>
@@ -445,7 +449,7 @@ export function DataTable<T>({
         <div className="flex flex-col gap-1">
           <span>
             {sorted.length} записей
-            {sorted.length > pageSize && ` · стр. ${currentPage} из ${totalPages}`}
+            {hasMore && ` · показано ${paged.length}`}
           </span>
           {selectable && sorted.length > 0 && !allFilteredSelected && selectableFilteredIds.length > selectablePageIds.length && (
             <button
@@ -457,13 +461,14 @@ export function DataTable<T>({
             </button>
           )}
         </div>
-        {sorted.length > pageSize && (
+        {hasMore && (
           <div className="flex gap-2">
-            <button type="button" className="btn-secondary btn-sm" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
-              Назад
-            </button>
-            <button type="button" className="btn-secondary btn-sm" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
-              Далее
+            <button
+              type="button"
+              className="btn-secondary btn-sm"
+              onClick={() => setVisibleCount((c) => c + pageSize)}
+            >
+              Загрузить ещё ({nextChunk})
             </button>
           </div>
         )}

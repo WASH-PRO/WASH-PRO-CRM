@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.3] — 2026-07-08
+
+### Изменено
+
+- **Пагинация таблиц** — «Назад/Далее» заменены на кнопку **«Загрузить ещё»**; таблицы показывают по **200 записей** с догрузкой следующих 200 (общий компонент `DataTable` → применяется ко всем таблицам)
+- **История состояний поста** и другие крупные таблицы (Текущее состояние, MQTT, Логи, Уведомления, Финансы, Использование, справочники) — начальный вывод 200 строк вместо тысяч
+
 ## [1.1.2] — 2026-07-08
 
 ### Исправлено
@@ -78,7 +85,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.3
 [1.1.2]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.2
 [1.1.1]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.1
 [1.1.0]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.0

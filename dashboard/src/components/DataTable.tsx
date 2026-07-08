@@ -76,7 +76,7 @@ export function DataTable<T>({
   data,
   rowKey,
   searchPlaceholder = 'Поиск…',
-  pageSize = 200,
+  pageSize: initialPageSize = 100,
   emptyMessage = 'Нет данных',
   toolbar,
   toolbarPlacement = 'end',
@@ -93,7 +93,8 @@ export function DataTable<T>({
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(defaultSortDir);
-  const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [visibleCount, setVisibleCount] = useState(initialPageSize);
   const [internalFilterValues, setInternalFilterValues] = useState<Record<string, string>>({});
   const mergedFilterValues = { ...internalFilterValues, ...(controlledFilterValues ?? {}) };
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -153,9 +154,20 @@ export function DataTable<T>({
   const hasMore = sorted.length > paged.length;
   const nextChunk = Math.min(pageSize, sorted.length - paged.length);
 
-  useEffect(() => {
-    setVisibleCount(pageSize);
+  const pageSizeOptions = useMemo(() => {
+    const opts = new Set([50, 100, 200, 500, 1000, pageSize]);
+    return [...opts].sort((a, b) => a - b);
   }, [pageSize]);
+
+  useEffect(() => {
+    setPageSize(initialPageSize);
+    setVisibleCount(initialPageSize);
+  }, [initialPageSize]);
+
+  const changePageSize = (size: number) => {
+    setPageSize(size);
+    setVisibleCount(size);
+  };
 
   const rowById = useMemo(() => new Map(data.map((row) => [rowKey(row), row])), [data, rowKey]);
   const selectableFilteredIds = useMemo(
@@ -461,17 +473,30 @@ export function DataTable<T>({
             </button>
           )}
         </div>
-        {hasMore && (
-          <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-panel-muted dark:text-panel-muted-dark">
+            <span>На странице:</span>
+            <select
+              className="input input-sm w-auto"
+              value={pageSize}
+              onChange={(e) => changePageSize(Number(e.target.value))}
+              aria-label="Записей на странице"
+            >
+              {pageSizeOptions.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+          </label>
+          {hasMore && (
             <button
               type="button"
               className="btn-secondary btn-sm"
               onClick={() => setVisibleCount((c) => c + pageSize)}
             >
-              Загрузить ещё ({nextChunk})
+              Загрузить ещё ({nextChunk} записей)
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

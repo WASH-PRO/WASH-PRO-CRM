@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.4] — 2026-07-08
+
+### Изменено
+
+- **Пагинация таблиц** — вместо фиксированных 200 строк: выпадающий список **«На странице»** (50 / 100 / 200 / 500 / 1000, по умолчанию **100**) и кнопка **«Загрузить ещё (N записей)»** в стиле раздела MQTT
+- Общий компонент `DataTable` — селектор размера страницы в подвале, догрузка следующей порции по выбранному размеру
+
 ## [1.1.3] — 2026-07-08
 
 ### Изменено
@@ -85,7 +92,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.4
 [1.1.3]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.3
 [1.1.2]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.2
 [1.1.1]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.1

@@ -421,7 +421,6 @@ export function PostDetailPage() {
             ? 'Нет записей за выбранный период'
             : 'Нет записей состояния с поста'
         }
-        pageSize={200}
         defaultSortKey="receivedAt"
         defaultSortDir="desc"
         searchPlaceholder="Поиск по режиму или времени…"

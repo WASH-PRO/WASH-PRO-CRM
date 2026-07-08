@@ -73,7 +73,6 @@ export function NotificationsPage() {
         rowKey={(n) => n.id}
         filters={notificationFilters(true)}
         searchPlaceholder="Поиск уведомлений…"
-        pageSize={200}
         defaultSortKey="date"
         defaultSortDir="desc"
         bulkActions={bulkActions}

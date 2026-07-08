@@ -133,7 +133,6 @@ export function LogsPage() {
         data={dateFiltered}
         rowKey={(l) => l.id}
         filters={filters}
-        pageSize={200}
         searchPlaceholder="Поиск в логах…"
         toolbar={
           <div className="toolbar-cluster">

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { parseTagVersion } from './github.js';
 import type { UpdateComponentId, UpdateStep } from './types.js';
 
 const DEPLOY_ROOT = process.env.DEPLOY_ROOT || '/deploy';
@@ -39,19 +40,24 @@ function shellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
+function syncEnvVersion(envFile: string, key: string, version: string): string {
+  const file = shellQuote(envFile);
+  const ver = shellQuote(version);
+  return `if [ -f ${file} ]; then if grep -q '^${key}=' ${file}; then sed -i 's/^${key}=.*/${key}=${ver}/' ${file}; else printf '\\n${key}=${ver}\\n' >> ${file}; fi; else printf '${key}=${ver}\\n' > ${file}; fi`;
+}
+
 function stepCommand(component: UpdateComponentId, stepId: string, targetTag: string): string {
   const root = DEPLOY_ROOT;
   const tag = shellQuote(targetTag);
 
   if (component === 'crm') {
     if (stepId === 'pull') {
-      return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main`;
+      return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main && ${syncEnvVersion(`${root}/.env`, 'APP_VERSION', parseTagVersion(targetTag))}`;
     }
     if (stepId === 'build') {
-      // NB: update-bridge исключён намеренно — пересборка самого себя убивает
-      // процесс, ведущий обновление (exit 137), из-за чего UI зависает на этом
-      // шаге. Сам бридж обновляется при полном `docker compose up -d --build`.
-      return `cd ${root} && docker compose up -d --build --no-deps dashboard message-processor backup mosquitto`;
+      // NB: update-bridge и mosquitto исключены — пересборка бриджа убивает процесс
+      // обновления; mosquitto не требует пересборки при обновлении CRM.
+      return `cd ${root} && docker compose build init-seed && docker compose up -d --build --no-deps dynamic-api dynamic-api-panel dashboard message-processor backup`;
     }
     if (stepId === 'seed') {
       return `cd ${root} && docker compose run --rm init-seed`;

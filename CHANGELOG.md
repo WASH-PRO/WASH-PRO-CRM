@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [1.1.7] — 2026-07-09
+
+### Исправлено
+
+- **Автообновление из настроек** — при запуске из контейнера `update-bridge` bind mount'ы Mosquitto и build context используют реальный путь хоста (`WASH_HOST_PROJECT_ROOT`); шаг сборки больше не перезапускает Mosquitto; пересобираются `dynamic-api`, `dynamic-api-panel`, `init-seed`; после `git pull` в `.env` записывается `APP_VERSION`
+
 ## [1.1.6] — 2026-07-09
 
 ### Добавлено
@@ -124,7 +130,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.6...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.7...HEAD
+[1.1.7]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.7
 [1.1.6]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.6
 [1.1.5]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.5
 [1.1.4]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.4

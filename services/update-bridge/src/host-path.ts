@@ -100,11 +100,13 @@ export function resolveHostDataDir(): string {
 export function composeCommandEnv(): NodeJS.ProcessEnv {
   const hostRoot = resolveHostProjectRoot();
   const hostData = resolveHostDataDir();
+  const buildRoot = hostRoot !== DEPLOY_ROOT ? DEPLOY_ROOT : hostRoot;
   return {
     ...process.env,
     DATA_DIR: hostData,
     HOST_PROJECT_ROOT: hostRoot,
     WASH_HOST_PROJECT_ROOT: hostRoot,
+    WASH_BUILD_ROOT: buildRoot,
     HOST_DATA_DIR: hostData,
     COMPOSE_PROJECT_NAME: process.env.COMPOSE_PROJECT_NAME || 'wash-pro-crm',
   };

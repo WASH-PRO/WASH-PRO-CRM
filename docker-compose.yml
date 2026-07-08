@@ -1,3 +1,5 @@
+# WASH_HOST_PROJECT_ROOT — реальный путь на хосте для bind mount (автообновление из контейнера).
+# WASH_BUILD_ROOT — путь для docker build context (в update-bridge = /deploy).
 name: wash-pro-crm
 
 services:
@@ -25,7 +27,7 @@ services:
   # ===========================================================================
   dynamic-api:
     build:
-      context: ./dynamic-api
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/dynamic-api
       dockerfile: backend/Dockerfile
     container_name: wash-dynamic-api
     restart: unless-stopped
@@ -69,7 +71,7 @@ services:
   # ===========================================================================
   dynamic-api-panel:
     build:
-      context: .
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}
       dockerfile: services/dynamic-api-panel/Dockerfile
       args:
         VITE_API_URL: ""
@@ -89,7 +91,7 @@ services:
   # ===========================================================================
   init-seed:
     build:
-      context: ./services/init-seed
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/services/init-seed
       dockerfile: Dockerfile
     container_name: wash-init-seed
     restart: on-failure:5
@@ -121,9 +123,9 @@ services:
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
     volumes:
       - ${DATA_DIR:-./data}/mosquitto/config:/mosquitto/config
-      - ./config/mosquitto/mosquitto.conf:/mosquitto-conf/mosquitto.conf:ro
-      - ./config/mosquitto/acl:/mosquitto-conf/acl:ro
-      - ./config/mosquitto/init-user.sh:/init-user.sh:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/config/mosquitto/mosquitto.conf:/mosquitto-conf/mosquitto.conf:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/config/mosquitto/acl:/mosquitto-conf/acl:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/config/mosquitto/init-user.sh:/init-user.sh:ro
     networks:
       - wash-internal
 
@@ -137,7 +139,7 @@ services:
     volumes:
       - ${DATA_DIR:-./data}/mosquitto/data:/mosquitto/data
       - ${DATA_DIR:-./data}/mosquitto/config:/mosquitto/config
-      - ./config/mosquitto/watch-entrypoint.sh:/watch-entrypoint.sh:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/config/mosquitto/watch-entrypoint.sh:/watch-entrypoint.sh:ro
     depends_on:
       mosquitto-init:
         condition: service_completed_successfully
@@ -155,7 +157,7 @@ services:
   # ===========================================================================
   message-processor:
     build:
-      context: ./services/message-processor
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/services/message-processor
       dockerfile: Dockerfile
     container_name: wash-message-processor
     restart: unless-stopped
@@ -221,7 +223,7 @@ services:
   # ===========================================================================
   backup:
     build:
-      context: ./services/backup
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/services/backup
       dockerfile: Dockerfile
     container_name: wash-backup
     restart: unless-stopped
@@ -251,7 +253,7 @@ services:
   # ===========================================================================
   update-bridge:
     build:
-      context: ./services/update-bridge
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/services/update-bridge
       dockerfile: Dockerfile
     container_name: wash-update-bridge
     restart: unless-stopped
@@ -260,7 +262,7 @@ services:
       UPDATE_HTTP_PORT: 3023
       DEPLOY_ROOT: /deploy
       STATE_DIR: /data
-      APP_VERSION: ${APP_VERSION:-1.1.6}
+      APP_VERSION: ${APP_VERSION:-1.1.7}
       UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
       HOST_PROJECT_ROOT: ${WASH_HOST_PROJECT_ROOT:-${PWD}}
       DATA_DIR: ${DATA_DIR:-./data}
@@ -269,7 +271,7 @@ services:
       PYORCHESTRATOR_GITHUB_REPO: ${PYORCHESTRATOR_GITHUB_REPO:-PyOrchestrator/PyOrchestrator}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     volumes:
-      - .:/deploy
+      - ${WASH_HOST_PROJECT_ROOT:-.}:/deploy
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR:-./data}/update-bridge:/data
     depends_on:
@@ -284,10 +286,10 @@ services:
   # ===========================================================================
   dashboard:
     build:
-      context: ./dashboard
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/dashboard
       dockerfile: Dockerfile
       args:
-        VITE_APP_VERSION: ${APP_VERSION:-1.1.6}
+        VITE_APP_VERSION: ${APP_VERSION:-1.1.7}
     container_name: wash-dashboard
     restart: unless-stopped
     environment:

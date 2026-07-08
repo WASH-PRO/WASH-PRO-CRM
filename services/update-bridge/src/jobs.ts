@@ -166,6 +166,7 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
         const env = usesCompose(step.id) ? composeCommandEnv() : undefined;
         if (env) {
           appendLog(`DATA_DIR=${env.DATA_DIR}`);
+          appendLog(`WASH_HOST_PROJECT_ROOT=${env.WASH_HOST_PROJECT_ROOT}`);
         }
         await runShell(cmd, appendLog, env);
         step.status = 'completed';

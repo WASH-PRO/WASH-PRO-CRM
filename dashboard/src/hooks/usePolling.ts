@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRegisterLiveMode } from '../context/LiveModeContext';
+import { useLiveMode } from '../context/LiveModeContext';
 
 export type PollingFetcher<T> = (signal: AbortSignal) => Promise<T>;
 
 interface UsePollingOptions {
   intervalMs?: number;
   enabled?: boolean;
-  /** Показывать индикатор Live в шапке (по умолчанию true) */
+  /** @deprecated Используйте глобальный переключатель Live/Статика в шапке */
   live?: boolean;
 }
 
@@ -17,8 +17,9 @@ function isAbortError(error: unknown): boolean {
 export function usePolling<T>(
   fetcher: PollingFetcher<T>,
   deps: unknown[] = [],
-  { intervalMs = 5000, enabled = true, live = true }: UsePollingOptions = {}
+  { intervalMs = 5000, enabled = true }: UsePollingOptions = {}
 ) {
+  const { liveEnabled } = useLiveMode();
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +59,16 @@ export function usePolling<T>(
     }
     setLoading(true);
     refresh();
+    if (!liveEnabled) {
+      return () => {
+        mounted.current = false;
+        requestIdRef.current += 1;
+        for (const controller of activeControllersRef.current) {
+          controller.abort();
+        }
+        activeControllersRef.current.clear();
+      };
+    }
     const id = setInterval(refresh, intervalMs);
     return () => {
       mounted.current = false;
@@ -69,9 +80,7 @@ export function usePolling<T>(
       clearInterval(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refresh, intervalMs, enabled, ...deps]);
-
-  useRegisterLiveMode(intervalMs, lastUpdatedAt, enabled && live);
+  }, [refresh, intervalMs, enabled, liveEnabled, ...deps]);
 
   const setDataSafe = useCallback((value: T | null | ((prev: T | null) => T | null)) => {
     if (!mounted.current) return;

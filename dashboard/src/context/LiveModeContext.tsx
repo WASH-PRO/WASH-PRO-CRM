@@ -1,25 +1,54 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-export interface LiveModeState {
-  intervalMs: number;
-  lastUpdatedAt: number | null;
+const STORAGE_KEY = 'wash-crm-live-enabled';
+
+function readStoredLiveEnabled(): boolean {
+  try {
+    const value = localStorage.getItem(STORAGE_KEY);
+    if (value === 'false') return false;
+    if (value === 'true') return true;
+  } catch {
+    // ignore
+  }
+  return true;
+}
+
+function persistLiveEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(enabled));
+  } catch {
+    // ignore
+  }
 }
 
 interface LiveModeContextValue {
-  live: LiveModeState | null;
-  setLive: (state: LiveModeState | null) => void;
+  liveEnabled: boolean;
+  setLiveEnabled: (enabled: boolean) => void;
+  toggleLiveEnabled: () => void;
 }
 
 const LiveModeContext = createContext<LiveModeContextValue | null>(null);
 
 export function LiveModeProvider({ children }: { children: ReactNode }) {
-  const [live, setLiveState] = useState<LiveModeState | null>(null);
+  const [liveEnabled, setLiveEnabledState] = useState(readStoredLiveEnabled);
 
-  const setLive = useCallback((state: LiveModeState | null) => {
-    setLiveState(state);
+  const setLiveEnabled = useCallback((enabled: boolean) => {
+    setLiveEnabledState(enabled);
+    persistLiveEnabled(enabled);
   }, []);
 
-  const value = useMemo(() => ({ live, setLive }), [live, setLive]);
+  const toggleLiveEnabled = useCallback(() => {
+    setLiveEnabledState((prev) => {
+      const next = !prev;
+      persistLiveEnabled(next);
+      return next;
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({ liveEnabled, setLiveEnabled, toggleLiveEnabled }),
+    [liveEnabled, setLiveEnabled, toggleLiveEnabled]
+  );
 
   return <LiveModeContext.Provider value={value}>{children}</LiveModeContext.Provider>;
 }
@@ -30,18 +59,4 @@ export function useLiveMode() {
     throw new Error('useLiveMode must be used within LiveModeProvider');
   }
   return ctx;
-}
-
-/** Регистрирует live-режим текущей страницы в шапке приложения. */
-export function useRegisterLiveMode(intervalMs: number, lastUpdatedAt: number | null, enabled = true) {
-  const { setLive } = useLiveMode();
-
-  useEffect(() => {
-    if (!enabled) {
-      setLive(null);
-      return;
-    }
-    setLive({ intervalMs, lastUpdatedAt });
-    return () => setLive(null);
-  }, [intervalMs, lastUpdatedAt, enabled, setLive]);
 }

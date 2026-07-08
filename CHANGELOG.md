@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.8] — 2026-07-09
+
+### Изменено
+
+- **Меню «Информация»** — перенесён в раздел «Главное» сразу после «Обзор»
+- **Live / Статика** — в шапке глобальный переключатель автообновления данных вместо индикатора с разным интервалом на каждой странице; выбор сохраняется между сессиями
+
 ## [1.1.7] — 2026-07-09
 
 ### Исправлено
@@ -130,7 +137,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.7...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.8...HEAD
+[1.1.8]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.8
 [1.1.7]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.7
 [1.1.6]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.6
 [1.1.5]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.5

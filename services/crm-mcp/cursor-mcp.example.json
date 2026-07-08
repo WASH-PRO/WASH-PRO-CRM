@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "wash-pro-crm": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "${workspaceFolder}/services/crm-mcp",
+      "env": {
+        "CRM_API_URL": "http://localhost:3001",
+        "CRM_DASHBOARD_URL": "http://localhost",
+        "CRM_LOGIN": "admin",
+        "CRM_PASSWORD": "Admin123!"
+      }
+    }
+  }
+}

@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [1.1.9] — 2026-07-09
+
+### Добавлено
+
+- **MCP-сервер** (`services/crm-mcp`) — stdio MCP для AI-агентов (Cursor): CRM-сущности, composite tools, прокси Dynamic API MCP, Telegram-боты и команды постам через bridge
+
 ## [1.1.8] — 2026-07-09
 
 ### Изменено
@@ -137,7 +143,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.8...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.9...HEAD
+[1.1.9]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.9
 [1.1.8]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.8
 [1.1.7]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.7
 [1.1.6]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.6

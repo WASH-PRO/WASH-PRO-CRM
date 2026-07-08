@@ -262,7 +262,7 @@ services:
       UPDATE_HTTP_PORT: 3023
       DEPLOY_ROOT: /deploy
       STATE_DIR: /data
-      APP_VERSION: ${APP_VERSION:-1.1.8}
+      APP_VERSION: ${APP_VERSION:-1.1.9}
       UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
       HOST_PROJECT_ROOT: ${WASH_HOST_PROJECT_ROOT:-${PWD}}
       DATA_DIR: ${DATA_DIR:-./data}
@@ -289,7 +289,7 @@ services:
       context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/dashboard
       dockerfile: Dockerfile
       args:
-        VITE_APP_VERSION: ${APP_VERSION:-1.1.8}
+        VITE_APP_VERSION: ${APP_VERSION:-1.1.9}
     container_name: wash-dashboard
     restart: unless-stopped
     environment:

@@ -1,8 +1,11 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Pencil, Play, Plus, RefreshCw, Square, Trash2 } from 'lucide-react';
 import {
   WASH_TELEGRAM_COMMAND_GROUPS,
-  WASH_TELEGRAM_COMMANDS,
+  TELEGRAM_BOT_COMMAND_PRESETS,
+  TELEGRAM_BOT_TYPE_LABELS,
+  TELEGRAM_BOT_TYPE_OPTIONS,
   checkTelegramBridgeHealth,
   createTelegramBot,
   deleteTelegramBot,
@@ -11,6 +14,7 @@ import {
   stopTelegramBot,
   updateTelegramBot,
   type TelegramBot,
+  type TelegramBotType,
 } from '../api/telegramBots';
 import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader } from '../components/UI';
 import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
@@ -21,6 +25,7 @@ import { formatDateTime } from '../utils/format';
 interface BotForm {
   name: string;
   token: string;
+  botType: TelegramBotType;
   commands: string[];
   description: string;
   startAfterCreate: boolean;
@@ -29,10 +34,17 @@ interface BotForm {
 const EMPTY_FORM: BotForm = {
   name: '',
   token: '',
-  commands: [...WASH_TELEGRAM_COMMANDS],
+  botType: 'management',
+  commands: [...TELEGRAM_BOT_COMMAND_PRESETS.management],
   description: '',
   startAfterCreate: true,
 };
+
+function resolveBotType(bot: TelegramBot): TelegramBotType {
+  const raw = bot.metadata.bot_type;
+  if (raw === 'informational' || raw === 'service' || raw === 'management') return raw;
+  return 'management';
+}
 
 type PageState = 'loading' | 'ready' | 'unavailable';
 
@@ -163,18 +175,28 @@ export function TelegramPage() {
   };
 
   const openEdit = (bot: TelegramBot) => {
+    const botType = resolveBotType(bot);
     setEditing(bot);
     setForm({
       name: bot.name,
       token: '',
+      botType,
       commands: bot.metadata.allowed_commands?.length
         ? [...bot.metadata.allowed_commands]
-        : [...WASH_TELEGRAM_COMMANDS],
+        : [...TELEGRAM_BOT_COMMAND_PRESETS[botType]],
       description: bot.description,
       startAfterCreate: false,
     });
     setFormError(null);
     setModalOpen(true);
+  };
+
+  const setBotType = (botType: TelegramBotType) => {
+    setForm((prev) => ({
+      ...prev,
+      botType,
+      commands: [...TELEGRAM_BOT_COMMAND_PRESETS[botType]],
+    }));
   };
 
   const toggleCommand = (cmd: string) => {
@@ -195,6 +217,7 @@ export function TelegramPage() {
           description: form.description,
           token: form.token.trim() || undefined,
           commands: form.commands,
+          botType: form.botType,
         });
         rememberBot(updated);
       } else {
@@ -207,6 +230,7 @@ export function TelegramPage() {
           description: form.description,
           token: form.token.trim(),
           commands: form.commands,
+          botType: form.botType,
           start: form.startAfterCreate,
         });
         rememberBot(created);
@@ -303,6 +327,13 @@ export function TelegramPage() {
         ),
       },
       {
+        key: 'bot_type',
+        header: 'Тип',
+        sortable: true,
+        sortValue: (bot) => resolveBotType(bot),
+        render: (bot) => TELEGRAM_BOT_TYPE_LABELS[resolveBotType(bot)],
+      },
+      {
         key: 'status',
         header: 'Статус',
         sortable: true,
@@ -317,14 +348,25 @@ export function TelegramPage() {
         key: 'commands',
         header: 'Команды',
         sortable: true,
-        sortValue: (bot) =>
-          (bot.metadata.allowed_commands?.length ? bot.metadata.allowed_commands : WASH_TELEGRAM_COMMANDS).join(','),
-        searchValue: (bot) =>
-          (bot.metadata.allowed_commands?.length ? bot.metadata.allowed_commands : WASH_TELEGRAM_COMMANDS).join(' '),
-        render: (bot) => {
+        sortValue: (bot) => {
+          const type = resolveBotType(bot);
           const cmds = bot.metadata.allowed_commands?.length
             ? bot.metadata.allowed_commands
-            : [...WASH_TELEGRAM_COMMANDS];
+            : TELEGRAM_BOT_COMMAND_PRESETS[type];
+          return cmds.join(',');
+        },
+        searchValue: (bot) => {
+          const type = resolveBotType(bot);
+          const cmds = bot.metadata.allowed_commands?.length
+            ? bot.metadata.allowed_commands
+            : TELEGRAM_BOT_COMMAND_PRESETS[type];
+          return cmds.join(' ');
+        },
+        render: (bot) => {
+          const type = resolveBotType(bot);
+          const cmds = bot.metadata.allowed_commands?.length
+            ? bot.metadata.allowed_commands
+            : [...TELEGRAM_BOT_COMMAND_PRESETS[type]];
           return (
             <div className="flex flex-wrap gap-1">
               {cmds.slice(0, 4).map((c) => (
@@ -501,6 +543,24 @@ export function TelegramPage() {
           </div>
 
           <div>
+            <label className="label">Тип бота</label>
+            <select
+              className="input"
+              value={form.botType}
+              onChange={(e) => setBotType(e.target.value as TelegramBotType)}
+            >
+              {TELEGRAM_BOT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+              {TELEGRAM_BOT_TYPE_OPTIONS.find((o) => o.value === form.botType)?.hint}
+            </p>
+          </div>
+
+          <div>
             <label className="label">Token {editing ? '(оставьте пустым, чтобы не менять)' : ''}</label>
             <input
               className="input font-mono text-xs"
@@ -511,27 +571,36 @@ export function TelegramPage() {
             />
           </div>
 
-          <div>
-            <label className="label mb-2">Разрешённые команды</label>
-            <div className="space-y-3">
-              {WASH_TELEGRAM_COMMAND_GROUPS.map((group) => (
-                <div key={group.label}>
-                  <p className="mb-1 text-xs font-medium text-panel-muted dark:text-panel-muted-dark">{group.label}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {group.commands.map((cmd) => (
-                      <label
-                        key={cmd}
-                        className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-1.5 text-sm dark:border-panel-border-dark"
-                      >
-                        <input type="checkbox" checked={form.commands.includes(cmd)} onChange={() => toggleCommand(cmd)} />
-                        {cmd}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
+          {form.botType === 'informational' ? (
+            <div className="rounded-lg border border-panel-border p-3 text-sm dark:border-panel-border-dark">
+              <p className="font-medium text-panel-ink dark:text-panel-ink-dark">Меню информационного бота</p>
+              <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+                📰 Новости · 💰 Цены · 🅿️ Занятость · 🎁 Акции.                 Контент — в разделе <Link to="/info-messages" className="text-brand-600 hover:underline dark:text-brand-400">Информация</Link>.
+              </p>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="label mb-2">Разрешённые команды</label>
+              <div className="space-y-3">
+                {WASH_TELEGRAM_COMMAND_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="mb-1 text-xs font-medium text-panel-muted dark:text-panel-muted-dark">{group.label}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {group.commands.map((cmd) => (
+                        <label
+                          key={cmd}
+                          className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-1.5 text-sm dark:border-panel-border-dark"
+                        >
+                          <input type="checkbox" checked={form.commands.includes(cmd)} onChange={() => toggleCommand(cmd)} />
+                          {cmd}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {!editing && (
             <label className="flex items-center gap-2 text-sm">

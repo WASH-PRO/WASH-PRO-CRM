@@ -1816,8 +1816,15 @@ const DEFAULT_BOT_COMMANDS = [
   '/cards',
 ];
 
+import { WASH_TELEGRAM_INFO_BOT_MAIN } from './infoBotTemplate.js';
+
+export type WashBotType = 'management' | 'service' | 'informational';
+
 /** Генерирует main.py с зашитыми allowed-командами из настроек бота в CRM. */
-export function generateBotMain(allowedCommands: string[]): string {
+export function generateBotMain(allowedCommands: string[], botType: WashBotType = 'management'): string {
+  if (botType === 'informational') {
+    return WASH_TELEGRAM_INFO_BOT_MAIN;
+  }
   const cmds = [
     ...new Set(
       (allowedCommands.length ? allowedCommands : DEFAULT_BOT_COMMANDS)

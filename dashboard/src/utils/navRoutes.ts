@@ -19,6 +19,7 @@ import {
   Radio,
   Settings,
   SlidersHorizontal,
+  Newspaper,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -85,6 +86,7 @@ export const navGroups: NavGroup[] = [
       { to: '/groups', label: 'Группы и права', icon: Shield, admin: true },
       { to: '/backups', label: 'Резервные копии', shortLabel: 'Бэкапы', icon: HardDrive, admin: true },
       { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
+      { to: '/info-messages', label: 'Информация', icon: Newspaper, admin: true },
       { to: '/settings', label: 'Настройки', icon: Settings },
       { to: '/logs', label: 'Логи', icon: FileText, admin: true },
     ],

@@ -292,6 +292,21 @@ export interface WorkMode {
   createdAt?: string;
 }
 
+export interface InfoMessage {
+  id: string;
+  title: string;
+  body: string;
+  imageUrl?: string;
+  category: 'news' | 'promotion' | 'general';
+  status: 'draft' | 'scheduled' | 'published';
+  publishedAt?: string;
+  expiresAt?: string;
+  washId?: string;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Notification {
   id: string;
   type: string;

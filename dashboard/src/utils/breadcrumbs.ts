@@ -17,6 +17,7 @@ const ROUTE_LABELS: Record<string, string> = {
   groups: 'Группы и права',
   backups: 'Резервные копии',
   telegram: 'Telegram',
+  'info-messages': 'Информация',
   currency: 'Валюты',
   'discount-types': 'Типы скидок',
   'work-modes': 'Режимы работы',

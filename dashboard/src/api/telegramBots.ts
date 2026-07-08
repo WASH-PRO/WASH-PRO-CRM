@@ -19,6 +19,51 @@ export const WASH_TELEGRAM_COMMANDS = WASH_TELEGRAM_COMMAND_GROUPS.flatMap((grou
   ...group.commands,
 ]);
 
+export type TelegramBotType = 'management' | 'service' | 'informational';
+
+export const TELEGRAM_BOT_TYPE_OPTIONS: { value: TelegramBotType; label: string; hint: string }[] = [
+  {
+    value: 'management',
+    label: 'Управление',
+    hint: 'Полный операторский бот: мониторинг, справочники, команды постов',
+  },
+  {
+    value: 'service',
+    label: 'Сервисный',
+    hint: 'Мониторинг и команды постов без создания/удаления объектов',
+  },
+  {
+    value: 'informational',
+    label: 'Информационный',
+    hint: 'Публичный бот: новости, цены, занятость постов, акции',
+  },
+];
+
+export const TELEGRAM_BOT_COMMAND_PRESETS: Record<TelegramBotType, string[]> = {
+  management: [...WASH_TELEGRAM_COMMANDS],
+  service: [
+    '/help',
+    '/start',
+    '/menu',
+    '/status',
+    '/washes',
+    '/wash',
+    '/posts',
+    '/post',
+    '/post_cmd',
+    '/revenue',
+    '/statistics',
+    '/cards',
+  ],
+  informational: ['/help', '/start', '/menu'],
+};
+
+export const TELEGRAM_BOT_TYPE_LABELS: Record<TelegramBotType, string> = {
+  management: 'Управление',
+  service: 'Сервисный',
+  informational: 'Информационный',
+};
+
 export interface TelegramBot {
   id: string;
   name: string;
@@ -30,6 +75,7 @@ export interface TelegramBot {
     wash_telegram_bot?: boolean;
     admin_ids?: number[];
     allowed_commands?: string[];
+    bot_type?: TelegramBotType;
   };
   active_run?: {
     id: string;
@@ -88,6 +134,7 @@ export async function createTelegramBot(input: {
   token: string;
   adminIds?: number[];
   commands: string[];
+  botType?: TelegramBotType;
   start?: boolean;
 }): Promise<TelegramBot> {
   return bridgeFetch<TelegramBot>('/bots', {
@@ -104,6 +151,7 @@ export async function updateTelegramBot(
     token?: string;
     adminIds?: number[];
     commands?: string[];
+    botType?: TelegramBotType;
   }
 ): Promise<TelegramBot> {
   return bridgeFetch<TelegramBot>(`/bots/${id}`, {

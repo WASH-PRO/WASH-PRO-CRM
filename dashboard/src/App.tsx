@@ -21,6 +21,7 @@ const FinancePage = lazyPage(() => import('./pages/FinancePage'), 'FinancePage')
 const ArchivePage = lazyPage(() => import('./pages/ArchivePage'), 'ArchivePage');
 const BackupsPage = lazyPage(() => import('./pages/BackupsPage'), 'BackupsPage');
 const TelegramPage = lazyPage(() => import('./pages/TelegramPage'), 'TelegramPage');
+const InfoMessagesPage = lazyPage(() => import('./pages/InfoMessagesPage'), 'InfoMessagesPage');
 const NotificationsPage = lazyPage(() => import('./pages/NotificationsPage'), 'NotificationsPage');
 const CurrencyPage = lazyPage(() => import('./pages/CurrencyPage'), 'CurrencyPage');
 const DiscountTypesPage = lazyPage(() => import('./pages/DiscountTypesPage'), 'DiscountTypesPage');
@@ -104,6 +105,7 @@ function AppRoutes() {
         <Route path="groups" element={<AdminRoute><GroupsPage /></AdminRoute>} />
         <Route path="backups" element={<AdminRoute><BackupsPage /></AdminRoute>} />
         <Route path="telegram" element={<AdminRoute><TelegramPage /></AdminRoute>} />
+        <Route path="info-messages" element={<AdminRoute><InfoMessagesPage /></AdminRoute>} />
         <Route path="work-modes" element={<AdminRoute><WorkModesPage /></AdminRoute>} />
         <Route path="currency" element={<AdminRoute><CurrencyPage /></AdminRoute>} />
         <Route path="discount-types" element={<AdminRoute><DiscountTypesPage /></AdminRoute>} />

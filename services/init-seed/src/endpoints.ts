@@ -290,6 +290,14 @@ export const ENDPOINT_GROUPS = [
     color: '#ef4444',
     order: 21,
   },
+  {
+    key: 'info-messages',
+    name: 'Информация',
+    description: 'Новости и акции для информационных Telegram-ботов',
+    icon: 'newspaper',
+    color: '#06b6d4',
+    order: 22,
+  },
 ] as const;
 
 export type EndpointGroupKey = (typeof ENDPOINT_GROUPS)[number]['key'];
@@ -406,6 +414,20 @@ const notificationFields: SchemaField[] = [
   { name: 'read', type: 'boolean', order: 5 },
   { name: 'channels', type: 'array', order: 6, description: 'telegram|web' },
   { name: 'createdAt', type: 'datetime', order: 7 },
+];
+
+const infoMessageFields: SchemaField[] = [
+  { name: 'title', type: 'string', required: true, order: 0, description: 'Заголовок' },
+  { name: 'body', type: 'string', required: true, order: 1, description: 'Текст сообщения (HTML)' },
+  { name: 'imageUrl', type: 'string', order: 2, description: 'URL изображения' },
+  { name: 'category', type: 'string', order: 3, description: 'news|promotion|general' },
+  { name: 'status', type: 'string', order: 4, description: 'draft|scheduled|published' },
+  { name: 'publishedAt', type: 'datetime', order: 5, description: 'Дата и время публикации' },
+  { name: 'expiresAt', type: 'datetime', order: 6, description: 'Скрыть после даты' },
+  { name: 'washId', type: 'reference', refEndpointSlug: 'crm-washes-list', order: 7, description: 'Автомойка (пусто = все)' },
+  { name: 'sortOrder', type: 'number', order: 8, description: 'Порядок в ленте' },
+  { name: 'createdAt', type: 'datetime', order: 9 },
+  { name: 'updatedAt', type: 'datetime', order: 10 },
 ];
 
 const backupFields: SchemaField[] = [
@@ -553,6 +575,12 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Список MQTT outbox', slug: 'crm-mqtt-outbox-list', path: '/api/crm/mqtt-outbox', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'telemetry', description: 'Очередь исходящих MQTT' },
   { name: 'Обновить MQTT outbox', slug: 'crm-mqtt-outbox-patch', path: '/api/crm/mqtt-outbox/:id', method: 'PATCH', schema: mqttOutboxFields, accessType: 'group', groupKey: 'telemetry', description: 'Статус доставки / повтор' },
   { name: 'Удалить MQTT outbox', slug: 'crm-mqtt-outbox-delete', path: '/api/crm/mqtt-outbox/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Очистка устаревших записей outbox' },
+
+  { name: 'Информационные сообщения', slug: 'crm-info-messages-list', path: '/api/crm/info-messages', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'info-messages', description: 'Лента для информационных ботов' },
+  { name: 'Создать сообщение', slug: 'crm-info-messages-create', path: '/api/crm/info-messages', method: 'POST', schema: infoMessageFields, accessType: 'group', groupKey: 'info-messages', description: 'Добавить новость или акцию' },
+  { name: 'Сообщение по ID', slug: 'crm-info-messages-get', path: '/api/crm/info-messages/:id', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'info-messages', description: 'Получить сообщение' },
+  { name: 'Обновить сообщение', slug: 'crm-info-messages-update', path: '/api/crm/info-messages/:id', method: 'PUT', schema: infoMessageFields, accessType: 'group', groupKey: 'info-messages', description: 'Обновить сообщение' },
+  { name: 'Удалить сообщение', slug: 'crm-info-messages-delete', path: '/api/crm/info-messages/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'info-messages', description: 'Удалить сообщение' },
 ];
 
 export const DEFAULT_SETTINGS = [

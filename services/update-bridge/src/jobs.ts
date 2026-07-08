@@ -24,10 +24,12 @@ export async function checkComponent(id: UpdateComponentId): Promise<ComponentCh
   const def = getComponent(id);
   const currentVersion = def.readCurrentVersion();
   let latest = null as Awaited<ReturnType<typeof fetchLatestRelease>>;
+  let error: string | null = null;
   try {
     latest = await fetchLatestRelease(def.githubRepo);
-  } catch {
+  } catch (err) {
     latest = null;
+    error = err instanceof Error ? err.message : 'Не удалось получить релизы GitHub';
   }
   const latestVersion = latest ? parseTagVersion(latest.tag_name) : null;
   const updateAvailable = latestVersion ? isNewerVersion(latestVersion, currentVersion) : false;
@@ -44,6 +46,7 @@ export async function checkComponent(id: UpdateComponentId): Promise<ComponentCh
     releaseNotes: latest?.body ?? null,
     publishedAt: latest?.published_at ?? null,
     checkedAt: new Date().toISOString(),
+    error,
   };
 }
 

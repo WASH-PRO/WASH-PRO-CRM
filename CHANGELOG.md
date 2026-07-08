@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [1.1.2] — 2026-07-08
+
+### Исправлено
+
+- **Апдейтер не видел новую версию** — текущая версия читалась из `.env` (`APP_VERSION`), который при бампах не обновлялся; синхронизирован с релизом
+- **Лимит GitHub API** — при исчерпании лимита (60 запросов/час без токена) проверка релизов молча возвращала «нет обновлений». Теперь выводится понятная причина и поддерживается `GITHUB_TOKEN` (лимит 5000/час)
+
+### Добавлено
+
+- `GITHUB_TOKEN` в `update-bridge` — авторизованные запросы к GitHub API для проверки обновлений
+- Поле `error` в проверке компонента — UI показывает причину сбоя проверки (rate limit, сеть и т.д.)
+
 ## [1.1.1] — 2026-07-08
 
 ### Исправлено
@@ -66,7 +78,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.2
 [1.1.1]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.1
 [1.1.0]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.0
 [1.0.0]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.0.0

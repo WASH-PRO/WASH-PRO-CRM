@@ -38,6 +38,7 @@ export interface ComponentCheck {
   releaseNotes: string | null;
   publishedAt: string | null;
   checkedAt: string | null;
+  error?: string | null;
 }
 
 export interface UpdatesStatus {

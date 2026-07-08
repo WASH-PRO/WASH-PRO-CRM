@@ -11,13 +11,27 @@ export interface GitHubRelease {
 
 export async function fetchLatestRelease(repo: string, includePrerelease = false): Promise<GitHubRelease | null> {
   const url = `https://api.github.com/repos/${repo}/releases?per_page=15`;
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'WASH-PRO-CRM-Updater',
-    },
-  });
+  const token = process.env.GITHUB_TOKEN || process.env.UPDATE_GITHUB_TOKEN || '';
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'WASH-PRO-CRM-Updater',
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(url, { headers });
   if (!res.ok) {
+    // Неавторизованный лимит GitHub — 60 запросов/час на IP; при исчерпании
+    // возвращается 403 с remaining=0. Даём понятное сообщение вместо «нет релизов».
+    const remaining = res.headers.get('x-ratelimit-remaining');
+    if ((res.status === 403 || res.status === 429) && remaining === '0') {
+      const reset = res.headers.get('x-ratelimit-reset');
+      const resetAt = reset ? new Date(Number(reset) * 1000).toISOString() : 'позже';
+      throw new Error(
+        token
+          ? `Превышен лимит GitHub API, повтор после ${resetAt}`
+          : `Превышен лимит GitHub API (60/час без токена). Задайте GITHUB_TOKEN. Сброс: ${resetAt}`
+      );
+    }
     throw new Error(`GitHub API ${res.status}: ${res.statusText}`);
   }
   const releases = (await res.json()) as GitHubRelease[];

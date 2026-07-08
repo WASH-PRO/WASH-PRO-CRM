@@ -260,13 +260,14 @@ services:
       UPDATE_HTTP_PORT: 3023
       DEPLOY_ROOT: /deploy
       STATE_DIR: /data
-      APP_VERSION: ${APP_VERSION:-1.1.1}
+      APP_VERSION: ${APP_VERSION:-1.1.2}
       UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
       HOST_PROJECT_ROOT: ${WASH_HOST_PROJECT_ROOT:-${PWD}}
       DATA_DIR: ${DATA_DIR:-./data}
       CRM_GITHUB_REPO: ${CRM_GITHUB_REPO:-WASH-PRO/WASH-PRO-CRM}
       DYNAMIC_API_GITHUB_REPO: ${DYNAMIC_API_GITHUB_REPO:-Dynamic-API-Platform/Dynamic-API-Platform}
       PYORCHESTRATOR_GITHUB_REPO: ${PYORCHESTRATOR_GITHUB_REPO:-PyOrchestrator/PyOrchestrator}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     volumes:
       - .:/deploy
       - /var/run/docker.sock:/var/run/docker.sock
@@ -286,7 +287,7 @@ services:
       context: ./dashboard
       dockerfile: Dockerfile
       args:
-        VITE_APP_VERSION: ${APP_VERSION:-1.1.1}
+        VITE_APP_VERSION: ${APP_VERSION:-1.1.2}
     container_name: wash-dashboard
     restart: unless-stopped
     environment:

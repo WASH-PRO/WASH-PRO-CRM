@@ -14,6 +14,8 @@ const SERVICE_LOGIN = process.env.SERVICE_LOGIN || 'service';
 const SERVICE_PASSWORD = process.env.SERVICE_PASSWORD || 'ServiceInternal123!';
 const CRM_API_BASE = process.env.CRM_API_BASE_URL || 'http://dynamic-api:3001';
 const PROCESSOR_API_BASE = process.env.PROCESSOR_API_BASE_URL || 'http://message-processor:3022';
+const INTERNAL_API_KEY = process.env.PYORCH_INTERNAL_API_KEY || process.env.INTERNAL_API_KEY || 'internal-dev-key';
+const BRIDGE_PUBLIC_URL = (process.env.PYORCH_BRIDGE_URL || 'http://pyorch-bridge:3021').replace(/\/$/, '');
 
 interface PyorchScript {
   id: string;
@@ -110,6 +112,81 @@ async function setSecret(scriptId: string, key: string, value: string): Promise<
   });
 }
 
+async function fetchTelegramBotUsername(token: string): Promise<string | null> {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(`https://api.telegram.org/bot${trimmed}/getMe`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok?: boolean; result?: { username?: string } };
+    const username = data.result?.username?.trim();
+    return username || null;
+  } catch (err) {
+    logger.warn({ err }, 'Telegram getMe failed');
+    return null;
+  }
+}
+
+async function resolveTelegramUsername(token?: string): Promise<string | null> {
+  if (!token?.trim()) return null;
+  try {
+    return await fetchTelegramBotUsername(token);
+  } catch {
+    return null;
+  }
+}
+
+function botTelegramUrl(script: PyorchScript, username?: string | null): string | null {
+  const fromArg = username?.trim().replace(/^@/, '');
+  const fromMeta = script.metadata?.telegram_username;
+  const resolved =
+    fromArg ||
+    (typeof fromMeta === 'string' ? fromMeta.trim().replace(/^@/, '') : '');
+  if (!resolved) return null;
+  return `https://t.me/${resolved}`;
+}
+
+async function getBotTelegramToken(scriptId: string): Promise<string | null> {
+  try {
+    const data = await pyorchFetch<{ key: string; value: string }>(
+      `/scripts/${scriptId}/secrets/TELEGRAM_TOKEN/value`
+    );
+    return data.value?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+async function persistBotUsername(bot: PyorchScript, username: string): Promise<PyorchScript> {
+  const normalized = username.trim().replace(/^@/, '');
+  if (!normalized) return bot;
+  const metadata = {
+    ...bot.metadata,
+    telegram_username: normalized,
+  };
+  await pyorchFetch(`/scripts/${bot.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ metadata }),
+  });
+  return { ...bot, metadata };
+}
+
+async function ensureBotTelegramUsername(bot: PyorchScript): Promise<string | null> {
+  const cached = bot.metadata?.telegram_username;
+  if (typeof cached === 'string' && cached.trim()) {
+    return cached.trim().replace(/^@/, '');
+  }
+  const token = await getBotTelegramToken(bot.id);
+  if (!token) return null;
+  const username = await fetchTelegramBotUsername(token);
+  if (!username) return null;
+  await persistBotUsername(bot, username);
+  return username;
+}
+
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -117,13 +194,23 @@ async function sleep(ms: number): Promise<void> {
 async function applySecrets(
   scriptId: string,
   input: { token?: string; adminIds: number[]; commands: string[] },
-  updateToken: boolean
+  updateToken: boolean,
+  kind: WashBotType = 'management'
 ): Promise<void> {
   if (updateToken && input.token?.trim()) {
     await setSecret(scriptId, 'TELEGRAM_TOKEN', input.token.trim());
   }
   await setSecret(scriptId, 'API_BASE_URL', CRM_API_BASE);
   await setSecret(scriptId, 'PROCESSOR_API_BASE_URL', PROCESSOR_API_BASE);
+  await setSecret(scriptId, 'PYORCH_BRIDGE_URL', BRIDGE_PUBLIC_URL);
+  await setSecret(scriptId, 'BRIDGE_INTERNAL_KEY', INTERNAL_API_KEY);
+  if (kind === 'informational') {
+    await setSecret(scriptId, 'API_LOGIN', '');
+    await setSecret(scriptId, 'API_PASSWORD', '');
+    await setSecret(scriptId, 'ADMIN_IDS', '');
+    await setSecret(scriptId, 'ALLOWED_COMMANDS', '/help,/start,/menu');
+    return;
+  }
   await setSecret(scriptId, 'API_LOGIN', SERVICE_LOGIN);
   await setSecret(scriptId, 'API_PASSWORD', SERVICE_PASSWORD);
   await setSecret(scriptId, 'ADMIN_IDS', input.adminIds.join(','));
@@ -226,8 +313,8 @@ async function refreshAllWashBots(restartRunning: boolean): Promise<void> {
       const kind = botType(bot);
       const adminIds = (bot.metadata.admin_ids as number[]) ?? [];
       await syncBotCode(bot, cmds, kind);
+      await applySecrets(bot.id, { adminIds, commands: cmds }, false, kind).catch(() => undefined);
       if (restartRunning && runningIds.includes(bot.id)) {
-        await applySecrets(bot.id, { adminIds, commands: cmds }, false).catch(() => undefined);
         await pyorchFetch(`/scripts/${bot.id}/enable`, { method: 'POST' }).catch(() => undefined);
         await pyorchFetch(`/runs/scripts/${bot.id}/run`, { method: 'POST' });
         logger.info({ botId: bot.id, name: bot.name }, 'Restarted wash telegram bot with fresh template');
@@ -332,6 +419,36 @@ export function startServer(): void {
       return;
     }
 
+    const internalUsernameMatch = url.match(/^\/internal\/bots\/([^/]+)\/username$/);
+    if (req.method === 'POST' && internalUsernameMatch) {
+      const internalKey = req.headers['x-internal-key'];
+      if (internalKey !== INTERNAL_API_KEY) {
+        json(res, 401, { success: false, error: 'Unauthorized' });
+        return;
+      }
+      try {
+        const body = JSON.parse(await readBody(req)) as { username?: string };
+        const username = body.username?.trim().replace(/^@/, '');
+        if (!username) {
+          json(res, 400, { success: false, error: 'username required' });
+          return;
+        }
+        const botId = internalUsernameMatch[1]!;
+        const bot = await getWashBot(botId);
+        if (!bot) {
+          json(res, 404, { success: false, error: 'Bot not found' });
+          return;
+        }
+        await persistBotUsername(bot, username);
+        json(res, 200, { success: true });
+      } catch (err) {
+        logger.error({ err, url }, 'Internal username registration failed');
+        const message = err instanceof Error ? err.message : 'Internal error';
+        json(res, 500, { success: false, error: message });
+      }
+      return;
+    }
+
     const auth = await verifyAdmin(req.headers.authorization);
     if (!auth.ok) {
       json(res, auth.status, { success: false, error: auth.error });
@@ -375,12 +492,15 @@ export function startServer(): void {
         const adminIds = body.adminIds ?? [];
         const commands = body.commands ?? [];
         const kind: WashBotType = body.botType ?? 'management';
+        const telegramUsername = await resolveTelegramUsername(body.token);
         const botMeta = {
           wash_telegram_bot: true,
           source: 'wash-pro-crm',
-          admin_ids: adminIds,
+          admin_ids: kind === 'informational' ? [] : adminIds,
           allowed_commands: commands,
           bot_type: kind,
+          public_access: kind === 'informational',
+          ...(telegramUsername ? { telegram_username: telegramUsername } : {}),
         };
 
         let script: PyorchScript | undefined;
@@ -410,7 +530,8 @@ export function startServer(): void {
           await applySecrets(
             script.id,
             { token: body.token, adminIds, commands: body.commands ?? [] },
-            true
+            true,
+            kind
           );
           await pyorchFetch(`/scripts/${script.id}/enable`, { method: 'POST' });
 
@@ -434,9 +555,40 @@ export function startServer(): void {
         return;
       }
 
-      const botMatch = url.match(/^\/bots\/([^/]+)(\/start|\/stop)?$/);
+      const botMatch = url.match(/^\/bots\/([^/]+)(\/start|\/stop|\/link)?$/);
       if (botMatch) {
         const botId = botMatch[1]!;
+
+        if (req.method === 'GET' && botMatch[2] === '/link') {
+          let existing = await getWashBot(botId);
+          if (!existing) {
+            json(res, 404, { success: false, error: 'Bot not found' });
+            return;
+          }
+          let username = await ensureBotTelegramUsername(existing);
+          if (!username) {
+            existing = (await getWashBot(botId)) ?? existing;
+            username = await ensureBotTelegramUsername(existing);
+          }
+          const link = botTelegramUrl(existing, username);
+          if (!link) {
+            json(res, 404, {
+              success: false,
+              error:
+                'Ссылка на бота недоступна. Запустите бота (он зарегистрирует username) или сохраните токен в настройках.',
+            });
+            return;
+          }
+          json(res, 200, {
+            success: true,
+            data: {
+              url: link,
+              username: username || String(existing.metadata.telegram_username || '').replace(/^@/, ''),
+              qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`,
+            },
+          });
+          return;
+        }
 
         if (req.method === 'PUT') {
           const body = JSON.parse(await readBody(req)) as {
@@ -458,6 +610,9 @@ export function startServer(): void {
             body.botType ??
             (existing.metadata.bot_type as WashBotType | undefined) ??
             'management';
+          const telegramUsername = body.token?.trim()
+            ? await resolveTelegramUsername(body.token)
+            : await ensureBotTelegramUsername(existing);
           await pyorchFetch(`/scripts/${botId}`, {
             method: 'PUT',
             body: JSON.stringify({
@@ -467,9 +622,11 @@ export function startServer(): void {
                 ...existing.metadata,
                 wash_telegram_bot: true,
                 source: 'wash-pro-crm',
-                admin_ids: adminIds,
+                admin_ids: kind === 'informational' ? [] : adminIds,
                 allowed_commands: commands,
                 bot_type: kind,
+                public_access: kind === 'informational',
+                ...(telegramUsername ? { telegram_username: telegramUsername } : {}),
               },
             }),
           });
@@ -477,7 +634,8 @@ export function startServer(): void {
           await applySecrets(
             botId,
             { token: body.token, adminIds, commands },
-            Boolean(body.token?.trim())
+            Boolean(body.token?.trim()),
+            kind
           );
           const wasRunning = isBotRunning(existing);
           if (wasRunning) {
@@ -514,7 +672,7 @@ export function startServer(): void {
           const commands = botCommands(existing);
           const kind = botType(existing);
           await syncBotCode(existing, commands, kind);
-          await applySecrets(botId, { adminIds, commands }, false);
+          await applySecrets(botId, { adminIds, commands }, false, kind);
           await restartWashBot(existing, commands, kind);
           const updated = (await getWashBot(botId)) ?? existing;
           json(res, 200, { success: true, data: updated });

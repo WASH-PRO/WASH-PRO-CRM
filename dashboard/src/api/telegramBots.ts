@@ -76,6 +76,7 @@ export interface TelegramBot {
     admin_ids?: number[];
     allowed_commands?: string[];
     bot_type?: TelegramBotType;
+    telegram_username?: string;
   };
   active_run?: {
     id: string;
@@ -107,7 +108,11 @@ async function bridgeFetch<T>(path: string, options: RequestInit = {}): Promise<
     if (res.status === 401) {
       throw new Error('Сессия истекла. Обновите страницу или войдите снова.');
     }
-    throw new Error(json.error ?? `Ошибка ${res.status}`);
+    const raw = json.error ?? `Ошибка ${res.status}`;
+    if (/fetch failed|ECONNREFUSED|ENOTFOUND|network/i.test(raw)) {
+      throw new Error('Сервис ботов временно недоступен. Перезапустите бота и повторите.');
+    }
+    throw new Error(raw);
   }
   return json.data as T;
 }
@@ -174,4 +179,14 @@ export async function stopTelegramBot(id: string): Promise<TelegramBot> {
   const bot = await bridgeFetch<TelegramBot>(`/bots/${id}/stop`, { method: 'POST' });
   if (!bot?.id) throw new Error('Сервис не вернул данные бота');
   return bot;
+}
+
+export interface TelegramBotLink {
+  url: string;
+  username: string;
+  qrUrl: string;
+}
+
+export async function getTelegramBotLink(id: string): Promise<TelegramBotLink> {
+  return bridgeFetch<TelegramBotLink>(`/bots/${id}/link`);
 }

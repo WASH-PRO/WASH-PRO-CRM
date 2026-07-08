@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Play, Plus, RefreshCw, Square, Trash2 } from 'lucide-react';
+import { Pencil, Play, Plus, QrCode, RefreshCw, Square, Trash2 } from 'lucide-react';
 import {
   WASH_TELEGRAM_COMMAND_GROUPS,
   TELEGRAM_BOT_COMMAND_PRESETS,
@@ -9,17 +9,20 @@ import {
   checkTelegramBridgeHealth,
   createTelegramBot,
   deleteTelegramBot,
+  getTelegramBotLink,
   listTelegramBots,
   startTelegramBot,
   stopTelegramBot,
   updateTelegramBot,
   type TelegramBot,
+  type TelegramBotLink,
   type TelegramBotType,
 } from '../api/telegramBots';
 import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader } from '../components/UI';
-import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
+import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
+import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
 
 interface BotForm {
@@ -93,6 +96,10 @@ export function TelegramPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [botPatches, setBotPatches] = useState<Map<string, TelegramBot>>(() => new Map());
+  const [qrBot, setQrBot] = useState<TelegramBot | null>(null);
+  const [qrLink, setQrLink] = useState<TelegramBotLink | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   const checkService = useCallback(async () => {
     setPageState('loading');
@@ -288,9 +295,121 @@ export function TelegramPage() {
     }
   };
 
+  const openQrModal = async (bot: TelegramBot) => {
+    setQrBot(bot);
+    setQrLink(null);
+    setQrError(null);
+    setQrLoading(true);
+    try {
+      const link = await getTelegramBotLink(bot.id);
+      setQrLink(link);
+    } catch (err) {
+      setQrError(err instanceof Error ? err.message : 'Не удалось получить ссылку на бота');
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const closeQrModal = () => {
+    setQrBot(null);
+    setQrLink(null);
+    setQrError(null);
+    setQrLoading(false);
+  };
+
   const botList = useMemo(
     () => applyTelegramBotPatches(bots ?? [], botPatches),
     [bots, botPatches]
+  );
+
+  const bulkActions: DataTableBulkAction<TelegramBot>[] = useMemo(
+    () => [
+      createExportBulkAction('telegram-bots.csv', [
+        { header: 'Название', value: (bot) => bot.name },
+        { header: 'Описание', value: (bot) => bot.description || '' },
+        { header: 'Тип', value: (bot) => TELEGRAM_BOT_TYPE_LABELS[resolveBotType(bot)] },
+        { header: 'Статус', value: (bot) => runStatus(bot).label },
+        {
+          header: 'Команды',
+          value: (bot) => {
+            const type = resolveBotType(bot);
+            const cmds = bot.metadata.allowed_commands?.length
+              ? bot.metadata.allowed_commands
+              : TELEGRAM_BOT_COMMAND_PRESETS[type];
+            return cmds.join(', ');
+          },
+        },
+        { header: 'Дата создания', value: (bot) => bot.created_at || '' },
+      ]),
+      {
+        id: 'start',
+        label: 'Запустить',
+        variant: 'primary',
+        disabled: (rows) => !rows.some((bot) => botRunState(bot) === 'stopped'),
+        onAction: async (rows) => {
+          const targets = rows.filter((bot) => botRunState(bot) === 'stopped');
+          const errors: string[] = [];
+          for (const bot of targets) {
+            try {
+              const updated = await startTelegramBot(bot.id);
+              rememberBot(updated);
+            } catch (err) {
+              errors.push(`${bot.name}: ${err instanceof Error ? err.message : 'ошибка'}`);
+            }
+          }
+          void refresh();
+          if (errors.length > 0) {
+            throw new Error(`Запущено ${targets.length - errors.length} из ${targets.length}.\n${errors.join('\n')}`);
+          }
+        },
+      },
+      {
+        id: 'stop',
+        label: 'Остановить',
+        disabled: (rows) => !rows.some((bot) => botRunState(bot) === 'running' || botRunState(bot) === 'queued'),
+        onAction: async (rows) => {
+          const targets = rows.filter(
+            (bot) => botRunState(bot) === 'running' || botRunState(bot) === 'queued'
+          );
+          const errors: string[] = [];
+          for (const bot of targets) {
+            try {
+              const updated = await stopTelegramBot(bot.id);
+              rememberBot(updated);
+            } catch (err) {
+              errors.push(`${bot.name}: ${err instanceof Error ? err.message : 'ошибка'}`);
+            }
+          }
+          void refresh();
+          if (errors.length > 0) {
+            throw new Error(`Остановлено ${targets.length - errors.length} из ${targets.length}.\n${errors.join('\n')}`);
+          }
+        },
+      },
+      {
+        id: 'delete',
+        label: 'Удалить',
+        variant: 'danger',
+        confirmMessage: (_rows, ids) => `Удалить ${ids.length} Telegram-ботов? Это действие необратимо.`,
+        onAction: async (rows) => {
+          const errors: string[] = [];
+          for (const bot of rows) {
+            try {
+              await deleteTelegramBot(bot.id);
+              forgetBot(bot.id);
+              setBots((prev) => (prev ?? []).filter((item) => String(item.id) !== String(bot.id)));
+            } catch (err) {
+              errors.push(`${bot.name}: ${err instanceof Error ? err.message : 'ошибка'}`);
+            }
+          }
+          void refresh();
+          if (errors.length > 0) {
+            throw new Error(`Удалено ${rows.length - errors.length} из ${rows.length}.\n${errors.join('\n')}`);
+          }
+        },
+      },
+    ],
+    [forgetBot, rememberBot, refresh, setBots]
   );
 
   const filters: DataTableFilter<TelegramBot>[] = useMemo(
@@ -418,6 +537,15 @@ export function TelegramPage() {
                   <Square size={16} />
                 </button>
               )}
+              <button
+                type="button"
+                className="btn-icon"
+                title="QR-код и ссылка на бота"
+                disabled={busy}
+                onClick={() => void openQrModal(bot)}
+              >
+                <QrCode size={16} />
+              </button>
               <button type="button" className="btn-icon" title="Настройки" onClick={() => openEdit(bot)}>
                 <Pencil size={16} />
               </button>
@@ -466,7 +594,7 @@ export function TelegramPage() {
     <div>
       <PageHeader
         title="Telegram боты"
-        subtitle="Доступ в бот — по Telegram user_id в карточке пользователя CRM (Пользователи → Telegram ID)"
+        subtitle="Боты «Управление» и «Сервисный» — доступ по Telegram ID в карточке пользователя. «Информационный» — публичный, без регистрации."
         actions={
           <button type="button" className="btn-primary" onClick={openCreate}>
             <Plus size={16} className="mr-1.5 inline" />
@@ -505,6 +633,7 @@ export function TelegramPage() {
             if (id === 'status') setStatusFilter(value);
           }}
           searchPlaceholder="Поиск ботов…"
+          bulkActions={bulkActions}
           emptyMessage={
             botList.length > 0 && statusFilter
               ? 'Нет ботов с выбранным статусом'
@@ -575,7 +704,8 @@ export function TelegramPage() {
             <div className="rounded-lg border border-panel-border p-3 text-sm dark:border-panel-border-dark">
               <p className="font-medium text-panel-ink dark:text-panel-ink-dark">Меню информационного бота</p>
               <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
-                📰 Новости · 💰 Цены · 🅿️ Занятость · 🎁 Акции.                 Контент — в разделе <Link to="/info-messages" className="text-brand-600 hover:underline dark:text-brand-400">Информация</Link>.
+                📰 Новости · 💰 Цены · 🅿️ Занятость · 🎁 Акции. Публичный доступ — Telegram ID не требуется.
+                Контент — в разделе <Link to="/info-messages" className="text-brand-600 hover:underline dark:text-brand-400">Информация</Link>.
               </p>
             </div>
           ) : (
@@ -622,6 +752,38 @@ export function TelegramPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={Boolean(qrBot)} onClose={closeQrModal} title={qrBot ? `Ссылка на бота «${qrBot.name}»` : 'Ссылка на бота'}>
+        {qrLoading && <Loading />}
+        {qrError && <ErrorMessage message={qrError} />}
+        {qrLink && (
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <img
+                src={qrLink.qrUrl}
+                alt={`QR-код бота @${qrLink.username}`}
+                className="h-52 w-52 rounded-lg border border-panel-border bg-white p-2 dark:border-panel-border-dark"
+              />
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="text-panel-muted dark:text-panel-muted-dark">Ссылка для клиентов</div>
+              <a
+                href={qrLink.url}
+                target="_blank"
+                rel="noreferrer"
+                className="block break-all font-mono text-brand-600 hover:underline dark:text-brand-400"
+              >
+                {qrLink.url}
+              </a>
+              {qrLink.username && (
+                <div className="text-panel-muted dark:text-panel-muted-dark">
+                  Telegram: <span className="font-mono text-panel-ink dark:text-panel-ink-dark">@{qrLink.username}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

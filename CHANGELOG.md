@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+## [1.1.10] — 2026-07-09
+
+### Добавлено
+
+- **QR-код и ссылка на бота** — кнопка в таблице Telegram-ботов; модальное окно с `t.me`-ссылкой и QR
+- **Массовые действия** на странице Telegram-ботов — экспорт CSV, запуск, остановка, удаление выбранных
+- **Информационный бот v1.3** — фоновая рассылка новостей/акций подписчикам; по кнопке — последние 10 записей; регистрация `@username` при старте
+
+### Изменено
+
+- **Публичный доступ информационного бота** — без проверки Telegram ID; CRM endpoints `info-messages`, `washes`, `posts`, `post-states`, `work-modes`, `currencies` — `accessType: public`
+
+### Исправлено
+
+- **Ссылка на бота недоступна / fetch failed** — `pyorch-bridge` получил доступ в интернет; чтение `TELEGRAM_TOKEN` из PyOrchestrator; username регистрируется ботом при запуске; понятные сообщения об ошибках
+
 ## [1.1.9] — 2026-07-09
 
 ### Добавлено
@@ -143,7 +159,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.9...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.10...HEAD
+[1.1.10]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.10
 [1.1.9]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.9
 [1.1.8]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.8
 [1.1.7]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.7

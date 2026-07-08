@@ -496,19 +496,19 @@ const workModeFields: SchemaField[] = [
 ];
 
 export const CRM_ENDPOINTS: EndpointDef[] = [
-  { name: 'Список автомоек', slug: 'crm-washes-list', path: '/api/crm/washes', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'washes', description: 'Получить список автомоек' },
+  { name: 'Список автомоек', slug: 'crm-washes-list', path: '/api/crm/washes', method: 'GET', schema: [], accessType: 'public', groupKey: 'washes', description: 'Получить список автомоек (публично — информационный бот)' },
   { name: 'Создать автомойку', slug: 'crm-washes-create', path: '/api/crm/washes', method: 'POST', schema: washFields, accessType: 'group', groupKey: 'washes', description: 'Создать автомойку' },
   { name: 'Автомойка по ID', slug: 'crm-washes-get', path: '/api/crm/washes/:id', method: 'GET', schema: washFields, accessType: 'authenticated', groupKey: 'washes', description: 'Получить автомойку' },
   { name: 'Обновить автомойку', slug: 'crm-washes-update', path: '/api/crm/washes/:id', method: 'PUT', schema: washFields, accessType: 'group', groupKey: 'washes', description: 'Обновить автомойку' },
   { name: 'Удалить автомойку', slug: 'crm-washes-delete', path: '/api/crm/washes/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'washes', description: 'Удалить автомойку, все посты и связанные данные', handlers: [WASH_DELETE_CASCADE_HANDLER] },
 
-  { name: 'Список постов', slug: 'crm-posts-list', path: '/api/crm/posts', method: 'GET', schema: postFields, accessType: 'authenticated', groupKey: 'posts', description: 'Получить список постов' },
+  { name: 'Список постов', slug: 'crm-posts-list', path: '/api/crm/posts', method: 'GET', schema: postFields, accessType: 'public', groupKey: 'posts', description: 'Получить список постов (публично — информационный бот)' },
   { name: 'Создать пост', slug: 'crm-posts-create', path: '/api/crm/posts', method: 'POST', schema: postFields, accessType: 'group', groupKey: 'posts', description: 'Создать пост' },
   { name: 'Пост по ID', slug: 'crm-posts-get', path: '/api/crm/posts/:id', method: 'GET', schema: postFields, accessType: 'authenticated', groupKey: 'posts', description: 'Получить пост' },
   { name: 'Обновить пост', slug: 'crm-posts-update', path: '/api/crm/posts/:id', method: 'PUT', schema: postFields, accessType: 'group', groupKey: 'posts', description: 'Обновить пост' },
   { name: 'Удалить пост', slug: 'crm-posts-delete', path: '/api/crm/posts/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'posts', description: 'Удалить пост и связанные данные', handlers: [POST_DELETE_CASCADE_HANDLER] },
 
-  { name: 'Состояние поста', slug: 'crm-post-states-list', path: '/api/crm/post-states', method: 'GET', schema: postStateFields, accessType: 'authenticated', groupKey: 'scada', description: 'Список состояний постов' },
+  { name: 'Состояние поста', slug: 'crm-post-states-list', path: '/api/crm/post-states', method: 'GET', schema: postStateFields, accessType: 'public', groupKey: 'scada', description: 'Список состояний постов (публично — занятость)' },
   { name: 'Создать состояние', slug: 'crm-post-states-create', path: '/api/crm/post-states', method: 'POST', schema: postStateFields, accessType: 'group', groupKey: 'scada', description: 'Создать состояние поста' },
   { name: 'Состояние по ID', slug: 'crm-post-states-get', path: '/api/crm/post-states/:id', method: 'GET', schema: postStateFields, accessType: 'authenticated', groupKey: 'scada', description: 'Получить состояние' },
   { name: 'Обновить состояние', slug: 'crm-post-states-update', path: '/api/crm/post-states/:id', method: 'PUT', schema: postStateFields, accessType: 'group', groupKey: 'scada', description: 'Обновить состояние поста' },
@@ -531,7 +531,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Обновить финансы', slug: 'crm-finance-stats-update', path: '/api/crm/finance-stats/:id', method: 'PATCH', schema: financeStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Обновить финансовую статистику' },
   { name: 'Удалить финансовую статистику', slug: 'crm-finance-stats-delete', path: '/api/crm/finance-stats/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'statistics', description: 'Удалить запись финансов' },
 
-  { name: 'Список валют', slug: 'crm-currencies-list', path: '/api/crm/currencies', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'currencies', description: 'Справочник валют' },
+  { name: 'Список валют', slug: 'crm-currencies-list', path: '/api/crm/currencies', method: 'GET', schema: [], accessType: 'public', groupKey: 'currencies', description: 'Справочник валют (публично)' },
   { name: 'Создать валюту', slug: 'crm-currencies-create', path: '/api/crm/currencies', method: 'POST', schema: currencyFields, accessType: 'group', groupKey: 'currencies', description: 'Добавить валюту' },
   { name: 'Валюта по ID', slug: 'crm-currencies-get', path: '/api/crm/currencies/:id', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'currencies', description: 'Получить валюту' },
   { name: 'Обновить валюту', slug: 'crm-currencies-update', path: '/api/crm/currencies/:id', method: 'PUT', schema: currencyFields, accessType: 'group', groupKey: 'currencies', description: 'Обновить валюту' },
@@ -543,7 +543,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Обновить тип скидки', slug: 'crm-discount-types-update', path: '/api/crm/discount-types/:id', method: 'PUT', schema: discountTypeFields, accessType: 'group', groupKey: 'discount-types', description: 'Обновить тип скидки' },
   { name: 'Удалить тип скидки', slug: 'crm-discount-types-delete', path: '/api/crm/discount-types/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'discount-types', description: 'Удалить тип скидки' },
 
-  { name: 'Список режимов работы', slug: 'crm-work-modes-list', path: '/api/crm/work-modes', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'work-modes', description: 'Справочник режимов работы постов' },
+  { name: 'Список режимов работы', slug: 'crm-work-modes-list', path: '/api/crm/work-modes', method: 'GET', schema: [], accessType: 'public', groupKey: 'work-modes', description: 'Справочник режимов (публично — цены)' },
   { name: 'Создать режим работы', slug: 'crm-work-modes-create', path: '/api/crm/work-modes', method: 'POST', schema: workModeFields, accessType: 'group', groupKey: 'work-modes', description: 'Добавить режим работы' },
   { name: 'Режим работы по ID', slug: 'crm-work-modes-get', path: '/api/crm/work-modes/:id', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'work-modes', description: 'Получить режим работы' },
   { name: 'Обновить режим работы', slug: 'crm-work-modes-update', path: '/api/crm/work-modes/:id', method: 'PUT', schema: workModeFields, accessType: 'group', groupKey: 'work-modes', description: 'Обновить режим работы' },
@@ -576,7 +576,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Обновить MQTT outbox', slug: 'crm-mqtt-outbox-patch', path: '/api/crm/mqtt-outbox/:id', method: 'PATCH', schema: mqttOutboxFields, accessType: 'group', groupKey: 'telemetry', description: 'Статус доставки / повтор' },
   { name: 'Удалить MQTT outbox', slug: 'crm-mqtt-outbox-delete', path: '/api/crm/mqtt-outbox/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Очистка устаревших записей outbox' },
 
-  { name: 'Информационные сообщения', slug: 'crm-info-messages-list', path: '/api/crm/info-messages', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'info-messages', description: 'Лента для информационных ботов' },
+  { name: 'Информационные сообщения', slug: 'crm-info-messages-list', path: '/api/crm/info-messages', method: 'GET', schema: [], accessType: 'public', groupKey: 'info-messages', description: 'Лента для информационных ботов (публично)' },
   { name: 'Создать сообщение', slug: 'crm-info-messages-create', path: '/api/crm/info-messages', method: 'POST', schema: infoMessageFields, accessType: 'group', groupKey: 'info-messages', description: 'Добавить новость или акцию' },
   { name: 'Сообщение по ID', slug: 'crm-info-messages-get', path: '/api/crm/info-messages/:id', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'info-messages', description: 'Получить сообщение' },
   { name: 'Обновить сообщение', slug: 'crm-info-messages-update', path: '/api/crm/info-messages/:id', method: 'PUT', schema: infoMessageFields, accessType: 'group', groupKey: 'info-messages', description: 'Обновить сообщение' },

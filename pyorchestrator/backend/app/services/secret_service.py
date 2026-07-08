@@ -36,5 +36,12 @@ async def list_secrets(db: AsyncSession, script_id: UUID) -> list[dict]:
     ]
 
 
+async def get_secret_by_key(db: AsyncSession, script_id: UUID, key: str) -> ScriptSecret | None:
+    result = await db.execute(
+        select(ScriptSecret).where(ScriptSecret.script_id == script_id, ScriptSecret.key == key)
+    )
+    return result.scalar_one_or_none()
+
+
 def get_secret_value(secret: ScriptSecret) -> str:
     return decrypt_secret(secret.ciphertext, secret.nonce)

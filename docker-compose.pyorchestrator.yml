@@ -94,6 +94,8 @@ services:
       PROCESSOR_API_BASE_URL: http://message-processor:3022
       SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
       SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
+      PYORCH_INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
+      PYORCH_BRIDGE_URL: http://pyorch-bridge:3021
     depends_on:
       pyorch-backend:
         condition: service_healthy
@@ -101,6 +103,7 @@ services:
         condition: service_healthy
     networks:
       - wash-internal
+      - wash-external
 
   pyorch-runtime:
     build:

@@ -415,6 +415,9 @@ async function ensureEndpoints(
 
     const patch: Record<string, unknown> = {};
     if (found.groupId !== groupId) patch.groupId = groupId;
+    if (found.accessType !== ep.accessType) {
+      patch.accessType = ep.accessType;
+    }
     if (ep.accessType === 'group' && !sameIdSets(found.allowedGroupIds, allowedGroupIds)) {
       patch.allowedGroupIds = allowedGroupIds;
     }
@@ -430,6 +433,10 @@ async function ensureEndpoints(
       if (patch.groupId) {
         console.log(`  Moved endpoint: ${ep.method} ${ep.path} → ${ep.groupKey}`);
         reorganized++;
+      }
+      if (patch.accessType) {
+        console.log(`  Updated access: ${ep.method} ${ep.path} → ${ep.accessType}`);
+        accessFixed++;
       }
       if (patch.allowedGroupIds) {
         accessFixed++;

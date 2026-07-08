@@ -38,7 +38,7 @@ from app.services.dashboard_service import get_dashboard_stats, get_dashboard_ti
 from app.services.notification_service import dismiss_notification, sync_run_alerts_for_user
 from app.services.run_service import append_run_log, complete_run, record_metric, start_run
 from app.services.script_service import get_script_or_404, queue_run, redis_service
-from app.services.secret_service import list_secrets, set_secret
+from app.services.secret_service import get_secret_by_key, get_secret_value, list_secrets, set_secret
 
 secrets_router = APIRouter()
 
@@ -62,6 +62,20 @@ async def add_secret(
     await get_script_or_404(db, script_id)
     s = await set_secret(db, script_id, body.key, body.value, body.description)
     return SecretResponse(id=s.id, key=s.key, description=s.description, has_value=True)
+
+
+@secrets_router.get("/scripts/{script_id}/secrets/{key}/value")
+async def read_secret_value(
+    script_id: UUID,
+    key: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_permission("secrets:write"))],
+):
+    await get_script_or_404(db, script_id)
+    secret = await get_secret_by_key(db, script_id, key)
+    if not secret:
+        raise HTTPException(404, "Secret not found")
+    return {"key": secret.key, "value": get_secret_value(secret)}
 
 
 notifications_router = APIRouter()

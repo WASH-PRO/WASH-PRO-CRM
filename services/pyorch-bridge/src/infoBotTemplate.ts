@@ -1,4 +1,4 @@
-/** Публичный информационный Telegram-бот: новости, цены, занятость, акции. */
+// Публичный информационный Telegram-бот: без проверки Telegram ID, доступен всем.
 export const WASH_TELEGRAM_INFO_BOT_MAIN = `"""WASH PRO CRM — информационный Telegram-бот."""
 import fcntl
 import html
@@ -10,16 +10,44 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "1.0"
+BOT_VERSION = "1.3"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
-API_LOGIN = os.environ.get("SECRET_API_LOGIN", "service")
-API_PASSWORD = os.environ.get("SECRET_API_PASSWORD", "")
+PYORCH_SCRIPT_ID = os.environ.get("PYORCH_SCRIPT_ID", "").strip()
+PYORCH_BRIDGE_URL = os.environ.get("SECRET_PYORCH_BRIDGE_URL", "http://pyorch-bridge:3021").rstrip("/")
+BRIDGE_INTERNAL_KEY = os.environ.get("SECRET_BRIDGE_INTERNAL_KEY", "")
 
-_access_token: str | None = None
-_CHAT_LAST_FEED_ID: dict[int, str] = {}
+
+def register_bot_username() -> None:
+    if not PYORCH_SCRIPT_ID or not TELEGRAM_TOKEN:
+        return
+    try:
+        with urllib.request.urlopen(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getMe", timeout=15) as resp:
+            payload = json.loads(resp.read().decode())
+        username = str((payload.get("result") or {}).get("username") or "").strip()
+        if not username:
+            return
+        req = urllib.request.Request(
+            f"{PYORCH_BRIDGE_URL}/internal/bots/{PYORCH_SCRIPT_ID}/username",
+            data=json.dumps({"username": username}).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-Key": BRIDGE_INTERNAL_KEY,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10):
+            print(f"Registered Telegram username @{username}")
+    except Exception as exc:
+        print(f"register username skipped: {exc}")
+
 _CHAT_FLOW: dict[int, dict] = {}
+_SUBSCRIBED_CHATS: set[int] = set()
+_GLOBAL_LAST_BROADCAST: dict[str, str] = {"news": "", "promotion": ""}
+_FEED_HISTORY_LIMIT = 10
+_BROADCAST_POLL_SEC = 30
+_STATE_PATH = os.path.join(os.environ.get("PYORCH_WORKDIR", "."), "info_bot_state.json")
 _POST_ONLINE_SEC = 30
 
 MENU_BUTTONS = {
@@ -69,31 +97,9 @@ def request_json(method: str, path: str, body: dict | None = None, headers: dict
         return json.loads(raw) if raw else {}
 
 
-def api_login() -> None:
-    global _access_token
-    data = request_json("POST", "/api/auth/login", {"login": API_LOGIN, "password": API_PASSWORD})
-    if not data.get("success") or not data.get("data", {}).get("accessToken"):
-        raise RuntimeError("Service login failed")
-    _access_token = data["data"]["accessToken"]
-
-
-def auth_headers() -> dict[str, str]:
-    global _access_token
-    if not _access_token:
-        api_login()
-    return {"Authorization": f"Bearer {_access_token}"}
-
-
 def api_get(path: str):
-    global _access_token
-    try:
-        data = request_json("GET", path, headers=auth_headers())
-    except urllib.error.HTTPError as exc:
-        if exc.code == 401:
-            api_login()
-            data = request_json("GET", path, headers=auth_headers())
-        else:
-            raise
+    """Публичное чтение CRM — без JWT и без Telegram ID."""
+    data = request_json("GET", path)
     if data.get("success") is False:
         raise RuntimeError(data.get("error", "API error"))
     return data.get("data")
@@ -212,15 +218,113 @@ def message_visible(row: dict, wash_id: str | None = None) -> bool:
     return True
 
 
-def fetch_messages(category: str | None = None, wash_id: str | None = None) -> list[dict]:
+def load_state() -> None:
+    global _SUBSCRIBED_CHATS, _GLOBAL_LAST_BROADCAST
+    try:
+        with open(_STATE_PATH, encoding="utf-8") as fh:
+            data = json.load(fh)
+        _SUBSCRIBED_CHATS = {int(x) for x in data.get("chats", [])}
+        stored = data.get("broadcast") or {}
+        _GLOBAL_LAST_BROADCAST = {
+            "news": str(stored.get("news") or ""),
+            "promotion": str(stored.get("promotion") or ""),
+        }
+    except Exception:
+        pass
+
+
+def save_state() -> None:
+    try:
+        with open(_STATE_PATH, "w", encoding="utf-8") as fh:
+            json.dump(
+                {
+                    "chats": sorted(_SUBSCRIBED_CHATS),
+                    "broadcast": _GLOBAL_LAST_BROADCAST,
+                },
+                fh,
+            )
+    except Exception as exc:
+        print(f"state save failed: {exc}")
+
+
+def register_chat(chat_id: int) -> None:
+    if chat_id in _SUBSCRIBED_CHATS:
+        return
+    _SUBSCRIBED_CHATS.add(chat_id)
+    save_state()
+
+
+def fetch_messages(categories: tuple[str, ...] | None = None, wash_id: str | None = None) -> list[dict]:
     rows = api_get("/api/crm/info-messages?limit=200") or []
     items = [r for r in rows if message_visible(r, wash_id)]
-    if category:
-        items = [r for r in items if str(r.get("category") or "news") == category]
+    if categories:
+        allowed = set(categories)
+        items = [r for r in items if str(r.get("category") or "news") in allowed]
     items.sort(
         key=lambda r: (-parse_ts(r.get("publishedAt")), int(r.get("sortOrder") or 0), str(r.get("id", ""))),
     )
     return items
+
+
+def collect_new_rows(items: list[dict], last_id: str) -> list[dict]:
+    if not items:
+        return []
+    if not last_id:
+        return []
+    new_rows: list[dict] = []
+    for row in items:
+        row_id = str(row.get("id") or "")
+        if row_id == last_id:
+            break
+        new_rows.append(row)
+    return new_rows
+
+
+def broadcast_category(category_key: str, categories: tuple[str, ...], icon: str, fallback_title: str) -> None:
+    global _GLOBAL_LAST_BROADCAST
+    items = fetch_messages(categories)
+    if not items:
+        return
+    newest_id = str(items[0].get("id") or "")
+    last_id = _GLOBAL_LAST_BROADCAST.get(category_key) or ""
+    if not last_id:
+        _GLOBAL_LAST_BROADCAST[category_key] = newest_id
+        save_state()
+        return
+    if newest_id == last_id:
+        return
+    new_rows = collect_new_rows(items, last_id)
+    if not new_rows:
+        _GLOBAL_LAST_BROADCAST[category_key] = newest_id
+        save_state()
+        return
+    new_rows.reverse()
+    for chat_id in list(_SUBSCRIBED_CHATS):
+        for row in new_rows:
+            try:
+                title = str(row.get("title") or fallback_title)
+                send_item(chat_id, f"{icon} {title}", render_message_body(row), str(row.get("imageUrl") or "") or None)
+            except Exception as exc:
+                print(f"broadcast to {chat_id} failed: {exc}")
+    _GLOBAL_LAST_BROADCAST[category_key] = newest_id
+    save_state()
+
+
+def broadcast_new_messages() -> None:
+    if not _SUBSCRIBED_CHATS:
+        return
+    broadcast_category("news", ("news", "general"), "📰", "Новость")
+    broadcast_category("promotion", ("promotion",), "🎁", "Акция")
+
+
+def show_feed_history(chat_id: int, categories: tuple[str, ...], header: str, empty_text: str) -> None:
+    items = fetch_messages(categories)[:_FEED_HISTORY_LIMIT]
+    if not items:
+        send_text(chat_id, empty_text, main_keyboard())
+        return
+    send_text(chat_id, f"{header} ({len(items)})", main_keyboard())
+    for row in items:
+        send_item(chat_id, str(row.get("title") or header), render_message_body(row), str(row.get("imageUrl") or "") or None)
 
 
 def render_message_body(row: dict) -> str:
@@ -231,6 +335,7 @@ def welcome_text() -> str:
     return (
         "<b>WASH PRO</b>\\n"
         "Информационный бот автомойки\\n\\n"
+        "Бот доступен <b>всем</b> — регистрация и Telegram ID не нужны.\\n\\n"
         "📰 <b>Новости</b> — лента обновлений\\n"
         "💰 <b>Цены</b> — стоимость режимов на мойке\\n"
         "🅿️ <b>Занятость</b> — свободные и занятые посты\\n"
@@ -245,48 +350,11 @@ def show_main_menu(chat_id: int) -> None:
 
 
 def show_news(chat_id: int, wash_id: str | None = None) -> None:
-    items = fetch_messages(None, wash_id)[:10]
-    if not items:
-        send_text(chat_id, "📰 Пока нет опубликованных новостей.", main_keyboard())
-        return
-    send_text(chat_id, f"📰 <b>Новости</b> ({len(items)})", main_keyboard())
-    for row in items:
-        send_item(chat_id, str(row.get("title") or "Новость"), render_message_body(row), str(row.get("imageUrl") or "") or None)
-        _CHAT_LAST_FEED_ID[chat_id] = str(row.get("id") or "")
+    show_feed_history(chat_id, ("news", "general"), "📰 <b>Новости</b>", "📰 Пока нет опубликованных новостей.")
 
 
 def show_promotions(chat_id: int, wash_id: str | None = None) -> None:
-    items = fetch_messages("promotion", wash_id)[:10]
-    if not items:
-        send_text(chat_id, "🎁 Сейчас нет активных акций.", main_keyboard())
-        return
-    send_text(chat_id, f"🎁 <b>Акции</b> ({len(items)})", main_keyboard())
-    for row in items:
-        send_item(chat_id, str(row.get("title") or "Акция"), render_message_body(row), str(row.get("imageUrl") or "") or None)
-
-
-def push_new_feed_items(chat_id: int) -> None:
-    items = fetch_messages()[:5]
-    if not items:
-        return
-    newest_id = str(items[0].get("id") or "")
-    last_id = _CHAT_LAST_FEED_ID.get(chat_id)
-    if not last_id:
-        _CHAT_LAST_FEED_ID[chat_id] = newest_id
-        return
-    if newest_id == last_id:
-        return
-    new_rows = []
-    for row in items:
-        if str(row.get("id") or "") == last_id:
-            break
-        new_rows.append(row)
-    if not new_rows:
-        return
-    new_rows.reverse()
-    for row in new_rows:
-        send_item(chat_id, f"📢 {row.get('title') or 'Новость'}", render_message_body(row), str(row.get("imageUrl") or "") or None)
-    _CHAT_LAST_FEED_ID[chat_id] = newest_id
+    show_feed_history(chat_id, ("promotion",), "🎁 <b>Акции</b>", "🎁 Сейчас нет активных акций.")
 
 
 def washes_keyboard(prefix: str) -> dict:
@@ -403,16 +471,10 @@ def handle_callback(chat_id: int, callback_id: str, data: str) -> None:
 
 
 def handle_text(chat_id: int, text: str) -> None:
-    push_new_feed_items(chat_id)
+    register_chat(chat_id)
     stripped = text.strip()
     if stripped in ("/start", "/menu"):
         show_main_menu(chat_id)
-        items = fetch_messages()[:3]
-        if items:
-            send_text(chat_id, "📰 Последние новости:", main_keyboard())
-            for row in reversed(items):
-                send_item(chat_id, str(row.get("title") or "Новость"), render_message_body(row), str(row.get("imageUrl") or "") or None)
-            _CHAT_LAST_FEED_ID[chat_id] = str(items[0].get("id") or "")
         return
     if stripped == "/help":
         send_text(chat_id, welcome_text(), main_keyboard())
@@ -448,13 +510,23 @@ def main() -> None:
         print("SECRET_TELEGRAM_TOKEN not configured")
         return
     print(f"WASH PRO informational bot v{BOT_VERSION} started")
+    register_bot_username()
     time.sleep(2)
     if not acquire_poll_lock():
         print("Another info bot instance is polling this token. Exit.")
         return
+    load_state()
     offset = 0
+    last_broadcast_check = 0.0
     while True:
         try:
+            now = time.time()
+            if now - last_broadcast_check >= _BROADCAST_POLL_SEC:
+                last_broadcast_check = now
+                try:
+                    broadcast_new_messages()
+                except Exception as exc:
+                    print(f"broadcast cycle failed: {exc}")
             params = urllib.parse.urlencode({
                 "offset": offset,
                 "timeout": 25,
@@ -472,6 +544,7 @@ def main() -> None:
                     cb = update["callback_query"]
                     chat = (cb.get("message") or {}).get("chat") or {}
                     if "id" in chat:
+                        register_chat(int(chat["id"]))
                         handle_callback(int(chat["id"]), str(cb.get("id", "")), str(cb.get("data") or ""))
                     continue
                 msg = update.get("message") or {}
@@ -480,6 +553,7 @@ def main() -> None:
                 if "id" not in chat or not text:
                     continue
                 try:
+                    register_chat(int(chat["id"]))
                     handle_text(int(chat["id"]), text)
                 except Exception as exc:
                     print(f"Message failed: {exc}")

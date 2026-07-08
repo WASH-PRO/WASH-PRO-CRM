@@ -12,11 +12,14 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "2.9"
+BOT_VERSION = "3.0"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
 PROCESSOR_API_BASE = os.environ.get("SECRET_PROCESSOR_API_BASE_URL", "http://message-processor:3022").rstrip("/")
+PYORCH_SCRIPT_ID = os.environ.get("PYORCH_SCRIPT_ID", "").strip()
+PYORCH_BRIDGE_URL = os.environ.get("SECRET_PYORCH_BRIDGE_URL", "http://pyorch-bridge:3021").rstrip("/")
+BRIDGE_INTERNAL_KEY = os.environ.get("SECRET_BRIDGE_INTERNAL_KEY", "")
 API_LOGIN = os.environ.get("SECRET_API_LOGIN", "service")
 API_PASSWORD = os.environ.get("SECRET_API_PASSWORD", "")
 ADMIN_IDS = [
@@ -72,6 +75,30 @@ _MAX_PROCESSED_CALLBACKS = 2000
 _POLL_LOCK_FILE = None
 _LAST_SENT: dict[int, tuple[str, float]] = {}
 _SEND_DEDUP_SEC = 3.0
+
+
+def register_bot_username() -> None:
+    if not PYORCH_SCRIPT_ID or not TELEGRAM_TOKEN:
+        return
+    try:
+        with urllib.request.urlopen(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getMe", timeout=15) as resp:
+            payload = json.loads(resp.read().decode())
+        username = str((payload.get("result") or {}).get("username") or "").strip()
+        if not username:
+            return
+        req = urllib.request.Request(
+            f"{PYORCH_BRIDGE_URL}/internal/bots/{PYORCH_SCRIPT_ID}/username",
+            data=json.dumps({"username": username}).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-Key": BRIDGE_INTERNAL_KEY,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10):
+            print(f"Registered Telegram username @{username}")
+    except Exception as exc:
+        print(f"register username skipped: {exc}")
 
 
 def offset_file_path() -> str:
@@ -1729,6 +1756,7 @@ def main() -> None:
     if not ADMIN_IDS:
         print("INFO: CRM telegram auth via /api/users/telegram/{id}/auth (ADMIN_IDS optional fallback)")
     print(f"WASH PRO CRM Telegram bot v{BOT_VERSION} started")
+    register_bot_username()
     try:
         cur = resolve_default_currency()
         print(f"Default currency: {cur.get('code')} ({cur.get('symbol')})")

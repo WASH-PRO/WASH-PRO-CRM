@@ -7,6 +7,7 @@ import { startProcessorHttpServer } from './http.js';
 import { syncMqttUsersFromPosts } from './mqtt-users.js';
 import { syncPricesFromDevice } from './post-settings.js';
 import { extractNativeTopicSerial, getBindingBySerial, resolveTrustedPostSerial, bindingsBySerialSize } from './mqtt-post-bindings.js';
+import { handleDeliveryAck, startOutboxMaintenance, type DeliveryAckPayload } from './mqtt-outbox.js';
 
 function normalizeIncoming(topic: string, raw: unknown): WashMessage[] {
   if (isLegacyEnvelope(raw)) {
@@ -91,11 +92,23 @@ async function handleMessage(topic: string, payload: Buffer): Promise<void> {
 
   await logRawMqtt(topic, raw);
 
-  if (entry.messageType === 'prices' && trustedSerial && raw && typeof raw === 'object') {
+  const ackMatch = /^([^/]+)\/([^/]+)\/set\/ack$/.exec(topic);
+  if (ackMatch && raw && typeof raw === 'object' && trustedSerial) {
     try {
-      await syncPricesFromDevice(trustedSerial, raw as Record<string, unknown>);
+      await handleDeliveryAck(trustedSerial, raw as DeliveryAckPayload);
     } catch (err) {
-      logger.warn({ err, topic }, 'Device prices sync failed (non-fatal)');
+      logger.warn({ err, topic }, 'Delivery ack handling failed (non-fatal)');
+    }
+  }
+
+  if (entry.messageType === 'prices' && trustedSerial && raw && typeof raw === 'object') {
+    const pricePayload = raw as Record<string, unknown>;
+    if (!pricePayload.message_id) {
+      try {
+        await syncPricesFromDevice(trustedSerial, pricePayload);
+      } catch (err) {
+        logger.warn({ err, topic }, 'Device prices sync failed (non-fatal)');
+      }
     }
   }
 
@@ -146,6 +159,7 @@ function main(): void {
     void handleMessage(topic, payload);
   });
   startProcessorHttpServer();
+  startOutboxMaintenance();
   setTimeout(() => {
     void syncMqttUsersFromPosts()
       .then(() => reconnectMqttBroker())

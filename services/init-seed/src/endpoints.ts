@@ -435,6 +435,21 @@ const telemetryFields: SchemaField[] = [
   { name: 'receivedAt', type: 'datetime', order: 5 },
 ];
 
+const mqttOutboxFields: SchemaField[] = [
+  { name: 'messageId', type: 'string', required: true, order: 0, description: 'UUID исходящего сообщения (message_id в MQTT)' },
+  { name: 'postSerial', type: 'string', required: true, order: 1 },
+  { name: 'mqttTopic', type: 'string', required: true, order: 2 },
+  { name: 'kind', type: 'string', required: true, order: 3, description: 'prices|command' },
+  { name: 'payload', type: 'json', required: true, order: 4 },
+  { name: 'status', type: 'string', required: true, order: 5, description: 'pending|delivered|failed|expired' },
+  { name: 'attempts', type: 'number', order: 6 },
+  { name: 'createdAt', type: 'datetime', order: 7 },
+  { name: 'expiresAt', type: 'datetime', order: 8 },
+  { name: 'ackAt', type: 'datetime', order: 9 },
+  { name: 'lastError', type: 'string', order: 10 },
+  { name: 'nextRedeliverAt', type: 'datetime', order: 11 },
+];
+
 const currencyFields: SchemaField[] = [
   { name: 'code', type: 'string', required: true, order: 0, description: 'Код ISO 4217 (RUB, USD, EUR)' },
   { name: 'name', type: 'string', required: true, order: 1, description: 'Название валюты' },
@@ -533,6 +548,11 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Телеметрия (внутр.)', slug: 'crm-telemetry-create', path: '/api/crm/telemetry', method: 'POST', schema: telemetryFields, accessType: 'group', groupKey: 'telemetry', description: 'Приём телеметрии от processor' },
   { name: 'Список телеметрии', slug: 'crm-telemetry-list', path: '/api/crm/telemetry', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'telemetry', description: 'Список входящих MQTT-сообщений' },
   { name: 'Удалить телеметрию', slug: 'crm-telemetry-delete', path: '/api/crm/telemetry/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Удаление при архивировании' },
+
+  { name: 'MQTT outbox (внутр.)', slug: 'crm-mqtt-outbox-create', path: '/api/crm/mqtt-outbox', method: 'POST', schema: mqttOutboxFields, accessType: 'group', groupKey: 'telemetry', description: 'Исходящие MQTT-команды с подтверждением доставки' },
+  { name: 'Список MQTT outbox', slug: 'crm-mqtt-outbox-list', path: '/api/crm/mqtt-outbox', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'telemetry', description: 'Очередь исходящих MQTT' },
+  { name: 'Обновить MQTT outbox', slug: 'crm-mqtt-outbox-patch', path: '/api/crm/mqtt-outbox/:id', method: 'PATCH', schema: mqttOutboxFields, accessType: 'group', groupKey: 'telemetry', description: 'Статус доставки / повтор' },
+  { name: 'Удалить MQTT outbox', slug: 'crm-mqtt-outbox-delete', path: '/api/crm/mqtt-outbox/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Очистка устаревших записей outbox' },
 ];
 
 export const DEFAULT_SETTINGS = [
@@ -587,6 +607,11 @@ export const DEFAULT_SETTINGS = [
     value: {
       systemLogin: 'system',
       systemPassword: 'washpro',
+      outboundRetentionHours: 168,
+      requireDeliveryConfirmation: false,
+      redeliverOnNoAck: false,
+      redeliverIntervalSec: 30,
+      redeliverMaxAttempts: 5,
     },
   },
   {

@@ -44,7 +44,7 @@ export function editableModePrices(prices: Record<string, number>): Record<strin
 }
 
 /** Цены режимов: ключ — код режима (0–9), значение — рубли. */
-const SKIP_PRICE_KEYS = new Set(['direction', 'cmd', 'command', 'summ', 'type', 'prices']);
+const SKIP_PRICE_KEYS = new Set(['direction', 'cmd', 'command', 'summ', 'type', 'prices', 'message_id']);
 
 export function normalizeModePrices(raw: unknown): Record<string, number> {
   if (raw == null) return {};

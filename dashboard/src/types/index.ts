@@ -245,6 +245,11 @@ export interface DynamicApiCrmSettings {
 export interface MqttBrokerSettings {
   systemLogin: string;
   systemPassword: string;
+  outboundRetentionHours: number;
+  requireDeliveryConfirmation: boolean;
+  redeliverOnNoAck: boolean;
+  redeliverIntervalSec: number;
+  redeliverMaxAttempts: number;
 }
 
 export interface SetupSettings {

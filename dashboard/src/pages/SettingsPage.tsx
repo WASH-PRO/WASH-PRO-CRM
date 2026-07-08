@@ -376,6 +376,77 @@ export function SettingsPage() {
               onChange={(e) => setMqttBroker({ ...mqttBroker, systemPassword: e.target.value })}
             />
           </Field>
+          <Field
+            label="Хранение исходящих MQTT (часы)"
+            hint="Срок хранения команд и цен в outbox CRM до автоочистки (по умолчанию 168 = 7 суток)"
+          >
+            <input
+              className="input font-mono"
+              type="number"
+              min={1}
+              disabled={!canEdit}
+              value={mqttBroker.outboundRetentionHours}
+              onChange={(e) =>
+                setMqttBroker({ ...mqttBroker, outboundRetentionHours: Math.max(1, Number(e.target.value) || 168) })
+              }
+            />
+          </Field>
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              disabled={!canEdit}
+              checked={mqttBroker.requireDeliveryConfirmation}
+              onChange={(e) =>
+                setMqttBroker({
+                  ...mqttBroker,
+                  requireDeliveryConfirmation: e.target.checked,
+                  redeliverOnNoAck: e.target.checked ? mqttBroker.redeliverOnNoAck : false,
+                })
+              }
+            />
+            Требовать подтверждение доставки от устройства (топик <span className="font-mono">set/ack</span>)
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              disabled={!canEdit || !mqttBroker.requireDeliveryConfirmation}
+              checked={mqttBroker.redeliverOnNoAck}
+              onChange={(e) => setMqttBroker({ ...mqttBroker, redeliverOnNoAck: e.target.checked })}
+            />
+            Повторно отправлять, если подтверждение не получено
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Интервал повтора (сек)" hint="Между попытками доставки без ack">
+              <input
+                className="input font-mono"
+                type="number"
+                min={5}
+                disabled={!canEdit || !mqttBroker.redeliverOnNoAck}
+                value={mqttBroker.redeliverIntervalSec}
+                onChange={(e) =>
+                  setMqttBroker({
+                    ...mqttBroker,
+                    redeliverIntervalSec: Math.max(5, Number(e.target.value) || 30),
+                  })
+                }
+              />
+            </Field>
+            <Field label="Макс. попыток" hint="Включая первую отправку">
+              <input
+                className="input font-mono"
+                type="number"
+                min={1}
+                disabled={!canEdit || !mqttBroker.redeliverOnNoAck}
+                value={mqttBroker.redeliverMaxAttempts}
+                onChange={(e) =>
+                  setMqttBroker({
+                    ...mqttBroker,
+                    redeliverMaxAttempts: Math.max(1, Number(e.target.value) || 5),
+                  })
+                }
+              />
+            </Field>
+          </div>
         </SettingSection>
         </div>
 

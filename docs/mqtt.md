@@ -201,6 +201,53 @@ CRM отправляет команды и цены в топики:
 
 Запросы из веб-интерфейса идут через `message-processor` (HTTP → MQTT). Исходящие публикации также попадают в журнал MQTT.
 
+### Настройки доставки (Настройки → MQTT)
+
+| Поле | По умолчанию | Описание |
+|------|--------------|----------|
+| `outboundRetentionHours` | 168 (7 суток) | Срок хранения исходящих команд/цен в **outbox** CRM |
+| `requireDeliveryConfirmation` | `false` | Включить протокол подтверждения (`set/ack`) |
+| `redeliverOnNoAck` | `false` | Повторять публикацию, если ack не получен (только при включённом подтверждении) |
+| `redeliverIntervalSec` | 30 | Пауза между повторами |
+| `redeliverMaxAttempts` | 5 | Максимум попыток (включая первую) |
+
+При `requireDeliveryConfirmation=false` (по умолчанию) поведение как раньше: CRM публикует `set/*`, для цен устройство может ответить эхом на `set/prices`.
+
+При `requireDeliveryConfirmation=true` CRM добавляет в payload поле `message_id` (UUID), сохраняет запись в `/api/crm/mqtt-outbox` и ждёт ответ в топике:
+
+```
+{dt_pref}/{serial_number}/set/ack
+```
+
+Формат подтверждения от ETH:
+
+```json
+{
+  "kind": "prices",
+  "status": "ok",
+  "message_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+Ошибка:
+
+```json
+{
+  "kind": "command",
+  "status": "error",
+  "message_id": "550e8400-e29b-41d4-a716-446655440000",
+  "cmd": 3,
+  "error_message": "INVALID_AMOUNT"
+}
+```
+
+| `kind` | Исходный топик |
+|--------|----------------|
+| `prices` | `set/prices` |
+| `command` | `set/command` |
+
+Журнал входящих MQTT (`/api/crm/telemetry`) по-прежнему хранит все сообщения; срок очистки журнала задаётся в настройках **архива** (`archive.retentionDays`), отдельно от outbox.
+
 ### set/prices
 
 Ключи — коды режимов (`0`–`9`), значения — цена в рублях:

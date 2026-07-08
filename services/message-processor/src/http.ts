@@ -17,6 +17,8 @@ import {
 } from './post-device.js';
 import { mergePostSettings } from './post-settings.js';
 import { syncMqttUsersFromPosts } from './mqtt-users.js';
+import { loadMqttBrokerSettings } from './mqtt-broker-settings.js';
+import { createOutboxEntry, newMessageId } from './mqtt-outbox.js';
 
 const logger = pino({ level: 'info' });
 const PORT = parseInt(process.env.PROCESSOR_HTTP_PORT || '3022', 10);
@@ -149,15 +151,36 @@ export function startProcessorHttpServer(): void {
         }
 
         let topic: string | undefined;
+        let deliveryStatus: 'pending_ack' | 'published' = 'published';
         if (sendToDevice) {
           topic = buildSetTopic(mqttPrefix, serial, 'prices');
-          const payload = pricesPayload(mqttPrices);
-          await publishMqtt(topic, payload);
-          await logOutbound(topic, serial, 'prices', { ...payload, direction: 'outbound' });
+          const brokerSettings = await loadMqttBrokerSettings();
+          const mqttPayload: Record<string, number | string> = { ...pricesPayload(mqttPrices) };
+          const messageId = brokerSettings.requireDeliveryConfirmation ? newMessageId() : undefined;
+          if (messageId) {
+            mqttPayload.message_id = messageId;
+            deliveryStatus = 'pending_ack';
+          }
+          await publishMqtt(topic, mqttPayload);
+          if (messageId && topic) {
+            await createOutboxEntry({
+              messageId,
+              postSerial: serial,
+              mqttTopic: topic,
+              kind: 'prices',
+              payload: mqttPayload,
+            });
+          }
+          await logOutbound(topic, serial, 'prices', { ...mqttPayload, direction: 'outbound' });
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true, data: { topic, prices, mqttPrices, mqttPrefix } }));
+        res.end(
+          JSON.stringify({
+            success: true,
+            data: { topic, prices, mqttPrices, mqttPrefix, deliveryStatus },
+          })
+        );
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Prices publish failed';
         logger.error({ err, serial }, 'Prices request failed');
@@ -186,17 +209,46 @@ export function startProcessorHttpServer(): void {
           throw new Error('Не указана команда');
         }
         const mqttPrefix = resolveMqttPrefix(body.mqttPrefix);
-        const payload = commandPayload(body.command, body.amount);
+        const basePayload = commandPayload(body.command, body.amount);
         const topic = buildSetTopic(mqttPrefix, serial, 'command');
-        await publishMqtt(topic, payload);
-        await logOutbound(topic, serial, 'command', { ...payload, direction: 'outbound', command: body.command });
+        const brokerSettings = await loadMqttBrokerSettings();
+        const messageId = brokerSettings.requireDeliveryConfirmation ? newMessageId() : undefined;
+        const mqttPayload: Record<string, number | string> = { ...basePayload };
+        if (messageId) {
+          mqttPayload.message_id = messageId;
+        }
+        await publishMqtt(topic, mqttPayload);
+        if (messageId) {
+          await createOutboxEntry({
+            messageId,
+            postSerial: serial,
+            mqttTopic: topic,
+            kind: 'command',
+            payload: mqttPayload,
+          });
+        }
+        await logOutbound(topic, serial, 'command', {
+          ...mqttPayload,
+          direction: 'outbound',
+          command: body.command,
+        });
         await mergePostSettings(serial, {
           lastCommand: body.command,
           lastCommandAt: new Date().toISOString(),
         });
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true, data: { topic, payload, command: body.command } }));
+        res.end(
+          JSON.stringify({
+            success: true,
+            data: {
+              topic,
+              payload: mqttPayload,
+              command: body.command,
+              deliveryStatus: brokerSettings.requireDeliveryConfirmation ? 'pending_ack' : 'published',
+            },
+          })
+        );
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Command publish failed';
         logger.error({ err, serial }, 'Command request failed');

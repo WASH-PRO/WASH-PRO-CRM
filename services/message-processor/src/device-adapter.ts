@@ -45,7 +45,8 @@ export function inferMqttLogEntry(
 
     let messageType = suffix || path;
     if (section === 'set') {
-      messageType = suffix === 'prices' ? 'prices' : suffix === 'command' ? 'command' : 'settings';
+      messageType =
+        suffix === 'prices' ? 'prices' : suffix === 'command' ? 'command' : suffix === 'ack' ? 'ack' : 'settings';
     } else if (section === 'state') {
       messageType = MQTT_SUFFIX_MESSAGE_TYPE[suffix] || suffix;
     }

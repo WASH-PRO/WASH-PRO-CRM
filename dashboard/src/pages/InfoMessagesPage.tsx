@@ -34,7 +34,7 @@ const emptyForm = {
   body: '',
   imageUrl: '',
   category: 'news' as InfoMessage['category'],
-  status: 'draft' as InfoMessage['status'],
+  status: 'published' as InfoMessage['status'],
   publishedAt: '',
   expiresAt: '',
   washId: '',
@@ -111,14 +111,21 @@ export function InfoMessagesPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const now = new Date().toISOString();
+    const publishedAt =
+      fromLocalInput(form.publishedAt) ??
+      (form.status === 'published' || form.status === 'scheduled' ? now : undefined);
+    let expiresAt = fromLocalInput(form.expiresAt);
+    if (expiresAt && publishedAt && new Date(expiresAt).getTime() <= new Date(publishedAt).getTime()) {
+      expiresAt = undefined;
+    }
     const body = {
       title: form.title.trim(),
       body: form.body.trim(),
       imageUrl: form.imageUrl.trim() || undefined,
       category: form.category,
       status: form.status,
-      publishedAt: fromLocalInput(form.publishedAt),
-      expiresAt: fromLocalInput(form.expiresAt),
+      publishedAt,
+      expiresAt,
       washId: form.washId || undefined,
       sortOrder: Number(form.sortOrder) || 0,
       updatedAt: now,
@@ -328,6 +335,9 @@ export function InfoMessagesPage() {
                 value={form.expiresAt}
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
               />
+              <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+                Необязательно. Оставьте пустым — новость не исчезнет. Дата должна быть позже публикации.
+              </p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

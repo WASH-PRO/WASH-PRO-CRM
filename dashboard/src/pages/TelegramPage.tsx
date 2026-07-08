@@ -705,6 +705,7 @@ export function TelegramPage() {
               <p className="font-medium text-panel-ink dark:text-panel-ink-dark">Меню информационного бота</p>
               <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
                 📰 Новости · 💰 Цены · 🅿️ Занятость · 🎁 Акции. Публичный доступ — Telegram ID не требуется.
+                Каждый пользователь пишет боту в личном чате — диалоги изолированы, группы не поддерживаются.
                 Контент — в разделе <Link to="/info-messages" className="text-brand-600 hover:underline dark:text-brand-400">Информация</Link>.
               </p>
             </div>

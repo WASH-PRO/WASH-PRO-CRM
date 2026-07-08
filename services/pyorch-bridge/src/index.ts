@@ -205,8 +205,8 @@ async function applySecrets(
   await setSecret(scriptId, 'PYORCH_BRIDGE_URL', BRIDGE_PUBLIC_URL);
   await setSecret(scriptId, 'BRIDGE_INTERNAL_KEY', INTERNAL_API_KEY);
   if (kind === 'informational') {
-    await setSecret(scriptId, 'API_LOGIN', '');
-    await setSecret(scriptId, 'API_PASSWORD', '');
+    await setSecret(scriptId, 'API_LOGIN', SERVICE_LOGIN);
+    await setSecret(scriptId, 'API_PASSWORD', SERVICE_PASSWORD);
     await setSecret(scriptId, 'ADMIN_IDS', '');
     await setSecret(scriptId, 'ALLOWED_COMMANDS', '/help,/start,/menu');
     return;

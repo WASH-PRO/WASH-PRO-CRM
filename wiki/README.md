@@ -2,7 +2,8 @@
 
 Исходники для [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
-**Полная документация:** https://wash-pro.github.io/WASH-PRO-CRM/
+**Полная документация (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/  
+**Текущая версия:** v1.1.11
 
 | Файл | Wiki |
 |------|------|
@@ -11,8 +12,15 @@
 | [Setup-Wizard.md](Setup-Wizard.md) | Setup-Wizard |
 | [Architecture.md](Architecture.md) | Architecture |
 | [MQTT.md](MQTT.md) | MQTT |
+| [Telegram.md](Telegram.md) | Telegram |
 | [Embedded-Services.md](Embedded-Services.md) | Embedded-Services |
 | [Dashboard.md](Dashboard.md) | Dashboard |
 | [Database-Schema.md](Database-Schema.md) | Database-Schema |
 
-Синхронизируйте с [`docs/`](../docs/) при обновлениях.
+Синхронизируйте с [`docs/`](../docs/) при обновлениях. После релиза обновите wiki-клон:
+
+```bash
+git clone https://github.com/WASH-PRO/WASH-PRO-CRM.wiki.git
+cp wiki/*.md WASH-PRO-CRM.wiki/
+cd WASH-PRO-CRM.wiki && git add -A && git commit -m "Sync wiki v1.1.11" && git push
+```

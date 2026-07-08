@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "3.0"
+BOT_VERSION = "3.1"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -203,7 +203,8 @@ def private_guest_message(telegram_user_id: int) -> str:
         + report_section(
             "Доступ закрыт",
             f"Ваш Telegram ID: <code>{telegram_user_id}</code>\\n\\n"
-            "Бот доступен только сотрудникам с привязанной учётной записью CRM.\\n"
+            "Бот работает только в личных сообщениях — ваши команды не видны другим пользователям.\\n"
+            "Доступ открыт сотрудникам с привязанной учётной записью CRM.\\n"
             "Для доступа обратитесь к администратору и укажите ваш Telegram ID.",
         )
         + "\\n\\n"
@@ -213,6 +214,40 @@ def private_guest_message(telegram_user_id: int) -> str:
 
 def send_guest_reply(chat_id: int, telegram_user_id: int) -> None:
     send_ui(chat_id, private_guest_message(telegram_user_id))
+
+
+_PRIVATE_HINT_SENT: set[int] = set()
+
+
+def is_private_chat(chat: dict) -> bool:
+    return str(chat.get("type") or "") == "private"
+
+
+def private_chat_id(chat: dict) -> int | None:
+    if not is_private_chat(chat):
+        return None
+    raw = chat.get("id")
+    if raw is None:
+        return None
+    cid = int(raw)
+    return cid if cid > 0 else None
+
+
+def maybe_notify_private_chat(user_id: int) -> None:
+    if user_id <= 0 or user_id in _PRIVATE_HINT_SENT:
+        return
+    _PRIVATE_HINT_SENT.add(user_id)
+    try:
+        send_ui(
+            user_id,
+            ui_hint(
+                "🔒 Бот работает только в личных сообщениях.\\n"
+                "Ваш диалог изолирован — другие пользователи не видят ваши команды и ответы.\\n"
+                "Откройте чат с ботом напрямую и нажмите /start."
+            ),
+        )
+    except Exception as exc:
+        print(f"private chat hint failed for {user_id}: {exc}")
 
 
 def ui_write_denied() -> str:
@@ -1796,9 +1831,15 @@ def main() -> None:
                     msg = cb.get("message") or {}
                     chat = msg.get("chat") or {}
                     user = cb.get("from") or {}
-                    if "id" in chat and "id" in user:
+                    chat_id = private_chat_id(chat)
+                    if chat_id is None:
+                        uid = int(user.get("id") or 0)
+                        if uid:
+                            maybe_notify_private_chat(uid)
+                        continue
+                    if "id" in user:
                         try:
-                            process_update(chat["id"], user["id"], None, cb)
+                            process_update(chat_id, user["id"], None, cb)
                         except Exception as exc:
                             print(f"Callback failed: {exc}")
                     continue
@@ -1806,10 +1847,16 @@ def main() -> None:
                 text = msg.get("text") or ""
                 user = msg.get("from") or {}
                 chat = msg.get("chat") or {}
-                if not user or "id" not in chat:
+                chat_id = private_chat_id(chat)
+                if chat_id is None:
+                    uid = int(user.get("id") or 0)
+                    if uid:
+                        maybe_notify_private_chat(uid)
+                    continue
+                if not user:
                     continue
                 try:
-                    process_update(chat["id"], user["id"], text, None)
+                    process_update(chat_id, user["id"], text, None)
                 except Exception as exc:
                     print(f"Message failed: {exc}")
         except Exception as exc:

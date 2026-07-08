@@ -13,6 +13,7 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 import { useSidebarSize } from '../hooks/useSidebarSize';
+import { useUnreadNotifications } from '../hooks/useUnreadNotifications';
 import { ThemeToggle } from './ThemeToggle';
 import { LiveModeProvider } from '../context/LiveModeContext';
 import { LiveModeIndicator } from './LiveModeIndicator';
@@ -27,6 +28,7 @@ import { UpdateBanner } from './UpdateBanner';
 
 function LayoutInner() {
   const { user, logout, isAdmin } = useAuth();
+  const { unreadCount } = useUnreadNotifications();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarUserKey = user?.id || user?.login;
@@ -194,6 +196,12 @@ function LayoutInner() {
               <LiveModeIndicator />
               <Link to="/notifications" className="btn-icon relative" title="Уведомления">
                 <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-panel-surface dark:ring-panel-bg-dark"
+                    aria-label={`Непрочитанных: ${unreadCount}`}
+                  />
+                )}
               </Link>
               <ThemeToggle />
               <button type="button" onClick={() => logout()} className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-500" title="Выход">

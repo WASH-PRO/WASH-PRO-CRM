@@ -651,6 +651,8 @@ export const DEFAULT_SETTINGS = [
         cardUpdated: true,
         cardDeleted: true,
         autoTask: true,
+        mqttCredit: false,
+        mqttCollection: false,
       },
     },
   },

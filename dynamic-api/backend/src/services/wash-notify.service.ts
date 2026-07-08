@@ -52,6 +52,8 @@ const TYPE_TO_EVENT: Record<string, string> = {
   card_deleted: 'cardDeleted',
   auto_backup: 'autoTask',
   auto_archive: 'autoTask',
+  mqtt_credit: 'mqttCredit',
+  mqtt_collection: 'mqttCollection',
 };
 
 const DEFAULT_EVENTS: Record<string, boolean> = {
@@ -86,6 +88,8 @@ const DEFAULT_EVENTS: Record<string, boolean> = {
   cardUpdated: true,
   cardDeleted: true,
   autoTask: true,
+  mqttCredit: false,
+  mqttCollection: false,
 };
 
 const EXCLUDED_NOTIFY_PREFIXES = [
@@ -121,7 +125,7 @@ async function loadNotificationSettings(): Promise<NotificationSettings> {
 
 function isTypeEnabled(type: string, settings: NotificationSettings): boolean {
   const eventKey = TYPE_TO_EVENT[type];
-  if (!eventKey) return true;
+  if (!eventKey) return false;
   return settings.events[eventKey] !== false;
 }
 
@@ -173,23 +177,25 @@ export async function createWashNotification(input: NotifyInput): Promise<void> 
   const deliveryChannels = channels(settings);
   if (!deliveryChannels.length) return;
 
-  const endpointId = await findNotificationsEndpointId();
-  if (!endpointId) return;
+  if (deliveryChannels.includes('web')) {
+    const endpointId = await findNotificationsEndpointId();
+    if (!endpointId) return;
 
-  await endpointDataRepository.create(
-    endpointId,
-    '/api/crm/notifications',
-    {
-      type: input.type,
-      severity: input.severity,
-      message: input.message,
-      washId: input.washId,
-      postId: input.postId,
-      read: false,
-      channels: deliveryChannels,
-      createdAt: new Date().toISOString(),
-    }
-  );
+    await endpointDataRepository.create(
+      endpointId,
+      '/api/crm/notifications',
+      {
+        type: input.type,
+        severity: input.severity,
+        message: input.message,
+        washId: input.washId,
+        postId: input.postId,
+        read: false,
+        channels: deliveryChannels,
+        createdAt: new Date().toISOString(),
+      }
+    );
+  }
 
   if (deliveryChannels.includes('telegram')) {
     const prefix = input.severity === 'error' ? '🔴' : input.severity === 'warning' ? '🟡' : 'ℹ️';
@@ -300,6 +306,8 @@ function buildMutationMessage(
   };
 }
 
+const INTERNAL_SERVICE_LOGINS = new Set(['service']);
+
 export async function notifyCrmMutation(
   method: string,
   path: string,
@@ -307,6 +315,7 @@ export async function notifyCrmMutation(
   body?: unknown
 ): Promise<void> {
   if (!shouldNotifyCrmMutation(method, path)) return;
+  if (user?.login && INTERNAL_SERVICE_LOGINS.has(user.login)) return;
 
   const base = getCollectionPath(path);
   if (base === '/api/crm/archive-logs' && method === 'POST') {

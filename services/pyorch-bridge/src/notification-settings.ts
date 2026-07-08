@@ -29,7 +29,9 @@ export type NotificationEventKey =
   | 'cardCreated'
   | 'cardUpdated'
   | 'cardDeleted'
-  | 'autoTask';
+  | 'autoTask'
+  | 'mqttCredit'
+  | 'mqttCollection';
 
 export interface NotificationSettingsValue {
   telegram: boolean;
@@ -72,6 +74,8 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettingsValue = {
     cardUpdated: true,
     cardDeleted: true,
     autoTask: true,
+    mqttCredit: false,
+    mqttCollection: false,
   },
 };
 
@@ -108,6 +112,8 @@ export const NOTIFICATION_TYPE_TO_EVENT: Record<string, NotificationEventKey> = 
   card_deleted: 'cardDeleted',
   auto_backup: 'autoTask',
   auto_archive: 'autoTask',
+  mqtt_credit: 'mqttCredit',
+  mqtt_collection: 'mqttCollection',
 };
 
 export function normalizeNotificationSettings(raw: unknown): NotificationSettingsValue {
@@ -136,6 +142,6 @@ export function channelsFromSettings(settings: NotificationSettingsValue): strin
 
 export function isNotificationTypeEnabled(type: string, settings: NotificationSettingsValue): boolean {
   const eventKey = NOTIFICATION_TYPE_TO_EVENT[type];
-  if (!eventKey) return true;
+  if (!eventKey) return false;
   return settings.events[eventKey] !== false;
 }

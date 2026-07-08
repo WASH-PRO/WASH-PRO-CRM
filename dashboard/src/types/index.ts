@@ -227,6 +227,8 @@ export interface NotificationSettings {
     cardUpdated?: boolean;
     cardDeleted?: boolean;
     autoTask?: boolean;
+    mqttCredit?: boolean;
+    mqttCollection?: boolean;
   };
 }
 

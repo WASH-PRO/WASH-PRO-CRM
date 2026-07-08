@@ -5,7 +5,7 @@ import type { DataTableBulkAction, DataTableColumn, DataTableFilter } from '../c
 import { bulkDelete, bulkPatch } from './bulk';
 import { createExportBulkAction } from './export';
 import { formatDateTime } from './format';
-import { NOTIFICATION_TYPE_LABELS } from './notificationSettings';
+import { NOTIFICATION_TYPE_LABELS, isWebNotification } from './notificationSettings';
 import type { Notification } from '../types';
 
 export const NOTIFICATIONS_PAGE_LIMIT = 150;
@@ -16,10 +16,17 @@ export async function fetchRecentNotifications(
   signal?: AbortSignal
 ): Promise<{ items: Notification[]; total: number }> {
   const { data, pagination } = await apiListPage<Notification>('/crm/notifications', 1, limit, signal);
-  const items = [...data].sort(
-    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-  );
+  const items = [...data]
+    .filter(isWebNotification)
+    .sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
   return { items, total: pagination.total };
+}
+
+export async function countUnreadWebNotifications(signal?: AbortSignal): Promise<number> {
+  const { items } = await fetchRecentNotifications(NOTIFICATIONS_PAGE_LIMIT, signal);
+  return items.filter((n) => !n.read).length;
 }
 
 export function notificationFilters(full = true): DataTableFilter<Notification>[] {

@@ -35,6 +35,7 @@ import type {
   MqttBrokerSettings,
   NotificationSettings,
   PyOrchestratorCrmSettings,
+  TelegramCrmSettings,
 } from '../types';
 
 const DEFAULT_BACKUP: BackupSettings = {
@@ -59,6 +60,24 @@ const DEFAULT_DAP: DynamicApiCrmSettings = {
 };
 
 const DEFAULT_MQTT = DEFAULT_MQTT_BROKER;
+
+const DEFAULT_TELEGRAM: TelegramCrmSettings = {
+  token: '',
+  adminIds: [],
+  allowedCommands: [],
+  enabled: false,
+};
+
+function parseTelegram(raw: Record<string, unknown>): TelegramCrmSettings {
+  return {
+    token: String(raw.token ?? ''),
+    adminIds: Array.isArray(raw.adminIds)
+      ? raw.adminIds.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0)
+      : [],
+    allowedCommands: Array.isArray(raw.allowedCommands) ? raw.allowedCommands.map(String) : [],
+    enabled: raw.enabled === true,
+  };
+}
 
 function SettingSection({
   title,
@@ -129,6 +148,7 @@ export function SettingsPage() {
   const [ids, setIds] = useState<Record<string, string | null>>({});
   const [backup, setBackup] = useState<BackupSettings>(DEFAULT_BACKUP);
   const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
+  const [telegram, setTelegram] = useState<TelegramCrmSettings>(DEFAULT_TELEGRAM);
   const [pyorch, setPyorch] = useState<PyOrchestratorCrmSettings>(DEFAULT_PYORCH);
   const [dynamicApi, setDynamicApi] = useState<DynamicApiCrmSettings>(DEFAULT_DAP);
   const [mqttBroker, setMqttBroker] = useState<MqttBrokerSettings>(DEFAULT_MQTT);
@@ -139,6 +159,7 @@ export function SettingsPage() {
     const idMap: Record<string, string | null> = {
       backup: null,
       notifications: null,
+      telegram: null,
       pyorchestrator: null,
       'dynamic-api': null,
       'mqtt-broker': null,
@@ -151,6 +172,7 @@ export function SettingsPage() {
       const v = row.value;
       if (row.key === 'backup') setBackup({ ...DEFAULT_BACKUP, ...(v as unknown as BackupSettings) });
       if (row.key === 'notifications') setNotifications(parseNotifications(v));
+      if (row.key === 'telegram') setTelegram(parseTelegram(v));
       if (row.key === 'pyorchestrator') {
         legacyPyOrchRaw = v;
         setPyorch(parsePyOrch(v));
@@ -186,6 +208,7 @@ export function SettingsPage() {
       await Promise.all([
         saveCrmSetting('backup', backup as unknown as Record<string, unknown>, ids.backup ?? null),
         saveCrmSetting('notifications', notifications as unknown as Record<string, unknown>, ids.notifications ?? null),
+        saveCrmSetting('telegram', telegram as unknown as Record<string, unknown>, ids.telegram ?? null),
         saveCrmSetting('pyorchestrator', pyorch as unknown as Record<string, unknown>, ids.pyorchestrator ?? null),
         saveCrmSetting('dynamic-api', dynamicApi as unknown as Record<string, unknown>, ids['dynamic-api'] ?? null),
         saveCrmSetting('mqtt-broker', mqttBroker as unknown as Record<string, unknown>, ids['mqtt-broker'] ?? null),
@@ -480,6 +503,56 @@ export function SettingsPage() {
               Уведомления в Telegram
             </label>
           </div>
+          {notifications.telegram && (
+            <div className="rounded-lg border border-panel-border p-4 dark:border-panel-border-dark">
+              <p className="mb-3 text-xs text-panel-muted dark:text-panel-muted-dark">
+                Отдельный бот для оповещений администраторов (не путать с операторскими ботами на странице Telegram).
+                Укажите токен от @BotFather и Telegram ID получателей (см. профиль пользователя или @userinfobot).
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex cursor-pointer items-center gap-2 text-sm sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    disabled={!canEdit}
+                    checked={telegram.enabled}
+                    onChange={(e) => setTelegram({ ...telegram, enabled: e.target.checked })}
+                  />
+                  Бот оповещений включён
+                </label>
+                <Field label="Токен бота">
+                  <input
+                    className="input font-mono text-xs"
+                    type="password"
+                    disabled={!canEdit}
+                    value={telegram.token}
+                    onChange={(e) => setTelegram({ ...telegram, token: e.target.value })}
+                    placeholder="123456:ABC..."
+                    autoComplete="off"
+                  />
+                </Field>
+                <Field label="Telegram ID администраторов" hint="Через запятую">
+                  <input
+                    className="input font-mono text-xs"
+                    disabled={!canEdit}
+                    value={telegram.adminIds.join(', ')}
+                    onChange={(e) => {
+                      const adminIds = e.target.value
+                        .split(/[,;\s]+/)
+                        .map((part) => Number(part.trim()))
+                        .filter((id) => Number.isInteger(id) && id > 0);
+                      setTelegram({ ...telegram, adminIds });
+                    }}
+                    placeholder="123456789, 987654321"
+                  />
+                </Field>
+              </div>
+              {notifications.telegram && telegram.enabled && (!telegram.token.trim() || telegram.adminIds.length === 0) && (
+                <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                  Telegram-канал включён, но бот не настроен — сообщения отправляться не будут.
+                </p>
+              )}
+            </div>
+          )}
           <Field label="События">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {NOTIFICATION_EVENT_GROUPS.map((group) => (

@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { pino } from 'pino';
-import { WASH_TELEGRAM_BOT_MAIN } from './botTemplate.js';
+import { generateBotMain } from './botTemplate.js';
 import { notifyCrm } from './notify.js';
 
 const logger = pino({ level: 'info' });
@@ -130,13 +130,21 @@ async function applySecrets(
   await setSecret(scriptId, 'ALLOWED_COMMANDS', input.commands.join(','));
 }
 
-/** Всегда подтягиваем актуальный шаблон бота в main.py перед запуском. */
-async function syncBotCode(script: PyorchScript): Promise<void> {
+function botCommands(script: PyorchScript): string[] {
+  const raw = script.metadata?.allowed_commands;
+  return Array.isArray(raw) ? (raw as string[]) : [];
+}
+
+/** Подтягиваем актуальный шаблон main.py с командами из metadata CRM. */
+async function syncBotCode(script: PyorchScript, commands?: string[]): Promise<void> {
+  const cmds = commands ?? botCommands(script);
   const entrypoint = script.entrypoint || 'main.py';
+  const content = generateBotMain(cmds);
   await pyorchFetch(`/scripts/${script.id}/files/${entrypoint}`, {
     method: 'PUT',
-    body: JSON.stringify({ content: WASH_TELEGRAM_BOT_MAIN }),
+    body: JSON.stringify({ content }),
   });
+  logger.info({ botId: script.id, commands: cmds.length }, 'Synced telegram bot template');
 }
 
 function isBotRunning(bot: PyorchScript): boolean {
@@ -177,14 +185,14 @@ async function stopLegacyDuplicateBots(): Promise<void> {
   }
 }
 
-async function restartWashBot(bot: PyorchScript): Promise<void> {
+async function restartWashBot(bot: PyorchScript, commands?: string[]): Promise<void> {
   await stopLegacyDuplicateBots();
   await pyorchFetch(`/runs/scripts/${bot.id}/stop`, { method: 'POST' }).catch(() => undefined);
   const stopped = await waitForBotStopped(bot.id);
   if (!stopped) {
     logger.warn({ botId: bot.id, name: bot.name }, 'Bot stop timed out before restart');
   }
-  await syncBotCode(bot);
+  await syncBotCode(bot, commands);
   await pyorchFetch(`/scripts/${bot.id}/enable`, { method: 'POST' }).catch(() => undefined);
   await pyorchFetch(`/runs/scripts/${bot.id}/run`, { method: 'POST' });
 }
@@ -207,8 +215,11 @@ async function refreshAllWashBots(restartRunning: boolean): Promise<void> {
     }
 
     for (const bot of bots) {
-      await syncBotCode(bot);
+      const cmds = botCommands(bot);
+      const adminIds = (bot.metadata.admin_ids as number[]) ?? [];
+      await syncBotCode(bot, cmds);
       if (restartRunning && runningIds.includes(bot.id)) {
+        await applySecrets(bot.id, { adminIds, commands: cmds }, false).catch(() => undefined);
         await pyorchFetch(`/scripts/${bot.id}/enable`, { method: 'POST' }).catch(() => undefined);
         await pyorchFetch(`/runs/scripts/${bot.id}/run`, { method: 'POST' });
         logger.info({ botId: bot.id, name: bot.name }, 'Restarted wash telegram bot with fresh template');
@@ -353,11 +364,12 @@ export function startServer(): void {
 
         const groupId = await getBotsGroupId();
         const adminIds = body.adminIds ?? [];
+        const commands = body.commands ?? [];
         const botMeta = {
           wash_telegram_bot: true,
           source: 'wash-pro-crm',
           admin_ids: adminIds,
-          allowed_commands: body.commands ?? [],
+          allowed_commands: commands,
         };
 
         let script: PyorchScript | undefined;
@@ -370,7 +382,7 @@ export function startServer(): void {
               group_id: groupId,
               script_type: 'bot',
               entrypoint: 'main.py',
-              code: WASH_TELEGRAM_BOT_MAIN,
+              code: generateBotMain(commands),
               metadata: botMeta,
             }),
           });
@@ -393,7 +405,7 @@ export function startServer(): void {
 
           if (body.start !== false) {
             await stopLegacyDuplicateBots();
-            await syncBotCode(script);
+            await syncBotCode(script, commands);
             await pyorchFetch(`/runs/scripts/${script.id}/run`, { method: 'POST' });
           }
         } catch (err) {
@@ -444,15 +456,15 @@ export function startServer(): void {
               },
             }),
           });
-          await syncBotCode(existing);
+          await syncBotCode(existing, commands);
           await applySecrets(
             botId,
             { token: body.token, adminIds, commands },
             Boolean(body.token?.trim())
           );
-          const wasRunning = existing.active_run?.status === 'running';
+          const wasRunning = isBotRunning(existing);
           if (wasRunning) {
-            await restartWashBot(existing);
+            await restartWashBot({ ...existing, metadata: { ...existing.metadata, allowed_commands: commands } }, commands);
           }
           const updated = (await getWashBot(botId)) ?? existing;
           json(res, 200, { success: true, data: updated });
@@ -478,10 +490,10 @@ export function startServer(): void {
             return;
           }
           const adminIds = (existing.metadata.admin_ids as number[]) ?? [];
-          const commands = (existing.metadata.allowed_commands as string[]) ?? [];
-          await syncBotCode(existing);
+          const commands = botCommands(existing);
+          await syncBotCode(existing, commands);
           await applySecrets(botId, { adminIds, commands }, false);
-          await restartWashBot(existing);
+          await restartWashBot(existing, commands);
           const updated = (await getWashBot(botId)) ?? existing;
           json(res, 200, { success: true, data: updated });
           return;

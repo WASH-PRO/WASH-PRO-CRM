@@ -35,6 +35,8 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     cardUpdated: true,
     cardDeleted: true,
     autoTask: true,
+    mqttCredit: false,
+    mqttCollection: false,
   },
 };
 
@@ -91,6 +93,8 @@ export const NOTIFICATION_EVENT_GROUPS: {
     items: [
       { key: 'connectionLost', label: 'Потеря связи с постом' },
       { key: 'equipmentError', label: 'Ошибка оборудования' },
+      { key: 'mqttCredit', label: 'Зачисление на пост' },
+      { key: 'mqttCollection', label: 'Инкассация' },
     ],
   },
 ];
@@ -131,6 +135,11 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   auto_backup: 'Автобэкап',
   auto_archive: 'Автоархив',
 };
+
+export function isWebNotification(notification: { channels?: string[] }): boolean {
+  if (!notification.channels?.length) return true;
+  return notification.channels.includes('web');
+}
 
 export function parseNotificationSettings(raw: Record<string, unknown>): NotificationSettings {
   const events = (raw.events as Record<string, unknown>) ?? {};

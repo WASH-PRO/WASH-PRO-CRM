@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "2.7"
+BOT_VERSION = "2.9"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -29,6 +29,7 @@ ALLOWED = [
     for c in os.environ.get("SECRET_ALLOWED_COMMANDS", "").split(",")
     if c.strip()
 ]
+BAKED_ALLOWED_COMMANDS: list[str] = []  # __WASH_BOT_ALLOWED_COMMANDS__
 DEFAULT_COMMANDS = [
     "/help", "/start", "/menu", "/status", "/washes", "/wash", "/wash_add", "/wash_edit", "/wash_del",
     "/posts", "/post", "/post_add", "/post_edit", "/post_del", "/post_cmd", "/revenue", "/statistics", "/cards",
@@ -83,7 +84,11 @@ def offset_file_path() -> str:
 
 
 def allowed_commands() -> list[str]:
-    return ALLOWED if ALLOWED else DEFAULT_COMMANDS
+    if BAKED_ALLOWED_COMMANDS:
+        return list(BAKED_ALLOWED_COMMANDS)
+    if ALLOWED:
+        return ALLOWED
+    return DEFAULT_COMMANDS
 
 
 def command_allowed(cmd: str) -> bool:
@@ -97,7 +102,7 @@ def action_allowed(action: str) -> bool:
 
 _CHAT_SESSION: dict[int, dict] = {}
 _AUTH_CACHE: dict[int, tuple[dict | None, float]] = {}
-_AUTH_CACHE_TTL_SEC = 120
+_AUTH_CACHE_TTL_SEC = 10
 
 READ_ACTIONS = frozenset({"status", "washes", "posts", "revenue", "statistics", "cards"})
 CREATE_ACTIONS = frozenset({"wash_add", "post_add"})
@@ -123,13 +128,7 @@ def resolve_user_session(telegram_user_id: int) -> dict | None:
             }
     except Exception as exc:
         print(f"telegram auth lookup failed for {telegram_user_id}: {exc}")
-        if telegram_user_id in ADMIN_IDS:
-            session = {
-                "userId": "legacy-admin",
-                "name": "Администратор",
-                "login": "admin",
-                "permissions": ["view", "create", "update", "delete", "manage_users", "manage_api"],
-            }
+        session = None
 
     _AUTH_CACHE[telegram_user_id] = (session, now)
     return session
@@ -350,17 +349,43 @@ def answer_callback(callback_id: str, text: str = "") -> None:
         print(f"answerCallbackQuery error: {exc}")
 
 
-def main_reply_keyboard() -> dict:
-    return {
-        "keyboard": [
-            [{"text": "📊 Мониторинг"}, {"text": "🏢 Автомойки"}],
-            [{"text": "🅿️ Посты"}, {"text": "⚙️ Команды"}],
-            [{"text": "📈 Отчёты"}, {"text": "❓ Справка"}],
-            [{"text": "🏠 Главное меню"}],
-        ],
-        "resize_keyboard": True,
-        "is_persistent": True,
-    }
+def main_reply_keyboard(chat_id: int) -> dict:
+    rows: list[list[dict[str, str]]] = []
+    row1: list[dict[str, str]] = []
+    row2: list[dict[str, str]] = []
+    if menu_section_visible(chat_id, "monitor"):
+        row1.append({"text": "📊 Мониторинг"})
+    if menu_section_visible(chat_id, "washes"):
+        row1.append({"text": "🏢 Автомойки"})
+    if menu_section_visible(chat_id, "posts"):
+        row2.append({"text": "🅿️ Посты"})
+    if menu_section_visible(chat_id, "commands"):
+        row2.append({"text": "⚙️ Команды"})
+    if row1:
+        rows.append(row1)
+    if row2:
+        rows.append(row2)
+    row3: list[dict[str, str]] = []
+    if menu_section_visible(chat_id, "reports"):
+        row3.append({"text": "📈 Отчёты"})
+    row3.append({"text": "❓ Справка"})
+    rows.append(row3)
+    rows.append([{"text": "🏠 Главное меню"}])
+    return {"keyboard": rows, "resize_keyboard": True, "is_persistent": True}
+
+
+def menu_section_visible(chat_id: int, section: str) -> bool:
+    if section == "monitor":
+        return any(access_allowed(chat_id, a) for a in ("status", "washes", "posts"))
+    if section == "washes":
+        return any(access_allowed(chat_id, a) for a in ("washes", "wash_add", "wash_del"))
+    if section == "posts":
+        return any(access_allowed(chat_id, a) for a in ("posts", "post_add", "post_del"))
+    if section == "commands":
+        return access_allowed(chat_id, "post_cmd")
+    if section == "reports":
+        return any(access_allowed(chat_id, a) for a in ("revenue", "statistics", "cards"))
+    return True
 
 
 def inline_keyboard(rows: list[list[tuple[str, str]]]) -> dict:
@@ -734,8 +759,40 @@ def record_time(row: dict) -> float:
         return 0.0
 
 
-def format_rub(amount: float) -> str:
-    return f"{amount:,.2f} ₽".replace(",", " ")
+_DEFAULT_CURRENCY: dict[str, str] = {"code": "RUB", "symbol": "₽", "name": "Российский рубль"}
+_CURRENCY_CACHE: tuple[dict[str, str], float] | None = None
+_CURRENCY_CACHE_TTL_SEC = 60
+
+
+def resolve_default_currency() -> dict[str, str]:
+    global _CURRENCY_CACHE
+    now = time.time()
+    if _CURRENCY_CACHE and now - _CURRENCY_CACHE[1] < _CURRENCY_CACHE_TTL_SEC:
+        return _CURRENCY_CACHE[0]
+
+    currency = dict(_DEFAULT_CURRENCY)
+    try:
+        rows = api_get("/api/crm/currencies?limit=100") or []
+        if isinstance(rows, list) and rows:
+            default = next((c for c in rows if c.get("isDefault")), None) or rows[0]
+            if isinstance(default, dict):
+                code = str(default.get("code") or _DEFAULT_CURRENCY["code"])
+                currency = {
+                    "code": code,
+                    "symbol": str(default.get("symbol") or code),
+                    "name": str(default.get("name") or ""),
+                }
+    except Exception as exc:
+        print(f"currency lookup failed: {exc}")
+
+    _CURRENCY_CACHE = (currency, now)
+    return currency
+
+
+def format_money(amount: float) -> str:
+    cur = resolve_default_currency()
+    symbol = cur.get("symbol") or cur.get("code") or "₽"
+    return f"{amount:,.2f} {symbol}".replace(",", " ")
 
 
 def latest_finance_by_post(stats: list) -> list:
@@ -764,10 +821,10 @@ def finance_totals(stats: list, period: str) -> dict[str, float]:
 def finance_period_block(title: str, totals: dict[str, float]) -> str:
     return (
         f"<b>{esc(title)}</b>\\n"
-        f"├ Наличные: {esc(format_rub(totals['cash']))}\\n"
-        f"├ Внешние (безнал): {esc(format_rub(totals['cashless']))}\\n"
-        f"├ Скидочные: {esc(format_rub(totals['discount']))}\\n"
-        f"└ Выручка: {esc(format_rub(totals['revenue']))}"
+        f"├ Наличные: {esc(format_money(totals['cash']))}\\n"
+        f"├ Внешние (безнал): {esc(format_money(totals['cashless']))}\\n"
+        f"├ Скидочные: {esc(format_money(totals['discount']))}\\n"
+        f"└ Выручка: {esc(format_money(totals['revenue']))}"
     )
 
 
@@ -992,7 +1049,7 @@ def action_posts() -> str:
             balance = state.get("balance")
             extra = ""
             if balance not in (None, "", 0):
-                extra = f" · 💰 {esc(format_rub(float(balance)))}"
+                extra = f" · 💰 {esc(format_money(float(balance)))}"
             mode_label = resolve_post_mode_label(state, mode_labels)
             if mode_label:
                 extra += f" · ⚙️ {esc(mode_label)}"
@@ -1043,7 +1100,7 @@ def action_revenue() -> str:
         report_header(
             "Выручка",
             f"Постов в отчёте: {posts_count}",
-            f"До инкассации: {esc(format_rub(before['revenue']))} · После: {esc(format_rub(after['revenue']))}",
+            f"До инкассации: {esc(format_money(before['revenue']))} · После: {esc(format_money(after['revenue']))}",
         )
         + report_section(
             "Периоды",
@@ -1094,7 +1151,7 @@ def action_cards() -> str:
     for card_type, items in sorted(by_type.items(), key=lambda row: row[0]):
         label = CARD_TYPE_LABELS.get(card_type, card_type)
         balance_sum = sum(float(item.get("balance") or 0) for item in items)
-        summary_parts.append(f"{label}: {len(items)} · {esc(format_rub(balance_sum))}")
+        summary_parts.append(f"{label}: {len(items)} · {esc(format_money(balance_sum))}")
     summary = " · ".join(summary_parts[:4])
 
     sections: list[str] = []
@@ -1108,7 +1165,7 @@ def action_cards() -> str:
             status = CARD_STATUS_LABELS.get(str(card.get("status") or ""), str(card.get("status") or "—"))
             line = (
                 f"• <code>{esc(card.get('cardNumber', '?'))}</code> · "
-                f"{esc(format_rub(float(card.get('balance') or 0)))} · {esc(status)}"
+                f"{esc(format_money(float(card.get('balance') or 0)))} · {esc(status)}"
             )
             if card.get("discountType"):
                 line += f" · тип {esc(str(card.get('discountType')))}"
@@ -1145,21 +1202,29 @@ def execute_post_command(serial: str, command_key: str, amount: float | None = N
         f"├ Пост: <code>{esc(serial)}</code>",
     ]
     if amount is not None:
-        details.append(f"├ Сумма: {esc(format_rub(float(amount)))}")
+        details.append(f"├ Сумма: {esc(format_money(float(amount)))}")
     details.append(f"└ MQTT: {esc(topic)}")
     return ui_success("Команда отправлена", *details)
 
 
 def welcome_text(session: dict) -> str:
     name = esc(session.get("name") or session.get("login") or "пользователь")
-    perms = session.get("permissions") or []
-    access = "полный доступ" if ("create" in perms or "update" in perms) else "только просмотр"
+    perms = set(session.get("permissions") or [])
+    if "manage_users" in perms or "manage_api" in perms:
+        access = "администратор"
+    elif "delete" in perms:
+        access = "оператор (с удалением)"
+    elif "create" in perms or "update" in perms:
+        access = "оператор"
+    elif "view" in perms:
+        access = "только просмотр"
+    else:
+        access = "ограниченный"
     return (
         report_header("WASH PRO CRM", f"Здравствуйте, {name}")
         + report_section(
             "Разделы",
-            "📊 Мониторинг · 🏢 Автомойки · 🅿️ Посты\\n"
-            "⚙️ Команды · 📈 Отчёты · ❓ Справка",
+            "Кнопки меню зависят от настроек бота и вашей группы в CRM.",
         )
         + report_section("Доступ", f"Режим: {esc(access)}")
         + "\\n\\n"
@@ -1171,7 +1236,7 @@ def welcome_text(session: dict) -> str:
 
 def show_main_menu(chat_id: int) -> None:
     session = current_session(chat_id) or {}
-    send_ui(chat_id, welcome_text(session), main_reply_keyboard())
+    send_ui(chat_id, welcome_text(session), main_reply_keyboard(chat_id))
 
 
 def show_inline_menu(chat_id: int, menu: str) -> None:
@@ -1348,7 +1413,7 @@ def handle_flow_text(chat_id: int, text: str) -> bool:
             created = api_post("/api/crm/washes", {"name": data["name"], "address": text.strip()}) or {}
             wid = ref_id(created) or "?"
             clear_flow(chat_id)
-            send_ui(chat_id, ui_success("Автомойка создана", f"└ ID: <code>{esc(wid)}</code>"), main_reply_keyboard())
+            send_ui(chat_id, ui_success("Автомойка создана", f"└ ID: <code>{esc(wid)}</code>"), main_reply_keyboard(chat_id))
             return True
 
     if name == "post_add":
@@ -1384,7 +1449,7 @@ def handle_flow_text(chat_id: int, text: str) -> bool:
                     f"├ ID: <code>{esc(ref_id(created))}</code>",
                     f"└ Serial: <code>{esc(serial)}</code>",
                 ),
-                main_reply_keyboard(),
+                main_reply_keyboard(chat_id),
             )
             return True
 
@@ -1402,7 +1467,7 @@ def handle_flow_text(chat_id: int, text: str) -> bool:
                 reply = execute_post_command(serial, command_key, amount)
             except Exception as exc:
                 reply = ui_error(str(exc))
-            send_ui(chat_id, reply, main_reply_keyboard())
+            send_ui(chat_id, reply, main_reply_keyboard(chat_id))
             return True
 
     return False
@@ -1413,7 +1478,7 @@ def handle_callback(chat_id: int, callback_id: str, data: str) -> None:
 
     if data == "x:cancel":
         clear_flow(chat_id)
-        send_ui(chat_id, ui_notice("Отмена", "Действие отменено", footer=True), main_reply_keyboard())
+        send_ui(chat_id, ui_notice("Отмена", "Действие отменено", footer=True), main_reply_keyboard(chat_id))
         return
 
     if data == "m:main":
@@ -1498,7 +1563,7 @@ def handle_callback(chat_id: int, callback_id: str, data: str) -> None:
                 reply = execute_post_command(serial, command_key)
             except Exception as exc:
                 reply = ui_error(str(exc))
-            send_ui(chat_id, reply, main_reply_keyboard())
+            send_ui(chat_id, reply, main_reply_keyboard(chat_id))
         return
 
     if data.startswith("w:"):
@@ -1514,7 +1579,7 @@ def handle_callback(chat_id: int, callback_id: str, data: str) -> None:
             api_delete(f"/api/crm/washes/{wash_id}")
             mqtt_sync_users()
             clear_flow(chat_id)
-            send_ui(chat_id, ui_success("Автомойка удалена", f"└ ID: <code>{esc(wash_id)}</code>"), main_reply_keyboard())
+            send_ui(chat_id, ui_success("Автомойка удалена", f"└ ID: <code>{esc(wash_id)}</code>"), main_reply_keyboard(chat_id))
             return
         if flow_name == "post_add":
             set_flow(chat_id, "post_add", "number", {"washId": wash_id})
@@ -1534,7 +1599,7 @@ def handle_callback(chat_id: int, callback_id: str, data: str) -> None:
             api_delete(f"/api/crm/posts/{post_id}")
             mqtt_sync_users()
             clear_flow(chat_id)
-            send_ui(chat_id, ui_success("Пост удалён", f"└ ID: <code>{esc(post_id)}</code>"), main_reply_keyboard())
+            send_ui(chat_id, ui_success("Пост удалён", f"└ ID: <code>{esc(post_id)}</code>"), main_reply_keyboard(chat_id))
             return
 
 
@@ -1592,10 +1657,10 @@ def handle_slash_command(chat_id: int, text: str) -> None:
             return
         command_key = DEVICE_COMMANDS.get(args[1].lower(), args[1])
         amount = float(args[2]) if len(args) > 2 and command_key == "credit_balance" else None
-        send_ui(chat_id, execute_post_command(args[0], command_key, amount), main_reply_keyboard())
+        send_ui(chat_id, execute_post_command(args[0], command_key, amount), main_reply_keyboard(chat_id))
         return
 
-    send_ui(chat_id, ui_hint("Команда не поддерживается в кратком режиме. Используйте меню или /menu"), main_reply_keyboard())
+    send_ui(chat_id, ui_hint("Команда не поддерживается в кратком режиме. Используйте меню или /menu"), main_reply_keyboard(chat_id))
 
 
 def process_update(chat_id: int, user_id: int, text: str | None, callback: dict | None) -> None:
@@ -1628,7 +1693,13 @@ def process_update(chat_id: int, user_id: int, text: str | None, callback: dict 
                 show_inline_menu(chat_id, "help")
             elif menu == "commands" and not access_allowed(chat_id, "post_cmd"):
                 send_ui(chat_id, ui_write_denied())
-            elif menu == "washes" and not has_permission(chat_id, "view"):
+            elif menu == "washes" and not menu_section_visible(chat_id, "washes"):
+                send_ui(chat_id, ui_warning("Раздел недоступен для вашей учётной записи."))
+            elif menu == "posts" and not menu_section_visible(chat_id, "posts"):
+                send_ui(chat_id, ui_warning("Раздел недоступен для вашей учётной записи."))
+            elif menu == "reports" and not menu_section_visible(chat_id, "reports"):
+                send_ui(chat_id, ui_warning("Раздел недоступен для вашей учётной записи."))
+            elif menu == "monitor" and not menu_section_visible(chat_id, "monitor"):
                 send_ui(chat_id, ui_warning("Раздел недоступен для вашей учётной записи."))
             else:
                 show_inline_menu(chat_id, menu)
@@ -1646,7 +1717,7 @@ def process_update(chat_id: int, user_id: int, text: str | None, callback: dict 
                 send_ui(chat_id, ui_error(str(exc)))
             return
 
-        send_ui(chat_id, ui_hint("Выберите пункт меню или нажмите 🏠 Главное меню"), main_reply_keyboard())
+        send_ui(chat_id, ui_hint("Выберите пункт меню или нажмите 🏠 Главное меню"), main_reply_keyboard(chat_id))
     finally:
         _CHAT_SESSION.pop(chat_id, None)
 
@@ -1658,6 +1729,11 @@ def main() -> None:
     if not ADMIN_IDS:
         print("INFO: CRM telegram auth via /api/users/telegram/{id}/auth (ADMIN_IDS optional fallback)")
     print(f"WASH PRO CRM Telegram bot v{BOT_VERSION} started")
+    try:
+        cur = resolve_default_currency()
+        print(f"Default currency: {cur.get('code')} ({cur.get('symbol')})")
+    except Exception as exc:
+        print(f"Default currency init failed: {exc}")
     time.sleep(2)
     if not acquire_poll_lock():
         print("Another bot instance is already polling this Telegram token. Exit.")
@@ -1716,3 +1792,42 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 `;
+
+const WASH_BOT_COMMANDS_MARKER = '# __WASH_BOT_ALLOWED_COMMANDS__';
+
+const DEFAULT_BOT_COMMANDS = [
+  '/help',
+  '/start',
+  '/menu',
+  '/status',
+  '/washes',
+  '/wash',
+  '/wash_add',
+  '/wash_edit',
+  '/wash_del',
+  '/posts',
+  '/post',
+  '/post_add',
+  '/post_edit',
+  '/post_del',
+  '/post_cmd',
+  '/revenue',
+  '/statistics',
+  '/cards',
+];
+
+/** Генерирует main.py с зашитыми allowed-командами из настроек бота в CRM. */
+export function generateBotMain(allowedCommands: string[]): string {
+  const cmds = [
+    ...new Set(
+      (allowedCommands.length ? allowedCommands : DEFAULT_BOT_COMMANDS)
+        .map((c) => c.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ];
+  const baked = `BAKED_ALLOWED_COMMANDS: list[str] = [${cmds.map((c) => JSON.stringify(c)).join(', ')}]`;
+  return WASH_TELEGRAM_BOT_MAIN.replace(
+    /BAKED_ALLOWED_COMMANDS: list\[str\] = \[\]  # __WASH_BOT_ALLOWED_COMMANDS__/,
+    `${baked}  ${WASH_BOT_COMMANDS_MARKER}`
+  );
+}

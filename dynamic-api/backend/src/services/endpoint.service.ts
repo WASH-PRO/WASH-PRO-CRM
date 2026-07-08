@@ -670,6 +670,13 @@ export class DynamicEngine {
           endpoint.fields
         );
         await this.assertReferences(data, endpoint.fields);
+
+        const delivery = Array.isArray(data.channels) ? (data.channels as string[]) : [];
+        const webEnabled = delivery.length === 0 || delivery.includes('web');
+        if (collectionPath === '/api/crm/notifications' && !webEnabled) {
+          return { success: true, data: { id: 'telegram-only', ...data } };
+        }
+
         const record = await endpointDataRepository.create(
           endpoint._id.toString(),
           collectionPath,
@@ -799,7 +806,9 @@ export class DynamicEngine {
           const payload = (body ?? {}) as Record<string, unknown>;
           const delivery = payload.channels as string[] | undefined;
           if (delivery?.includes('telegram') && typeof payload.message === 'string') {
-            void dispatchTelegram(payload.message);
+            const severity = String(payload.severity ?? 'info');
+            const prefix = severity === 'error' ? '🔴' : severity === 'warning' ? '🟡' : 'ℹ️';
+            void dispatchTelegram(`${prefix} ${payload.message}`);
           }
         } else {
           void notifyCrmMutation(method, requestPath, user, body);

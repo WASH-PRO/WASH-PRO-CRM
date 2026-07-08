@@ -54,6 +54,14 @@ interface DataTableProps<T> {
   defaultSortDir?: 'asc' | 'desc';
 }
 
+const PAGE_SIZE_OPTIONS = [20, 40, 60, 80, 100] as const;
+const DEFAULT_PAGE_SIZE = 20;
+
+function pageSizeOptionsFor(initial: number): number[] {
+  const opts = new Set<number>([...PAGE_SIZE_OPTIONS, initial]);
+  return [...opts].sort((a, b) => a - b);
+}
+
 function resolveSortable<T>(col: DataTableColumn<T>): DataTableColumn<T> {
   const sortValue = col.sortValue ?? (col.searchValue ? (row: T) => col.searchValue!(row) : undefined);
   const sortable = col.sortable !== false && !!sortValue;
@@ -76,7 +84,7 @@ export function DataTable<T>({
   data,
   rowKey,
   searchPlaceholder = 'Поиск…',
-  pageSize: initialPageSize = 100,
+  pageSize: initialPageSize = DEFAULT_PAGE_SIZE,
   emptyMessage = 'Нет данных',
   toolbar,
   toolbarPlacement = 'end',
@@ -94,7 +102,9 @@ export function DataTable<T>({
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(defaultSortDir);
   const [pageSize, setPageSize] = useState(initialPageSize);
-  const [visibleCount, setVisibleCount] = useState(initialPageSize);
+  const [page, setPage] = useState(1);
+  /** Сколько строк из отфильтрованного набора уже «загружено» для просмотра */
+  const [loadedCount, setLoadedCount] = useState(initialPageSize);
   const [internalFilterValues, setInternalFilterValues] = useState<Record<string, string>>({});
   const mergedFilterValues = { ...internalFilterValues, ...(controlledFilterValues ?? {}) };
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -150,23 +160,43 @@ export function DataTable<T>({
     });
   }, [filtered, sortKey, sortDir, displayColumns]);
 
-  const paged = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
-  const hasMore = sorted.length > paged.length;
-  const nextChunk = Math.min(pageSize, sorted.length - paged.length);
-
-  const pageSizeOptions = useMemo(() => {
-    const opts = new Set([50, 100, 200, 500, 1000, pageSize]);
-    return [...opts].sort((a, b) => a - b);
-  }, [pageSize]);
+  const effectiveLoaded = Math.min(loadedCount, sorted.length);
+  const totalPagesInLoaded = Math.max(1, Math.ceil(effectiveLoaded / pageSize));
+  const currentPage = Math.min(page, totalPagesInLoaded);
+  const paged = useMemo(
+    () => sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [sorted, currentPage, pageSize]
+  );
+  const canLoadMore = effectiveLoaded < sorted.length;
+  const hasPrev = currentPage > 1;
+  const hasNext = currentPage < totalPagesInLoaded;
+  const pageSizeOptions = useMemo(() => pageSizeOptionsFor(initialPageSize), [initialPageSize]);
 
   useEffect(() => {
     setPageSize(initialPageSize);
-    setVisibleCount(initialPageSize);
+    setPage(1);
+    setLoadedCount(initialPageSize);
   }, [initialPageSize]);
+
+  useEffect(() => {
+    setPage(1);
+    setLoadedCount(pageSize);
+  }, [search, pageSize, internalFilterValues, controlledFilterValues]);
+
+  useEffect(() => {
+    if (page > totalPagesInLoaded) setPage(totalPagesInLoaded);
+  }, [page, totalPagesInLoaded]);
 
   const changePageSize = (size: number) => {
     setPageSize(size);
-    setVisibleCount(size);
+    setPage(1);
+    setLoadedCount(size);
+  };
+
+  const loadMore = () => {
+    const nextLoaded = Math.min(loadedCount + pageSize, sorted.length);
+    setLoadedCount(nextLoaded);
+    setPage(Math.max(1, Math.ceil(nextLoaded / pageSize)));
   };
 
   const rowById = useMemo(() => new Map(data.map((row) => [rowKey(row), row])), [data, rowKey]);
@@ -220,7 +250,6 @@ export function DataTable<T>({
       setInternalFilterValues((prev) => ({ ...prev, [id]: value }));
     }
     onFilterChange?.(id, value);
-    setVisibleCount(pageSize);
   };
 
   const toggleRow = (id: string) => {
@@ -293,10 +322,7 @@ export function DataTable<T>({
                 className="input-search"
                 placeholder={searchPlaceholder}
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setVisibleCount(pageSize);
-                }}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <TableColumnPicker
@@ -461,7 +487,8 @@ export function DataTable<T>({
         <div className="flex flex-col gap-1">
           <span>
             {sorted.length} записей
-            {hasMore && ` · показано ${paged.length}`}
+            {totalPagesInLoaded > 1 && ` · стр. ${currentPage} из ${totalPagesInLoaded}`}
+            {canLoadMore && ` · загружено ${effectiveLoaded}`}
           </span>
           {selectable && sorted.length > 0 && !allFilteredSelected && selectableFilteredIds.length > selectablePageIds.length && (
             <button
@@ -473,7 +500,7 @@ export function DataTable<T>({
             </button>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-panel-muted dark:text-panel-muted-dark">
             <span>На странице:</span>
             <select
@@ -487,13 +514,25 @@ export function DataTable<T>({
               ))}
             </select>
           </label>
-          {hasMore && (
-            <button
-              type="button"
-              className="btn-secondary btn-sm"
-              onClick={() => setVisibleCount((c) => c + pageSize)}
-            >
-              Загрузить ещё ({nextChunk} записей)
+          <button
+            type="button"
+            className="btn-secondary btn-sm"
+            disabled={!hasPrev}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Назад
+          </button>
+          <button
+            type="button"
+            className="btn-secondary btn-sm"
+            disabled={!hasNext}
+            onClick={() => setPage((p) => Math.min(totalPagesInLoaded, p + 1))}
+          >
+            Далее
+          </button>
+          {canLoadMore && (
+            <button type="button" className="btn-secondary btn-sm" onClick={loadMore}>
+              Загрузить ещё ({Math.min(pageSize, sorted.length - effectiveLoaded)} записей)
             </button>
           )}
         </div>

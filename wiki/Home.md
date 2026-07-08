@@ -16,6 +16,7 @@
 - **Telegram-боты v2.7** (несколько) через PyOrchestrator + pyorch-bridge; CRM RBAC в боте
 - MQTT (Mosquitto): изоляция постов по serial, `system` для CRM
 - Live-обновление 3–15 с
+- **Таблицы:** пагинация 20/40/60/80/100, Назад/Далее, Загрузить ещё ([Dashboard](Dashboard#пагинация-таблиц-v115))
 
 ## Быстрый старт
 

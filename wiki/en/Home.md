@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.13** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.14** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -19,7 +19,8 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - Web + Telegram notifications, configurable event types
 - Users and RBAC groups, **Telegram user_id**, profile
 - **Telegram bots:** Management / Service / **Information (v1.9)**; QR link; **private chats only**
-- **Dashboard localization** — English / Russian; default English; switcher in header and Settings (v1.1.13)
+- **Dashboard localization** — English / Russian; default English; switcher in header and Settings (v1.1.13+)
+- **Localized notifications** — list messages by event type follow UI language, including legacy DB records (v1.1.14)
 - **MCP server** in Dashboard — Dynamic API + PyOrchestrator for AI agents (v1.1.12)
 - Stdio MCP `services/crm-mcp` for Cursor (v1.1.9+)
 - MQTT (Mosquitto): post isolation by serial
@@ -56,6 +57,14 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](MCP)
 - [Embedded services](Embedded-Services)
 - [Database schema](Database-Schema)
+
+## Changelog v1.1.14
+
+- **Notifications i18n** — prepared phrases by event type; legacy Russian records display in the active language
+- **Header toggles** — language and Live/Static as single icons on all screen sizes
+- **Wiki links** — fixed bilingual navigation; Product Hunt embed in README
+
+Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.13
 

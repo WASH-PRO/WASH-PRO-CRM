@@ -4,7 +4,7 @@
 
 Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en/dashboard/)
 
-## Menu (v1.1.13)
+## Menu (v1.1.14)
 
 | Group | Sections |
 |-------|----------|
@@ -19,11 +19,15 @@ Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en
 
 Admin sections — **Administrator** only. Profile — in the header (`/profile`). Setup wizard — `/setup`.
 
-## Interface language (v1.1.13)
+## Interface language (v1.1.13+)
 
 - **English** (default) and **Russian** — menu, statuses, messages, logs UI
-- Switcher in the **header** (🇺🇸/🇷🇺 flags; single flag on mobile) and in **Settings**
+- Switcher in the **header** (🇺🇸/🇷🇺 flags; single flag icon) and in **Settings**
 - Choice is saved in the browser (`wash_locale`); user-entered data is not translated
+
+## Notifications (v1.1.14)
+
+The **Notifications** list and Overview widget show **localized message templates by event type** (`mqtt_credit`, `user_login`, `wash_created`, etc.), not the raw text stored when the record was created. Parameters (amount, login, entity name) are parsed from legacy messages. Severity labels and CSV export follow the active language.
 
 ## Post online/offline status
 
@@ -74,14 +78,12 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 5 s | Overview |
 | 10–15 s | Others |
 
-## Recent changes (v1.1.13)
+## Recent changes (v1.1.14)
 
-- **EN/RU localization** — full UI translation; English default
-- Language switcher: flags in header; compact icon on mobile
-- Live/Static: single icon on mobile
-- **Information**: green "Published" badge when scheduled time has passed
+- **Notifications i18n** — prepared phrases by event type; legacy records follow active language
+- **Header** — language and Live/Static as single icons on all screen sizes
 
-## Earlier (v1.1.12)
+## Earlier (v1.1.13)
 
 - **Automation** group: Information, Telegram, **MCP**, Backups
 - **Status** under **Main**

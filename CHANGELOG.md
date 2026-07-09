@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+## [1.1.14] — 2026-07-09
+
+### Исправлено
+
+- **Список уведомлений** — сообщения формируются из заготовленных i18n-шаблонов по типу события; старые записи на русском корректно отображаются после переключения на English; переводятся severity и экспорт CSV
+- **GitHub Wiki** — исправлены ссылки на двуязычные страницы (`en/`, `ru/`)
+
+### Изменено
+
+- **Шапка Dashboard** — переключатели языка (флаг) и Live/Static (радио/пауза) — одна иконка на всех размерах экрана
+
+### Документация
+
+- Виджет Product Hunt в `README.md` и `README.ru.md`
+- Скрипты `sync-github-wiki.sh`, `sync-github-releases.sh`, `validate-wiki-links.sh`
+
 ## [1.1.13] — 2026-07-09
 
 ### Добавлено
@@ -212,7 +228,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.13...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.14...HEAD
+[1.1.14]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.14
 [1.1.13]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.13
 [1.1.12]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.12
 [1.1.11]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.11

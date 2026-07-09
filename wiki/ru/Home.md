@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**Версия WASH PRO:** **v1.1.13** · **Документация:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**Версия WASH PRO:** **v1.1.14** · **Документация:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -19,7 +19,8 @@
 - Уведомления web + Telegram, настраиваемые типы событий
 - Пользователи и группы RBAC, **Telegram user_id**, профиль
 - **Telegram-боты:** Управление / Сервисный / **Информационный (v1.9)**; QR-ссылка; только **личные чаты**
-- **Локализация Dashboard** — English / Русский; по умолчанию English; переключатель в шапке и Настройках (v1.1.13)
+- **Локализация Dashboard** — English / Русский; по умолчанию English; переключатель в шапке и Настройках (v1.1.13+)
+- **Локализованные уведомления** — сообщения в списке по типу события следуют языку интерфейса, в т.ч. старые записи (v1.1.14)
 - **MCP сервер** в Dashboard — Dynamic API + PyOrchestrator для AI-агентов (v1.1.12)
 - Stdio MCP `services/crm-mcp` для Cursor (v1.1.9+)
 - MQTT (Mosquitto): изоляция постов по serial
@@ -56,6 +57,14 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](MCP)
 - [Встроенные сервисы](Embedded-Services)
 - [Схема данных](Database-Schema)
+
+## Changelog v1.1.14
+
+- **Локализация уведомлений** — заготовленные фразы по типу события; старые записи на русском отображаются на выбранном языке
+- **Шапка** — переключатели языка и Live/Static одной иконкой на всех экранах
+- **Wiki** — исправлены двуязычные ссылки; виджет Product Hunt в README
+
+Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.13
 

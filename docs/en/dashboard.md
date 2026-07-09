@@ -32,14 +32,18 @@ Sections marked admin are available only to **Administrator** (`manage_users` or
 
 More about embedded platforms: [Embedded services](embedded-services.md).
 
-## Interface language (v1.1.13)
+## Interface language (v1.1.13+)
 
 | Element | Description |
 |---------|-------------|
 | **Locales** | English (default), Russian |
-| **Switcher** | Header (🇺🇸/🇷🇺 flags; single flag on mobile) and **Settings → Language** |
+| **Switcher** | Header (🇺🇸/🇷🇺 flags; single flag icon) and **Settings → Language** |
 | **Scope** | Menu, statuses, messages, table labels, logs UI; user data is not translated |
 | **Storage** | `localStorage` (`wash_locale`) |
+
+## Notifications (v1.1.14)
+
+The **Notifications** page and Overview widget display **localized message templates by event type** (`mqtt_credit`, `user_login`, `wash_created`, etc.), not the raw text stored when the record was created. Parameters (amount, login, entity name) are parsed from legacy messages. Severity labels and CSV export follow the active UI language.
 
 ## Live mode
 
@@ -177,10 +181,10 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 - `RouteErrorBoundary` instead of gray screen;
 - polling timeout 60 s; on Overview — error message instead of endless Loading.
 
-### Mobile header (v1.1.13)
+### Header toggles (v1.1.14)
 
-- language switcher — single icon with the current locale flag;
-- Live/Static — single icon (radio / pause); on `sm+` — segmented control with labels.
+- language switcher — single icon with the current locale flag (all screen sizes);
+- Live/Static — single icon (radio / pause) on all screen sizes.
 
 ### Login page (`/login`)
 

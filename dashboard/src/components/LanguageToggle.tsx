@@ -21,22 +21,27 @@ export function LanguageToggle({ className, showLabel = false }: { className?: s
     <button
       type="button"
       onClick={cycle}
-      className={className ?? 'btn-icon !w-auto gap-0.5 px-1.5'}
+      className={className ?? 'btn-icon sm:!w-auto sm:gap-0.5 sm:px-1.5'}
       title={t('language.switchTitle', { lang: t(`language.names.${locale}`) })}
       aria-label={t('language.switchTitle', { lang: t(`language.names.${locale}`) })}
     >
-      {ORDER.map((code) => (
-        <span
-          key={code}
-          className={clsx(
-            'text-base leading-none transition-opacity',
-            locale === code ? 'opacity-100' : 'opacity-35'
-          )}
-          aria-hidden
-        >
-          {LOCALE_FLAGS[code]}
-        </span>
-      ))}
+      <span className="text-base leading-none sm:hidden" aria-hidden>
+        {LOCALE_FLAGS[locale]}
+      </span>
+      <span className="hidden sm:contents">
+        {ORDER.map((code) => (
+          <span
+            key={code}
+            className={clsx(
+              'text-base leading-none transition-opacity',
+              locale === code ? 'opacity-100' : 'opacity-35'
+            )}
+            aria-hidden
+          >
+            {LOCALE_FLAGS[code]}
+          </span>
+        ))}
+      </span>
       {showLabel && (
         <span className={clsx('ml-1 text-xs font-medium uppercase')}>{locale}</span>
       )}

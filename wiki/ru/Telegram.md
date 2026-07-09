@@ -1,6 +1,8 @@
+> **[English](../en/Telegram.md)** · **Русский**
+
 # Telegram-боты
 
-Полная документация: [docs/telegram.md](../docs/telegram.md) · [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-PRO-CRM/telegram/)
+Полная документация: [docs/telegram.md](../../docs/telegram.md) · [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-PRO-CRM/ru/telegram/)
 
 ## v1.1.12 — кратко
 
@@ -41,4 +43,4 @@ docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d 
 # Dashboard → Telegram → перезапуск ботов
 ```
 
-См. [Embedded-Services](Embedded-Services), [MCP](MCP), [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/troubleshooting/).
+См. [Embedded-Services](Embedded-Services), [MCP](MCP), [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/ru/troubleshooting/).

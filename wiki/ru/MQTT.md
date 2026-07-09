@@ -1,6 +1,8 @@
+> **[English](../en/MQTT.md)** · **Русский**
+
 # MQTT и управление постами
 
-Полная документация: [docs/mqtt.md](https://wash-pro.github.io/WASH-PRO-CRM/mqtt/)
+Полная документация: [docs/mqtt.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/mqtt/)
 
 ## Подключение контроллера (пост)
 

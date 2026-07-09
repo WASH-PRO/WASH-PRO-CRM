@@ -128,11 +128,10 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 
 | Язык | URL |
 |------|-----|
+| **English** | https://wash-pro.github.io/WASH-PRO-CRM/en/ |
 | Русский | https://wash-pro.github.io/WASH-PRO-CRM/ru/ |
-| English | https://wash-pro.github.io/WASH-PRO-CRM/en/ |
-| Қазақша | https://wash-pro.github.io/WASH-PRO-CRM/kk/ |
 
-Корень `/` автоматически перенаправляет на язык браузера (или `/ru/`).
+Корень `/` перенаправляет на **English** (или русский, если выбран ранее / язык браузера `ru`).
 
 | Раздел | Описание |
 |--------|----------|
@@ -149,7 +148,8 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 | [Безопасность](docs/security.md) | RBAC и рекомендации |
 | [Устранение неполадок](docs/troubleshooting.md) | Типичные проблемы |
 | [Changelog](CHANGELOG.md) | История изменений |
-| [Wiki](wiki/Home.md) | Краткие страницы для GitHub Wiki |
+| [Wiki (EN)](wiki/en/Home.md) | Краткие страницы GitHub Wiki |
+| [Wiki (RU)](wiki/ru/Home.md) | Wiki на русском |
 
 ### Публикация GitHub Pages
 

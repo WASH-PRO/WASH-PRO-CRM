@@ -10,10 +10,10 @@ permalink: /
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
   <script>
     (function () {
-      var supported = ['ru', 'en', 'kk'];
+      var supported = ['en', 'ru'];
       var saved = localStorage.getItem('wash-docs-lang');
-      var browser = (navigator.language || 'ru').slice(0, 2).toLowerCase();
-      var lang = supported.indexOf(saved) >= 0 ? saved : (supported.indexOf(browser) >= 0 ? browser : 'ru');
+      var browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
+      var lang = supported.indexOf(saved) >= 0 ? saved : (browser === 'ru' ? 'ru' : 'en');
       var base = '{{ "/" | relative_url }}';
       window.location.replace(base + lang + '/');
     })();
@@ -22,11 +22,10 @@ permalink: /
 <body>
   <main class="lang-picker">
     <h1>WASH PRO CRM</h1>
-    <p>Выберите язык / Choose language / Тілді таңдаңыз</p>
+    <p>Choose language / Выберите язык</p>
     <div class="lang-picker-links">
-      <a href="{{ '/ru/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','ru')}catch(e){}">Русский</a>
       <a href="{{ '/en/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','en')}catch(e){}">English</a>
-      <a href="{{ '/kk/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','kk')}catch(e){}">Қазақша</a>
+      <a href="{{ '/ru/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','ru')}catch(e){}">Русский</a>
     </div>
   </main>
 </body>

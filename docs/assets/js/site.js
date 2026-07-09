@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     link.addEventListener('click', function () {
       try {
         var href = link.getAttribute('href') || '';
-        var match = href.match(/\/(ru|en|kk)\//);
+        var match = href.match(/\/(en|ru)\//);
         if (match) localStorage.setItem('wash-docs-lang', match[1]);
       } catch (e) { /* ignore */ }
     });

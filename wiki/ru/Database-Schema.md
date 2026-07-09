@@ -1,6 +1,8 @@
+> **[English](../en/Database-Schema.md)** · **Русский**
+
 # Схема данных
 
-Полное описание: [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/database-schema/)
+Полное описание: [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/database-schema/)
 
 ## Группы endpoints
 
@@ -24,7 +26,7 @@
 
 ## `posts.settings`
 
-JSON с метаданными поста: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance` и др. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/database-schema/).
+JSON с метаданными поста: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance` и др. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/database-schema/).
 
 ## Удаление поста и автомойки
 

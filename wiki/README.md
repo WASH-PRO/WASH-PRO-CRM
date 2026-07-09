@@ -1,28 +1,51 @@
-# Wiki WASH PRO CRM
+# WASH PRO CRM Wiki
 
-Исходники для [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
+**Language:** **[English](en/README.md)** · [Русский](ru/README.md)
 
-**Полная документация (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/  
-Языки: [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/) · [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [KK](https://wash-pro.github.io/WASH-PRO-CRM/kk/)  
-**Текущая версия:** v1.1.12
+Sources for [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
-| Файл | Wiki |
-|------|------|
-| [Home.md](Home.md) | Home |
-| [Getting-Started.md](Getting-Started.md) | Getting-Started |
-| [Setup-Wizard.md](Setup-Wizard.md) | Setup-Wizard |
-| [Architecture.md](Architecture.md) | Architecture |
-| [MQTT.md](MQTT.md) | MQTT |
-| [Telegram.md](Telegram.md) | Telegram |
-| [MCP.md](MCP.md) | MCP |
-| [Embedded-Services.md](Embedded-Services.md) | Embedded-Services |
-| [Dashboard.md](Dashboard.md) | Dashboard |
-| [Database-Schema.md](Database-Schema.md) | Database-Schema |
+**Full documentation (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**Current version:** v1.1.12
 
-Синхронизируйте с [`docs/`](../docs/) при обновлениях. После релиза обновите wiki-клон:
+Default language: **English**
+
+## English
+
+| File | Topic |
+|------|-------|
+| [Home](en/Home.md) | Overview |
+| [Getting-Started](en/Getting-Started.md) | Quick start |
+| [Setup-Wizard](en/Setup-Wizard.md) | Setup wizard |
+| [Architecture](en/Architecture.md) | Architecture |
+| [Dashboard](en/Dashboard.md) | Dashboard |
+| [Embedded-Services](en/Embedded-Services.md) | Embedded services |
+| [MQTT](en/MQTT.md) | MQTT |
+| [Telegram](en/Telegram.md) | Telegram bots |
+| [MCP](en/MCP.md) | MCP for AI agents |
+| [Database-Schema](en/Database-Schema.md) | Database schema |
+
+## Русский
+
+| Файл | Раздел |
+|------|--------|
+| [Home](ru/Home.md) | Обзор |
+| [Getting-Started](ru/Getting-Started.md) | Быстрый старт |
+| [Setup-Wizard](ru/Setup-Wizard.md) | Мастер настройки |
+| [Architecture](ru/Architecture.md) | Архитектура |
+| [Dashboard](ru/Dashboard.md) | Dashboard |
+| [Embedded-Services](ru/Embedded-Services.md) | Встроенные сервисы |
+| [MQTT](ru/MQTT.md) | MQTT |
+| [Telegram](ru/Telegram.md) | Telegram-боты |
+| [MCP](ru/MCP.md) | MCP |
+| [Database-Schema](ru/Database-Schema.md) | Схема данных |
+
+Sync with [`docs/`](../docs/) when updating. To publish GitHub Wiki:
 
 ```bash
 git clone https://github.com/WASH-PRO/WASH-PRO-CRM.wiki.git
-cp wiki/*.md WASH-PRO-CRM.wiki/
-cd WASH-PRO-CRM.wiki && git add -A && git commit -m "Sync wiki v1.1.12" && git push
+# English pages (default):
+cp wiki/en/*.md WASH-PRO-CRM.wiki/
+# Or Russian:
+# cp wiki/ru/*.md WASH-PRO-CRM.wiki/
+cd WASH-PRO-CRM.wiki && git add -A && git commit -m "Sync wiki" && git push
 ```

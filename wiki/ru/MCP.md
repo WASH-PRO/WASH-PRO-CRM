@@ -1,6 +1,8 @@
+> **[English](../en/MCP.md)** · **Русский**
+
 # MCP для AI-агентов
 
-Полная документация: [docs/mcp.md](../docs/mcp.md) · [GitHub Pages — MCP](https://wash-pro.github.io/WASH-PRO-CRM/mcp/)
+Полная документация: [docs/mcp.md](../../docs/mcp.md) · [GitHub Pages — MCP](https://wash-pro.github.io/WASH-PRO-CRM/ru/mcp/)
 
 ## v1.1.12 — кратко
 
@@ -29,4 +31,4 @@
 | PyOrch unreachable | `docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d pyorch-mcp` |
 | 401 Dynamic API | Обновите JWT / API key в конфиге |
 
-См. [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/troubleshooting/), [Dashboard](Dashboard).
+См. [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/ru/troubleshooting/), [Dashboard](Dashboard).

@@ -1,4 +1,4 @@
-{%- assign current_lang = page.lang | default: 'ru' -%}
+{%- assign current_lang = page.lang | default: 'en' -%}
 {%- assign path_no_ext = page.path | replace: '.md', '' | replace: '.html', '' -%}
 {%- assign lang_prefix = current_lang | append: '/' -%}
 {%- assign page_slug = path_no_ext | replace: lang_prefix, '' -%}

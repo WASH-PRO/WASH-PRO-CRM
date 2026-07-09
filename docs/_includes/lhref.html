@@ -1,4 +1,4 @@
-{%- assign lng = include.lang | default: page.lang | default: 'ru' -%}
+{%- assign lng = include.lang | default: page.lang | default: 'en' -%}
 {%- assign slug = include.slug | default: '' -%}
 {%- if slug == '' or slug == 'index' -%}
 {{- '/' | append: lng | append: '/' | relative_url -}}

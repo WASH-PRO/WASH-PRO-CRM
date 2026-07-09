@@ -5,7 +5,7 @@ baseurl: /WASH-PRO-CRM
 
 markdown: GFM
 permalink: pretty
-lang: ru
+lang: en
 
 plugins:
   - jekyll-relative-links
@@ -22,17 +22,12 @@ exclude:
 
 defaults:
   - scope:
-      path: "ru"
-      type: "pages"
-    values:
-      lang: ru
-  - scope:
       path: "en"
       type: "pages"
     values:
       lang: en
   - scope:
-      path: "kk"
+      path: "ru"
       type: "pages"
     values:
-      lang: kk
+      lang: ru

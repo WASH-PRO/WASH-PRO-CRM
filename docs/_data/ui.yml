@@ -28,18 +28,3 @@ en:
   hero_lead: "Local CRM/SCADA for self-service car washes powered by"
   hero_optional: "and optionally"
   hero_summary: "Local car wash management — real-time SCADA, customer cards, analytics, RBAC, and embedded Dynamic API and PyOrchestrator platforms."
-kk:
-  tagline: SCADA / CRM
-  resources: Resources
-  documentation: Құжаттама
-  github: GitHub
-  menu_open: Мәзірді ашу
-  menu_close: Мәзірді жабу
-  language: Тіл
-  footer_docs: Құжаттама
-  redirecting: Қайта бағыттау…
-  redirect_docs: құжаттамаға
-  choose_language: Тілді таңдаңыз
-  hero_lead: "Өзіндік жуу орындары үшін жергілікті CRM/SCADA жүйесі — негізі"
-  hero_optional: "және міндетті емес"
-  hero_summary: "Жергілікті автожуу басқаруы — нақты уақыттағы SCADA, клиент карталары, аналитика, RBAC, Dynamic API және PyOrchestrator платформалары."

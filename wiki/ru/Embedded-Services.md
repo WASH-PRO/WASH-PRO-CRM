@@ -1,6 +1,8 @@
+> **[English](../en/Embedded-Services.md)** · **Русский**
+
 # Встроенные сервисы
 
-Полная версия: [docs/embedded-services.md](https://wash-pro.github.io/WASH-PRO-CRM/embedded-services/)
+Полная версия: [docs/embedded-services.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/embedded-services/)
 
 ## Dynamic API Platform v1.5.13
 

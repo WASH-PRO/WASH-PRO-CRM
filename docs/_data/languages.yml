@@ -1,9 +1,6 @@
-- code: ru
-  label: Русский
-  locale: ru
 - code: en
   label: English
   locale: en
-- code: kk
-  label: Қазақша
-  locale: kk
+- code: ru
+  label: Русский
+  locale: ru

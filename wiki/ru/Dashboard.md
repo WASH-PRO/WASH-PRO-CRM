@@ -1,6 +1,8 @@
+> **[English](../en/Dashboard.md)** · **Русский**
+
 # Dashboard
 
-Полное описание: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/dashboard/)
+Полное описание: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/dashboard/)
 
 ## Меню (v1.1.12)
 

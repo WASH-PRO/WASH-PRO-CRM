@@ -1,6 +1,8 @@
+> **[English](../en/Setup-Wizard.md)** · **Русский**
+
 # Мастер настройки
 
-Полная документация: [docs/setup-wizard.md](https://wash-pro.github.io/WASH-PRO-CRM/setup-wizard/)
+Полная документация: [docs/setup-wizard.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/setup-wizard/)
 
 После первого входа — `/setup` до завершения первичной настройки.
 

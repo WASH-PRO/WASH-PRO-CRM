@@ -6,10 +6,10 @@
   <title>Redirecting…</title>
   <script>
     (function () {
-      var supported = ['ru', 'en', 'kk'];
+      var supported = ['en', 'ru'];
       var saved = localStorage.getItem('wash-docs-lang');
-      var browser = (navigator.language || 'ru').slice(0, 2).toLowerCase();
-      var lang = supported.indexOf(saved) >= 0 ? saved : (supported.indexOf(browser) >= 0 ? browser : 'ru');
+      var browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
+      var lang = supported.indexOf(saved) >= 0 ? saved : (browser === 'ru' ? 'ru' : 'en');
       var base = '{{ "/" | relative_url }}';
       var slug = '{{ page.slug_path }}';
       var target = slug ? base + lang + '/' + slug + '/' : base + lang + '/';

@@ -1,6 +1,8 @@
+> **[English](../en/Getting-Started.md)** · **Русский**
+
 # Быстрый старт
 
-Полная версия: [docs/getting-started.md](https://wash-pro.github.io/WASH-PRO-CRM/getting-started/)
+Полная версия: [docs/getting-started.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/getting-started/)
 
 ## Требования
 

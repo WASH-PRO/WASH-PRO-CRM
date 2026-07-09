@@ -1,6 +1,8 @@
+> **[English](../en/Architecture.md)** · **Русский**
+
 # Архитектура
 
-Полная версия: [docs/architecture.md](https://wash-pro.github.io/WASH-PRO-CRM/architecture/)
+Полная версия: [docs/architecture.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/architecture/)
 
 ## Поток данных
 

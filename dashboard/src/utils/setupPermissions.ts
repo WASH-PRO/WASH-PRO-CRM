@@ -1,4 +1,5 @@
 import type { Permission, User } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
 export function canManageSystemSetup(permissions: Permission[] | undefined): boolean {
   if (!permissions?.length) return false;
@@ -36,7 +37,7 @@ export function isReadOnlySetupUser(user: User | null): boolean {
 
 export function setupRoleHint(user: User | null): string {
   if (!user) return '';
-  if (canManageSystemSetup(user.permissions)) return 'Настройка системы';
-  if (user.permissions?.includes('view')) return 'Только просмотр';
-  return 'Ограниченный доступ';
+  if (canManageSystemSetup(user.permissions)) return tGlobal('rbac.setupManage');
+  if (user.permissions?.includes('view')) return tGlobal('rbac.viewOnly');
+  return tGlobal('rbac.limitedAccess');
 }

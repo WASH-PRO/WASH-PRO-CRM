@@ -15,12 +15,13 @@ import {
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
 import { syncMqttUsers } from '../api/postDevice';
 import { SoftwareUpdatesSection, componentVersionLabel } from '../components/SoftwareUpdatesSection';
+import { LanguageSelect } from '../components/LanguageToggle';
 import { useAuth } from '../context/AuthContext';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { PageHeader, Loading } from '../components/UI';
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
-  NOTIFICATION_EVENT_GROUPS,
+  getNotificationEventGroups,
   parseNotificationSettings,
 } from '../utils/notificationSettings';
 import {
@@ -37,6 +38,7 @@ import type {
   PyOrchestratorCrmSettings,
   TelegramCrmSettings,
 } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
 const DEFAULT_BACKUP: BackupSettings = {
   enabled: true,
@@ -131,7 +133,7 @@ function parseDynamicApi(raw: Record<string, unknown>): DynamicApiCrmSettings {
   };
 }
 
-/** Legacy: service-поля раньше хранились в pyorchestrator. */
+/** Legacy: service fields were previously stored in pyorchestrator. */
 function legacyDynamicApiFromPyOrch(raw: Record<string, unknown>): DynamicApiCrmSettings | null {
   if (raw.serviceLogin == null && raw.servicePassword == null && raw.apiBaseUrl == null) return null;
   return {
@@ -142,6 +144,7 @@ function legacyDynamicApiFromPyOrch(raw: Record<string, unknown>): DynamicApiCrm
 }
 
 export function SettingsPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const updatesCtx = useSoftwareUpdatesContext();
@@ -154,6 +157,7 @@ export function SettingsPage() {
   const [mqttBroker, setMqttBroker] = useState<MqttBrokerSettings>(DEFAULT_MQTT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const notificationEventGroups = getNotificationEventGroups();
 
   const applySettings = useCallback((rows: CrmSetting[]) => {
     const idMap: Record<string, string | null> = {
@@ -219,8 +223,8 @@ export function SettingsPage() {
         console.error(syncErr);
         alert(
           syncErr instanceof Error
-            ? `Настройки сохранены, но синхронизация MQTT не удалась: ${syncErr.message}`
-            : 'Настройки сохранены, но синхронизация MQTT не удалась'
+            ? `${t('api.mqttSyncFailed')}: ${syncErr.message}`
+            : t('api.mqttSyncFailed')
         );
         const rows = await listCrmSettings();
         applySettings(rows);
@@ -228,9 +232,9 @@ export function SettingsPage() {
       }
       const rows = await listCrmSettings();
       applySettings(rows);
-      alert('Настройки сохранены');
+      alert(t('api.saved'));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Ошибка сохранения');
+      alert(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -241,35 +245,43 @@ export function SettingsPage() {
   return (
     <div>
       <PageHeader
-        title="Настройки"
-        subtitle="Параметры WASH PRO CRM — резервное копирование, интеграции и уведомления"
+        title={t('settings.title')}
+        subtitle={t('settings.subtitle')}
         actions={
           <>
             <button type="button" className="btn-secondary" onClick={load}>
-              <RefreshCw className="h-4 w-4" /> Обновить
+              <RefreshCw className="h-4 w-4" /> {t('common.refresh')}
             </button>
             {canEdit && (
               <button type="button" className="btn-primary" onClick={save} disabled={saving}>
-                <Save className="h-4 w-4" /> {saving ? 'Сохранение…' : 'Сохранить'}
+                <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.save')}
               </button>
             )}
           </>
         }
       />
 
+      <div className="mb-4 card">
+        <div className="mb-3 border-b border-panel-border pb-3 text-sm font-semibold dark:border-panel-border-dark">
+          {t('settings.languageSection')}
+        </div>
+        <LanguageSelect />
+        <p className="mt-2 text-xs text-panel-muted dark:text-panel-muted-dark">{t('settings.languageHint')}</p>
+      </div>
+
       {!canEdit && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
-          Режим просмотра: изменение настроек доступно операторам и администраторам.
+          {t('pages.settings.viewOnlyHint')}
         </p>
       )}
 
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SettingSection title="Резервное копирование" icon={HardDrive}>
+        <SettingSection title={t('pages.settings.backup.title')} icon={HardDrive}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Используется сервисом <span className="font-mono">wash-backup</span>. Список копий — на странице{' '}
+            {t('pages.settings.backup.hintStart')} <span className="font-mono">wash-backup</span>. {t('pages.settings.backup.hintMiddle')}{' '}
             <Link to="/backups" className="text-brand-600 hover:underline dark:text-brand-400">
-              Резервные копии
+              {t('nav.items.backups')}
             </Link>
             .
           </p>
@@ -280,12 +292,12 @@ export function SettingsPage() {
               disabled={!canEdit}
               onChange={(e) => setBackup({ ...backup, enabled: e.target.checked })}
             />
-            Автоматическое резервное копирование
+            {t('pages.settings.backup.auto')}
           </label>
-          <Field label="Расписание (cron)" hint="Формат cron, например 0 2 * * * — каждый день в 02:00">
+          <Field label={t('pages.settings.backup.cron')} hint={t('pages.settings.backup.cronHint')}>
             <input className="input font-mono" value={backup.cron} disabled={!canEdit} onChange={(e) => setBackup({ ...backup, cron: e.target.value })} />
           </Field>
-          <Field label="Количество хранимых копий">
+          <Field label={t('pages.settings.backup.retention')}>
             <input
               type="number"
               className="input"
@@ -296,7 +308,7 @@ export function SettingsPage() {
               onChange={(e) => setBackup({ ...backup, retentionCount: Number(e.target.value) || 7 })}
             />
           </Field>
-          <Field label="Путь хранения" hint="Каталог внутри контейнера backup">
+          <Field label={t('pages.settings.backup.storagePath')} hint={t('pages.settings.backup.storageHint')}>
             <input
               className="input font-mono"
               disabled={!canEdit}
@@ -308,17 +320,17 @@ export function SettingsPage() {
 
         <SettingSection title="PyOrchestrator" icon={Server}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Учётная запись администратора и порт встроенной панели PyOrchestrator.
+            {t('pages.settings.pyorch.hint')}
           </p>
           {componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator') && (
             <p className="mb-3 font-mono text-xs text-brand-700 dark:text-brand-300">
-              Версия: {componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator')}
+              {t('pages.settings.version')}: {componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator')}
             </p>
           )}
-          <Field label="Email администратора">
+          <Field label={t('pages.settings.pyorch.adminEmail')}>
             <input className="input font-mono" disabled={!canEdit} value={pyorch.email} onChange={(e) => setPyorch({ ...pyorch, email: e.target.value })} />
           </Field>
-          <Field label="Пароль администратора">
+          <Field label={t('pages.settings.pyorch.adminPassword')}>
             <input
               className="input font-mono"
               type="password"
@@ -328,7 +340,7 @@ export function SettingsPage() {
               onChange={(e) => setPyorch({ ...pyorch, password: e.target.value })}
             />
           </Field>
-          <Field label="Порт панели" hint="Внешний порт панели PyOrchestrator (по умолчанию 8090)">
+          <Field label={t('pages.settings.pyorch.panelPort')} hint={t('pages.settings.pyorch.panelPortHint')}>
             <input
               type="number"
               className="input"
@@ -343,14 +355,14 @@ export function SettingsPage() {
 
         <SettingSection title="Dynamic API" icon={Workflow}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Service account и внутренний URL для bridge-сервисов (бот, backup, processor).
+            {t('pages.settings.dynamicApi.hint')}
           </p>
           {componentVersionLabel(updatesCtx?.status ?? null, 'dynamic-api') && (
             <p className="mb-3 font-mono text-xs text-brand-700 dark:text-brand-300">
-              Версия: {componentVersionLabel(updatesCtx?.status ?? null, 'dynamic-api')}
+              {t('pages.settings.version')}: {componentVersionLabel(updatesCtx?.status ?? null, 'dynamic-api')}
             </p>
           )}
-          <Field label="Service login" hint="Учётная запись для внутренних сервисов">
+          <Field label={t('pages.settings.dynamicApi.serviceLogin')} hint={t('pages.settings.dynamicApi.serviceLoginHint')}>
             <input
               className="input font-mono"
               disabled={!canEdit}
@@ -368,7 +380,7 @@ export function SettingsPage() {
               onChange={(e) => setDynamicApi({ ...dynamicApi, servicePassword: e.target.value })}
             />
           </Field>
-          <Field label="API base URL" hint="Базовый URL Dynamic API внутри Docker-сети">
+          <Field label={t('pages.settings.dynamicApi.baseUrl')} hint={t('pages.settings.dynamicApi.baseUrlHint')}>
             <input
               className="input font-mono"
               disabled={!canEdit}
@@ -380,15 +392,15 @@ export function SettingsPage() {
 
         <SettingSection title="MQTT (CRM)" icon={Radio}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Учётная запись <span className="font-mono">system</span> для подключения{' '}
-            <span className="font-mono">message-processor</span> к Mosquitto. Пароль постов задаётся в карточке поста.
+            {t('pages.settings.mqtt.hintStart')} <span className="font-mono">system</span> {t('pages.settings.mqtt.hintMiddle')}{' '}
+            <span className="font-mono">message-processor</span> {t('pages.settings.mqtt.hintEnd')}
           </p>
-          <Field label="Логин CRM в брокере">
+          <Field label={t('pages.settings.mqtt.crmLogin')}>
             <input className="input font-mono" value={MQTT_SYSTEM_LOGIN} readOnly disabled />
           </Field>
           <Field
-            label="Пароль system"
-            hint="После сохранения пароль применяется в Mosquitto и переподключает processor"
+            label={t('pages.settings.mqtt.systemPassword')}
+            hint={t('pages.settings.mqtt.systemPasswordHint')}
           >
             <input
               className="input font-mono"
@@ -400,8 +412,8 @@ export function SettingsPage() {
             />
           </Field>
           <Field
-            label="Хранение исходящих MQTT (часы)"
-            hint="Срок хранения команд и цен в outbox CRM до автоочистки (по умолчанию 168 = 7 суток)"
+            label={t('pages.settings.mqtt.retentionHours')}
+            hint={t('pages.settings.mqtt.retentionHoursHint')}
           >
             <input
               className="input font-mono"
@@ -427,7 +439,7 @@ export function SettingsPage() {
                 })
               }
             />
-            Требовать подтверждение доставки от устройства (топик <span className="font-mono">set/ack</span>)
+            {t('pages.settings.mqtt.requireAck')} (<span className="font-mono">set/ack</span>)
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm">
             <input
@@ -436,10 +448,10 @@ export function SettingsPage() {
               checked={mqttBroker.redeliverOnNoAck}
               onChange={(e) => setMqttBroker({ ...mqttBroker, redeliverOnNoAck: e.target.checked })}
             />
-            Повторно отправлять, если подтверждение не получено
+            {t('pages.settings.mqtt.redeliver')}
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Интервал повтора (сек)" hint="Между попытками доставки без ack">
+            <Field label={t('pages.settings.mqtt.redeliverInterval')} hint={t('pages.settings.mqtt.redeliverIntervalHint')}>
               <input
                 className="input font-mono"
                 type="number"
@@ -454,7 +466,7 @@ export function SettingsPage() {
                 }
               />
             </Field>
-            <Field label="Макс. попыток" hint="Включая первую отправку">
+            <Field label={t('pages.settings.mqtt.maxAttempts')} hint={t('pages.settings.mqtt.maxAttemptsHint')}>
               <input
                 className="input font-mono"
                 type="number"
@@ -473,13 +485,13 @@ export function SettingsPage() {
         </SettingSection>
         </div>
 
-        <SettingSection title="Уведомления" icon={Bell}>
+        <SettingSection title={t('nav.items.notifications')} icon={Bell}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-            Каналы и типы событий для оповещений операторов. Сервисы{' '}
-            <span className="font-mono">message-processor</span> и <span className="font-mono">wash-backup</span>{' '}
-            читают эти настройки при создании записей. Список — на странице{' '}
+            {t('pages.settings.notifications.hintStart')}{' '}
+            <span className="font-mono">message-processor</span> &amp; <span className="font-mono">wash-backup</span>{' '}
+            {t('pages.settings.notifications.hintMiddle')}{' '}
             <Link to="/notifications" className="text-brand-600 hover:underline dark:text-brand-400">
-              Уведомления
+              {t('nav.items.notifications')}
             </Link>
             .
           </p>
@@ -491,7 +503,7 @@ export function SettingsPage() {
                 checked={notifications.web}
                 onChange={(e) => setNotifications({ ...notifications, web: e.target.checked })}
               />
-              Уведомления в веб-панели
+              {t('notifications.channels.web')}
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
@@ -500,14 +512,13 @@ export function SettingsPage() {
                 checked={notifications.telegram}
                 onChange={(e) => setNotifications({ ...notifications, telegram: e.target.checked })}
               />
-              Уведомления в Telegram
+              {t('notifications.channels.telegram')}
             </label>
           </div>
           {notifications.telegram && (
             <div className="rounded-lg border border-panel-border p-4 dark:border-panel-border-dark">
               <p className="mb-3 text-xs text-panel-muted dark:text-panel-muted-dark">
-                Отдельный бот для оповещений администраторов (не путать с операторскими ботами на странице Telegram).
-                Укажите токен от @BotFather и Telegram ID получателей (см. профиль пользователя или @userinfobot).
+                {t('pages.settings.notifications.botHint')}
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="flex cursor-pointer items-center gap-2 text-sm sm:col-span-2">
@@ -517,9 +528,9 @@ export function SettingsPage() {
                     checked={telegram.enabled}
                     onChange={(e) => setTelegram({ ...telegram, enabled: e.target.checked })}
                   />
-                  Бот оповещений включён
+                  {t('pages.settings.notifications.botEnabled')}
                 </label>
-                <Field label="Токен бота">
+                <Field label={t('pages.settings.notifications.botToken')}>
                   <input
                     className="input font-mono text-xs"
                     type="password"
@@ -530,7 +541,7 @@ export function SettingsPage() {
                     autoComplete="off"
                   />
                 </Field>
-                <Field label="Telegram ID администраторов" hint="Через запятую">
+                <Field label={t('pages.settings.notifications.adminIds')} hint={t('pages.settings.notifications.adminIdsHint')}>
                   <input
                     className="input font-mono text-xs"
                     disabled={!canEdit}
@@ -548,14 +559,14 @@ export function SettingsPage() {
               </div>
               {notifications.telegram && telegram.enabled && (!telegram.token.trim() || telegram.adminIds.length === 0) && (
                 <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
-                  Telegram-канал включён, но бот не настроен — сообщения отправляться не будут.
+                  {t('pages.settings.notifications.botWarning')}
                 </p>
               )}
             </div>
           )}
-          <Field label="События">
+          <Field label={t('pages.settings.notifications.events')}>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {NOTIFICATION_EVENT_GROUPS.map((group) => (
+              {notificationEventGroups.map((group) => (
                 <div key={group.title} className="rounded-lg border border-panel-border p-3 dark:border-panel-border-dark">
                   <p className="mb-2 text-xs font-medium text-panel-muted dark:text-panel-muted-dark">{group.title}</p>
                   <div className="space-y-2">
@@ -583,7 +594,7 @@ export function SettingsPage() {
           </Field>
         </SettingSection>
 
-        <SettingSection title="Обновления ПО" icon={ArrowUpCircle}>
+        <SettingSection title={t('pages.settings.softwareUpdates')} icon={ArrowUpCircle}>
           <SoftwareUpdatesSection />
         </SettingSection>
       </div>

@@ -1,14 +1,21 @@
 import type { DapGroup, DapUser, Permission } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
-export const PERMISSION_LABELS: Record<Permission, string> = {
-  view: 'Просмотр',
-  create: 'Создание',
-  update: 'Изменение',
-  delete: 'Удаление',
-  manage_users: 'Управление пользователями',
-  manage_api: 'Управление API',
-  view_logs: 'Просмотр логов',
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+
+export function getPermissionLabels(t: TranslateFn): Record<Permission, string> {
+  return {
+    view: t('rbac.permissions.view'),
+    create: t('rbac.permissions.create'),
+    update: t('rbac.permissions.update'),
+    delete: t('rbac.permissions.delete'),
+    manage_users: t('rbac.permissions.manageUsers'),
+    manage_api: t('rbac.permissions.manageApi'),
+    view_logs: t('rbac.permissions.viewLogs'),
+  };
+}
+
+export const PERMISSION_LABELS: Record<Permission, string> = getPermissionLabels(tGlobal);
 
 export const ALL_PERMISSIONS: Permission[] = [
   'view',
@@ -20,11 +27,15 @@ export const ALL_PERMISSIONS: Permission[] = [
   'view_logs',
 ];
 
-export const USER_STATUS_LABELS: Record<string, string> = {
-  active: 'Активен',
-  inactive: 'Неактивен',
-  suspended: 'Заблокирован',
-};
+export function getUserStatusLabels(t: TranslateFn): Record<string, string> {
+  return {
+    active: t('rbac.userStatus.active'),
+    inactive: t('rbac.userStatus.inactive'),
+    suspended: t('rbac.userStatus.suspended'),
+  };
+}
+
+export const USER_STATUS_LABELS: Record<string, string> = getUserStatusLabels(tGlobal);
 
 export function entityId(row: { id?: string; _id?: unknown }): string {
   if (row.id) return String(row.id);
@@ -49,7 +60,7 @@ export function resolveGroupLabel(ref: unknown, groups: { id: string; name: stri
     if (typeof obj.name === 'string' && obj.name) return obj.name;
   }
   const id = normalizeGroupId(ref);
-  if (!id) return '—';
+  if (!id) return tGlobal('common.notAvailable');
   return groups.find((g) => g.id === id)?.name ?? id.slice(-6);
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Columns3, RotateCcw } from 'lucide-react';
 import clsx from 'clsx';
+import { useLocale } from '../i18n/LocaleContext';
 
 interface TableColumnPickerProps {
   columns: { key: string; header: string }[];
@@ -19,6 +20,7 @@ export function TableColumnPicker({
   onReset,
   hasCustomVisibility,
 }: TableColumnPickerProps) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -53,10 +55,10 @@ export function TableColumnPicker({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="Настройка столбцов"
+        title={t('tableColumnPicker.title')}
       >
         <Columns3 size={16} />
-        <span className="hidden sm:inline">Столбцы</span>
+        <span className="hidden sm:inline">{t('tableColumnPicker.buttonLabel')}</span>
         {hiddenCount > 0 && (
           <span className="rounded-full bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:text-brand-300">
             −{hiddenCount}
@@ -67,20 +69,20 @@ export function TableColumnPicker({
       {open && (
         <div
           role="dialog"
-          aria-label="Отображение столбцов"
+          aria-label={t('tableColumnPicker.dialogAria')}
           className="absolute right-0 z-30 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-panel border border-panel-border bg-panel-card p-3 shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">Столбцы таблицы</p>
+            <p className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">{t('tableColumnPicker.dialogTitle')}</p>
             <button
               type="button"
               className="btn-ghost !px-2 !py-1 text-xs"
               onClick={onReset}
               disabled={!hasCustomVisibility}
-              title="Показать все столбцы"
+              title={t('tableColumnPicker.showAllTitle')}
             >
               <RotateCcw size={14} className="mr-1 inline" />
-              Сбросить
+              {t('tableColumnPicker.reset')}
             </button>
           </div>
           <div className="max-h-64 space-y-1 overflow-y-auto pr-1">

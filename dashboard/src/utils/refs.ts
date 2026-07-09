@@ -1,7 +1,8 @@
 import type { WashRef } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
 /** Подпись, если автомойка удалена или не найдена в справочнике. */
-export const UNDEFINED_WASH_LABEL = 'не определен';
+export const UNDEFINED_WASH_LABEL = tGlobal('refs.undefinedWash');
 
 export function refId(value: string | { id?: string; _id?: string } | null | undefined): string {
   if (value == null) return '';
@@ -16,7 +17,7 @@ export function resolveWashAddress(
 ): string {
   if (washId != null && typeof washId === 'object' && washId.address) return washId.address;
   const id = refId(washId);
-  if (!id) return '—';
+  if (!id) return tGlobal('common.notAvailable');
   return washById.get(id)?.address ?? UNDEFINED_WASH_LABEL;
 }
 
@@ -27,7 +28,7 @@ export function resolveWashName(
 ): string {
   if (washId != null && typeof washId === 'object' && washId.name) return washId.name;
   const id = refId(washId);
-  if (!id) return '—';
+  if (!id) return tGlobal('common.notAvailable');
   return washById.get(id)?.name ?? UNDEFINED_WASH_LABEL;
 }
 
@@ -41,11 +42,12 @@ export function resolvePostLabel(
     postId != null && typeof postId === 'object'
       ? postId
       : postById.get(refId(postId));
-  if (!post) return '—';
+  if (!post) return tGlobal('common.notAvailable');
 
-  const postName = post.name || (post.postNumber != null ? `Пост ${post.postNumber}` : 'Пост');
+  const postName =
+    post.name || (post.postNumber != null ? tGlobal('refs.postWithNumber', { number: post.postNumber }) : tGlobal('refs.post'));
   const washName = resolveWashName(post.washId, washById);
-  return washName !== '—' && washName !== UNDEFINED_WASH_LABEL
-    ? `#${post.postNumber ?? '—'} ${postName} · ${washName}`
-    : `#${post.postNumber ?? '—'} ${postName}`;
+  return washName !== tGlobal('common.notAvailable') && washName !== UNDEFINED_WASH_LABEL
+    ? `#${post.postNumber ?? tGlobal('common.notAvailable')} ${postName} · ${washName}`
+    : `#${post.postNumber ?? tGlobal('common.notAvailable')} ${postName}`;
 }

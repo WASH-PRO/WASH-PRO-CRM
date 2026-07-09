@@ -1,3 +1,5 @@
+import { tGlobal } from '../i18n/runtime';
+
 export interface McpTool {
   name: string;
   description: string;
@@ -11,30 +13,30 @@ export interface PyorchMcpTool {
 }
 
 export const PYORCH_MCP_TOOLS: PyorchMcpTool[] = [
-  { name: 'pyorch_login', category: 'auth', description: 'Получить JWT для API PyOrchestrator' },
-  { name: 'pyorch_whoami', category: 'auth', description: 'Текущий пользователь и права' },
-  { name: 'list_scripts', category: 'scripts', description: 'Список скриптов (ботов, задач)' },
-  { name: 'get_script', category: 'scripts', description: 'Метаданные и файлы скрипта' },
-  { name: 'create_script', category: 'scripts', description: 'Создать скрипт' },
-  { name: 'update_script_file', category: 'scripts', description: 'Обновить файл скрипта' },
-  { name: 'enable_script', category: 'scripts', description: 'Включить выполнение' },
-  { name: 'disable_script', category: 'scripts', description: 'Отключить выполнение' },
-  { name: 'delete_script', category: 'scripts', description: 'Удалить скрипт' },
-  { name: 'run_script', category: 'runs', description: 'Запустить скрипт' },
-  { name: 'stop_script', category: 'runs', description: 'Остановить запущенные sandbox' },
-  { name: 'get_run', category: 'runs', description: 'Статус запуска' },
-  { name: 'get_run_logs', category: 'runs', description: 'Логи запуска' },
-  { name: 'list_script_runs', category: 'runs', description: 'История запусков скрипта' },
-  { name: 'list_groups', category: 'organization', description: 'Группы скриптов' },
-  { name: 'list_schedules', category: 'automation', description: 'Расписания cron/interval' },
-  { name: 'create_schedule', category: 'automation', description: 'Создать расписание' },
-  { name: 'list_webhooks', category: 'automation', description: 'Входящие webhooks' },
-  { name: 'create_webhook', category: 'automation', description: 'Создать webhook' },
-  { name: 'set_script_secret', category: 'secrets', description: 'Зашифрованный секрет скрипта' },
-  { name: 'list_script_secrets', category: 'secrets', description: 'Ключи секретов скрипта' },
-  { name: 'dashboard_stats', category: 'platform', description: 'KPI платформы' },
-  { name: 'system_info', category: 'platform', description: 'Состояние платформы' },
-  { name: 'list_notifications', category: 'platform', description: 'Уведомления пользователя' },
+  { name: 'pyorch_login', category: 'auth', description: tGlobal('mcp.tools.pyorchLogin') },
+  { name: 'pyorch_whoami', category: 'auth', description: tGlobal('mcp.tools.pyorchWhoami') },
+  { name: 'list_scripts', category: 'scripts', description: tGlobal('mcp.tools.listScripts') },
+  { name: 'get_script', category: 'scripts', description: tGlobal('mcp.tools.getScript') },
+  { name: 'create_script', category: 'scripts', description: tGlobal('mcp.tools.createScript') },
+  { name: 'update_script_file', category: 'scripts', description: tGlobal('mcp.tools.updateScriptFile') },
+  { name: 'enable_script', category: 'scripts', description: tGlobal('mcp.tools.enableScript') },
+  { name: 'disable_script', category: 'scripts', description: tGlobal('mcp.tools.disableScript') },
+  { name: 'delete_script', category: 'scripts', description: tGlobal('mcp.tools.deleteScript') },
+  { name: 'run_script', category: 'runs', description: tGlobal('mcp.tools.runScript') },
+  { name: 'stop_script', category: 'runs', description: tGlobal('mcp.tools.stopScript') },
+  { name: 'get_run', category: 'runs', description: tGlobal('mcp.tools.getRun') },
+  { name: 'get_run_logs', category: 'runs', description: tGlobal('mcp.tools.getRunLogs') },
+  { name: 'list_script_runs', category: 'runs', description: tGlobal('mcp.tools.listScriptRuns') },
+  { name: 'list_groups', category: 'organization', description: tGlobal('mcp.tools.listGroups') },
+  { name: 'list_schedules', category: 'automation', description: tGlobal('mcp.tools.listSchedules') },
+  { name: 'create_schedule', category: 'automation', description: tGlobal('mcp.tools.createSchedule') },
+  { name: 'list_webhooks', category: 'automation', description: tGlobal('mcp.tools.listWebhooks') },
+  { name: 'create_webhook', category: 'automation', description: tGlobal('mcp.tools.createWebhook') },
+  { name: 'set_script_secret', category: 'secrets', description: tGlobal('mcp.tools.setScriptSecret') },
+  { name: 'list_script_secrets', category: 'secrets', description: tGlobal('mcp.tools.listScriptSecrets') },
+  { name: 'dashboard_stats', category: 'platform', description: tGlobal('mcp.tools.dashboardStats') },
+  { name: 'system_info', category: 'platform', description: tGlobal('mcp.tools.systemInfo') },
+  { name: 'list_notifications', category: 'platform', description: tGlobal('mcp.tools.listNotifications') },
 ];
 
 export async function getDapMcpTools(signal?: AbortSignal): Promise<McpTool[]> {
@@ -47,7 +49,7 @@ export async function getDapMcpTools(signal?: AbortSignal): Promise<McpTool[]> {
   });
   if (!json.ok) throw new Error(`Dynamic API MCP: HTTP ${json.status}`);
   const body = (await json.json()) as { success?: boolean; data?: McpTool[]; error?: string };
-  if (!body.success) throw new Error(body.error || 'Не удалось загрузить инструменты');
+  if (!body.success) throw new Error(body.error || tGlobal('mcp.loadToolsFailed'));
   return body.data ?? [];
 }
 

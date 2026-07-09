@@ -13,6 +13,7 @@ import {
 import clsx from 'clsx';
 import { useTheme } from '../context/ThemeContext';
 import { formatDurationHuman, formatMoney, type CurrencyConfig } from '../utils/format';
+import { useLocale } from '../i18n/LocaleContext';
 
 export interface PostStateChartRow {
   postId: string;
@@ -29,11 +30,13 @@ export interface PostStateChartRow {
 
 type Metric = 'modeTime' | 'balance' | 'freePause';
 
-const METRIC_OPTIONS: { id: Metric; label: string }[] = [
-  { id: 'modeTime', label: 'Время режима' },
-  { id: 'balance', label: 'Баланс' },
-  { id: 'freePause', label: 'Бесплатная пауза' },
-];
+function getMetricOptions(t: (key: string, params?: Record<string, string | number>) => string): { id: Metric; label: string }[] {
+  return [
+    { id: 'modeTime', label: t('postStatesChart.metric.modeTime') },
+    { id: 'balance', label: t('postStatesChart.metric.balance') },
+    { id: 'freePause', label: t('postStatesChart.metric.freePause') },
+  ];
+}
 
 function liveModeSeconds(row: PostStateChartRow, now: number): number {
   if (!row.hasData || row.modeTime == null) return 0;
@@ -58,14 +61,18 @@ function metricValue(row: PostStateChartRow, metric: Metric, now: number): numbe
   }
 }
 
-function metricAxisLabel(metric: Metric, currency: CurrencyConfig): string {
+function metricAxisLabel(
+  metric: Metric,
+  currency: CurrencyConfig,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
   switch (metric) {
     case 'modeTime':
-      return 'мин';
+      return t('postStatesChart.minutesShort');
     case 'balance':
       return currency.symbol || currency.code;
     case 'freePause':
-      return 'мин';
+      return t('postStatesChart.minutesShort');
     default:
       return '';
   }
@@ -103,11 +110,13 @@ interface PostStatesChartProps {
 }
 
 export function PostStatesChart({ rows, currency }: PostStatesChartProps) {
+  const { t } = useLocale();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [metric, setMetric] = useState<Metric>('modeTime');
   const [now, setNow] = useState(() => Date.now());
   const [activePostId, setActivePostId] = useState<string | null>(null);
+  const metricOptions = useMemo(() => getMetricOptions(t), [t]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -128,13 +137,13 @@ export function PostStatesChart({ rows, currency }: PostStatesChartProps) {
   const chartData = useMemo((): ChartPoint[] => {
     return [...rows]
       .sort((a, b) => {
-        const addr = a.address.localeCompare(b.address, 'ru');
+        const addr = a.address.localeCompare(b.address, undefined);
         return addr !== 0 ? addr : a.postNumber - b.postNumber;
       })
       .map((row) => ({
         postId: row.postId,
         label: `${shortAddress(row.address)} · #${row.postNumber}`,
-        fullLabel: `${row.address} · пост ${row.postNumber}`,
+        fullLabel: t('postStatesChart.postLabel', { address: row.address, number: row.postNumber }),
         value: metricValue(row, metric, now),
         hasData: row.hasData,
         modeName: row.modeName,
@@ -152,13 +161,13 @@ export function PostStatesChart({ rows, currency }: PostStatesChartProps) {
     <div className="card mb-6">
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-semibold text-panel-ink dark:text-panel-ink-dark">Сводка по постам</h2>
+          <h2 className="font-semibold text-panel-ink dark:text-panel-ink-dark">{t('postStatesChart.title')}</h2>
           <p className="mt-1 text-sm text-panel-muted dark:text-panel-muted-dark">
-            {activeCount} из {rows.length} постов с данными · наведите на столбец для деталей
+            {t('postStatesChart.subtitle', { active: activeCount, total: rows.length })}
           </p>
         </div>
         <div className="flex flex-wrap gap-1 rounded-lg border border-panel-border p-1 dark:border-panel-border-dark">
-          {METRIC_OPTIONS.map((opt) => (
+          {metricOptions.map((opt) => (
             <button
               key={opt.id}
               type="button"
@@ -178,7 +187,7 @@ export function PostStatesChart({ rows, currency }: PostStatesChartProps) {
 
       {rows.length === 0 ? (
         <p className="flex h-72 items-center justify-center text-sm text-panel-muted dark:text-panel-muted-dark">
-          Нет постов для отображения
+          {t('postStatesChart.empty')}
         </p>
       ) : (
         <div className="h-[22rem] w-full sm:h-80">
@@ -205,7 +214,7 @@ export function PostStatesChart({ rows, currency }: PostStatesChartProps) {
                 tickLine={false}
                 width={48}
                 label={{
-                  value: metricAxisLabel(metric, currency),
+                  value: metricAxisLabel(metric, currency, t),
                   angle: -90,
                   position: 'insideLeft',
                   fill: axisColor,
@@ -224,21 +233,21 @@ export function PostStatesChart({ rows, currency }: PostStatesChartProps) {
                       <div className="mb-2 font-medium">{row.fullLabel}</div>
                       <div className="space-y-1 text-panel-muted dark:text-panel-muted-dark">
                         <div>
-                          <span className="text-panel-ink dark:text-panel-ink-dark">{METRIC_OPTIONS.find((m) => m.id === metric)?.label ?? 'Значение'}: </span>
+                          <span className="text-panel-ink dark:text-panel-ink-dark">{metricOptions.find((m) => m.id === metric)?.label ?? t('postStatesChart.value')}: </span>
                           {formatMetricValue(row.value, metric, currency)}
                         </div>
-                        <div>Режим: {row.hasData ? (row.modeName ?? '—') : 'ожидание данных'}</div>
+                        <div>{t('postStatesChart.mode')}: {row.hasData ? (row.modeName ?? '—') : t('postStatesChart.waitingData')}</div>
                         {row.balance != null && (
-                          <div>Баланс: {formatMoney(row.balance, currency)}</div>
+                          <div>{t('postStatesChart.balance')}: {formatMoney(row.balance, currency)}</div>
                         )}
                         {row.discount != null && (
-                          <div>Скидка: {formatMoney(row.discount, currency)}</div>
+                          <div>{t('postStatesChart.discount')}: {formatMoney(row.discount, currency)}</div>
                         )}
                         {row.liveModeSec > 0 && (
-                          <div>Время режима: {formatDurationHuman(row.liveModeSec)}</div>
+                          <div>{t('postStatesChart.metric.modeTime')}: {formatDurationHuman(row.liveModeSec)}</div>
                         )}
                         {row.freePauseSec != null && row.freePauseSec > 0 && (
-                          <div>Бесплатная пауза: {formatDurationHuman(row.freePauseSec)}</div>
+                          <div>{t('postStatesChart.metric.freePause')}: {formatDurationHuman(row.freePauseSec)}</div>
                         )}
                       </div>
                     </div>

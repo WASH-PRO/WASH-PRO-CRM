@@ -13,8 +13,10 @@ import {
   fetchRecentNotifications,
   notificationFilters,
 } from '../utils/notificationsTable';
+import { useLocale } from '../i18n/LocaleContext';
 
 export function NotificationsPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -38,7 +40,7 @@ export function NotificationsPage() {
 
   const deleteOne = async (id: string) => {
     if (!canEdit) return;
-    if (!confirm('Удалить уведомление?')) return;
+    if (!confirm(t('pages.notifications.confirmDeleteOne'))) return;
     await bulkDelete('/crm/notifications', [id]);
     refresh();
   };
@@ -53,9 +55,9 @@ export function NotificationsPage() {
 
   const limitHint =
     totalCount != null && totalCount > NOTIFICATIONS_PAGE_LIMIT
-      ? ` · показаны последние ${NOTIFICATIONS_PAGE_LIMIT} из ${totalCount}`
+      ? t('pages.notifications.limitHint.shownLatest', { limit: NOTIFICATIONS_PAGE_LIMIT, total: totalCount })
       : totalCount != null
-        ? ` · ${totalCount} всего`
+        ? t('pages.notifications.limitHint.total', { total: totalCount })
         : '';
 
   if (loading && !items) return <Loading />;
@@ -63,8 +65,8 @@ export function NotificationsPage() {
   return (
     <div>
       <PageHeader
-        title="Уведомления"
-        subtitle={`Telegram и Web Notifications${limitHint}${!canEdit ? ' · только просмотр' : ''}`}
+        title={t('pages.notifications.title')}
+        subtitle={`${t('pages.notifications.subtitleBase')}${limitHint}${!canEdit ? t('pages.notifications.readonlySuffix') : ''}`}
       />
       <DataTable
         tableId="notifications"
@@ -72,7 +74,7 @@ export function NotificationsPage() {
         data={items || []}
         rowKey={(n) => n.id}
         filters={notificationFilters(true)}
-        searchPlaceholder="Поиск уведомлений…"
+        searchPlaceholder={t('pages.notifications.searchPlaceholder')}
         defaultSortKey="date"
         defaultSortDir="desc"
         bulkActions={bulkActions}

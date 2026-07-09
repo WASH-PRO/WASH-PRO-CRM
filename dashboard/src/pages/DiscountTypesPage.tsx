@@ -14,10 +14,12 @@ import {
   normalizeDiscountTypeCode,
 } from '../utils/discountTypes';
 import type { DiscountType, DiscountTypeStatus } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
 const emptyForm = { name: '', status: 'active' as DiscountTypeStatus };
 
 export function DiscountTypesPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const [modal, setModal] = useState(false);
@@ -43,13 +45,13 @@ export function DiscountTypesPage() {
     () => [
       {
         id: 'code',
-        label: 'Код',
+        label: t('pages.discountTypes.code'),
         options: sorted.map((t) => ({ value: t.code, label: t.code })),
         match: (t, value) => t.code === value,
       },
       {
         id: 'status',
-        label: 'Статус',
+        label: t('common.status'),
         options: (['active', 'inactive'] as const).map((s) => ({
           value: s,
           label: DISCOUNT_TYPE_STATUS_LABELS[s],
@@ -57,7 +59,7 @@ export function DiscountTypesPage() {
         match: (t, value) => discountTypeStatus(t) === value,
       },
     ],
-    [sorted]
+    [sorted, t]
   );
 
   const openEdit = (item: DiscountType) => {
@@ -86,7 +88,7 @@ export function DiscountTypesPage() {
     () => [
       {
         key: 'code',
-        header: 'Код',
+        header: t('pages.discountTypes.code'),
         sortable: true,
         sortValue: (t) => t.code,
         searchValue: (t) => `${t.code} ${t.name}`,
@@ -94,7 +96,7 @@ export function DiscountTypesPage() {
       },
       {
         key: 'name',
-        header: 'Название',
+        header: t('pages.discountTypes.name'),
         sortable: true,
         sortValue: (t) => t.name,
         searchValue: (t) => t.name,
@@ -102,7 +104,7 @@ export function DiscountTypesPage() {
       },
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (t) => discountTypeStatus(t),
         searchValue: (t) => DISCOUNT_TYPE_STATUS_LABELS[discountTypeStatus(t)],
@@ -117,7 +119,7 @@ export function DiscountTypesPage() {
       },
       {
         key: 'createdAt',
-        header: 'Дата создания',
+        header: t('pages.discountTypes.createdAt'),
         sortable: true,
         sortValue: (t) => t.createdAt || '',
         searchValue: (t) => formatDateTime(t.createdAt),
@@ -128,13 +130,13 @@ export function DiscountTypesPage() {
             {
               key: 'actions',
               header: '',
-              render: (t: DiscountType) => (
+              render: (row: DiscountType) => (
                 <div className="flex justify-end gap-1">
                   <button
                     type="button"
                     className="btn-secondary !px-2 !py-1"
-                    onClick={() => openEdit(t)}
-                    title="Изменить"
+                    onClick={() => openEdit(row)}
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -144,23 +146,23 @@ export function DiscountTypesPage() {
           ]
         : []),
     ],
-    [canEdit]
+    [canEdit, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<DiscountType>[] => [
     createExportBulkAction('discount-types.csv', [
-      { header: 'Код', value: (t) => t.code },
-      { header: 'Название', value: (t) => t.name },
-      { header: 'Статус', value: (t) => DISCOUNT_TYPE_STATUS_LABELS[discountTypeStatus(t)] },
-      { header: 'Дата создания', value: (t) => t.createdAt || '' },
+      { header: t('pages.discountTypes.code'), value: (t) => t.code },
+      { header: t('pages.discountTypes.name'), value: (t) => t.name },
+      { header: t('common.status'), value: (t) => DISCOUNT_TYPE_STATUS_LABELS[discountTypeStatus(t)] },
+      { header: t('pages.discountTypes.createdAt'), value: (t) => t.createdAt || '' },
     ]),
-  ], []);
+  ], [t]);
 
   if (loading && !types) return <Loading />;
   if (error && !types) {
     return (
       <div>
-        <PageHeader title="Типы скидок" />
+        <PageHeader title={t('nav.items.discountTypes')} />
         <ErrorMessage message={error} />
       </div>
     );
@@ -169,8 +171,8 @@ export function DiscountTypesPage() {
   return (
     <div>
       <PageHeader
-        title="Типы скидок"
-        subtitle="Справочник кодов и названий типов скидок для скидочных карт"
+        title={t('nav.items.discountTypes')}
+        subtitle={t('pages.discountTypes.subtitle')}
       />
       <DataTable
         tableId="discount-types"
@@ -178,44 +180,44 @@ export function DiscountTypesPage() {
         data={sorted}
         rowKey={(t) => t.id}
         filters={filters}
-        searchPlaceholder="Поиск типов скидок…"
+        searchPlaceholder={t('pages.discountTypes.searchPlaceholder')}
         bulkActions={bulkActions}
-        emptyMessage="Типы скидок не настроены"
+        emptyMessage={t('pages.discountTypes.empty')}
       />
 
       <Modal
         open={modal}
         onClose={() => setModal(false)}
-        title={editCode ? `Тип скидки ${editCode}` : 'Тип скидки'}
+        title={editCode ? t('pages.discountTypes.modalWithCode', { code: editCode }) : t('pages.discountTypes.modal')}
       >
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="label">Код</label>
+            <label className="label">{t('pages.discountTypes.code')}</label>
             <input className="input font-mono" value={editCode} readOnly disabled />
           </div>
           <div>
-            <label className="label">Название</label>
+            <label className="label">{t('pages.discountTypes.name')}</label>
             <input
               className="input"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              placeholder="Например: Карта такси"
+              placeholder={t('pages.discountTypes.namePlaceholder')}
             />
           </div>
           <div>
-            <label className="label">Статус</label>
+            <label className="label">{t('common.status')}</label>
             <select
               className="input"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value as DiscountTypeStatus })}
             >
-              <option value="active">Активен</option>
-              <option value="inactive">Неактивен</option>
+              <option value="active">{t('discountTypes.status.active')}</option>
+              <option value="inactive">{t('discountTypes.status.inactive')}</option>
             </select>
           </div>
           <button type="submit" className="btn-primary w-full">
-            Сохранить
+            {t('common.save')}
           </button>
         </form>
       </Modal>

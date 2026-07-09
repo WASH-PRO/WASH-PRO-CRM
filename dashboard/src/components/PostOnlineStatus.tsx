@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { POST_ONLINE_THRESHOLD_MS } from '../constants/live';
 import { isPostOnline } from '../utils/statsAggregation';
+import { useLocale } from '../i18n/LocaleContext';
 
 interface PostOnlineState {
   lastMessageAt?: string;
@@ -20,11 +21,12 @@ function statusDot(online: boolean): string {
 }
 
 export function PostOnlineStatus({ state, showLabel = true, className }: PostOnlineStatusProps) {
+  const { t } = useLocale();
   const online = isPostOnline(state);
-  const label = online ? 'Онлайн' : 'Офлайн';
+  const label = online ? t('status.online') : t('status.offline');
   const hint = online
-    ? `Телеметрия за последние ${POST_ONLINE_THRESHOLD_MS / 1000} с`
-    : 'Нет телеметрии или данные устарели';
+    ? t('postOnlineStatus.onlineHint', { seconds: POST_ONLINE_THRESHOLD_MS / 1000 })
+    : t('postOnlineStatus.offlineHint');
 
   return (
     <span

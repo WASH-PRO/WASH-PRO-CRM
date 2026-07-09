@@ -7,6 +7,7 @@ import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTab
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
 import { useWorkModes } from '../hooks/useWorkModes';
+import { useLocale } from '../i18n/LocaleContext';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatPause, formatDateTime, formatMoney } from '../utils/format';
 import { refId, resolveWashAddress } from '../utils/refs';
@@ -46,6 +47,7 @@ function latestCardByPost(cards: Card[]): Map<string, Card> {
 
 export function StatesPage() {
   const navigate = useNavigate();
+  const { locale, t } = useLocale();
   const { currency } = useCurrency();
   const { label: workModeLabel } = useWorkModes();
 
@@ -89,39 +91,39 @@ export function StatesPage() {
     () => [
       {
         id: 'status',
-        label: 'Статус',
+        label: t('common.status'),
         options: [
-          { value: 'online', label: 'Онлайн' },
-          { value: 'offline', label: 'Офлайн' },
+          { value: 'online', label: t('status.online') },
+          { value: 'offline', label: t('status.offline') },
         ],
         match: (r, v) => (v === 'online' ? r.isOnline : !r.isOnline),
       },
       {
         id: 'hasData',
-        label: 'Данные',
+        label: t('pages.states.filters.data'),
         options: [
-          { value: 'yes', label: 'Есть данные' },
-          { value: 'no', label: 'Ожидание' },
+          { value: 'yes', label: t('pages.states.filters.hasData') },
+          { value: 'no', label: t('pages.states.filters.waiting') },
         ],
         match: (r, v) => (v === 'yes' ? r.hasData : !r.hasData),
       },
     ],
-    []
+    [t]
   );
 
   const columns: DataTableColumn<StateRow>[] = useMemo(
     () => [
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (r) => (r.isOnline ? 1 : 0),
-        searchValue: (r) => (r.isOnline ? 'онлайн' : 'оффлайн'),
+        searchValue: (r) => (r.isOnline ? t('status.online') : t('status.offline')),
         render: (r) => <PostOnlineStatus state={{ lastMessageAt: r.lastMessageAt }} />,
       },
       {
         key: 'address',
-        header: 'Адрес объекта',
+        header: t('pages.states.columns.objectAddress'),
         sortable: true,
         searchValue: (r) => r.address,
         sortValue: (r) => r.address,
@@ -129,7 +131,7 @@ export function StatesPage() {
       },
       {
         key: 'postNumber',
-        header: 'Номер поста',
+        header: t('pages.states.columns.postNumber'),
         sortable: true,
         searchValue: (r) => String(r.postNumber),
         sortValue: (r) => r.postNumber,
@@ -137,7 +139,7 @@ export function StatesPage() {
       },
       {
         key: 'balance',
-        header: 'Текущий баланс',
+        header: t('pages.states.columns.currentBalance'),
         sortable: true,
         searchValue: (r) => String(r.balance ?? ''),
         sortValue: (r) => r.balance ?? -1,
@@ -145,18 +147,18 @@ export function StatesPage() {
           r.hasData && r.balance != null ? (
             <span className="font-mono">{formatMoney(r.balance, currency)}</span>
           ) : (
-            '—'
+            t('common.notAvailable')
           ),
       },
       {
         key: 'freePause',
-        header: 'Бесплатная пауза',
+        header: t('pages.states.columns.freePause'),
         sortValue: (r) => r.freePause ?? -1,
-        render: (r) => (r.hasData ? formatPause(r.freePause) : '—'),
+        render: (r) => (r.hasData ? formatPause(r.freePause) : t('common.notAvailable')),
       },
       {
         key: 'discount',
-        header: 'Сумма скидки',
+        header: t('pages.states.columns.discountAmount'),
         sortable: true,
         searchValue: (r) => String(r.discount ?? ''),
         sortValue: (r) => r.discount ?? -1,
@@ -164,45 +166,45 @@ export function StatesPage() {
           r.hasData && r.discount != null ? (
             <span className="font-mono">{formatMoney(r.discount, currency)}</span>
           ) : (
-            '—'
+            t('common.notAvailable')
           ),
       },
       {
         key: 'mode',
-        header: 'Режим',
+        header: t('pages.states.columns.mode'),
         searchValue: (r) => (r.hasData ? workModeLabel(r.modeName) : ''),
         sortValue: (r) => (r.hasData ? workModeLabel(r.modeName) : ''),
-        render: (r) => (r.hasData ? workModeLabel(r.modeName) : '—'),
+        render: (r) => (r.hasData ? workModeLabel(r.modeName) : t('common.notAvailable')),
       },
       {
         key: 'lastMessageAt',
-        header: 'Дата и время',
+        header: t('pages.states.columns.dateTime'),
         sortable: true,
         sortValue: (r) => r.lastMessageAt || '',
         render: (r) => formatDateTime(r.lastMessageAt),
       },
     ],
-    [currency, workModeLabel]
+    [currency, workModeLabel, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<StateRow>[] => [
     createExportBulkAction('post-states.csv', [
-      { header: 'Статус', value: (r) => (r.isOnline ? 'Онлайн' : 'Офлайн') },
-      { header: 'Адрес', value: (r) => r.address },
-      { header: 'Пост', value: (r) => String(r.postNumber) },
-      { header: 'Текущий баланс', value: (r) => String(r.balance ?? '') },
-      { header: 'Бесплатная пауза', value: (r) => String(r.freePause ?? '') },
-      { header: 'Сумма скидки', value: (r) => String(r.discount ?? '') },
-      { header: 'Название режима', value: (r) => workModeLabel(r.modeName) },
-      { header: 'Дата и время', value: (r) => r.lastMessageAt || '' },
+      { header: t('common.status'), value: (r) => (r.isOnline ? t('status.online') : t('status.offline')) },
+      { header: t('pages.states.export.address'), value: (r) => r.address },
+      { header: t('pages.states.export.post'), value: (r) => String(r.postNumber) },
+      { header: t('pages.states.export.currentBalance'), value: (r) => String(r.balance ?? '') },
+      { header: t('pages.states.export.freePause'), value: (r) => String(r.freePause ?? '') },
+      { header: t('pages.states.export.discountAmount'), value: (r) => String(r.discount ?? '') },
+      { header: t('pages.states.export.modeName'), value: (r) => workModeLabel(r.modeName) },
+      { header: t('pages.states.export.dateTime'), value: (r) => r.lastMessageAt || '' },
     ]),
-  ], [workModeLabel]);
+  ], [workModeLabel, t]);
 
   if (loading && !rows) return <Loading />;
   if (error && !rows) {
     return (
       <div>
-        <PageHeader title="Текущее состояние постов" />
+        <PageHeader title={t('pages.states.title')} />
         <ErrorMessage message={error} />
       </div>
     );
@@ -211,8 +213,11 @@ export function StatesPage() {
   return (
     <div>
       <PageHeader
-        title="Текущее состояние постов"
-        subtitle={`Все посты · ${rows?.length ?? 0} · обновлено ${lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'}`}
+        title={t('pages.states.title')}
+        subtitle={t('pages.states.subtitle', {
+          count: rows?.length ?? 0,
+          updated: lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString(locale) : t('common.notAvailable'),
+        })}
       />
       <DataTable
         tableId="states"
@@ -220,7 +225,7 @@ export function StatesPage() {
         data={rows || []}
         rowKey={(r) => r.postId}
         filters={filters}
-        searchPlaceholder="Поиск по адресу или номеру поста…"
+        searchPlaceholder={t('pages.states.searchPlaceholder')}
         bulkActions={bulkActions}
         onRowClick={(r) => navigate(`/posts/${r.postId}`)}
       />

@@ -10,6 +10,7 @@ import { DataTable, type DataTableBulkAction, type DataTableColumn } from '../co
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
 import { useWorkModes } from '../hooks/useWorkModes';
+import { useLocale } from '../i18n/LocaleContext';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatPause, formatDateTime, formatMoney } from '../utils/format';
 import { refId } from '../utils/refs';
@@ -48,6 +49,7 @@ function parseSettings(raw?: PostSettings | Record<string, unknown>): PostSettin
 export function PostDetailPage() {
   const { postId = '' } = useParams();
   const { hasPermission } = useAuth();
+  const { locale, t } = useLocale();
   const canEdit = hasPermission('update', 'create');
   const { currency } = useCurrency();
   const { label: workModeLabel } = useWorkModes();
@@ -165,7 +167,7 @@ export function PostDetailPage() {
     () => [
       {
         key: 'receivedAt',
-        header: 'Время',
+        header: t('pages.postDetail.history.columns.time'),
         sortable: true,
         sortValue: (r) => new Date(r.receivedAt || 0).getTime(),
         searchValue: (r) => formatDateTime(r.receivedAt),
@@ -173,59 +175,59 @@ export function PostDetailPage() {
       },
       {
         key: 'balance',
-        header: 'Баланс',
+        header: t('pages.postDetail.history.columns.balance'),
         sortable: true,
         sortValue: (r) => r.balance ?? -1,
         render: (r) =>
           r.balance != null ? (
             <span className="font-mono">{formatMoney(r.balance, currency)}</span>
           ) : (
-            '—'
+            t('common.notAvailable')
           ),
       },
       {
         key: 'freePause',
-        header: 'Бесплатная пауза',
+        header: t('pages.postDetail.history.columns.freePause'),
         sortable: true,
         sortValue: (r) => r.freePause ?? -1,
         render: (r) => formatPause(r.freePause),
       },
       {
         key: 'discount',
-        header: 'Сумма скидки',
+        header: t('pages.postDetail.history.columns.discount'),
         sortable: true,
         sortValue: (r) => r.discount ?? -1,
         render: (r) =>
           r.discount != null ? (
             <span className="font-mono">{formatMoney(r.discount, currency)}</span>
           ) : (
-            '—'
+            t('common.notAvailable')
           ),
       },
       {
         key: 'mode',
-        header: 'Режим',
+        header: t('pages.postDetail.history.columns.mode'),
         sortable: true,
         sortValue: (r) => workModeLabel(r.modeName),
         searchValue: (r) => workModeLabel(r.modeName),
         render: (r) => workModeLabel(r.modeName),
       },
     ],
-    [currency, workModeLabel]
+    [currency, workModeLabel, t]
   );
 
   const historyBulkActions = useMemo((): DataTableBulkAction<PostStateHistoryRow>[] => {
-    const serial = data?.post.serialNumber || 'post';
+    const serial = data?.post.serialNumber || t('pages.postDetail.export.fallbackSerial');
     return [
       createExportBulkAction(`post-${serial}-states.csv`, [
-        { header: 'Время', value: (r) => r.receivedAt || '' },
-        { header: 'Баланс', value: (r) => (r.balance != null ? formatMoney(r.balance, currency) : '') },
-        { header: 'Бесплатная пауза', value: (r) => formatPause(r.freePause) },
-        { header: 'Сумма скидки', value: (r) => (r.discount != null ? formatMoney(r.discount, currency) : '') },
-        { header: 'Режим', value: (r) => workModeLabel(r.modeName) },
+        { header: t('pages.postDetail.history.columns.time'), value: (r) => r.receivedAt || '' },
+        { header: t('pages.postDetail.history.columns.balance'), value: (r) => (r.balance != null ? formatMoney(r.balance, currency) : '') },
+        { header: t('pages.postDetail.history.columns.freePause'), value: (r) => formatPause(r.freePause) },
+        { header: t('pages.postDetail.history.columns.discount'), value: (r) => (r.discount != null ? formatMoney(r.discount, currency) : '') },
+        { header: t('pages.postDetail.history.columns.mode'), value: (r) => workModeLabel(r.modeName) },
       ]),
     ];
-  }, [currency, data?.post.serialNumber, workModeLabel]);
+  }, [currency, data?.post.serialNumber, workModeLabel, t]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -265,10 +267,10 @@ export function PostDetailPage() {
         });
       }
 
-      setSaved('Сохранено');
+      setSaved(t('pages.postDetail.saved'));
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     }
   };
 
@@ -277,9 +279,9 @@ export function PostDetailPage() {
   if (!data) {
     return (
       <div>
-        <PageHeader title="Пост не найден" />
+        <PageHeader title={t('pages.postDetail.notFoundTitle')} />
         <Link to="/states" className="text-sm text-brand-600 hover:underline">
-          ← К состоянию постов
+          {t('pages.postDetail.backToStatesArrow')}
         </Link>
       </div>
     );
@@ -295,15 +297,17 @@ export function PostDetailPage() {
           className="inline-flex items-center gap-1 text-sm text-brand-600 hover:underline dark:text-brand-400"
         >
           <ArrowLeft size={14} />
-          К состоянию постов
+          {t('pages.postDetail.backToStates')}
         </Link>
       </div>
 
       <PageHeader
-        title={`Пост ${post.postNumber}${form.name ? ` — ${form.name}` : ''}`}
-        subtitle={`${wash?.name || '—'} · SN ${post.serialNumber} · обновлено ${
-          lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'
-        }`}
+        title={t('pages.postDetail.title', { number: post.postNumber, name: form.name ? ` — ${form.name}` : '' })}
+        subtitle={t('pages.postDetail.subtitle', {
+          wash: wash?.name || t('common.notAvailable'),
+          serial: post.serialNumber,
+          updated: lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString(locale) : t('common.notAvailable'),
+        })}
         actions={<PostOnlineStatus state={currentState ?? undefined} />}
       />
 
@@ -315,10 +319,10 @@ export function PostDetailPage() {
       {saved && <p className="mb-4 text-sm text-emerald-600">{saved}</p>}
 
       <form onSubmit={handleSubmit} className="card mb-6 space-y-4">
-        <h2 className="font-semibold">Описание поста</h2>
+        <h2 className="font-semibold">{t('pages.postDetail.descriptionTitle')}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="label">Название поста</label>
+            <label className="label">{t('pages.postDetail.fields.postName')}</label>
             <input
               className="input"
               value={form.name}
@@ -328,7 +332,7 @@ export function PostDetailPage() {
             />
           </div>
           <div>
-            <label className="label">Адрес объекта</label>
+            <label className="label">{t('pages.postDetail.fields.objectAddress')}</label>
             <input
               className="input"
               value={form.address}
@@ -338,7 +342,7 @@ export function PostDetailPage() {
             />
           </div>
           <div>
-            <label className="label">Серийный номер</label>
+            <label className="label">{t('pages.postDetail.fields.serialNumber')}</label>
             <input
               className="input font-mono"
               value={form.serialNumber}
@@ -347,17 +351,17 @@ export function PostDetailPage() {
             />
           </div>
           <div>
-            <label className="label">Версия прошивки</label>
+            <label className="label">{t('pages.postDetail.fields.firmwareVersion')}</label>
             <input
               className="input font-mono"
               value={form.firmwareVersion}
               disabled
               readOnly
-              placeholder="—"
+              placeholder={t('common.notAvailable')}
             />
           </div>
           <div>
-            <label className="label">Гарантия до</label>
+            <label className="label">{t('pages.postDetail.fields.warrantyUntil')}</label>
             <input
               className="input"
               type="date"
@@ -367,33 +371,33 @@ export function PostDetailPage() {
             />
           </div>
           <div>
-            <label className="label">Объект (автомойка)</label>
-            <input className="input" value={wash?.name || '—'} disabled />
+            <label className="label">{t('pages.postDetail.fields.wash')}</label>
+            <input className="input" value={wash?.name || t('common.notAvailable')} disabled />
           </div>
         </div>
         <div>
-          <label className="label">Обслуживание</label>
+          <label className="label">{t('pages.postDetail.fields.maintenance')}</label>
           <textarea
             className="input min-h-[80px]"
             value={form.maintenance}
             onChange={(e) => setForm({ ...form, maintenance: e.target.value })}
             disabled={!canEdit}
-            placeholder="Заметки по ТО, последнее обслуживание…"
+            placeholder={t('pages.postDetail.fields.maintenancePlaceholder')}
           />
         </div>
         <div>
-          <label className="label">Фичи и возможности</label>
+          <label className="label">{t('pages.postDetail.fields.features')}</label>
           <textarea
             className="input min-h-[80px]"
             value={form.features}
             onChange={(e) => setForm({ ...form, features: e.target.value })}
             disabled={!canEdit}
-            placeholder="NFC, пенная насадка, терминал безнала…"
+            placeholder={t('pages.postDetail.fields.featuresPlaceholder')}
           />
         </div>
         {canEdit && (
           <button type="submit" className="btn-primary">
-            Сохранить
+            {t('common.save')}
           </button>
         )}
       </form>
@@ -405,10 +409,10 @@ export function PostDetailPage() {
         onSaved={refresh}
       />
 
-      <h2 className="mb-3 font-semibold">История состояний</h2>
+      <h2 className="mb-3 font-semibold">{t('pages.postDetail.history.title')}</h2>
       {data.historyTruncated && (
         <p className="mb-3 text-sm text-panel-muted dark:text-panel-muted-dark">
-          Показаны последние записи. Для более старого периода укажите дату «С».
+          {t('pages.postDetail.history.truncatedHint')}
         </p>
       )}
       <DataTable
@@ -418,12 +422,12 @@ export function PostDetailPage() {
         rowKey={(r) => r.id}
         emptyMessage={
           historyDateFrom || historyDateTo
-            ? 'Нет записей за выбранный период'
-            : 'Нет записей состояния с поста'
+            ? t('pages.postDetail.history.emptyFiltered')
+            : t('pages.postDetail.history.empty')
         }
         defaultSortKey="receivedAt"
         defaultSortDir="desc"
-        searchPlaceholder="Поиск по режиму или времени…"
+        searchPlaceholder={t('pages.postDetail.history.searchPlaceholder')}
         toolbarPlacement="start"
         bulkActions={historyBulkActions}
         toolbar={
@@ -433,27 +437,27 @@ export function PostDetailPage() {
               className="input-inline"
               value={historyDateFrom}
               onChange={(e) => setHistoryDateFrom(e.target.value)}
-              aria-label="С"
+              aria-label={t('pages.postDetail.history.from')}
             />
-            <span className="text-sm text-panel-muted">—</span>
+            <span className="text-sm text-panel-muted">{t('common.notAvailable')}</span>
             <input
               type="date"
               className="input-inline"
               value={historyDateTo}
               onChange={(e) => setHistoryDateTo(e.target.value)}
-              aria-label="По"
+              aria-label={t('pages.postDetail.history.to')}
             />
             <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(null)}>
-              Все
+              {t('common.all')}
             </button>
             <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(0)}>
-              Сегодня
+              {t('pages.postDetail.history.today')}
             </button>
             <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(7)}>
-              7 дн.
+              {t('pages.postDetail.history.days7')}
             </button>
             <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(30)}>
-              30 дн.
+              {t('pages.postDetail.history.days30')}
             </button>
           </div>
         }

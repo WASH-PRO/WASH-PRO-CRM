@@ -37,72 +37,76 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-export const navGroups: NavGroup[] = [
-  {
-    title: 'Главное',
-    items: [
-      { to: '/', label: 'Обзор', icon: LayoutDashboard },
-      { to: '/states', label: 'Состояние', shortLabel: 'Состояние', icon: Activity },
-    ],
-  },
-  {
-    title: 'Объекты',
-    items: [
-      { to: '/washes', label: 'Автомойки', shortLabel: 'Мойки', icon: Building2 },
-      { to: '/posts', label: 'Посты', icon: Columns3 },
-    ],
-  },
-  {
-    title: 'Данные',
-    items: [{ to: '/mqtt', label: 'MQTT', icon: Radio }],
-  },
-  {
-    title: 'Карты',
-    items: [
-      { to: '/cards/discount', label: 'Скидочные', icon: CreditCard },
-      { to: '/cards/service', label: 'Сервисные', icon: CreditCard },
-      { to: '/cards/vip', label: 'VIP', icon: CreditCard },
-      { to: '/cards/collection', label: 'Инкассация', icon: CreditCard },
-    ],
-  },
-  {
-    title: 'Аналитика',
-    items: [
-      { to: '/usage', label: 'Использование', shortLabel: 'Usage', icon: BarChart3 },
-      { to: '/finance', label: 'Финансы', icon: Wallet },
-      { to: '/archive', label: 'Архив', icon: Archive },
-    ],
-  },
-  {
-    title: 'Справочники',
-    items: [
-      { to: '/work-modes', label: 'Режимы работы', shortLabel: 'Режимы', icon: SlidersHorizontal, admin: true },
-      { to: '/currency', label: 'Валюты', icon: Coins, admin: true },
-      { to: '/discount-types', label: 'Типы скидок', icon: Tags, admin: true },
-    ],
-  },
-  {
-    title: 'Автоматизация',
-    items: [
-      { to: '/info-messages', label: 'Информация', icon: Newspaper, admin: true },
-      { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
-      { to: '/mcp', label: 'MCP сервер', shortLabel: 'MCP', icon: Cpu, admin: true },
-      { to: '/backups', label: 'Резервные копии', shortLabel: 'Бэкапы', icon: HardDrive, admin: true },
-    ],
-  },
-  {
-    title: 'Система',
-    items: [
-      { to: '/notifications', label: 'Уведомления', icon: Bell },
-      { to: '/users', label: 'Пользователи', icon: Users, admin: true },
-      { to: '/groups', label: 'Группы и права', icon: Shield, admin: true },
-      { to: '/settings', label: 'Настройки', icon: Settings },
-      { to: '/logs', label: 'Логи', icon: FileText, admin: true },
-    ],
-  },
-];
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
-const navItemsByPathLength = navGroups
+export function getNavGroups(t: TranslateFn): NavGroup[] {
+  return [
+    {
+      title: t('nav.groups.main'),
+      items: [
+        { to: '/', label: t('nav.items.dashboard'), icon: LayoutDashboard },
+        { to: '/states', label: t('nav.items.states'), shortLabel: t('nav.short.states'), icon: Activity },
+      ],
+    },
+    {
+      title: t('nav.groups.objects'),
+      items: [
+        { to: '/washes', label: t('nav.items.washes'), shortLabel: t('nav.short.washes'), icon: Building2 },
+        { to: '/posts', label: t('nav.items.posts'), icon: Columns3 },
+      ],
+    },
+    {
+      title: t('nav.groups.data'),
+      items: [{ to: '/mqtt', label: t('nav.items.mqtt'), icon: Radio }],
+    },
+    {
+      title: t('nav.groups.cards'),
+      items: [
+        { to: '/cards/discount', label: t('nav.items.cardsDiscount'), icon: CreditCard },
+        { to: '/cards/service', label: t('nav.items.cardsService'), icon: CreditCard },
+        { to: '/cards/vip', label: t('nav.items.cardsVip'), icon: CreditCard },
+        { to: '/cards/collection', label: t('nav.items.cardsCollection'), icon: CreditCard },
+      ],
+    },
+    {
+      title: t('nav.groups.analytics'),
+      items: [
+        { to: '/usage', label: t('nav.items.usage'), shortLabel: t('nav.short.usage'), icon: BarChart3 },
+        { to: '/finance', label: t('nav.items.finance'), icon: Wallet },
+        { to: '/archive', label: t('nav.items.archive'), icon: Archive },
+      ],
+    },
+    {
+      title: t('nav.groups.references'),
+      items: [
+        { to: '/work-modes', label: t('nav.items.workModes'), shortLabel: t('nav.short.workModes'), icon: SlidersHorizontal, admin: true },
+        { to: '/currency', label: t('nav.items.currency'), icon: Coins, admin: true },
+        { to: '/discount-types', label: t('nav.items.discountTypes'), icon: Tags, admin: true },
+      ],
+    },
+    {
+      title: t('nav.groups.automation'),
+      items: [
+        { to: '/info-messages', label: t('nav.items.infoMessages'), icon: Newspaper, admin: true },
+        { to: '/telegram', label: t('nav.items.telegram'), icon: Bot, admin: true },
+        { to: '/mcp', label: t('nav.items.mcp'), shortLabel: t('nav.short.mcp'), icon: Cpu, admin: true },
+        { to: '/backups', label: t('nav.items.backups'), shortLabel: t('nav.short.backups'), icon: HardDrive, admin: true },
+      ],
+    },
+    {
+      title: t('nav.groups.system'),
+      items: [
+        { to: '/notifications', label: t('nav.items.notifications'), icon: Bell },
+        { to: '/users', label: t('nav.items.users'), icon: Users, admin: true },
+        { to: '/groups', label: t('nav.items.groups'), icon: Shield, admin: true },
+        { to: '/settings', label: t('nav.items.settings'), icon: Settings },
+        { to: '/logs', label: t('nav.items.logs'), icon: FileText, admin: true },
+      ],
+    },
+  ];
+}
+
+const navItemsByPathLength = getNavGroups((k) => k)
   .flatMap((group) => group.items)
   .sort((a, b) => b.to.length - a.to.length);
 

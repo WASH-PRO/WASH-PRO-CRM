@@ -5,9 +5,10 @@ import { useWorkModes } from '../hooks/useWorkModes';
 import { useCurrency } from '../hooks/useCurrency';
 import { ErrorMessage } from './UI';
 import type { PostSettings } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 import {
   commandNeedsAmount,
-  DEVICE_COMMAND_OPTIONS,
+  getDeviceCommandOptions,
   isModePriceReadonly,
   parseModePrices,
   hasModePrices,
@@ -22,6 +23,8 @@ interface PostDeviceSettingsProps {
 }
 
 export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }: PostDeviceSettingsProps) {
+  const { t, locale } = useLocale();
+  const deviceCommandOptions = useMemo(() => getDeviceCommandOptions(), [locale]);
   const { modes } = useWorkModes();
   const { currency } = useCurrency();
   const [mqttPrefix, setMqttPrefix] = useState(settings?.mqttPrefix || 'washpro');
@@ -89,22 +92,26 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
       );
       if (!row) {
         setPricesErr(
-          'В журнале MQTT нет цен с этого поста. Панель должна опубликовать set/prices (ключи price0…price9 или 0…9).'
+          t('postDevice.mqttPricesMissing')
         );
         return;
       }
       const parsed = parseModePrices(row.payload);
       if (!hasModePrices(parsed)) {
         setPricesErr(
-          `Сообщение найдено, но формат не распознан: ${JSON.stringify(row.payload).slice(0, 120)}`
+          t('postDevice.mqttFormatUnknown', { payload: JSON.stringify(row.payload).slice(0, 120) })
         );
         return;
       }
       setPrices(parsed);
       formDirty.current = true;
-      setPricesMsg(`Подтянуто из MQTT (${new Date(row.receivedAt || '').toLocaleString('ru')}). Нажмите «Сохранить цены», чтобы записать в CRM.`);
+      setPricesMsg(
+        t('postDevice.pulledFromMqtt', {
+          date: new Date(row.receivedAt || '').toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US'),
+        })
+      );
     } catch (err) {
-      setPricesErr(err instanceof Error ? err.message : 'Не удалось загрузить из MQTT');
+      setPricesErr(err instanceof Error ? err.message : t('postDevice.errors.loadFromMqtt'));
     } finally {
       setPullBusy(false);
     }
@@ -125,12 +132,14 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         sendToDevice,
         persist: true,
       });
-      const sent = result.topic ? ` Топик: ${result.topic}.` : ' Только в CRM.';
-      setPricesMsg(`Цены сохранены.${sent}`);
+      const sent = result.topic
+        ? t('postDevice.savedTopic', { topic: result.topic })
+        : t('postDevice.savedOnlyCrm');
+      setPricesMsg(t('postDevice.saved', { details: sent }));
       formDirty.current = false;
       onSaved?.();
     } catch (err) {
-      setPricesErr(err instanceof Error ? err.message : 'Не удалось сохранить цены');
+      setPricesErr(err instanceof Error ? err.message : t('postDevice.errors.savePrices'));
     } finally {
       setPricesBusy(false);
     }
@@ -139,8 +148,8 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
   const handleCommandSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!canEdit) return;
-    const label = DEVICE_COMMAND_OPTIONS.find((o) => o.value === command)?.label || command;
-    if (!confirm(`Выполнить команду «${label}» на посте ${serialNumber}?`)) return;
+    const label = deviceCommandOptions.find((o) => o.value === command)?.label || command;
+    if (!confirm(t('postDevice.confirmCommand', { label, serial: serialNumber }))) return;
 
     setCommandBusy(true);
     setCommandErr('');
@@ -152,10 +161,10 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         amount,
         mqttPrefix: mqttPrefix.trim() || 'washpro',
       });
-      setCommandMsg(`Команда отправлена (${result.topic}).`);
+      setCommandMsg(t('postDevice.commandSent', { topic: result.topic }));
       onSaved?.();
     } catch (err) {
-      setCommandErr(err instanceof Error ? err.message : 'Не удалось отправить команду');
+      setCommandErr(err instanceof Error ? err.message : t('postDevice.errors.sendCommand'));
     } finally {
       setCommandBusy(false);
     }
@@ -164,14 +173,14 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
   return (
     <section id="device-settings" className="card mb-6 space-y-6 scroll-mt-4">
       <div>
-        <h2 className="font-semibold">Настройки устройства</h2>
+        <h2 className="font-semibold">{t('postDevice.title')}</h2>
         <p className="mt-1 text-sm text-panel-muted dark:text-panel-muted-dark">
-          Цены режимов и команды панели — как в меню на посту. Отправка через MQTT.
+          {t('postDevice.subtitle')}
         </p>
       </div>
 
       <div className="max-w-xs">
-        <label className="label">Префикс MQTT (dt_pref)</label>
+        <label className="label">{t('postDevice.mqttPrefix')}</label>
         <input
           className="input font-mono"
           value={mqttPrefix}
@@ -185,23 +194,24 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
       </div>
 
       <form onSubmit={handlePricesSubmit} className="space-y-4">
-        <h3 className="text-sm font-medium">Цены режимов ({currency.symbol})</h3>
+        <h3 className="text-sm font-medium">{t('postDevice.modePrices', { symbol: currency.symbol || currency.code })}</h3>
         {!pricesLoaded && !settings?.pricesSyncedAt && (
           <p className="text-sm text-amber-700 dark:text-amber-400">
-            Цены ещё не приходили с поста в CRM. Поля пустые — это не нули на устройстве. Задайте вручную,
-            нажмите «Подтянуть из MQTT» или дождитесь публикации <code className="text-xs">set/prices</code> с панели.
+            {t('postDevice.pricesHintStart')}{' '}
+            <code className="text-xs">set/prices</code> {t('postDevice.pricesHintEnd')}
           </p>
         )}
         {settings?.pricesSyncedAt && (
           <p className="text-xs text-panel-muted">
-            С устройства: {new Date(settings.pricesSyncedAt).toLocaleString('ru')}
+            {t('postDevice.syncedFromDevice')}:{' '}
+            {new Date(settings.pricesSyncedAt).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US')}
             {settings.pricesUpdatedAt && (
-              <> · из CRM: {new Date(settings.pricesUpdatedAt).toLocaleString('ru')}</>
+              <> · {t('postDevice.syncedFromCrm')}: {new Date(settings.pricesUpdatedAt).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US')}</>
             )}
           </p>
         )}
         {sortedModes.length === 0 ? (
-          <p className="text-sm text-panel-muted">Справочник режимов не загружен.</p>
+          <p className="text-sm text-panel-muted">{t('postDevice.modesNotLoaded')}</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {sortedModes.map((mode) => {
@@ -211,7 +221,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
                 <label className="label">
                   {mode.code} — {mode.name}
                   {readonly && (
-                    <span className="ml-1 text-xs font-normal text-panel-muted">(только чтение)</span>
+                    <span className="ml-1 text-xs font-normal text-panel-muted">({t('postDevice.readonly')})</span>
                   )}
                 </label>
                 <input
@@ -224,7 +234,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
                   onChange={(e) => setPrice(String(mode.code), e.target.value)}
                   disabled={!canEdit || readonly}
                   readOnly={readonly}
-                  title={readonly ? 'Цена задаётся только на устройстве' : undefined}
+                  title={readonly ? t('postDevice.priceReadonlyTitle') : undefined}
                 />
               </div>
             );
@@ -242,7 +252,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
                   setSendToDevice(e.target.checked);
                 }}
               />
-              Отправить на пост после сохранения в CRM
+              {t('postDevice.sendToPost')}
             </label>
             <button
               type="button"
@@ -250,7 +260,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
               disabled={pullBusy || pricesBusy}
               onClick={() => void pullPricesFromMqtt()}
             >
-              {pullBusy ? 'Загрузка…' : 'Подтянуть из MQTT'}
+              {pullBusy ? t('common.loading') : t('postDevice.pullFromMqtt')}
             </button>
           </div>
         )}
@@ -258,23 +268,23 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         {pricesMsg && <p className="text-sm text-emerald-600">{pricesMsg}</p>}
         {canEdit && (
           <button type="submit" className="btn-primary" disabled={pricesBusy}>
-            {pricesBusy ? 'Сохранение…' : 'Сохранить цены'}
+            {pricesBusy ? t('common.saving') : t('postDevice.savePrices')}
           </button>
         )}
       </form>
 
       <form onSubmit={handleCommandSubmit} className="space-y-4 border-t border-panel-border pt-6 dark:border-panel-border-dark">
-        <h3 className="text-sm font-medium">Команды устройства</h3>
+        <h3 className="text-sm font-medium">{t('postDevice.commandsTitle')}</h3>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
-            <label className="label">Команда</label>
+            <label className="label">{t('postDevice.commandLabel')}</label>
             <select
               className="input"
               value={command}
               onChange={(e) => setCommand(e.target.value as DeviceCommandKey)}
               disabled={!canEdit || commandBusy}
             >
-              {DEVICE_COMMAND_OPTIONS.map((opt) => (
+              {deviceCommandOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -283,7 +293,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
           </div>
           {commandNeedsAmount(command) && (
             <div className="w-40">
-              <label className="label">Сумма ({currency.symbol})</label>
+              <label className="label">{t('postDevice.amountLabel', { symbol: currency.symbol || currency.code })}</label>
               <input
                 className="input font-mono"
                 type="number"
@@ -298,14 +308,15 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
           )}
           {canEdit && (
             <button type="submit" className="btn-secondary" disabled={commandBusy}>
-              {commandBusy ? 'Отправка…' : 'Выполнить'}
+              {commandBusy ? t('postDevice.sending') : t('postDevice.execute')}
             </button>
           )}
         </div>
         {settings?.lastCommand && settings.lastCommandAt && (
           <p className="text-xs text-panel-muted">
-            Последняя команда: {DEVICE_COMMAND_OPTIONS.find((o) => o.value === settings.lastCommand)?.label || settings.lastCommand}{' '}
-            ({new Date(settings.lastCommandAt).toLocaleString('ru')})
+            {t('postDevice.lastCommand')}:{' '}
+            {deviceCommandOptions.find((o) => o.value === settings.lastCommand)?.label || settings.lastCommand}{' '}
+            ({new Date(settings.lastCommandAt).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US')})
           </p>
         )}
         {commandErr && <ErrorMessage message={commandErr} />}

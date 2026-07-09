@@ -5,6 +5,7 @@ import { syncMqttUsers } from '../api/postDevice';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
+import { useLocale } from '../i18n/LocaleContext';
 import { PageHeader, Loading, Modal, ErrorMessage } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { Wash, Post } from '../types';
@@ -16,6 +17,7 @@ const emptyForm = { name: '', description: '', address: '', registeredAt: undefi
 
 export function WashesPage() {
   const { hasPermission } = useAuth();
+  const { t } = useLocale();
   const canEdit = hasPermission('create', 'update', 'delete');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -47,7 +49,7 @@ export function WashesPage() {
     try {
       await syncMqttUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось применить учётные записи MQTT');
+      setError(err instanceof Error ? err.message : t('pages.washes.mqttSyncFailed'));
       throw err;
     }
   };
@@ -73,14 +75,14 @@ export function WashesPage() {
   const handleDelete = async (id: string) => {
     if (
       !confirm(
-        'Удалить объект и все связанные данные?\n\nБудут удалены посты, состояния, карты, статистика, телеметрия и уведомления.'
+        t('pages.washes.confirmDeleteOne')
       )
     ) {
       return;
     }
     setError('');
     setNotice('');
-    setDeleteProgress('Удаление объекта и связанных данных…');
+    setDeleteProgress(t('pages.washes.deletingOne'));
     try {
       const result = await deleteWash(id);
       setDeleteProgress('');
@@ -89,7 +91,7 @@ export function WashesPage() {
       await refresh();
     } catch (err) {
       setDeleteProgress('');
-      setError(err instanceof Error ? err.message : 'Ошибка удаления');
+      setError(err instanceof Error ? err.message : t('pages.washes.deleteError'));
     }
   };
 
@@ -97,19 +99,19 @@ export function WashesPage() {
     () => [
       {
         id: 'cloudEnabled',
-        label: 'Облако',
+        label: t('pages.washes.filters.cloud'),
         options: [
-          { value: 'yes', label: 'Подключено' },
-          { value: 'no', label: 'Не подключено' },
+          { value: 'yes', label: t('pages.washes.filters.connected') },
+          { value: 'no', label: t('pages.washes.filters.notConnected') },
         ],
         match: (w, value) => (value === 'yes' ? !!w.cloudEnabled : !w.cloudEnabled),
       },
       {
         id: 'posts',
-        label: 'Посты',
+        label: t('pages.washes.filters.posts'),
         options: [
-          { value: 'with', label: 'С постами' },
-          { value: 'without', label: 'Без постов' },
+          { value: 'with', label: t('pages.washes.filters.withPosts') },
+          { value: 'without', label: t('pages.washes.filters.withoutPosts') },
         ],
         match: (w, value) => {
           const count = postCountByWash[w.id] || 0;
@@ -117,14 +119,14 @@ export function WashesPage() {
         },
       },
     ],
-    [postCountByWash]
+    [postCountByWash, t]
   );
 
   const columns: DataTableColumn<Wash>[] = useMemo(
     () => [
       {
         key: 'name',
-        header: 'Название объекта',
+        header: t('pages.washes.columns.objectName'),
         sortable: true,
         searchValue: (w) => `${w.name} ${w.description || ''}`,
         sortValue: (w) => w.name,
@@ -137,7 +139,7 @@ export function WashesPage() {
       },
       {
         key: 'address',
-        header: 'Адрес',
+        header: t('pages.washes.columns.address'),
         sortable: true,
         searchValue: (w) => w.address,
         sortValue: (w) => w.address,
@@ -145,14 +147,14 @@ export function WashesPage() {
       },
       {
         key: 'posts',
-        header: 'Количество постов',
+        header: t('pages.washes.columns.postsCount'),
         sortable: true,
         sortValue: (w) => postCountByWash[w.id] || 0,
         render: (w) => postCountByWash[w.id] || 0,
       },
       {
         key: 'createdAt',
-        header: 'Дата создания',
+        header: t('pages.washes.columns.createdAt'),
         sortable: true,
         sortValue: (w) => w.createdAt || w.registeredAt || '',
         searchValue: (w) => formatDateTime(w.createdAt || w.registeredAt),
@@ -169,7 +171,7 @@ export function WashesPage() {
                     type="button"
                     className="btn-secondary !px-2 !py-1"
                     onClick={() => openEdit(w)}
-                    title="Изменить"
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -177,7 +179,7 @@ export function WashesPage() {
                     type="button"
                     className="btn-secondary !px-2 !py-1 text-red-600"
                     onClick={() => handleDelete(w.id)}
-                    title="Удалить"
+                    title={t('common.delete')}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -187,32 +189,32 @@ export function WashesPage() {
           ]
         : []),
     ],
-    [canEdit, postCountByWash]
+    [canEdit, postCountByWash, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<Wash>[] => {
     const actions: DataTableBulkAction<Wash>[] = [
       createExportBulkAction('washes.csv', [
-        { header: 'Название', value: (w) => w.name },
-        { header: 'Адрес', value: (w) => w.address },
-        { header: 'Описание', value: (w) => w.description || '' },
-        { header: 'Постов', value: (w) => String(postCountByWash[w.id] || 0) },
-        { header: 'Дата создания', value: (w) => w.createdAt || w.registeredAt || '' },
+        { header: t('pages.washes.export.name'), value: (w) => w.name },
+        { header: t('pages.washes.export.address'), value: (w) => w.address },
+        { header: t('pages.washes.export.description'), value: (w) => w.description || '' },
+        { header: t('pages.washes.export.posts'), value: (w) => String(postCountByWash[w.id] || 0) },
+        { header: t('pages.washes.export.createdAt'), value: (w) => w.createdAt || w.registeredAt || '' },
       ]),
     ];
     if (canEdit) {
       actions.push({
         id: 'delete',
-        label: 'Удалить',
+        label: t('common.delete'),
         variant: 'danger',
         confirmMessage: (_rows, ids) =>
-          `Удалить ${ids.length} автомоек и все связанные данные?\n\nПосты, состояния, карты, статистика, телеметрия и уведомления будут удалены безвозвратно.`,
+          t('pages.washes.confirmDeleteMany', { count: ids.length }),
         onAction: async (_rows, ids) => {
           setError('');
           setNotice('');
           try {
             const results = await bulkDeleteWashes(ids, (current, total) => {
-              setDeleteProgress(`Удаление ${current} из ${total}…`);
+              setDeleteProgress(t('pages.washes.deletingProgress', { current, total }));
             });
             setDeleteProgress('');
             setNotice(formatWashDeleteSummary(results));
@@ -220,14 +222,14 @@ export function WashesPage() {
             await refresh();
           } catch (err) {
             setDeleteProgress('');
-            setError(err instanceof Error ? err.message : 'Ошибка удаления');
+            setError(err instanceof Error ? err.message : t('pages.washes.deleteError'));
             throw err;
           }
         },
       });
     }
     return actions;
-  }, [canEdit, postCountByWash, refresh]);
+  }, [canEdit, postCountByWash, refresh, t]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -250,7 +252,7 @@ export function WashesPage() {
       clearCatalogCache('/crm/washes');
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     }
   };
 
@@ -259,9 +261,9 @@ export function WashesPage() {
   return (
     <div>
       <PageHeader
-        title="Автомойки самообслуживания"
-        subtitle="Управление автомойками самообслуживания"
-        actions={canEdit && <button className="btn-primary" onClick={openCreate}><Plus size={16} /> Добавить</button>}
+        title={t('pages.washes.title')}
+        subtitle={t('pages.washes.subtitle')}
+        actions={canEdit && <button className="btn-primary" onClick={openCreate}><Plus size={16} /> {t('pages.washes.add')}</button>}
       />
       {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
       {deleteProgress && (
@@ -281,16 +283,16 @@ export function WashesPage() {
         data={data?.washes || []}
         rowKey={(w) => w.id}
         filters={filters}
-        searchPlaceholder="Поиск автомоек…"
+        searchPlaceholder={t('pages.washes.searchPlaceholder')}
         bulkActions={bulkActions}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать автомойку' : 'Новая автомойка'}>
+      <Modal open={modal} onClose={() => setModal(false)} title={editId ? t('pages.washes.editTitle') : t('pages.washes.newTitle')}>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div><label className="label">Название</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-          <div><label className="label">Описание</label><input className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div><label className="label">Адрес</label><input className="input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required /></div>
-          <button type="submit" className="btn-primary w-full">Сохранить</button>
+          <div><label className="label">{t('common.title')}</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+          <div><label className="label">{t('pages.washes.description')}</label><input className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+          <div><label className="label">{t('pages.washes.address')}</label><input className="input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required /></div>
+          <button type="submit" className="btn-primary w-full">{t('common.save')}</button>
         </form>
       </Modal>
     </div>

@@ -1,15 +1,17 @@
 import clsx from 'clsx';
 import { Pause, Radio } from 'lucide-react';
 import { useLiveMode } from '../context/LiveModeContext';
+import { useLocale } from '../i18n/LocaleContext';
 
 export function LiveModeIndicator() {
   const { liveEnabled, setLiveEnabled } = useLiveMode();
+  const { t } = useLocale();
 
   return (
     <div
       className="flex items-center rounded-lg border border-panel-border bg-panel-surface p-0.5 text-xs dark:border-panel-border-dark dark:bg-panel-bg-dark"
       role="group"
-      aria-label="Режим обновления данных"
+      aria-label={t('liveModeIndicator.groupLabel')}
     >
       <button
         type="button"
@@ -20,7 +22,7 @@ export function LiveModeIndicator() {
             ? 'bg-brand-500/15 text-brand-700 dark:bg-brand-400/20 dark:text-brand-300'
             : 'text-panel-muted hover:text-panel-ink dark:hover:text-panel-ink-dark'
         )}
-        title="Автообновление данных"
+        title={t('liveModeIndicator.liveTitle')}
         aria-pressed={liveEnabled}
       >
         {liveEnabled && (
@@ -41,11 +43,11 @@ export function LiveModeIndicator() {
             ? 'bg-panel-canvas text-panel-ink dark:bg-white/10 dark:text-panel-ink-dark'
             : 'text-panel-muted hover:text-panel-ink dark:hover:text-panel-ink-dark'
         )}
-        title="Данные не обновляются автоматически"
+        title={t('liveModeIndicator.staticTitle')}
         aria-pressed={!liveEnabled}
       >
         <Pause size={14} strokeWidth={2} className="opacity-70" />
-        <span className="hidden sm:inline">Статика</span>
+        <span className="hidden sm:inline">{t('live.static')}</span>
       </button>
     </div>
   );

@@ -1,3 +1,5 @@
+import { tGlobal } from '../i18n/runtime';
+
 export interface CsvColumn<T> {
   header: string;
   value: (row: T) => string;
@@ -28,7 +30,7 @@ export function createExportBulkAction<T>(
 } {
   return {
     id: 'export-csv',
-    label: 'Экспорт CSV',
+    label: tGlobal('export.csvLabel'),
     onAction: (rows) => exportToCsv(filename, rows, columns),
   };
 }

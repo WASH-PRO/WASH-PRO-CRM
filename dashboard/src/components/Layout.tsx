@@ -19,7 +19,7 @@ import { LiveModeProvider } from '../context/LiveModeContext';
 import { LiveModeIndicator } from './LiveModeIndicator';
 import { EmbeddedServicesSidebar } from './EmbeddedServicesSidebar';
 import { breadcrumbsFromPath } from '../utils/breadcrumbs';
-import { navGroups } from '../utils/navRoutes';
+import { getNavGroups } from '../utils/navRoutes';
 import { canManageSystemSetup, setupRoleHint } from '../utils/setupPermissions';
 import { BreadcrumbProvider, useBreadcrumbLastLabelOverride } from '../context/BreadcrumbContext';
 import { SoftwareUpdatesProvider } from '../context/SoftwareUpdatesContext';
@@ -27,9 +27,12 @@ import { BrandLogo } from './BrandLogo';
 import { UpdateBanner } from './UpdateBanner';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { Loading } from './UI';
+import { LanguageToggle } from './LanguageToggle';
+import { useLocale } from '../i18n/LocaleContext';
 
 function LayoutInner() {
   const { user, logout, isAdmin } = useAuth();
+  const { t } = useLocale();
   const { unreadCount } = useUnreadNotifications();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -42,23 +45,23 @@ function LayoutInner() {
 
   const filteredGroups = useMemo(
     () =>
-      navGroups
+      getNavGroups(t)
         .map((group) => ({
           ...group,
           items: group.items.filter((item) => !item.admin || isAdmin),
         }))
         .filter((group) => group.items.length > 0),
-    [isAdmin]
+    [isAdmin, t]
   );
 
   const lastCrumbLabel = useBreadcrumbLastLabelOverride();
   const crumbs = useMemo(() => {
-    const items = breadcrumbsFromPath(location.pathname);
+    const items = breadcrumbsFromPath(location.pathname, t);
     if (!lastCrumbLabel || items.length === 0) return items;
     return items.map((item, i) =>
       i === items.length - 1 ? { ...item, label: lastCrumbLabel } : item
     );
-  }, [location.pathname, lastCrumbLabel]);
+  }, [location.pathname, lastCrumbLabel, t]);
 
   return (
       <div
@@ -83,7 +86,7 @@ function LayoutInner() {
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-panel-ink dark:text-white">WASH PRO CRM</div>
-              <div className="truncate text-[11px] text-panel-muted dark:text-slate-500">SCADA · Управление</div>
+              <div className="truncate text-[11px] text-panel-muted dark:text-slate-500">{t('layout.sidebarSubtitle')}</div>
             </div>
           )}
         </div>
@@ -120,10 +123,10 @@ function LayoutInner() {
             to={setupHref}
             onClick={() => setMobileOpen(false)}
             className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
-            title={collapsed ? 'Мастер настроек' : undefined}
+            title={collapsed ? t('layout.setupWizard') : undefined}
           >
             <Wand2 size={18} strokeWidth={1.75} className="shrink-0" />
-            {!collapsed && <span className="truncate">Мастер настроек</span>}
+            {!collapsed && <span className="truncate">{t('layout.setupWizard')}</span>}
           </Link>
 
           <EmbeddedServicesSidebar collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
@@ -132,10 +135,10 @@ function LayoutInner() {
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             className={clsx('nav-item hidden w-full lg:flex', collapsed && 'justify-center px-2')}
-            title={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
+            title={collapsed ? t('layout.expandMenu') : t('layout.collapseMenu')}
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-            {!collapsed && <span>Свернуть меню</span>}
+            {!collapsed && <span>{t('layout.collapseMenu')}</span>}
           </button>
         </div>
 
@@ -143,7 +146,7 @@ function LayoutInner() {
           <div
             role="separator"
             aria-orientation="vertical"
-            aria-label="Изменить ширину меню"
+            aria-label={t('layout.resizeMenu')}
             onMouseDown={startResize}
             className={clsx(
               'absolute inset-y-0 right-0 z-50 hidden w-1.5 translate-x-1/2 cursor-col-resize touch-none lg:block',
@@ -169,7 +172,7 @@ function LayoutInner() {
               type="button"
               className="btn-icon lg:hidden"
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Меню"
+              aria-label={t('layout.menu')}
             >
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -177,7 +180,7 @@ function LayoutInner() {
             <Link
               to="/profile"
               className="flex min-w-0 shrink-0 items-center gap-3 rounded-lg transition-colors hover:bg-panel-canvas/80 dark:hover:bg-white/[0.04]"
-              title="Мой профиль"
+              title={t('layout.myProfile')}
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-brand-500/35 bg-transparent text-xs font-semibold text-brand-700 dark:border-brand-400/40 dark:text-brand-300">
                 {userInitials(user?.name, user?.login)}
@@ -187,7 +190,7 @@ function LayoutInner() {
                   {user?.name || user?.login}
                 </div>
                 <div className="truncate text-[11px] text-panel-muted dark:text-panel-muted-dark">
-                  {isAdmin ? 'Администратор' : setupRoleHint(user)}
+                  {isAdmin ? t('layout.adminRole') : setupRoleHint(user)}
                 </div>
               </div>
             </Link>
@@ -196,17 +199,18 @@ function LayoutInner() {
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <LiveModeIndicator />
-              <Link to="/notifications" className="btn-icon relative" title="Уведомления">
+              <Link to="/notifications" className="btn-icon relative" title={t('layout.notifications')}>
                 <Bell size={18} />
                 {unreadCount > 0 && (
                   <span
                     className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-panel-surface dark:ring-panel-bg-dark"
-                    aria-label={`Непрочитанных: ${unreadCount}`}
+                    aria-label={t('layout.unread', { count: unreadCount })}
                   />
                 )}
               </Link>
+              <LanguageToggle />
               <ThemeToggle />
-              <button type="button" onClick={() => logout()} className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-500" title="Выход">
+              <button type="button" onClick={() => logout()} className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-500" title={t('layout.logout')}>
                 <LogOut size={18} />
               </button>
             </div>
@@ -216,7 +220,7 @@ function LayoutInner() {
 
           <main className="page-main">
             <div className="page-body">
-              <nav className="breadcrumb-nav" aria-label="Навигация">
+              <nav className="breadcrumb-nav" aria-label={t('layout.breadcrumbs')}>
                 {crumbs.map((crumb, i) => (
                   <span key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
                     {i > 0 && <ChevronRight size={14} className="shrink-0 text-panel-muted" />}

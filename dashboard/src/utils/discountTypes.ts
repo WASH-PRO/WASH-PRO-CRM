@@ -1,9 +1,17 @@
 import type { DiscountType } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
-export const DISCOUNT_TYPE_STATUS_LABELS: Record<NonNullable<DiscountType['status']>, string> = {
-  active: 'Активен',
-  inactive: 'Неактивен',
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+
+export function getDiscountTypeStatusLabels(t: TranslateFn): Record<NonNullable<DiscountType['status']>, string> {
+  return {
+    active: t('discountTypes.status.active'),
+    inactive: t('discountTypes.status.inactive'),
+  };
+}
+
+export const DISCOUNT_TYPE_STATUS_LABELS: Record<NonNullable<DiscountType['status']>, string> =
+  getDiscountTypeStatusLabels(tGlobal);
 
 export function discountTypeStatus(type: DiscountType): NonNullable<DiscountType['status']> {
   return type.status ?? 'active';

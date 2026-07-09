@@ -8,7 +8,8 @@ import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, Badge, ErrorMessage } from '../components/UI';
 import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { DapGroup, Permission } from '../types';
-import { ALL_PERMISSIONS, entityId, PERMISSION_LABELS } from '../utils/rbac';
+import { ALL_PERMISSIONS, entityId, getPermissionLabels } from '../utils/rbac';
+import { useLocale } from '../i18n/LocaleContext';
 
 const emptyForm = {
   name: '',
@@ -17,8 +18,10 @@ const emptyForm = {
 };
 
 export function GroupsPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('manage_users');
+  const permissionLabels = useMemo(() => getPermissionLabels(t), [t]);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
@@ -57,10 +60,10 @@ export function GroupsPage() {
 
   const handleDelete = async (g: DapGroup) => {
     if (g.isSystem) {
-      alert('Системную группу нельзя удалить');
+      alert(t('pages.groups.errors.cannotDeleteSystem'));
       return;
     }
-    if (!confirm(`Удалить группу «${g.name}»?`)) return;
+    if (!confirm(t('pages.groups.confirmDelete', { name: g.name }))) return;
     await api(`/groups/${entityId(g)}`, { method: 'DELETE' });
     refresh();
   };
@@ -68,7 +71,7 @@ export function GroupsPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.permissions.length) {
-      setFormError('Выберите хотя бы одно право');
+      setFormError(t('pages.groups.errors.permissionRequired'));
       return;
     }
     setSaving(true);
@@ -87,7 +90,7 @@ export function GroupsPage() {
       setModal(false);
       refresh();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setFormError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -97,28 +100,28 @@ export function GroupsPage() {
     () => [
       {
         id: 'type',
-        label: 'Тип',
+        label: t('pages.groups.type'),
         options: [
-          { value: 'system', label: 'Системная' },
-          { value: 'custom', label: 'Пользовательская' },
+          { value: 'system', label: t('pages.groups.system') },
+          { value: 'custom', label: t('pages.groups.custom') },
         ],
         match: (g, value) => (value === 'system' ? !!g.isSystem : !g.isSystem),
       },
       {
         id: 'permission',
-        label: 'Право',
-        options: ALL_PERMISSIONS.map((p) => ({ value: p, label: PERMISSION_LABELS[p] ?? p })),
+        label: t('pages.groups.permission'),
+        options: ALL_PERMISSIONS.map((p) => ({ value: p, label: permissionLabels[p] ?? p })),
         match: (g, value) => (g.permissions ?? []).includes(value as Permission),
       },
     ],
-    []
+    [permissionLabels, t]
   );
 
   const columns: DataTableColumn<DapGroup>[] = useMemo(
     () => [
       {
         key: 'name',
-        header: 'Группа',
+        header: t('pages.groups.group'),
         sortable: true,
         searchValue: (g) => `${g.name} ${g.description ?? ''}`,
         sortValue: (g) => g.name,
@@ -126,7 +129,7 @@ export function GroupsPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium">{g.name}</span>
-              {g.isSystem && <Badge variant="default">Системная</Badge>}
+              {g.isSystem && <Badge variant="default">{t('pages.groups.system')}</Badge>}
             </div>
             {g.description && (
               <div className="text-xs text-panel-muted dark:text-panel-muted-dark">{g.description}</div>
@@ -136,15 +139,15 @@ export function GroupsPage() {
       },
       {
         key: 'permissions',
-        header: 'Права доступа',
+        header: t('pages.groups.accessPermissions'),
         sortable: true,
         sortValue: (g) => (g.permissions ?? []).join(','),
-        searchValue: (g) => (g.permissions ?? []).map((p) => PERMISSION_LABELS[p] ?? p).join(' '),
+        searchValue: (g) => (g.permissions ?? []).map((p) => permissionLabels[p] ?? p).join(' '),
         render: (g) => (
           <div className="flex flex-wrap gap-1">
             {(g.permissions ?? []).map((p) => (
               <span key={p} className="rounded bg-brand-600/10 px-1.5 py-0.5 text-[11px] text-brand-700 dark:text-brand-300">
-                {PERMISSION_LABELS[p] ?? p}
+                {permissionLabels[p] ?? p}
               </span>
             ))}
           </div>
@@ -161,7 +164,7 @@ export function GroupsPage() {
                     type="button"
                     className="btn-secondary !px-2 !py-1"
                     onClick={() => openEdit(g)}
-                    title="Изменить"
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -170,7 +173,7 @@ export function GroupsPage() {
                       type="button"
                       className="btn-secondary !px-2 !py-1 text-red-600"
                       onClick={() => void handleDelete(g)}
-                      title="Удалить"
+                      title={t('common.delete')}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -181,7 +184,7 @@ export function GroupsPage() {
           ]
         : []),
     ],
-    [canEdit]
+    [canEdit, permissionLabels, t]
   );
 
   if (loading && !groups) return <Loading />;
@@ -189,12 +192,12 @@ export function GroupsPage() {
   return (
     <div>
       <PageHeader
-        title="Группы и права"
-        subtitle="Роли пользователей и матрица прав доступа (RBAC)"
+        title={t('nav.items.groups')}
+        subtitle={t('pages.groups.subtitle')}
         actions={
           canEdit && (
             <button type="button" className="btn-primary" onClick={openCreate}>
-              <Plus size={16} /> Добавить группу
+              <Plus size={16} /> {t('pages.groups.add')}
             </button>
           )
         }
@@ -210,27 +213,31 @@ export function GroupsPage() {
         data={groups ?? []}
         rowKey={(g) => entityId(g)}
         filters={filters}
-        searchPlaceholder="Поиск групп…"
+        searchPlaceholder={t('pages.groups.searchPlaceholder')}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать группу' : 'Новая группа'}>
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        title={editId ? t('pages.groups.editGroup') : t('pages.groups.newGroup')}
+      >
         <form onSubmit={handleSubmit} className="space-y-3">
           {formError && <p className="text-sm text-red-600">{formError}</p>}
           <div>
-            <label className="label">Название</label>
+            <label className="label">{t('pages.groups.name')}</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div>
-            <label className="label">Описание</label>
+            <label className="label">{t('pages.groups.description')}</label>
             <input
               className="input"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Необязательно"
+              placeholder={t('pages.groups.optional')}
             />
           </div>
           <div>
-            <label className="label mb-2">Права доступа</label>
+            <label className="label mb-2">{t('pages.groups.accessPermissions')}</label>
             <div className="grid gap-2 sm:grid-cols-2">
               {ALL_PERMISSIONS.map((perm) => (
                 <label
@@ -244,7 +251,7 @@ export function GroupsPage() {
                     onChange={() => togglePermission(perm)}
                   />
                   <span>
-                    <span className="font-medium">{PERMISSION_LABELS[perm]}</span>
+                    <span className="font-medium">{permissionLabels[perm]}</span>
                     <span className="mt-0.5 block font-mono text-[10px] text-panel-muted">{perm}</span>
                   </span>
                 </label>
@@ -252,7 +259,7 @@ export function GroupsPage() {
             </div>
           </div>
           <button type="submit" className="btn-primary w-full" disabled={saving}>
-            {saving ? 'Сохранение…' : 'Сохранить'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </form>
       </Modal>

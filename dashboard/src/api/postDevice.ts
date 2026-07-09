@@ -1,10 +1,11 @@
 import { fetchWithAuth } from './client';
 import type { DeviceCommandKey } from '../utils/postDevice';
+import { tGlobal } from '../i18n/runtime';
 
 async function parseJson<T>(res: Response): Promise<T> {
   const json = (await res.json()) as { success?: boolean; error?: string; data?: T };
   if (!res.ok || json.success === false) {
-    throw new Error(json.error || res.statusText || 'Ошибка запроса');
+    throw new Error(json.error || res.statusText || tGlobal('errors.requestFailed', { status: res.status }));
   }
   return json.data as T;
 }

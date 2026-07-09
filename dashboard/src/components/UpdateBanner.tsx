@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { applyUpdate, dismissUpdate } from '../api/updates';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 
 function stepBarClass(status: string): string {
   if (status === 'completed') return 'bg-brand-500';
@@ -14,6 +15,7 @@ function stepBarClass(status: string): string {
 }
 
 export function UpdateBanner() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canManageUpdates = hasPermission('manage_users', 'manage_api');
   const ctx = useSoftwareUpdatesContext();
@@ -34,10 +36,10 @@ export function UpdateBanner() {
           <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-brand-600 dark:text-brand-400" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium text-brand-900 dark:text-brand-100">
-              Обновление {job.component}: v{job.fromVersion} → v{job.targetVersion}
+              {t('updateBanner.jobTitle', { component: job.component, from: job.fromVersion, to: job.targetVersion })}
             </div>
             <div className="mt-0.5 text-xs text-brand-800/90 dark:text-brand-200/80">
-              {runningStep ? runningStep.label : 'Подготовка…'}
+              {runningStep ? runningStep.label : t('updateBanner.preparing')}
               {runningStep?.message ? ` — ${runningStep.message}` : ''}
             </div>
             <div className="mt-2 flex gap-1">
@@ -51,7 +53,7 @@ export function UpdateBanner() {
             </div>
           </div>
           <Link to="/settings#updates" className="shrink-0 text-xs font-medium text-brand-700 hover:underline dark:text-brand-300">
-            Подробнее
+            {t('updateBanner.details')}
           </Link>
         </div>
       </div>
@@ -71,16 +73,16 @@ export function UpdateBanner() {
 
   const onApply = async () => {
     if (!status.executorAvailable) {
-      alert(status.executorReason || 'Автообновление недоступно');
+      alert(status.executorReason || t('updates.autoUnavailable'));
       return;
     }
-    if (!confirm(`Обновить ${primary.label} до v${primary.latestVersion}? Сервисы перезапустятся.`)) return;
+    if (!confirm(t('updateBanner.confirmUpdate', { component: primary.label, version: primary.latestVersion ?? '' }))) return;
     setApplying(true);
     try {
       await applyUpdate(primary.id, primary.latestTag || undefined);
       await refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Ошибка обновления');
+      alert(err instanceof Error ? err.message : t('updateBanner.updateError'));
     } finally {
       setApplying(false);
     }
@@ -92,23 +94,23 @@ export function UpdateBanner() {
         <ArrowUpCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium text-amber-950 dark:text-amber-100">
-            Доступно обновление: {primary.label} v{primary.latestVersion}
-            {pending.length > 1 && ` (+${pending.length - 1} компонентов)`}
+            {t('updateBanner.available', { component: primary.label, version: primary.latestVersion ?? '' })}
+            {pending.length > 1 && ` (+${pending.length - 1} ${t('updateBanner.components')})`}
           </div>
           <div className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-200/80">
-            Установлено v{primary.currentVersion}. Обновления загружаются с GitHub.
+            {t('updateBanner.installed', { version: primary.currentVersion })}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {status.executorAvailable && (
             <button type="button" className="btn-primary btn-sm" disabled={applying} onClick={() => void onApply()}>
-              {applying ? 'Запуск…' : 'Обновить'}
+              {applying ? t('updates.starting') : t('updates.update')}
             </button>
           )}
           <Link to="/settings#updates" className="btn-secondary btn-sm">
-            Все обновления
+            {t('updateBanner.allUpdates')}
           </Link>
-          <button type="button" className="btn-icon !h-8 !w-8" title="Скрыть" onClick={() => void onDismiss()}>
+          <button type="button" className="btn-icon !h-8 !w-8" title={t('updateBanner.hide')} onClick={() => void onDismiss()}>
             <X size={14} />
           </button>
         </div>

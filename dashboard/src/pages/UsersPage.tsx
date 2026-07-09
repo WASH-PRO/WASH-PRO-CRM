@@ -9,8 +9,9 @@ import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, Badge, ErrorMessage } from '../components/UI';
 import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { DapUser } from '../types';
-import { entityId, USER_STATUS_LABELS } from '../utils/rbac';
+import { entityId, getUserStatusLabels } from '../utils/rbac';
 import { formatDateTime } from '../utils/format';
+import { useLocale } from '../i18n/LocaleContext';
 
 const emptyForm = {
   login: '',
@@ -23,8 +24,11 @@ const emptyForm = {
 };
 
 export function UsersPage() {
+  const { t } = useLocale();
   const { hasPermission, user: currentUser } = useAuth();
   const canEdit = hasPermission('manage_users');
+  const userStatusLabels = useMemo(() => getUserStatusLabels(t), [t]);
+
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
@@ -92,10 +96,10 @@ export function UsersPage() {
   const handleDelete = async (u: DapUser) => {
     const id = entityId(u);
     if (id === entityId(currentUser ?? {})) {
-      alert('Нельзя удалить текущего пользователя');
+      alert(t('pages.users.errors.cannotDeleteCurrent'));
       return;
     }
-    if (!confirm(`Удалить пользователя «${u.login}»?`)) return;
+    if (!confirm(t('pages.users.confirmDelete', { login: u.login }))) return;
     await api(`/users/${id}`, { method: 'DELETE' });
     refresh();
   };
@@ -116,7 +120,7 @@ export function UsersPage() {
       if (telegramRaw) {
         const telegramUserId = Number(telegramRaw);
         if (!Number.isInteger(telegramUserId) || telegramUserId <= 0) {
-          setFormError('Telegram user_id должен быть положительным целым числом');
+          setFormError(t('pages.users.errors.invalidTelegramUserId'));
           return;
         }
         body.telegramUserId = telegramUserId;
@@ -130,7 +134,7 @@ export function UsersPage() {
         await api(`/users/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
       } else {
         if (!form.password.trim()) {
-          setFormError('Укажите пароль для нового пользователя');
+          setFormError(t('pages.users.errors.passwordRequired'));
           return;
         }
         await api('/users', { method: 'POST', body: JSON.stringify(body) });
@@ -138,7 +142,7 @@ export function UsersPage() {
       setModal(false);
       refresh();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setFormError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -148,28 +152,28 @@ export function UsersPage() {
     () => [
       {
         id: 'status',
-        label: 'Статус',
+        label: t('common.status'),
         options: (['active', 'inactive', 'suspended'] as const).map((s) => ({
           value: s,
-          label: USER_STATUS_LABELS[s] ?? s,
+          label: userStatusLabels[s] ?? s,
         })),
         match: (u, value) => u.status === value,
       },
       {
         id: 'group',
-        label: 'Группа',
+        label: t('pages.users.group'),
         options: groups.map((g) => ({ value: entityId(g), label: g.name })),
         match: (u, value) => (u.groupIds ?? []).includes(value),
       },
     ],
-    [groups]
+    [groups, t, userStatusLabels]
   );
 
   const columns: DataTableColumn<DapUser>[] = useMemo(
     () => [
       {
         key: 'login',
-        header: 'Логин',
+        header: t('pages.users.login'),
         sortable: true,
         searchValue: (u) => `${u.login} ${u.name} ${u.email}`,
         sortValue: (u) => u.login,
@@ -203,18 +207,18 @@ export function UsersPage() {
       },
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (u) => u.status,
         render: (u) => (
           <Badge variant={u.status === 'active' ? 'success' : u.status === 'suspended' ? 'error' : 'default'}>
-            {USER_STATUS_LABELS[u.status] ?? u.status}
+            {userStatusLabels[u.status] ?? u.status}
           </Badge>
         ),
       },
       {
         key: 'groups',
-        header: 'Группы',
+        header: t('pages.users.groups'),
         sortable: true,
         sortValue: (u) => (u.groupIds ?? []).map((gid) => groupNameById.get(gid) ?? gid).join(','),
         searchValue: (u) => (u.groupIds ?? []).map((gid) => groupNameById.get(gid) ?? gid).join(' '),
@@ -237,7 +241,7 @@ export function UsersPage() {
       },
       {
         key: 'lastLoginAt',
-        header: 'Последний вход',
+        header: t('pages.users.lastLogin'),
         sortable: true,
         sortValue: (u) => u.lastLoginAt ?? '',
         render: (u) => (u.lastLoginAt ? formatDateTime(u.lastLoginAt) : '—'),
@@ -253,7 +257,7 @@ export function UsersPage() {
                     type="button"
                     className="btn-secondary !px-2 !py-1"
                     onClick={() => openEdit(u)}
-                    title="Изменить"
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -262,7 +266,7 @@ export function UsersPage() {
                     className="btn-secondary !px-2 !py-1 text-red-600"
                     disabled={entityId(u) === entityId(currentUser ?? {})}
                     onClick={() => void handleDelete(u)}
-                    title="Удалить"
+                    title={t('common.delete')}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -272,7 +276,7 @@ export function UsersPage() {
           ]
         : []),
     ],
-    [canEdit, groupNameById, currentUser]
+    [canEdit, groupNameById, currentUser, t, userStatusLabels]
   );
 
   if (loading && !data) return <Loading />;
@@ -280,12 +284,12 @@ export function UsersPage() {
   return (
     <div>
       <PageHeader
-        title="Пользователи"
-        subtitle="Учётные записи и назначение групп доступа"
+        title={t('nav.items.users')}
+        subtitle={t('pages.users.subtitle')}
         actions={
           canEdit && (
             <button type="button" className="btn-primary" onClick={openCreate}>
-              <Plus size={16} /> Добавить
+              <Plus size={16} /> {t('pages.users.add')}
             </button>
           )
         }
@@ -301,14 +305,18 @@ export function UsersPage() {
         data={users}
         rowKey={(u) => entityId(u)}
         filters={filters}
-        searchPlaceholder="Поиск пользователей…"
+        searchPlaceholder={t('pages.users.searchPlaceholder')}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать пользователя' : 'Новый пользователь'}>
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        title={editId ? t('pages.users.editUser') : t('pages.users.newUser')}
+      >
         <form onSubmit={handleSubmit} className="space-y-3">
           {formError && <p className="text-sm text-red-600">{formError}</p>}
           <div>
-            <label className="label">Логин</label>
+            <label className="label">{t('pages.users.login')}</label>
             <input
               className="input"
               value={form.login}
@@ -328,7 +336,7 @@ export function UsersPage() {
             />
           </div>
           <div>
-            <label className="label">Имя</label>
+            <label className="label">{t('pages.users.name')}</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div>
@@ -337,14 +345,16 @@ export function UsersPage() {
               className="input font-mono text-sm"
               value={form.telegramUserId}
               onChange={(e) => setForm({ ...form, telegramUserId: e.target.value.replace(/[^\d]/g, '') })}
-              placeholder="Например: 123456789"
+              placeholder={t('pages.users.telegramPlaceholder')}
             />
             <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
-              ID пользователя Telegram для входа в бота. Узнать можно у @userinfobot.
+              {t('pages.users.telegramHint')}
             </p>
           </div>
           <div>
-            <label className="label">Пароль {editId ? '(оставьте пустым, чтобы не менять)' : ''}</label>
+            <label className="label">
+              {t('pages.login.password')} {editId ? t('pages.users.passwordEditHint') : ''}
+            </label>
             <input
               className="input"
               type="password"
@@ -355,15 +365,15 @@ export function UsersPage() {
             />
           </div>
           <div>
-            <label className="label">Статус</label>
+            <label className="label">{t('common.status')}</label>
             <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as DapUser['status'] })}>
-              <option value="active">Активен</option>
-              <option value="inactive">Неактивен</option>
-              <option value="suspended">Заблокирован</option>
+              <option value="active">{userStatusLabels.active}</option>
+              <option value="inactive">{userStatusLabels.inactive}</option>
+              <option value="suspended">{userStatusLabels.suspended}</option>
             </select>
           </div>
           <div>
-            <label className="label mb-2">Группы доступа</label>
+            <label className="label mb-2">{t('pages.users.accessGroups')}</label>
             <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-panel-border p-3 dark:border-panel-border-dark">
               {groups.map((g) => {
                 const gid = entityId(g);
@@ -378,7 +388,7 @@ export function UsersPage() {
             </div>
           </div>
           <button type="submit" className="btn-primary w-full" disabled={saving}>
-            {saving ? 'Сохранение…' : 'Сохранить'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </form>
       </Modal>

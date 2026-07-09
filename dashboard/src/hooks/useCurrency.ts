@@ -4,7 +4,7 @@ import { usePolling } from './usePolling';
 import type { Currency } from '../types';
 import type { CurrencyConfig } from '../utils/format';
 
-const FALLBACK: CurrencyConfig = { code: 'RUB', name: 'Российский рубль', symbol: '₽' };
+const FALLBACK: CurrencyConfig = { code: 'RUB', name: 'Russian Ruble', symbol: '₽' };
 
 function toConfig(c: Currency): CurrencyConfig {
   return { code: c.code, name: c.name, symbol: c.symbol };

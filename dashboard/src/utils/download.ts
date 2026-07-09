@@ -1,8 +1,9 @@
 import { fetchWithAuth } from '../api/client';
+import { tGlobal } from '../i18n/runtime';
 
 async function downloadResponse(res: Response, filename: string): Promise<void> {
   if (!res.ok) {
-    throw new Error(`Ошибка загрузки (${res.status})`);
+    throw new Error(tGlobal('download.errors.load', { status: res.status }));
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -25,7 +26,7 @@ export async function deleteBackupFile(filename: string): Promise<void> {
     method: 'DELETE',
   });
   if (res.status !== 204 && res.status !== 404) {
-    throw new Error(`Не удалось удалить файл (${res.status})`);
+    throw new Error(tGlobal('download.errors.deleteFile', { status: res.status }));
   }
 }
 
@@ -39,7 +40,7 @@ export async function deleteArchiveFile(filename: string): Promise<void> {
     method: 'DELETE',
   });
   if (res.status !== 204 && res.status !== 404) {
-    throw new Error(`Не удалось удалить архив (${res.status})`);
+    throw new Error(tGlobal('download.errors.deleteArchive', { status: res.status }));
   }
 }
 

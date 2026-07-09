@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import type { LucideIcon } from 'lucide-react';
 import { resolveRouteIcon } from '../utils/navRoutes';
+import { useLocale } from '../i18n/LocaleContext';
+import { tGlobal } from '../i18n/runtime';
 export { CARD_STATUS_LABELS as cardStatusLabel } from '../utils/cards';
 
 export function PageHeader({
@@ -86,6 +88,7 @@ export function Badge({
 }
 
 export function Loading({ fullScreen = false }: { fullScreen?: boolean }) {
+  const { t } = useLocale();
   return (
     <div
       className={clsx(
@@ -94,14 +97,17 @@ export function Loading({ fullScreen = false }: { fullScreen?: boolean }) {
       )}
     >
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-      <span className="text-sm text-panel-muted dark:text-panel-muted-dark">Загрузка…</span>
+      <span className="text-sm text-panel-muted dark:text-panel-muted-dark">{t('common.loading')}</span>
     </div>
   );
 }
 
-export function Empty({ message = 'Нет данных' }: { message?: string }) {
+export function Empty({ message }: { message?: string }) {
+  const { t } = useLocale();
   return (
-    <div className="py-16 text-center text-sm text-panel-muted dark:text-panel-muted-dark">{message}</div>
+    <div className="py-16 text-center text-sm text-panel-muted dark:text-panel-muted-dark">
+      {message ?? t('common.noData')}
+    </div>
   );
 }
 
@@ -138,48 +144,60 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
   );
 }
 
-export const statusLabel: Record<string, string> = {
-  online: 'Онлайн',
-  offline: 'Офлайн',
-  error: 'Ошибка',
-  maintenance: 'Обслуживание',
-  in_progress: 'В процессе',
-  completed: 'Завершено',
-  failed: 'Ошибка',
-};
+export function getStatusLabelMap() {
+  return {
+    online: tGlobal('status.online'),
+    offline: tGlobal('status.offline'),
+    error: tGlobal('status.error'),
+    maintenance: tGlobal('status.maintenance'),
+    in_progress: tGlobal('status.inProgress'),
+    completed: tGlobal('status.completed'),
+    failed: tGlobal('status.failed'),
+  } as const;
+}
 
-export const periodLabel: Record<string, string> = {
-  before_collection: 'До инкассации',
-  after_collection: 'После инкассации',
-};
+export function getPeriodLabelMap() {
+  return {
+    before_collection: tGlobal('common.beforeCollection'),
+    after_collection: tGlobal('common.afterCollection'),
+  } as const;
+}
 
-export const categoryLabel: Record<string, string> = {
-  regular: 'Скидочные клиенты',
-  unlimited: 'VIP-обслуживание',
-  service: 'Сервисное обслуживание',
-};
+export function getCategoryLabelMap() {
+  return {
+    regular: tGlobal('cards.category.regular'),
+    unlimited: tGlobal('cards.category.unlimited'),
+    service: tGlobal('cards.category.service'),
+  } as const;
+}
 
-export const cardTypeLabel: Record<string, string> = {
-  regular: 'Скидочная',
-  unlimited: 'VIP',
-  service: 'Сервисная',
-};
+export function getCardTypeLabelMap() {
+  return {
+    regular: tGlobal('cards.type.regular'),
+    unlimited: tGlobal('cards.type.unlimited'),
+    service: tGlobal('cards.type.service'),
+  } as const;
+}
 
-export const logCategoryOptions = [
-  { value: '', label: 'Все категории' },
-  { value: 'api_call', label: 'API запросы' },
-  { value: 'error', label: 'API ответы / ошибки' },
-  { value: 'webhook_dispatch', label: 'Сетевые события' },
-  { value: 'cron_run', label: 'Фоновые задачи' },
-  { value: 'mcp_call', label: 'Внутренние системные' },
-  { value: 'login', label: 'Авторизация' },
-];
+export function getLogCategoryOptions() {
+  return [
+    { value: '', label: tGlobal('logs.categories.all') },
+    { value: 'api_call', label: tGlobal('logs.categories.apiCall') },
+    { value: 'error', label: tGlobal('logs.categories.error') },
+    { value: 'webhook_dispatch', label: tGlobal('logs.categories.webhookDispatch') },
+    { value: 'cron_run', label: tGlobal('logs.categories.cronRun') },
+    { value: 'mcp_call', label: tGlobal('logs.categories.mcpCall') },
+    { value: 'login', label: tGlobal('logs.categories.login') },
+  ];
+}
 
-export const logLevelOptions = [
-  { value: '', label: 'Все уровни' },
-  { value: 'Debug', label: 'Debug' },
-  { value: 'Info', label: 'Info' },
-  { value: 'Warning', label: 'Warning' },
-  { value: 'Error', label: 'Error' },
-  { value: 'Critical', label: 'Critical' },
-];
+export function getLogLevelOptions() {
+  return [
+    { value: '', label: tGlobal('logs.levels.all') },
+    { value: 'Debug', label: 'Debug' },
+    { value: 'Info', label: 'Info' },
+    { value: 'Warning', label: 'Warning' },
+    { value: 'Error', label: 'Error' },
+    { value: 'Critical', label: 'Critical' },
+  ];
+}

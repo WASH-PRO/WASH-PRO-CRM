@@ -5,11 +5,14 @@ import { useState } from 'react';
 import { useEmbeddedServices, type EmbeddedService, type ServiceStatus } from '../hooks/useEmbeddedServices';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { componentVersionLabel } from './SoftwareUpdatesSection';
+import { useLocale } from '../i18n/LocaleContext';
 
-const DOC_LINKS = [
-  { href: 'https://wash-pro.github.io/WASH-PRO-CRM/', label: 'Документация', icon: BookOpen },
-  { href: 'https://github.com/WASH-PRO/WASH-PRO-CRM', label: 'GitHub', icon: Github },
-] as const;
+function getDocLinks(t: (key: string, params?: Record<string, string | number>) => string) {
+  return [
+    { href: 'https://wash-pro.github.io/WASH-PRO-CRM/', label: t('embeddedServices.docs'), icon: BookOpen },
+    { href: 'https://github.com/WASH-PRO/WASH-PRO-CRM', label: 'GitHub', icon: Github },
+  ] as const;
+}
 
 const SERVICE_ICONS: Record<string, LucideIcon> = {
   'dynamic-api': Workflow,
@@ -27,14 +30,14 @@ function statusDot(status: ServiceStatus): string {
   }
 }
 
-function statusLabel(status: ServiceStatus): string {
+function statusLabel(status: ServiceStatus, t: (key: string, params?: Record<string, string | number>) => string): string {
   switch (status) {
     case 'online':
-      return 'Запущен';
+      return t('embeddedServices.status.online');
     case 'offline':
-      return 'Остановлен';
+      return t('embeddedServices.status.offline');
     default:
-      return 'Проверка…';
+      return t('embeddedServices.status.checking');
   }
 }
 
@@ -48,11 +51,13 @@ function ServiceRow({
   collapsed,
   onNavigate,
   versionHint,
+  t,
 }: {
   service: EmbeddedService;
   collapsed: boolean;
   onNavigate?: () => void;
   versionHint?: string | null;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const Icon = SERVICE_ICONS[service.id] ?? Workflow;
   const online = service.status === 'online';
@@ -62,7 +67,7 @@ function ServiceRow({
       href={service.panelUrl}
       target="_blank"
       rel="noopener noreferrer"
-      title={`${service.label} — ${statusLabel(service.status)}`}
+      title={`${service.label} — ${statusLabel(service.status, t)}`}
       onClick={onNavigate}
       className={clsx(
         'nav-item group',
@@ -93,7 +98,7 @@ function ServiceRow({
             )}
             <span className="flex items-center gap-1.5">
               <span className={clsx('h-1.5 w-1.5 rounded-full', statusDot(service.status))} aria-hidden />
-              <span className="text-[10px] text-panel-muted dark:text-slate-500">{statusLabel(service.status)}</span>
+              <span className="text-[10px] text-panel-muted dark:text-slate-500">{statusLabel(service.status, t)}</span>
             </span>
           </span>
         </>
@@ -103,9 +108,11 @@ function ServiceRow({
 }
 
 export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServicesSidebarProps) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const services = useEmbeddedServices();
   const updatesCtx = useSoftwareUpdatesContext();
+  const docLinks = getDocLinks(t);
 
   const toggle = () => setOpen((v) => !v);
 
@@ -116,7 +123,7 @@ export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServi
         onClick={toggle}
         aria-expanded={open}
         aria-controls="sidebar-resources-panel"
-        title="Ресурсы"
+        title={t('embeddedServices.resources')}
         className={clsx(
           'nav-item w-full',
           collapsed && 'justify-center px-2',
@@ -124,7 +131,7 @@ export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServi
         )}
       >
         <Menu size={18} strokeWidth={1.75} className="shrink-0" />
-        {!collapsed && <span className="truncate">Ресурсы</span>}
+        {!collapsed && <span className="truncate">{t('embeddedServices.resources')}</span>}
       </button>
 
       {open && (
@@ -142,12 +149,13 @@ export function EmbeddedServicesSidebar({ collapsed, onNavigate }: EmbeddedServi
                     ? componentVersionLabel(updatesCtx?.status ?? null, 'pyorchestrator')
                     : null
               }
+              t={t}
             />
           ))}
           {!collapsed && (
             <div className="mx-2 my-1 border-t border-panel-border dark:border-panel-sidebar-border" aria-hidden />
           )}
-          {DOC_LINKS.map(({ href, label, icon: Icon }) => (
+          {docLinks.map(({ href, label, icon: Icon }) => (
             <a
               key={href}
               href={href}

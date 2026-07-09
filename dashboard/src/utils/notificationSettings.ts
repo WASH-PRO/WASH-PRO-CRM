@@ -1,4 +1,5 @@
 import type { NotificationSettings } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   telegram: true,
@@ -40,101 +41,105 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   },
 };
 
-export const NOTIFICATION_EVENT_GROUPS: {
+export function getNotificationEventGroups(): {
   title: string;
   items: { key: keyof NonNullable<NotificationSettings['events']>; label: string }[];
-}[] = [
-  {
-    title: 'Система и сервисы',
-    items: [
-      { key: 'backupSuccess', label: 'Успешный бэкап' },
-      { key: 'backupError', label: 'Ошибка бэкапа' },
-      { key: 'archiveSuccess', label: 'Успешное архивирование' },
-      { key: 'archiveError', label: 'Ошибка архивирования' },
-      { key: 'autoTask', label: 'Автозадачи (бэкап, архив)' },
-      { key: 'queueOverflow', label: 'Переполнение очереди MQTT' },
-      { key: 'telegramBotCreated', label: 'Создан Telegram-бот' },
-      { key: 'telegramBotError', label: 'Ошибка Telegram-бота' },
-    ],
-  },
-  {
-    title: 'Пользователи и безопасность',
-    items: [
-      { key: 'userLogin', label: 'Вход в систему' },
-      { key: 'userLogout', label: 'Выход из системы' },
-      { key: 'userPasswordChanged', label: 'Смена пароля' },
-      { key: 'userCreated', label: 'Создание пользователя' },
-      { key: 'userUpdated', label: 'Изменение пользователя' },
-      { key: 'userDeleted', label: 'Удаление пользователя' },
-    ],
-  },
-  {
-    title: 'Справочники и объекты',
-    items: [
-      { key: 'washCreated', label: 'Создание автомойки' },
-      { key: 'washUpdated', label: 'Изменение автомойки' },
-      { key: 'washDeleted', label: 'Удаление автомойки' },
-      { key: 'postCreated', label: 'Создание поста' },
-      { key: 'postUpdated', label: 'Изменение поста' },
-      { key: 'postDeleted', label: 'Удаление поста' },
-      { key: 'settingsUpdated', label: 'Изменение настроек' },
-      { key: 'currencyCreated', label: 'Создание валюты' },
-      { key: 'currencyUpdated', label: 'Изменение валюты' },
-      { key: 'currencyDeleted', label: 'Удаление валюты' },
-      { key: 'discountTypeUpdated', label: 'Изменение типа скидки' },
-      { key: 'workModeUpdated', label: 'Изменение режима работы' },
-      { key: 'cardCreated', label: 'Создание карты' },
-      { key: 'cardUpdated', label: 'Изменение карты' },
-      { key: 'cardDeleted', label: 'Удаление карты' },
-    ],
-  },
-  {
-    title: 'Посты (телеметрия)',
-    items: [
-      { key: 'connectionLost', label: 'Потеря связи с постом' },
-      { key: 'equipmentError', label: 'Ошибка оборудования' },
-      { key: 'mqttCredit', label: 'Зачисление на пост' },
-      { key: 'mqttCollection', label: 'Инкассация' },
-    ],
-  },
-];
+}[] {
+  return [
+    {
+      title: tGlobal('notifications.groups.system'),
+      items: [
+        { key: 'backupSuccess', label: tGlobal('notifications.events.backupSuccess') },
+        { key: 'backupError', label: tGlobal('notifications.events.backupError') },
+        { key: 'archiveSuccess', label: tGlobal('notifications.events.archiveSuccess') },
+        { key: 'archiveError', label: tGlobal('notifications.events.archiveError') },
+        { key: 'autoTask', label: tGlobal('notifications.events.autoTask') },
+        { key: 'queueOverflow', label: tGlobal('notifications.events.queueOverflow') },
+        { key: 'telegramBotCreated', label: tGlobal('notifications.events.telegramBotCreated') },
+        { key: 'telegramBotError', label: tGlobal('notifications.events.telegramBotError') },
+      ],
+    },
+    {
+      title: tGlobal('notifications.groups.users'),
+      items: [
+        { key: 'userLogin', label: tGlobal('notifications.events.userLogin') },
+        { key: 'userLogout', label: tGlobal('notifications.events.userLogout') },
+        { key: 'userPasswordChanged', label: tGlobal('notifications.events.userPasswordChanged') },
+        { key: 'userCreated', label: tGlobal('notifications.events.userCreated') },
+        { key: 'userUpdated', label: tGlobal('notifications.events.userUpdated') },
+        { key: 'userDeleted', label: tGlobal('notifications.events.userDeleted') },
+      ],
+    },
+    {
+      title: tGlobal('notifications.groups.references'),
+      items: [
+        { key: 'washCreated', label: tGlobal('notifications.events.washCreated') },
+        { key: 'washUpdated', label: tGlobal('notifications.events.washUpdated') },
+        { key: 'washDeleted', label: tGlobal('notifications.events.washDeleted') },
+        { key: 'postCreated', label: tGlobal('notifications.events.postCreated') },
+        { key: 'postUpdated', label: tGlobal('notifications.events.postUpdated') },
+        { key: 'postDeleted', label: tGlobal('notifications.events.postDeleted') },
+        { key: 'settingsUpdated', label: tGlobal('notifications.events.settingsUpdated') },
+        { key: 'currencyCreated', label: tGlobal('notifications.events.currencyCreated') },
+        { key: 'currencyUpdated', label: tGlobal('notifications.events.currencyUpdated') },
+        { key: 'currencyDeleted', label: tGlobal('notifications.events.currencyDeleted') },
+        { key: 'discountTypeUpdated', label: tGlobal('notifications.events.discountTypeUpdated') },
+        { key: 'workModeUpdated', label: tGlobal('notifications.events.workModeUpdated') },
+        { key: 'cardCreated', label: tGlobal('notifications.events.cardCreated') },
+        { key: 'cardUpdated', label: tGlobal('notifications.events.cardUpdated') },
+        { key: 'cardDeleted', label: tGlobal('notifications.events.cardDeleted') },
+      ],
+    },
+    {
+      title: tGlobal('notifications.groups.posts'),
+      items: [
+        { key: 'connectionLost', label: tGlobal('notifications.events.connectionLost') },
+        { key: 'equipmentError', label: tGlobal('notifications.events.equipmentError') },
+        { key: 'mqttCredit', label: tGlobal('notifications.events.mqttCredit') },
+        { key: 'mqttCollection', label: tGlobal('notifications.events.mqttCollection') },
+      ],
+    },
+  ];
+}
 
-export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
-  connection_lost: 'Потеря связи',
-  equipment_error: 'Ошибка оборудования',
-  queue_overflow: 'Переполнение очереди',
-  backup_success: 'Бэкап выполнен',
-  backup_error: 'Ошибка бэкапа',
-  archive_success: 'Архивирование',
-  archive_error: 'Ошибка архива',
-  telegram_bot_created: 'Telegram-бот создан',
-  telegram_bot_error: 'Ошибка Telegram-бота',
-  user_login: 'Вход',
-  user_logout: 'Выход',
-  user_password_changed: 'Смена пароля',
-  user_created: 'Пользователь создан',
-  user_updated: 'Пользователь изменён',
-  user_deleted: 'Пользователь удалён',
-  wash_created: 'Автомойка создана',
-  wash_updated: 'Автомойка изменена',
-  wash_deleted: 'Автомойка удалена',
-  post_created: 'Пост создан',
-  post_updated: 'Пост изменён',
-  post_deleted: 'Пост удалён',
-  settings_updated: 'Настройки изменены',
-  currency_created: 'Валюта создана',
-  currency_updated: 'Валюта изменена',
-  currency_deleted: 'Валюта удалена',
-  discount_type_updated: 'Тип скидки изменён',
-  work_mode_updated: 'Режим работы изменён',
-  card_created: 'Карта создана',
-  card_updated: 'Карта изменена',
-  card_deleted: 'Карта удалена',
-  mqtt_credit: 'Зачисление на пост',
-  mqtt_collection: 'Инкассация',
-  auto_backup: 'Автобэкап',
-  auto_archive: 'Автоархив',
-};
+export function getNotificationTypeLabels(): Record<string, string> {
+  return {
+    connection_lost: tGlobal('notifications.types.connectionLost'),
+    equipment_error: tGlobal('notifications.types.equipmentError'),
+    queue_overflow: tGlobal('notifications.types.queueOverflow'),
+    backup_success: tGlobal('notifications.types.backupSuccess'),
+    backup_error: tGlobal('notifications.types.backupError'),
+    archive_success: tGlobal('notifications.types.archiveSuccess'),
+    archive_error: tGlobal('notifications.types.archiveError'),
+    telegram_bot_created: tGlobal('notifications.types.telegramBotCreated'),
+    telegram_bot_error: tGlobal('notifications.types.telegramBotError'),
+    user_login: tGlobal('notifications.types.userLogin'),
+    user_logout: tGlobal('notifications.types.userLogout'),
+    user_password_changed: tGlobal('notifications.types.userPasswordChanged'),
+    user_created: tGlobal('notifications.types.userCreated'),
+    user_updated: tGlobal('notifications.types.userUpdated'),
+    user_deleted: tGlobal('notifications.types.userDeleted'),
+    wash_created: tGlobal('notifications.types.washCreated'),
+    wash_updated: tGlobal('notifications.types.washUpdated'),
+    wash_deleted: tGlobal('notifications.types.washDeleted'),
+    post_created: tGlobal('notifications.types.postCreated'),
+    post_updated: tGlobal('notifications.types.postUpdated'),
+    post_deleted: tGlobal('notifications.types.postDeleted'),
+    settings_updated: tGlobal('notifications.types.settingsUpdated'),
+    currency_created: tGlobal('notifications.types.currencyCreated'),
+    currency_updated: tGlobal('notifications.types.currencyUpdated'),
+    currency_deleted: tGlobal('notifications.types.currencyDeleted'),
+    discount_type_updated: tGlobal('notifications.types.discountTypeUpdated'),
+    work_mode_updated: tGlobal('notifications.types.workModeUpdated'),
+    card_created: tGlobal('notifications.types.cardCreated'),
+    card_updated: tGlobal('notifications.types.cardUpdated'),
+    card_deleted: tGlobal('notifications.types.cardDeleted'),
+    mqtt_credit: tGlobal('notifications.types.mqttCredit'),
+    mqtt_collection: tGlobal('notifications.types.mqttCollection'),
+    auto_backup: tGlobal('notifications.types.autoBackup'),
+    auto_archive: tGlobal('notifications.types.autoArchive'),
+  };
+}
 
 export function isWebNotification(notification: { channels?: string[] }): boolean {
   if (!notification.channels?.length) return true;

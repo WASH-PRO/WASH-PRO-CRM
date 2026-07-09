@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { BrandLogo } from '../components/BrandLogo';
+import { useLocale } from '../i18n/LocaleContext';
 
 function LoginField({
   id,
@@ -41,6 +42,7 @@ function LoginField({
 }
 
 export function LoginPage() {
+  const { t } = useLocale();
   const { user, login, loading } = useAuth();
   const [loginName, setLoginName] = useState('');
   const [password, setPassword] = useState('');
@@ -56,7 +58,7 @@ export function LoginPage() {
     try {
       await login(loginName, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка входа');
+      setError(err instanceof Error ? err.message : t('errors.loginFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -93,11 +95,10 @@ export function LoginPage() {
               <span className="text-lg font-bold text-white">WASH PRO CRM</span>
             </div>
             <h2 className="max-w-md text-3xl font-bold leading-tight tracking-tight text-white xl:text-4xl">
-              Управление автомойками в реальном времени
+              {t('pages.login.heroTitle')}
             </h2>
             <p className="mt-6 max-w-lg text-sm leading-relaxed text-zinc-300/90">
-              SCADA, карты клиентов, финансовая аналитика и мониторинг постов — единая панель для операторов и
-              администраторов.
+              {t('pages.login.heroSubtitle')}
             </p>
           </div>
           <p className="text-xs text-zinc-400">WASH PRO CRM · Enterprise SCADA</p>
@@ -119,9 +120,9 @@ export function LoginPage() {
                 <p className="text-xs text-panel-muted dark:text-panel-muted-dark">Enterprise SCADA</p>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-panel-ink dark:text-panel-ink-dark">Вход в систему</h1>
+            <h1 className="text-2xl font-bold text-panel-ink dark:text-panel-ink-dark">{t('pages.login.title')}</h1>
             <p className="mt-2 text-sm text-panel-muted dark:text-panel-muted-dark">
-              Введите учётные данные для доступа к панели управления
+              {t('pages.login.subtitle')}
             </p>
           </div>
 
@@ -134,7 +135,7 @@ export function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <LoginField
               id="login"
-              label="Логин"
+              label={t('pages.login.login')}
               type="text"
               value={loginName}
               onChange={setLoginName}
@@ -143,7 +144,7 @@ export function LoginPage() {
             />
             <LoginField
               id="password"
-              label="Пароль"
+              label={t('pages.login.password')}
               type="password"
               value={password}
               onChange={setPassword}
@@ -159,12 +160,12 @@ export function LoginPage() {
                 'disabled:cursor-not-allowed disabled:opacity-60'
               )}
             >
-              {submitting ? 'Вход…' : 'Войти в панель'}
+              {submitting ? t('pages.login.submitting') : t('pages.login.submit')}
             </button>
           </form>
 
           <p className="mt-8 text-center text-xs text-panel-muted dark:text-panel-muted-dark lg:text-left">
-            Доступ только для авторизованных сотрудников
+            {t('pages.login.accessOnly')}
           </p>
         </div>
       </div>

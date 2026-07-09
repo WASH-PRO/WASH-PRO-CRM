@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { tGlobal } from '../i18n/runtime';
 
 interface StatsScopeFilterOptions<T> {
   rows: T[];
@@ -36,7 +37,7 @@ export function useStatsScopeFilter<T>({
       if (!postId) return;
       setPostFilter(postId);
       const addr = getWashAddress(row);
-      if (addr && addr !== '—') setWashFilter(addr);
+      if (addr && addr !== tGlobal('common.notAvailable')) setWashFilter(addr);
     },
     [getPostId, getWashAddress]
   );
@@ -47,7 +48,7 @@ export function useStatsScopeFilter<T>({
   }, []);
 
   const washOptions = useMemo(() => {
-    const addresses = [...new Set(rows.map(getWashAddress))].filter((a) => a && a !== '—');
+    const addresses = [...new Set(rows.map(getWashAddress))].filter((a) => a && a !== tGlobal('common.notAvailable'));
     return addresses.sort((a, b) => a.localeCompare(b, 'ru'));
   }, [rows, getWashAddress]);
 
@@ -68,7 +69,7 @@ export function statsScopeHint(
   postFilter: string,
   postLabel?: string
 ): string {
-  if (postFilter && postLabel) return `Пост №${postLabel}`;
-  if (washFilter) return `Объект: ${washFilter}`;
-  return 'Сумма последних данных по каждому посту';
+  if (postFilter && postLabel) return tGlobal('statsScope.post', { post: postLabel });
+  if (washFilter) return tGlobal('statsScope.wash', { wash: washFilter });
+  return tGlobal('statsScope.default');
 }

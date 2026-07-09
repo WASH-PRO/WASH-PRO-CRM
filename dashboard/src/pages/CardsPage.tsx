@@ -15,29 +15,15 @@ import { createExportBulkAction } from '../utils/export';
 import { refId } from '../utils/refs';
 import { resolvePostNumber, resolveStatWashAddress } from '../utils/statsAggregation';
 import {
-  CARD_STATUS_LABELS,
+  getCardStatusLabels,
   getCardStatusBadgeVariant,
   getCardStatusLabel,
   normalizeCardStatus,
 } from '../utils/cards';
 import type { Card, Post, Wash } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
-const CARD_TABS = [
-  { to: '/cards/discount', label: 'Скидочные карты' },
-  { to: '/cards/service', label: 'Сервисные карты' },
-  { to: '/cards/vip', label: 'VIP-обслуживание' },
-  { to: '/cards/collection', label: 'Инкассация' },
-];
-
-const cardStatusFilter: DataTableFilter<Card> = {
-  id: 'status',
-  label: 'Статус',
-  options: [
-    { value: 'success', label: CARD_STATUS_LABELS.success },
-    { value: 'rejected', label: CARD_STATUS_LABELS.rejected },
-  ],
-  match: (c, v) => c.status === v,
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
 interface CardsColumnContext {
   currency: { code: string; symbol?: string };
@@ -46,10 +32,10 @@ interface CardsColumnContext {
   discountTypeLabel: (c: Card) => string;
 }
 
-function addressColumn(ctx: CardsColumnContext): DataTableColumn<Card> {
+function addressColumn(ctx: CardsColumnContext, t: TranslateFn): DataTableColumn<Card> {
   return {
     key: 'address',
-    header: 'Адрес объекта',
+    header: t('pages.cards.columns.washAddress'),
     sortable: true,
     searchValue: (c) => ctx.address(c),
     sortValue: (c) => ctx.address(c),
@@ -57,10 +43,10 @@ function addressColumn(ctx: CardsColumnContext): DataTableColumn<Card> {
   };
 }
 
-function postNumberColumn(ctx: CardsColumnContext): DataTableColumn<Card> {
+function postNumberColumn(ctx: CardsColumnContext, t: TranslateFn): DataTableColumn<Card> {
   return {
     key: 'postNumber',
-    header: 'Номер поста',
+    header: t('pages.cards.columns.postNumber'),
     sortable: true,
     searchValue: (c) => ctx.postNumber(c),
     sortValue: (c) => Number(ctx.postNumber(c)) || 0,
@@ -68,10 +54,10 @@ function postNumberColumn(ctx: CardsColumnContext): DataTableColumn<Card> {
   };
 }
 
-function statusColumn(): DataTableColumn<Card> {
+function statusColumn(t: TranslateFn): DataTableColumn<Card> {
   return {
     key: 'status',
-    header: 'Статус',
+    header: t('common.status'),
     sortable: true,
     sortValue: (c) => c.status,
     render: (c) => (
@@ -82,21 +68,21 @@ function statusColumn(): DataTableColumn<Card> {
   };
 }
 
-function datetimeColumn(): DataTableColumn<Card> {
+function datetimeColumn(t: TranslateFn): DataTableColumn<Card> {
   return {
     key: 'createdAt',
-    header: 'Дата и время',
+    header: t('notificationsTable.dateTime'),
     sortable: true,
     sortValue: (c) => c.createdAt || '',
     render: (c) => formatDateTime(c.createdAt),
   };
 }
 
-function discountColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
+function discountColumns(ctx: CardsColumnContext, t: TranslateFn): DataTableColumn<Card>[] {
   return [
     {
       key: 'cardNumber',
-      header: 'Номер карты',
+      header: t('pages.cards.columns.cardNumber'),
       sortable: true,
       searchValue: (c) => c.cardNumber,
       sortValue: (c) => c.cardNumber,
@@ -104,7 +90,7 @@ function discountColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
     },
     {
       key: 'discountType',
-      header: 'Тип скидки',
+      header: t('pages.cards.columns.discountType'),
       sortable: true,
       searchValue: (c) => ctx.discountTypeLabel(c),
       sortValue: (c) => ctx.discountTypeLabel(c),
@@ -112,47 +98,47 @@ function discountColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
     },
     {
       key: 'balance',
-      header: 'Баланс',
+      header: t('postStatesChart.balance'),
       sortable: true,
       sortValue: (c) => c.balance,
       render: (c) => formatMoney(c.balance, ctx.currency),
     },
     {
       key: 'discount',
-      header: 'Сумма скидки',
+      header: t('pages.cards.columns.discountAmount'),
       sortable: true,
       sortValue: (c) => c.discount,
       render: (c) => formatMoney(c.discount, ctx.currency),
     },
-    addressColumn(ctx),
-    postNumberColumn(ctx),
-    statusColumn(),
-    datetimeColumn(),
+    addressColumn(ctx, t),
+    postNumberColumn(ctx, t),
+    statusColumn(t),
+    datetimeColumn(t),
   ];
 }
 
-function collectionColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
+function collectionColumns(ctx: CardsColumnContext, t: TranslateFn): DataTableColumn<Card>[] {
   return [
     {
       key: 'cardNumber',
-      header: 'Номер карты',
+      header: t('pages.cards.columns.cardNumber'),
       sortable: true,
       searchValue: (c) => c.cardNumber,
       sortValue: (c) => c.cardNumber,
       render: (c) => <span className="font-mono">{c.cardNumber}</span>,
     },
-    addressColumn(ctx),
-    postNumberColumn(ctx),
-    statusColumn(),
-    datetimeColumn(),
+    addressColumn(ctx, t),
+    postNumberColumn(ctx, t),
+    statusColumn(t),
+    datetimeColumn(t),
   ];
 }
 
-function periodColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
+function periodColumns(ctx: CardsColumnContext, t: TranslateFn): DataTableColumn<Card>[] {
   return [
     {
       key: 'cardNumber',
-      header: 'Номер карты',
+      header: t('pages.cards.columns.cardNumber'),
       sortable: true,
       searchValue: (c) => c.cardNumber,
       sortValue: (c) => c.cardNumber,
@@ -160,30 +146,40 @@ function periodColumns(ctx: CardsColumnContext): DataTableColumn<Card>[] {
     },
     {
       key: 'validFrom',
-      header: 'Начало действия',
+      header: t('pages.cards.columns.validFrom'),
       sortable: true,
       sortValue: (c) => c.validFrom || '',
-      render: (c) => (c.validFrom ? new Date(c.validFrom).toLocaleString('ru') : '—'),
+      render: (c) => formatDateTime(c.validFrom),
     },
     {
       key: 'validUntil',
-      header: 'Окончание действия',
+      header: t('pages.cards.columns.validUntil'),
       sortable: true,
       sortValue: (c) => c.validUntil || '',
-      render: (c) => (c.validUntil ? new Date(c.validUntil).toLocaleString('ru') : '—'),
+      render: (c) => formatDateTime(c.validUntil),
     },
-    addressColumn(ctx),
-    postNumberColumn(ctx),
-    statusColumn(),
-    datetimeColumn(),
+    addressColumn(ctx, t),
+    postNumberColumn(ctx, t),
+    statusColumn(t),
+    datetimeColumn(t),
   ];
 }
 
 export function CardsLayout() {
+  const { t } = useLocale();
+  const cardTabs = useMemo(
+    () => [
+      { to: '/cards/discount', label: t('pages.cards.tabs.discount') },
+      { to: '/cards/service', label: t('pages.cards.tabs.service') },
+      { to: '/cards/vip', label: t('pages.cards.tabs.vip') },
+      { to: '/cards/collection', label: t('pages.cards.tabs.collection') },
+    ],
+    [t]
+  );
   return (
     <div>
-      <PageHeader title="Карты" subtitle="Журнал применений: каждое считывание NFC — отдельная строка" />
-      <TabNav items={CARD_TABS} columns={4} />
+      <PageHeader title={t('pages.cards.title')} subtitle={t('pages.cards.subtitle')} />
+      <TabNav items={cardTabs} columns={4} />
       <Suspense fallback={<Loading />}>
         <Outlet />
       </Suspense>
@@ -192,19 +188,23 @@ export function CardsLayout() {
 }
 
 export function CardsDiscountPage() {
-  return <CardsTable cardType="regular" title="Скидочные карты" />;
+  const { t } = useLocale();
+  return <CardsTable cardType="regular" title={t('pages.cards.tabs.discount')} />;
 }
 
 export function CardsServicePage() {
-  return <CardsTable cardType="service" title="Сервисные карты" period />;
+  const { t } = useLocale();
+  return <CardsTable cardType="service" title={t('pages.cards.tabs.service')} period />;
 }
 
 export function CardsVipPage() {
-  return <CardsTable cardType="unlimited" title="VIP-обслуживание" period />;
+  const { t } = useLocale();
+  return <CardsTable cardType="unlimited" title={t('pages.cards.tabs.vip')} period />;
 }
 
 export function CardsCollectionPage() {
-  return <CardsTable cardType="collection" title="Инкассация" collection />;
+  const { t } = useLocale();
+  return <CardsTable cardType="collection" title={t('pages.cards.tabs.collection')} collection />;
 }
 
 const CARDS_PAGE_SIZE = 100;
@@ -220,11 +220,26 @@ function CardsTable({
   period?: boolean;
   collection?: boolean;
 }) {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const { currency } = useCurrency();
   const { label: discountTypeLabel } = useDiscountTypes();
   const [cardPages, setCardPages] = useState(5);
+  const cardStatusLabels = useMemo(() => getCardStatusLabels(t), [t]);
+
+  const cardStatusFilter: DataTableFilter<Card> = useMemo(
+    () => ({
+      id: 'status',
+      label: t('common.status'),
+      options: [
+        { value: 'success', label: cardStatusLabels.success },
+        { value: 'rejected', label: cardStatusLabels.rejected },
+      ],
+      match: (c, v) => c.status === v,
+    }),
+    [cardStatusLabels, t]
+  );
 
   const fetchData = useCallback(async (signal: AbortSignal) => {
     const all: Card[] = [];
@@ -292,39 +307,43 @@ function CardsTable({
 
   const columns = useMemo(
     () =>
-      collection ? collectionColumns(columnCtx) : period ? periodColumns(columnCtx) : discountColumns(columnCtx),
-    [collection, period, columnCtx]
+      collection
+        ? collectionColumns(columnCtx, t)
+        : period
+          ? periodColumns(columnCtx, t)
+          : discountColumns(columnCtx, t),
+    [collection, period, columnCtx, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<Card>[] => {
     const actions: DataTableBulkAction<Card>[] = [
       createExportBulkAction(`cards-${cardType}.csv`, collection
         ? [
-            { header: 'Номер карты', value: (c) => c.cardNumber },
-            { header: 'Адрес объекта', value: (c) => address(c) },
-            { header: 'Номер поста', value: (c) => postNumber(c) },
-            { header: 'Статус', value: (c) => getCardStatusLabel(c.status) },
-            { header: 'Дата и время', value: (c) => c.createdAt || '' },
+            { header: t('pages.cards.columns.cardNumber'), value: (c) => c.cardNumber },
+            { header: t('pages.cards.columns.washAddress'), value: (c) => address(c) },
+            { header: t('pages.cards.columns.postNumber'), value: (c) => postNumber(c) },
+            { header: t('common.status'), value: (c) => getCardStatusLabel(c.status) },
+            { header: t('notificationsTable.dateTime'), value: (c) => c.createdAt || '' },
           ]
         : period
         ? [
-            { header: 'Номер карты', value: (c) => c.cardNumber },
-            { header: 'Начало', value: (c) => c.validFrom || '' },
-            { header: 'Окончание', value: (c) => c.validUntil || '' },
-            { header: 'Адрес объекта', value: (c) => address(c) },
-            { header: 'Номер поста', value: (c) => postNumber(c) },
-            { header: 'Статус', value: (c) => getCardStatusLabel(c.status) },
-            { header: 'Дата и время', value: (c) => c.createdAt || '' },
+            { header: t('pages.cards.columns.cardNumber'), value: (c) => c.cardNumber },
+            { header: t('pages.cards.columns.validFromShort'), value: (c) => c.validFrom || '' },
+            { header: t('pages.cards.columns.validUntilShort'), value: (c) => c.validUntil || '' },
+            { header: t('pages.cards.columns.washAddress'), value: (c) => address(c) },
+            { header: t('pages.cards.columns.postNumber'), value: (c) => postNumber(c) },
+            { header: t('common.status'), value: (c) => getCardStatusLabel(c.status) },
+            { header: t('notificationsTable.dateTime'), value: (c) => c.createdAt || '' },
           ]
         : [
-            { header: 'Номер карты', value: (c) => c.cardNumber },
-            { header: 'Тип скидки', value: (c) => discountTypeLabel(c.discountType) },
-            { header: 'Баланс', value: (c) => String(c.balance) },
-            { header: 'Сумма скидки', value: (c) => String(c.discount) },
-            { header: 'Адрес объекта', value: (c) => address(c) },
-            { header: 'Номер поста', value: (c) => postNumber(c) },
-            { header: 'Статус', value: (c) => getCardStatusLabel(c.status) },
-            { header: 'Дата и время', value: (c) => c.createdAt || '' },
+            { header: t('pages.cards.columns.cardNumber'), value: (c) => c.cardNumber },
+            { header: t('pages.cards.columns.discountType'), value: (c) => discountTypeLabel(c.discountType) },
+            { header: t('postStatesChart.balance'), value: (c) => String(c.balance) },
+            { header: t('pages.cards.columns.discountAmount'), value: (c) => String(c.discount) },
+            { header: t('pages.cards.columns.washAddress'), value: (c) => address(c) },
+            { header: t('pages.cards.columns.postNumber'), value: (c) => postNumber(c) },
+            { header: t('common.status'), value: (c) => getCardStatusLabel(c.status) },
+            { header: t('notificationsTable.dateTime'), value: (c) => c.createdAt || '' },
           ]),
     ];
 
@@ -332,7 +351,7 @@ function CardsTable({
       const setStatus = (status: string, label: string): DataTableBulkAction<Card> => ({
         id: `status-${status}`,
         label,
-        confirmMessage: (_rows, ids) => `Изменить статус у ${ids.length} карт?`,
+        confirmMessage: (_rows, ids) => t('pages.cards.confirmChangeStatus', { count: ids.length }),
         onAction: async (rows) => {
           await bulkPut('/crm/cards', rows, (c) => c.id, (c) => ({
             ...c,
@@ -343,11 +362,11 @@ function CardsTable({
           refresh();
         },
       });
-      actions.push(setStatus('success', 'Успешно'), setStatus('rejected', 'Отклонено'));
+      actions.push(setStatus('success', cardStatusLabels.success), setStatus('rejected', cardStatusLabels.rejected));
     }
 
     return actions;
-  }, [canEdit, cardType, collection, period, address, postNumber, discountTypeLabel, refresh]);
+  }, [canEdit, cardType, collection, period, address, postNumber, discountTypeLabel, refresh, t, cardStatusLabels]);
 
   if (loading && !data) return <Loading />;
   if (error && !data) {
@@ -364,11 +383,11 @@ function CardsTable({
       {data?.hasMoreCards && (
         <div className="mb-4">
           <button type="button" className="btn-secondary btn-sm" onClick={() => setCardPages((p) => p + 5)}>
-            Загрузить ещё карты (+{5 * CARDS_PAGE_SIZE} макс.)
+            {t('pages.cards.loadMore', { count: 5 * CARDS_PAGE_SIZE })}
           </button>
           {data.cardsTotal != null && (
             <span className="ml-3 text-sm text-panel-muted dark:text-panel-muted-dark">
-              Загружено {data.cards.length} из {data.cardsTotal}
+              {t('pages.cards.loadedCount', { loaded: data.cards.length, total: data.cardsTotal })}
             </span>
           )}
         </div>
@@ -379,7 +398,7 @@ function CardsTable({
       data={filtered}
       rowKey={(c) => c.id}
       filters={[cardStatusFilter]}
-      searchPlaceholder={`Поиск в разделе «${title}»…`}
+      searchPlaceholder={t('pages.cards.searchInSection', { section: title })}
       bulkActions={bulkActions}
       defaultSortKey="createdAt"
       defaultSortDir="desc"

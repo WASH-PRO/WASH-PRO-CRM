@@ -11,12 +11,13 @@ import { bulkDelete } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
 import {
-  INFO_MESSAGE_STATUS_LABELS,
+  getInfoMessageStatusLabels,
   INFO_MESSAGE_STATUS_VARIANT,
   resolveInfoMessageDisplayStatus,
 } from '../utils/infoMessages';
+import { useLocale } from '../i18n/LocaleContext';
 
-/** Перерисовка таблицы, когда наступает время публикации (даже в режиме «Статика»). */
+/** Re-render when scheduled publish time is reached. */
 function useScheduledStatusClock(messages: InfoMessage[] | null | undefined, intervalMs = 30_000) {
   const [, setTick] = useState(0);
 
@@ -35,12 +36,6 @@ function useScheduledStatusClock(messages: InfoMessage[] | null | undefined, int
     return () => clearInterval(id);
   }, [hasPendingSchedule, intervalMs]);
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  news: 'Новость',
-  promotion: 'Акция',
-  general: 'Общее',
-};
 
 const emptyForm = {
   title: '',
@@ -69,6 +64,7 @@ function fromLocalInput(value: string): string | undefined {
 }
 
 export function InfoMessagesPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('create', 'update', 'delete');
   const [modal, setModal] = useState(false);
@@ -117,8 +113,18 @@ export function InfoMessagesPage() {
     setModal(true);
   };
 
+  const statusLabels = useMemo(() => getInfoMessageStatusLabels(t), [t]);
+  const categoryLabels = useMemo(
+    () => ({
+      news: t('pages.infoMessages.categories.news'),
+      promotion: t('pages.infoMessages.categories.promotion'),
+      general: t('pages.infoMessages.categories.general'),
+    }),
+    [t]
+  );
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить сообщение?')) return;
+    if (!confirm(t('common.delete'))) return;
     await api(`/crm/info-messages/${id}`, { method: 'DELETE' });
     refresh();
   };
@@ -159,25 +165,25 @@ export function InfoMessagesPage() {
     () => [
       {
         id: 'status',
-        label: 'Статус',
-        options: Object.entries(INFO_MESSAGE_STATUS_LABELS).map(([value, label]) => ({ value, label })),
+        label: t('common.status'),
+        options: Object.entries(statusLabels).map(([value, label]) => ({ value, label })),
         match: (row, value) => resolveInfoMessageDisplayStatus(row) === value,
       },
       {
         id: 'category',
-        label: 'Категория',
-        options: Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
+        label: t('common.category'),
+        options: Object.entries(categoryLabels).map(([value, label]) => ({ value, label })),
         match: (row, value) => row.category === value,
       },
     ],
-    []
+    [categoryLabels, statusLabels, t]
   );
 
   const columns: DataTableColumn<InfoMessage>[] = useMemo(
     () => [
       {
         key: 'title',
-        header: 'Заголовок',
+        header: t('common.title'),
         sortable: true,
         sortValue: (r) => r.title,
         searchValue: (r) => `${r.title} ${r.body}`,
@@ -190,14 +196,14 @@ export function InfoMessagesPage() {
       },
       {
         key: 'category',
-        header: 'Категория',
+        header: t('common.category'),
         sortable: true,
         sortValue: (r) => r.category,
-        render: (r) => CATEGORY_LABELS[r.category] ?? r.category,
+        render: (r) => categoryLabels[r.category] ?? r.category,
       },
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (r) => resolveInfoMessageDisplayStatus(r),
         render: (r) => {
@@ -214,11 +220,11 @@ export function InfoMessagesPage() {
                     : undefined
                 }
               >
-                {INFO_MESSAGE_STATUS_LABELS[displayStatus]}
+                {statusLabels[displayStatus]}
               </Badge>
               {scheduledPending && (
                 <div className="text-[11px] text-panel-muted dark:text-panel-muted-dark">
-                  публикация с {formatDateTime(r.publishedAt)}
+                  {t('common.publicationFrom')} {formatDateTime(r.publishedAt)}
                 </div>
               )}
             </div>
@@ -227,15 +233,15 @@ export function InfoMessagesPage() {
       },
       {
         key: 'publishedAt',
-        header: 'Публикация',
+        header: t('common.publishDate'),
         sortable: true,
         sortValue: (r) => r.publishedAt || '',
         render: (r) => formatDateTime(r.publishedAt),
       },
       {
         key: 'washId',
-        header: 'Мойка',
-        render: (r) => (r.washId ? washById.get(r.washId)?.name ?? r.washId : 'Все'),
+        header: t('common.wash'),
+        render: (r) => (r.washId ? washById.get(r.washId)?.name ?? r.washId : t('common.all')),
       },
       {
         key: 'actions',
@@ -243,17 +249,17 @@ export function InfoMessagesPage() {
         render: (r) =>
           canEdit ? (
             <div className="flex justify-end gap-1">
-              <button type="button" className="btn-icon" title="Редактировать" onClick={() => openEdit(r)}>
+              <button type="button" className="btn-icon" title={t('common.edit')} onClick={() => openEdit(r)}>
                 <Pencil size={16} />
               </button>
-              <button type="button" className="btn-icon text-red-500" title="Удалить" onClick={() => void handleDelete(r.id)}>
+              <button type="button" className="btn-icon text-red-500" title={t('common.delete')} onClick={() => void handleDelete(r.id)}>
                 <Trash2 size={16} />
               </button>
             </div>
           ) : null,
       },
     ],
-    [canEdit, washById]
+    [canEdit, categoryLabels, statusLabels, t, washById]
   );
 
   const bulkActions: DataTableBulkAction<InfoMessage>[] = useMemo(
@@ -261,17 +267,17 @@ export function InfoMessagesPage() {
       canEdit
         ? [
             createExportBulkAction('info-messages.csv', [
-              { header: 'Заголовок', value: (r) => r.title },
-              { header: 'Категория', value: (r) => r.category },
-              { header: 'Статус', value: (r) => INFO_MESSAGE_STATUS_LABELS[resolveInfoMessageDisplayStatus(r)] },
-              { header: 'Публикация', value: (r) => r.publishedAt ?? '' },
+              { header: t('common.title'), value: (r) => r.title },
+              { header: 'Category', value: (r) => r.category },
+              { header: 'Status', value: (r) => statusLabels[resolveInfoMessageDisplayStatus(r)] },
+              { header: 'Published at', value: (r) => r.publishedAt ?? '' },
             ]),
             {
               id: 'delete',
-              label: 'Удалить',
+              label: t('common.delete'),
               icon: Trash2,
               variant: 'danger',
-              confirmMessage: (_rows, ids) => `Удалить ${ids.length} сообщений?`,
+              confirmMessage: (_rows, ids) => `${t('common.delete')} ${ids.length}?`,
               onAction: async (_rows, ids) => {
                 await bulkDelete('/crm/info-messages', ids);
                 refresh();
@@ -279,7 +285,7 @@ export function InfoMessagesPage() {
             },
           ]
         : [],
-    [canEdit, refresh]
+    [canEdit, refresh, statusLabels, t]
   );
 
   if (loading && !messages) return <Loading />;
@@ -287,13 +293,13 @@ export function InfoMessagesPage() {
   return (
     <div>
       <PageHeader
-        title="Информация"
-        subtitle="Новости, акции и лента для информационных Telegram-ботов"
+        title={t('pages.infoMessages.title')}
+        subtitle={t('pages.infoMessages.subtitle')}
         actions={
           canEdit ? (
             <button type="button" className="btn-primary" onClick={openCreate}>
               <Plus size={16} />
-              Добавить
+              {t('common.create')}
             </button>
           ) : undefined
         }
@@ -305,28 +311,28 @@ export function InfoMessagesPage() {
         data={messages ?? []}
         rowKey={(r) => r.id}
         filters={filters}
-        searchPlaceholder="Поиск сообщений…"
+        searchPlaceholder={t('dataTable.searchPlaceholder')}
         bulkActions={bulkActions}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать сообщение' : 'Новое сообщение'}>
+      <Modal open={modal} onClose={() => setModal(false)} title={editId ? t('common.edit') : t('common.create')}>
         <form className="space-y-4" onSubmit={(e) => void handleSubmit(e)}>
           <div>
-            <label className="label">Заголовок</label>
+            <label className="label">{t('common.title')}</label>
             <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           </div>
           <div>
-            <label className="label">Текст</label>
+            <label className="label">{t('common.text')}</label>
             <textarea
               className="input min-h-[120px]"
               value={form.body}
               onChange={(e) => setForm({ ...form, body: e.target.value })}
               required
-              placeholder="Поддерживается HTML: <b>жирный</b>, <i>курсив</i>"
+              placeholder={t('pages.infoMessages.bodyPlaceholder')}
             />
           </div>
           <div>
-            <label className="label">URL изображения</label>
+            <label className="label">{t('common.imageUrl')}</label>
             <input
               className="input font-mono text-xs"
               value={form.imageUrl}
@@ -339,25 +345,25 @@ export function InfoMessagesPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="label">Категория</label>
+              <label className="label">{t('common.category')}</label>
               <select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as InfoMessage['category'] })}>
-                <option value="news">Новость</option>
-                <option value="promotion">Акция</option>
-                <option value="general">Общее</option>
+                <option value="news">{categoryLabels.news}</option>
+                <option value="promotion">{categoryLabels.promotion}</option>
+                <option value="general">{categoryLabels.general}</option>
               </select>
             </div>
             <div>
-              <label className="label">Статус</label>
+              <label className="label">{t('common.status')}</label>
               <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as InfoMessage['status'] })}>
-                <option value="draft">Черновик</option>
-                <option value="scheduled">По расписанию</option>
-                <option value="published">Опубликовано</option>
+                <option value="draft">{statusLabels.draft}</option>
+                <option value="scheduled">{statusLabels.scheduled}</option>
+                <option value="published">{statusLabels.published}</option>
               </select>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="label">Дата публикации</label>
+              <label className="label">{t('common.publishDate')}</label>
               <input
                 className="input"
                 type="datetime-local"
@@ -366,7 +372,7 @@ export function InfoMessagesPage() {
               />
             </div>
             <div>
-              <label className="label">Скрыть после</label>
+              <label className="label">{t('common.hideAfter')}</label>
               <input
                 className="input"
                 type="datetime-local"
@@ -374,15 +380,15 @@ export function InfoMessagesPage() {
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
               />
               <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
-                Необязательно. Оставьте пустым — новость не исчезнет. Дата должна быть позже публикации.
+                {t('pages.infoMessages.expiresHint')}
               </p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="label">Автомойка</label>
+              <label className="label">{t('common.wash')}</label>
               <select className="input" value={form.washId} onChange={(e) => setForm({ ...form, washId: e.target.value })}>
-                <option value="">Все мойки</option>
+                <option value="">{t('common.all')} {t('common.washes')}</option>
                 {(washes ?? []).map((wash) => (
                   <option key={wash.id} value={wash.id}>
                     {wash.name}
@@ -391,7 +397,7 @@ export function InfoMessagesPage() {
               </select>
             </div>
             <div>
-              <label className="label">Порядок в ленте</label>
+              <label className="label">{t('common.sortOrder')}</label>
               <input
                 className="input"
                 type="number"
@@ -402,10 +408,10 @@ export function InfoMessagesPage() {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-secondary" onClick={() => setModal(false)}>
-              Отмена
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn-primary">
-              {editId ? 'Сохранить' : 'Создать'}
+              {editId ? t('common.save') : t('common.create')}
             </button>
           </div>
         </form>

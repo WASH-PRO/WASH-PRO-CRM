@@ -1,3 +1,5 @@
+import { tGlobal } from '../i18n/runtime';
+
 export type DeviceCommandKey =
   | 'soft_reset'
   | 'hard_reset'
@@ -7,15 +9,19 @@ export type DeviceCommandKey =
   | 'vip_mode'
   | 'collection_mode';
 
-export const DEVICE_COMMAND_OPTIONS: { value: DeviceCommandKey; label: string; group?: string }[] = [
-  { value: 'soft_reset', label: 'Мягкая перезагрузка', group: 'Система' },
-  { value: 'hard_reset', label: 'Жёсткая перезагрузка', group: 'Система' },
-  { value: 'credit_balance', label: 'Зачисление баланса', group: 'Операции' },
-  { value: 'fault_mode', label: 'Режим неисправности', group: 'Режимы' },
-  { value: 'service_mode', label: 'Обслуживание бокса', group: 'Режимы' },
-  { value: 'vip_mode', label: 'VIP-режим', group: 'Режимы' },
-  { value: 'collection_mode', label: 'Режим инкассации', group: 'Режимы' },
-];
+export function getDeviceCommandOptions(): { value: DeviceCommandKey; label: string; group?: string }[] {
+  return [
+    { value: 'soft_reset', label: tGlobal('postDevice.command.softReset'), group: tGlobal('postDevice.commandGroup.system') },
+    { value: 'hard_reset', label: tGlobal('postDevice.command.hardReset'), group: tGlobal('postDevice.commandGroup.system') },
+    { value: 'credit_balance', label: tGlobal('postDevice.command.creditBalance'), group: tGlobal('postDevice.commandGroup.operations') },
+    { value: 'fault_mode', label: tGlobal('postDevice.command.faultMode'), group: tGlobal('postDevice.commandGroup.modes') },
+    { value: 'service_mode', label: tGlobal('postDevice.command.serviceMode'), group: tGlobal('postDevice.commandGroup.modes') },
+    { value: 'vip_mode', label: tGlobal('postDevice.command.vipMode'), group: tGlobal('postDevice.commandGroup.modes') },
+    { value: 'collection_mode', label: tGlobal('postDevice.command.collectionMode'), group: tGlobal('postDevice.commandGroup.modes') },
+  ];
+}
+
+export const DEVICE_COMMAND_OPTIONS = getDeviceCommandOptions();
 
 const SKIP_PRICE_KEYS = new Set(['direction', 'cmd', 'command', 'summ', 'type', 'prices']);
 

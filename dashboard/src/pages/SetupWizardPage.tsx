@@ -45,6 +45,7 @@ import {
 } from '../utils/postMqtt';
 import { setViewerSetupAck } from '../utils/setupStorage';
 import { refId } from '../utils/refs';
+import { useLocale } from '../i18n/LocaleContext';
 
 const emptyWashForm = { name: '', address: '', description: '' };
 const emptyPostForm = {
@@ -56,7 +57,15 @@ const emptyPostForm = {
   mqttPassword: '',
 };
 
-function StepIndicator({ current, skipped }: { current: number; skipped: Set<string> }) {
+function StepIndicator({
+  current,
+  skipped,
+  skippedLabel,
+}: {
+  current: number;
+  skipped: Set<string>;
+  skippedLabel: string;
+}) {
   return (
     <ol className="mb-8 flex flex-wrap gap-2">
       {SETUP_STEPS.map((step, index) => {
@@ -75,7 +84,7 @@ function StepIndicator({ current, skipped }: { current: number; skipped: Set<str
           >
             {done ? <CheckCircle2 size={12} /> : <Circle size={12} />}
             <span>{step.label}</span>
-            {skippedStep && <span className="opacity-70">· пропущено</span>}
+            {skippedStep && <span className="opacity-70">· {skippedLabel}</span>}
           </li>
         );
       })}
@@ -84,6 +93,7 @@ function StepIndicator({ current, skipped }: { current: number; skipped: Set<str
 }
 
 export function SetupWizardPage() {
+  const { t } = useLocale();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -140,7 +150,7 @@ export function SetupWizardPage() {
   useEffect(() => {
     checkApiHealth().then(setApiOk);
     refreshCatalogs().catch((err) => {
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки данных');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.loadData'));
     });
   }, [refreshCatalogs]);
 
@@ -169,7 +179,7 @@ export function SetupWizardPage() {
         try {
           await persistSkipped(nextSkipped);
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Не удалось сохранить прогресс');
+          setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.saveProgress'));
           return;
         }
       }
@@ -187,15 +197,14 @@ export function SetupWizardPage() {
     if (!canWashDelete) return;
     if (
       !confirm(
-        `Удалить «${washName}» и все связанные данные?\n\n` +
-          'Будут удалены посты, состояния, карты, статистика, телеметрия и уведомления.'
+        t('pages.setupWizard.confirmDeleteWash', { name: washName })
       )
     ) {
       return;
     }
     setBusy(true);
     setError('');
-    setDeleteStatus(`Удаление «${washName}» и связанных данных…`);
+    setDeleteStatus(t('pages.setupWizard.deletingWash', { name: washName }));
     try {
       const result = await deleteWash(washId);
       setDeleteStatus(formatWashDeleteSummary([result]));
@@ -206,7 +215,7 @@ export function SetupWizardPage() {
       }
       await refreshCatalogs();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось удалить объект');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.deleteWash'));
       setDeleteStatus('');
     } finally {
       setBusy(false);
@@ -222,21 +231,20 @@ export function SetupWizardPage() {
     if (demoPosts.length === 0) return;
     if (
       !confirm(
-        `Удалить демо-посты (${demoPosts.length}) и все связанные данные?\n\n` +
-          'Будут удалены состояния, карты, статистика, телеметрия и уведомления.'
+        t('pages.setupWizard.confirmDeleteDemoPosts', { count: demoPosts.length })
       )
     ) {
       return;
     }
     setBusy(true);
     setError('');
-    setDeleteStatus('Удаление демо-постов и связанных данных…');
+    setDeleteStatus(t('pages.setupWizard.deletingDemoPosts'));
     try {
       for (const post of demoPosts) {
         await api(`/crm/posts/${post.id}`, { method: 'DELETE' });
       }
       clearCatalogCache('/crm/posts');
-      setDeleteStatus(`Удалено демо-постов: ${demoPosts.length}`);
+      setDeleteStatus(t('pages.setupWizard.deletedDemoPosts', { count: demoPosts.length }));
       try {
         await syncMqttUsers();
       } catch {
@@ -244,7 +252,7 @@ export function SetupWizardPage() {
       }
       await refreshCatalogs();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось удалить демо-данные');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.deleteDemoData'));
       setDeleteStatus('');
     } finally {
       setBusy(false);
@@ -270,7 +278,7 @@ export function SetupWizardPage() {
       setWashForm(emptyWashForm);
       await refreshCatalogs();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось создать объект');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.createWash'));
     } finally {
       setBusy(false);
     }
@@ -298,7 +306,7 @@ export function SetupWizardPage() {
       setPostForm({ ...emptyPostForm, mqttPassword: generateMqttPassword(), washId: postForm.washId });
       await refreshCatalogs();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось создать пост');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.createPost'));
     } finally {
       setBusy(false);
     }
@@ -340,7 +348,7 @@ export function SetupWizardPage() {
       setDefaultCurrencyId(savedId);
       await refreshCatalogs(savedId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось обновить валюту');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.updateCurrency'));
     } finally {
       setBusy(false);
     }
@@ -353,9 +361,9 @@ export function SetupWizardPage() {
     setMqttSyncResult('');
     try {
       const result = await syncMqttUsers();
-      setMqttSyncResult(`Синхронизировано учётных записей: ${result.postUsers}`);
+      setMqttSyncResult(t('pages.setupWizard.mqttSyncedUsers', { count: result.postUsers }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка синхронизации MQTT');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.syncMqtt'));
     } finally {
       setBusy(false);
     }
@@ -371,14 +379,14 @@ export function SetupWizardPage() {
         return;
       }
       if (!user || !canManage) {
-        setError('Недостаточно прав для завершения настройки системы');
+        setError(t('pages.setupWizard.errors.noFinishPermission'));
         return;
       }
       await markSetupComplete(user, settingId, settings, [...skipped]);
       await reload();
       navigate(forceRestart ? '/' : '/welcome', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось завершить настройку');
+      setError(err instanceof Error ? err.message : t('pages.setupWizard.errors.finish'));
     } finally {
       setBusy(false);
     }
@@ -390,21 +398,19 @@ export function SetupWizardPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm leading-relaxed text-panel-muted dark:text-panel-muted-dark">
-              Мастер поможет подготовить CRM к эксплуатации: проверить инфраструктуру, заменить демо-данные,
-              настроить посты и MQTT.
+              {t('pages.setupWizard.welcomeText')}
             </p>
             {readOnly && (
               <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-50/80 p-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-100">
                 <Shield size={16} className="mt-0.5 shrink-0" />
                 <span>
-                  У вас доступ только для чтения ({setupRoleHint(user)}). Вы можете просмотреть шаги, но изменения
-                  в системе недоступны. Нажмите «Понятно» на последнем шаге, чтобы продолжить.
+                  {t('pages.setupWizard.readOnlyHint', { role: setupRoleHint(user) })}
                 </span>
               </div>
             )}
             {forceRestart && canManage && (
               <p className="text-sm text-brand-600 dark:text-brand-400">
-                Режим повторной настройки — завершение снова отметит установку как настроенную.
+                {t('pages.setupWizard.restartHint')}
               </p>
             )}
           </div>
@@ -420,24 +426,32 @@ export function SetupWizardPage() {
                 ) : (
                   <Circle size={16} className="text-panel-muted" />
                 )}
-                API CRM {apiOk ? 'доступен' : apiOk === false ? 'недоступен' : 'проверяется…'}
+                {t('pages.setupWizard.apiStatus', {
+                  status:
+                    apiOk === true
+                      ? t('pages.setupWizard.statusAvailable')
+                      : apiOk === false
+                        ? t('pages.setupWizard.statusUnavailable')
+                        : t('pages.setupWizard.statusChecking'),
+                })}
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-emerald-500" />
-                MQTT брокер: <code className="rounded bg-panel-canvas px-1.5 py-0.5 text-xs">{mqttBrokerEndpoint()}</code>
+                {t('pages.setupWizard.mqttBroker')}:{' '}
+                <code className="rounded bg-panel-canvas px-1.5 py-0.5 text-xs">{mqttBrokerEndpoint()}</code>
               </li>
             </ul>
             <div className="rounded-lg border border-panel-border bg-panel-canvas/60 p-4 text-xs text-panel-muted dark:border-panel-border-dark dark:bg-white/[0.03]">
-              <p className="mb-2 font-medium text-panel-ink dark:text-panel-ink-dark">Параметры .env (справочно)</p>
+              <p className="mb-2 font-medium text-panel-ink dark:text-panel-ink-dark">{t('pages.setupWizard.envParams')}</p>
               <ul className="space-y-1 font-mono">
-                <li>MQTT_EXTERNAL_PORT — внешний порт Mosquitto (по умолчанию 1883)</li>
-                <li>JWT_SECRET — секрет авторизации</li>
-                <li>DATA_DIR — каталог данных на хосте</li>
+                <li>{t('pages.setupWizard.envMqttPort')}</li>
+                <li>{t('pages.setupWizard.envJwt')}</li>
+                <li>{t('pages.setupWizard.envDataDir')}</li>
               </ul>
             </div>
             <button type="button" className="btn-secondary btn-sm" onClick={() => checkApiHealth().then(setApiOk)}>
               <RefreshCw size={14} />
-              Проверить снова
+              {t('pages.setupWizard.checkAgain')}
             </button>
           </div>
         );
@@ -446,18 +460,19 @@ export function SetupWizardPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm text-panel-muted dark:text-panel-muted-dark">
-              Объекты в системе: {catalogs?.washes.length ?? '…'}
+              {t('pages.setupWizard.washesInSystem', { count: catalogs?.washes.length ?? '…' })}
             </p>
             {hasDemoArtifacts && (
               <div className="rounded-lg border border-panel-border p-3 dark:border-panel-border-dark">
                 <div className="text-sm font-medium">
-                  {demoWash ? demoWash.name : 'Демо-данные'}
+                  {demoWash ? demoWash.name : t('pages.setupWizard.demoData')}
                 </div>
                 <div className="mt-1 text-xs text-panel-muted">
-                  {demoWash ? 'Демо-объект' : 'Демо-посты без объекта'} · {demoPosts.length} пост(ов)
+                  {(demoWash ? t('pages.setupWizard.demoWash') : t('pages.setupWizard.demoPostsOnly'))} ·{' '}
+                  {t('pages.setupWizard.postsCount', { count: demoPosts.length })}
                 </div>
                 <p className="mt-2 text-xs text-panel-muted dark:text-panel-muted-dark">
-                  Удаление затронет посты, состояния, карты, статистику, телеметрию и уведомления, связанные с демо-данными.
+                  {t('pages.setupWizard.demoDeleteHint')}
                 </p>
                 {canWashDelete ? (
                   <button
@@ -467,16 +482,16 @@ export function SetupWizardPage() {
                     disabled={busy}
                   >
                     {busy ? <Loader2 size={14} className="animate-spin" /> : null}
-                    Удалить демо-данные
+                    {t('pages.setupWizard.deleteDemoData')}
                   </button>
                 ) : (
-                  <p className="mt-2 text-xs text-panel-muted">Удаление доступно только с правом delete</p>
+                  <p className="mt-2 text-xs text-panel-muted">{t('pages.setupWizard.deleteRequiresPermission')}</p>
                 )}
                 {deleteStatus && (
                   <p
                     className={clsx(
                       'mt-2 text-xs',
-                      deleteStatus.startsWith('Удалено')
+                      deleteStatus.startsWith(t('pages.setupWizard.deletedPrefix'))
                         ? 'text-emerald-600 dark:text-emerald-400'
                         : 'text-panel-muted dark:text-panel-muted-dark'
                     )}
@@ -488,29 +503,29 @@ export function SetupWizardPage() {
             )}
             {canWashCreate ? (
               <form onSubmit={handleCreateWash} className="space-y-3 rounded-lg border border-panel-border p-4 dark:border-panel-border-dark">
-                <p className="text-sm font-medium">Создать реальный объект</p>
+                <p className="text-sm font-medium">{t('pages.setupWizard.createRealWash')}</p>
                 <div>
-                  <label className="label">Название</label>
+                  <label className="label">{t('pages.setupWizard.name')}</label>
                   <input className="input" value={washForm.name} onChange={(e) => setWashForm({ ...washForm, name: e.target.value })} required />
                 </div>
                 <div>
-                  <label className="label">Адрес</label>
+                  <label className="label">{t('pages.setupWizard.address')}</label>
                   <input className="input" value={washForm.address} onChange={(e) => setWashForm({ ...washForm, address: e.target.value })} required />
                 </div>
                 <div>
-                  <label className="label">Описание</label>
+                  <label className="label">{t('pages.setupWizard.description')}</label>
                   <input className="input" value={washForm.description} onChange={(e) => setWashForm({ ...washForm, description: e.target.value })} />
                 </div>
                 <button type="submit" className="btn-primary btn-sm" disabled={busy}>
-                  Создать объект
+                  {t('pages.setupWizard.createWash')}
                 </button>
               </form>
             ) : (
-              <p className="text-sm text-panel-muted">Создание объектов требует права create</p>
+              <p className="text-sm text-panel-muted">{t('pages.setupWizard.createWashPermission')}</p>
             )}
             {(catalogs?.washes.length ?? 0) > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">Объекты в системе</p>
+                <p className="text-sm font-medium">{t('pages.setupWizard.washesTitle')}</p>
                 <ul className="text-sm">
                   {(catalogs?.washes || []).map((w) => (
                     <li
@@ -525,7 +540,7 @@ export function SetupWizardPage() {
                           onClick={() => handleDeleteWash(w.id, w.name)}
                           disabled={busy}
                         >
-                          Удалить данные
+                          {t('pages.setupWizard.deleteData')}
                         </button>
                       )}
                     </li>
@@ -541,11 +556,11 @@ export function SetupWizardPage() {
           <div className="space-y-4">
             {canPostCreate && (catalogs?.washes.length ?? 0) > 0 ? (
               <form onSubmit={handleCreatePost} className="space-y-3 rounded-lg border border-panel-border p-4 dark:border-panel-border-dark">
-                <p className="text-sm font-medium">Добавить пост</p>
+                <p className="text-sm font-medium">{t('pages.setupWizard.addPost')}</p>
                 <div>
-                  <label className="label">Объект</label>
+                  <label className="label">{t('pages.setupWizard.wash')}</label>
                   <select className="input" value={postForm.washId} onChange={(e) => setPostForm({ ...postForm, washId: e.target.value })} required>
-                    <option value="">Выберите…</option>
+                    <option value="">{t('pages.setupWizard.select')}</option>
                     {(catalogs?.washes || []).map((w) => (
                       <option key={w.id} value={w.id}>{w.name}</option>
                     ))}
@@ -553,42 +568,42 @@ export function SetupWizardPage() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="label">Номер</label>
+                    <label className="label">{t('pages.setupWizard.number')}</label>
                     <input type="number" className="input" min={1} value={postForm.postNumber} onChange={(e) => setPostForm({ ...postForm, postNumber: Number(e.target.value) })} required />
                   </div>
                   <div>
-                    <label className="label">Серийный номер</label>
+                    <label className="label">{t('pages.setupWizard.serialNumber')}</label>
                     <input className="input" value={postForm.serialNumber} onChange={(e) => setPostForm({ ...postForm, serialNumber: e.target.value })} required />
                   </div>
                 </div>
                 <div>
-                  <label className="label">Название</label>
+                  <label className="label">{t('pages.setupWizard.name')}</label>
                   <input className="input" value={postForm.name} onChange={(e) => setPostForm({ ...postForm, name: e.target.value })} required />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="label">MQTT логин</label>
+                    <label className="label">{t('pages.setupWizard.mqttLogin')}</label>
                     <input className="input" value={postForm.mqttLogin} onChange={(e) => setPostForm({ ...postForm, mqttLogin: e.target.value })} placeholder={defaultMqttLogin(postForm.serialNumber || 'post')} />
                   </div>
                   <div>
-                    <label className="label">MQTT пароль</label>
+                    <label className="label">{t('pages.setupWizard.mqttPassword')}</label>
                     <input className="input font-mono text-xs" value={postForm.mqttPassword} onChange={(e) => setPostForm({ ...postForm, mqttPassword: e.target.value })} />
                   </div>
                 </div>
                 <button type="submit" className="btn-primary btn-sm" disabled={busy}>
-                  Создать пост
+                  {t('pages.setupWizard.createPost')}
                 </button>
               </form>
             ) : (
               <p className="text-sm text-panel-muted">
-                {!canPostCreate ? 'Создание постов требует права create' : 'Сначала создайте объект на предыдущем шаге'}
+                {!canPostCreate ? t('pages.setupWizard.createPostPermission') : t('pages.setupWizard.createWashFirst')}
               </p>
             )}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-panel-muted">
-                    <th className="pb-2 pr-3">Пост</th>
+                    <th className="pb-2 pr-3">{t('refs.post')}</th>
                     <th className="pb-2 pr-3">S/N</th>
                     <th className="pb-2">MQTT</th>
                   </tr>
@@ -613,29 +628,31 @@ export function SetupWizardPage() {
       case 'currency':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-panel-muted">В справочнике {catalogs?.currencies.length ?? '…'} валют</p>
+            <p className="text-sm text-panel-muted">
+              {t('pages.setupWizard.currenciesInRef', { count: catalogs?.currencies.length ?? '…' })}
+            </p>
             {canCurrencyUpdate ? (
               <div className="space-y-2">
-                <label className="label">Валюта по умолчанию</label>
+                <label className="label">{t('pages.setupWizard.defaultCurrency')}</label>
                 <select className="input" value={defaultCurrencyId} onChange={(e) => setDefaultCurrencyId(e.target.value)}>
-                  <option value="">Выберите…</option>
+                  <option value="">{t('pages.setupWizard.select')}</option>
                   {(catalogs?.currencies || []).map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.code} — {c.name} ({c.symbol}){c.isDefault ? ' · текущая' : ''}
+                      {c.code} — {c.name} ({c.symbol}){c.isDefault ? ` · ${t('pages.setupWizard.current')}` : ''}
                     </option>
                   ))}
                 </select>
                 <button type="button" className="btn-primary btn-sm" onClick={handleSetDefaultCurrency} disabled={busy || !defaultCurrencyId}>
-                  Сохранить
+                  {t('common.save')}
                 </button>
               </div>
             ) : (
               <p className="text-sm">
-                Текущая валюта:{' '}
+                {t('pages.setupWizard.currentCurrency')}:{' '}
                 <span className="font-medium">
-                  {catalogs?.currencies.find((c) => c.isDefault)?.code || 'не задана'}
+                  {catalogs?.currencies.find((c) => c.isDefault)?.code || t('pages.setupWizard.notSet')}
                 </span>
-                <span className="text-panel-muted"> (изменение требует права update)</span>
+                <span className="text-panel-muted"> ({t('pages.setupWizard.updatePermissionHint')})</span>
               </p>
             )}
           </div>
@@ -645,19 +662,19 @@ export function SetupWizardPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm text-panel-muted dark:text-panel-muted-dark">
-              После создания или изменения постов синхронизируйте учётные записи Mosquitto с данными CRM.
+              {t('pages.setupWizard.mqttSyncHint')}
             </p>
             <p className="text-sm">
-              Адрес брокера для устройств:{' '}
+              {t('pages.setupWizard.deviceBrokerAddress')}:{' '}
               <code className="rounded bg-panel-canvas px-1.5 py-0.5 text-xs">{mqttBrokerEndpoint()}</code>
             </p>
             {canMqtt ? (
               <button type="button" className="btn-primary btn-sm" onClick={handleMqttSync} disabled={busy}>
                 {busy ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                Синхронизировать MQTT
+                {t('pages.setupWizard.syncMqtt')}
               </button>
             ) : (
-              <p className="text-sm text-panel-muted">Синхронизация доступна пользователям с правами update/delete</p>
+              <p className="text-sm text-panel-muted">{t('pages.setupWizard.syncMqttPermission')}</p>
             )}
             {mqttSyncResult && <p className="text-sm text-emerald-600 dark:text-emerald-400">{mqttSyncResult}</p>}
           </div>
@@ -667,15 +684,15 @@ export function SetupWizardPage() {
         return (
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { label: 'Режимы работы', count: catalogs?.workModes.length, to: '/work-modes' },
-              { label: 'Типы скидок', count: catalogs?.discountTypes.length, to: '/discount-types' },
-              { label: 'Валюты', count: catalogs?.currencies.length, to: '/currency' },
+              { label: t('nav.items.workModes'), count: catalogs?.workModes.length, to: '/work-modes' },
+              { label: t('nav.items.discountTypes'), count: catalogs?.discountTypes.length, to: '/discount-types' },
+              { label: t('nav.items.currency'), count: catalogs?.currencies.length, to: '/currency' },
             ].map((item) => (
               <div key={item.label} className="rounded-lg border border-panel-border p-4 dark:border-panel-border-dark">
                 <div className="text-sm font-medium">{item.label}</div>
                 <div className="mt-1 text-2xl font-semibold">{item.count ?? '…'}</div>
                 <Link to={item.to} className="mt-2 inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400">
-                  Открыть справочник
+                  {t('pages.setupWizard.openRef')}
                   <ExternalLink size={12} />
                 </Link>
               </div>
@@ -687,23 +704,22 @@ export function SetupWizardPage() {
         return (
           <div className="space-y-4">
             <ul className="space-y-2 text-sm">
-              <li>Объектов: {catalogs?.washes.length ?? 0}</li>
-              <li>Постов: {catalogs?.posts.length ?? 0}</li>
+              <li>{t('pages.setupWizard.washesCount', { count: catalogs?.washes.length ?? 0 })}</li>
+              <li>{t('pages.setupWizard.postsCount', { count: catalogs?.posts.length ?? 0 })}</li>
               <li>
-                Валюта: {catalogs?.currencies.find((c) => c.isDefault)?.code || '—'}
+                {t('nav.items.currency')}: {catalogs?.currencies.find((c) => c.isDefault)?.code || '—'}
               </li>
               {skipped.size > 0 && (
-                <li className="text-panel-muted">Пропущено шагов: {skipped.size}</li>
+                <li className="text-panel-muted">{t('pages.setupWizard.skippedSteps', { count: skipped.size })}</li>
               )}
             </ul>
             {readOnly ? (
               <p className="text-sm text-panel-muted">
-                Нажмите «Понятно», чтобы подтвердить ознакомление. Настройка системы останется незавершённой до входа
-                администратора или оператора с правами update.
+                {t('pages.setupWizard.readOnlyDoneHint')}
               </p>
             ) : (
               <p className="text-sm text-panel-muted">
-                После завершения мастер больше не будет показываться автоматически. Повторный запуск — из меню или{' '}
+                {t('pages.setupWizard.doneHint')}{' '}
                 <code className="text-xs">/setup?restart=1</code>.
               </p>
             )}
@@ -730,12 +746,12 @@ export function SetupWizardPage() {
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2 text-sm text-panel-muted">
           <BrandLogo size="sm" />
-          <span>Мастер настройки</span>
+          <span>{t('nav.items.setupWizard')}</span>
         </div>
         <div className="flex items-center gap-2">
           {canManage && settings.complete && !forceRestart && (
             <Link to="/" className="btn-secondary btn-sm">
-              В панель
+              {t('nav.items.dashboard')}
             </Link>
           )}
           <ThemeToggle />
@@ -743,7 +759,7 @@ export function SetupWizardPage() {
       </div>
 
       <div className="mx-auto w-full max-w-3xl flex-1 px-4 pb-12">
-        <StepIndicator current={stepIndex} skipped={skipped} />
+        <StepIndicator current={stepIndex} skipped={skipped} skippedLabel={t('pages.setupWizard.skipped')} />
 
         <div className="rounded-2xl border border-panel-border bg-panel-surface p-6 shadow-panel dark:border-panel-border-dark dark:bg-panel-surface-dark sm:p-8">
           <h1 className="font-display text-xl font-semibold text-panel-ink dark:text-white sm:text-2xl">
@@ -761,24 +777,24 @@ export function SetupWizardPage() {
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
             <button type="button" className="btn-secondary" onClick={goBack} disabled={stepIndex === 0 || busy}>
               <ArrowLeft size={16} />
-              Назад
+              {t('dataTable.prev')}
             </button>
 
             <div className="flex flex-wrap gap-2">
               {!isLast && !readOnly && (
                 <button type="button" className="btn-secondary" onClick={() => goNext(true)} disabled={busy}>
                   <SkipForward size={16} />
-                  Пропустить
+                  {t('pages.setupWizard.skip')}
                 </button>
               )}
               {isLast ? (
                 <button type="button" className="btn-primary" onClick={finishWizard} disabled={busy}>
                   {busy && <Loader2 size={16} className="animate-spin" />}
-                  {readOnly ? 'Понятно' : 'Завершить настройку'}
+                  {readOnly ? t('pages.setupWizard.gotIt') : t('pages.setupWizard.finish')}
                 </button>
               ) : (
                 <button type="button" className="btn-primary" onClick={() => goNext(false)} disabled={busy}>
-                  Далее
+                  {t('dataTable.next')}
                   <ArrowRight size={16} />
                 </button>
               )}

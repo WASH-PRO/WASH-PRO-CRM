@@ -5,10 +5,12 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { BrandLogo } from '../components/BrandLogo';
 import { setWelcomeSeen, getWelcomeSeen } from '../utils/setupStorage';
 import { setupRoleHint } from '../utils/setupPermissions';
+import { useLocale } from '../i18n/LocaleContext';
 
 export function WelcomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLocale();
 
   if (user && getWelcomeSeen(user.id)) {
     return <Navigate to="/" replace />;
@@ -31,7 +33,7 @@ export function WelcomePage() {
             <BrandLogo size="md" />
             <div>
               <div className="text-sm font-semibold text-panel-ink dark:text-white">WASH PRO CRM</div>
-              <div className="text-xs text-panel-muted dark:text-slate-500">Добро пожаловать</div>
+              <div className="text-xs text-panel-muted dark:text-slate-500">{t('pages.welcome.welcome')}</div>
             </div>
           </div>
 
@@ -40,22 +42,23 @@ export function WelcomePage() {
           </div>
 
           <h1 className="font-display text-2xl font-semibold text-panel-ink dark:text-white">
-            Здравствуйте, {user?.name || user?.login}!
+            {t('pages.welcome.greeting', { name: user?.name || user?.login || '' })}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-panel-muted dark:text-panel-muted-dark">
-            Система готова к работе. Ваш уровень доступа:{' '}
+            {t('pages.welcome.systemReady')}{' '}
+            {t('pages.welcome.accessLevel')}{' '}
             <span className="font-medium text-panel-ink dark:text-panel-ink-dark">{setupRoleHint(user)}</span>.
-            Используйте боковое меню для мониторинга постов, карт и финансов.
+            {t('pages.welcome.useSidebar')}
           </p>
 
           <ul className="mt-5 space-y-2 text-sm text-panel-muted dark:text-panel-muted-dark">
-            <li>• Панель — сводка по объектам и постам</li>
-            <li>• Посты — состояние оборудования и MQTT</li>
-            <li>• Настройки — параметры системы (при наличии прав)</li>
+            <li>{t('pages.welcome.tipDashboard')}</li>
+            <li>{t('pages.welcome.tipPosts')}</li>
+            <li>{t('pages.welcome.tipSettings')}</li>
           </ul>
 
           <button type="button" className="btn-primary mt-8 w-full" onClick={finish}>
-            Перейти в систему
+            {t('pages.welcome.enterSystem')}
             <ArrowRight size={16} />
           </button>
         </div>

@@ -1,4 +1,5 @@
 import { lazy, type ComponentType } from 'react';
+import { tGlobal } from '../i18n/runtime';
 
 const CHUNK_RELOAD_KEY = 'wash_crm_chunk_reload';
 
@@ -20,7 +21,7 @@ async function importWithRetry<T extends Record<string, ComponentType>>(
       const module = await loader();
       const component = module[name];
       if (!component) {
-        throw new Error(`Экспорт «${String(name)}» не найден в модуле страницы`);
+        throw new Error(tGlobal('lazyPage.exportNotFound', { name: String(name) }));
       }
       sessionStorage.removeItem(CHUNK_RELOAD_KEY);
       return { default: component };

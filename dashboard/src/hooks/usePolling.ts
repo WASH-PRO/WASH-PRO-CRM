@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLiveMode } from '../context/LiveModeContext';
+import { tGlobal } from '../i18n/runtime';
 
 export type PollingFetcher<T> = (signal: AbortSignal) => Promise<T>;
 
@@ -23,7 +24,7 @@ async function runWithTimeout<T>(fetcher: PollingFetcher<T>, signal: AbortSignal
 
   return new Promise<T>((resolve, reject) => {
     const timer = window.setTimeout(() => {
-      reject(new Error('Превышено время ожидания ответа сервера'));
+      reject(new Error(tGlobal('polling.timeoutExceeded')));
     }, timeoutMs);
 
     const onAbort = () => {
@@ -75,7 +76,7 @@ export function usePolling<T>(
     } catch (e) {
       if (!mounted.current || requestId !== requestIdRef.current) return;
       if (isAbortError(e)) return;
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки');
+      setError(e instanceof Error ? e.message : tGlobal('polling.loadError'));
     } finally {
       activeControllersRef.current.delete(controller);
       if (mounted.current && requestId === requestIdRef.current) {

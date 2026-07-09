@@ -6,6 +6,7 @@ import { syncMqttUsers } from '../api/postDevice';
 import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
+import { useLocale } from '../i18n/LocaleContext';
 import { PageHeader, Loading, Modal, ErrorMessage } from '../components/UI';
 import { PostOnlineStatus } from '../components/PostOnlineStatus';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
@@ -57,6 +58,7 @@ function buildSettings(prev: PostSettings | undefined, form: PostFormState): Pos
 export function PostsPage() {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const { t } = useLocale();
   const canEdit = hasPermission('create', 'update');
   const canDelete = hasPermission('delete');
   const [error, setError] = useState('');
@@ -89,7 +91,7 @@ export function PostsPage() {
     try {
       await syncMqttUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось применить учётные записи MQTT');
+      setError(err instanceof Error ? err.message : t('pages.posts.mqttSyncFailed'));
       throw err;
     }
   };
@@ -128,14 +130,14 @@ export function PostsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить пост и все связанные данные (состояние, карты, статистика, финансы, MQTT)?')) return;
+    if (!confirm(t('pages.posts.confirmDeleteOne'))) return;
     try {
       await api(`/crm/posts/${id}`, { method: 'DELETE' });
       await applyMqttSync();
       clearCatalogCache('/crm/posts');
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка удаления');
+      setError(err instanceof Error ? err.message : t('pages.posts.deleteError'));
     }
   };
 
@@ -144,63 +146,63 @@ export function PostsPage() {
     return [
       {
         id: 'washId',
-        label: 'Объект',
+        label: t('pages.posts.filters.object'),
         options: washOptions,
         match: (p, v) => refId(p.washId) === v,
       },
     ];
-  }, [data?.washes]);
+  }, [data?.washes, t]);
 
   const columns: DataTableColumn<Post>[] = useMemo(
     () => [
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? 1 : 0),
-        searchValue: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? 'онлайн' : 'оффлайн'),
+        searchValue: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? t('status.online') : t('status.offline')),
         render: (p) => <PostOnlineStatus state={data?.stateByPost.get(p.id)} />,
       },
       {
         key: 'postNumber',
-        header: 'Номер поста',
+        header: t('pages.posts.columns.postNumber'),
         sortValue: (p) => p.postNumber,
         searchValue: (p) => `${p.postNumber} ${p.name} ${p.serialNumber}`,
         render: (p) => <span className="font-mono">{p.postNumber}</span>,
       },
       {
         key: 'wash',
-        header: 'Объект',
+        header: t('pages.posts.columns.object'),
         sortValue: (p) => washName(p.washId),
         searchValue: (p) => washName(p.washId),
         render: (p) => washName(p.washId),
       },
       {
         key: 'name',
-        header: 'Название',
+        header: t('pages.posts.columns.name'),
         searchValue: (p) => p.name,
         sortValue: (p) => p.name,
         render: (p) => p.name,
       },
       {
         key: 'serialNumber',
-        header: 'Серийный номер',
+        header: t('pages.posts.columns.serialNumber'),
         sortValue: (p) => p.serialNumber,
         searchValue: (p) => p.serialNumber,
         render: (p) => <span className="font-mono text-xs">{p.serialNumber}</span>,
       },
       {
         key: 'mqttLogin',
-        header: 'MQTT логин',
+        header: t('pages.posts.columns.mqttLogin'),
         searchValue: (p) => readPostMqttSettings(p.settings).mqttLogin,
         sortValue: (p) => readPostMqttSettings(p.settings).mqttLogin,
         render: (p) => (
-          <span className="font-mono text-xs">{readPostMqttSettings(p.settings).mqttLogin || '—'}</span>
+          <span className="font-mono text-xs">{readPostMqttSettings(p.settings).mqttLogin || t('common.notAvailable')}</span>
         ),
       },
       {
         key: 'createdAt',
-        header: 'Дата создания',
+        header: t('pages.posts.columns.createdAt'),
         sortable: true,
         sortValue: (p) => p.createdAt || '',
         searchValue: (p) => formatDateTime(p.createdAt),
@@ -218,7 +220,7 @@ export function PostsPage() {
                 e.stopPropagation();
                 navigate(`/posts/${p.id}#device-settings`);
               }}
-              title="Настройки устройства"
+              title={t('pages.posts.deviceSettings')}
             >
               <Settings size={14} />
             </button>
@@ -230,7 +232,7 @@ export function PostsPage() {
                   e.stopPropagation();
                   openEdit(p);
                 }}
-                title="Изменить"
+                title={t('common.edit')}
               >
                 <Pencil size={14} />
               </button>
@@ -243,7 +245,7 @@ export function PostsPage() {
                   e.stopPropagation();
                   handleDelete(p.id);
                 }}
-                title="Удалить"
+                title={t('common.delete')}
               >
                 <Trash2 size={14} />
               </button>
@@ -252,29 +254,29 @@ export function PostsPage() {
         ),
       },
     ],
-    [washName, canEdit, canDelete, navigate, data?.stateByPost]
+    [washName, canEdit, canDelete, navigate, data?.stateByPost, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<Post>[] => {
     const actions: DataTableBulkAction<Post>[] = [
       createExportBulkAction('posts.csv', [
-        { header: 'Статус', value: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? 'Онлайн' : 'Офлайн') },
-        { header: 'Номер', value: (p) => String(p.postNumber) },
-        { header: 'Объект', value: (p) => washName(p.washId) },
-        { header: 'Название', value: (p) => p.name },
-        { header: 'Серийный номер', value: (p) => p.serialNumber },
-        { header: 'MQTT логин', value: (p) => readPostMqttSettings(p.settings).mqttLogin },
-        { header: 'Дата создания', value: (p) => p.createdAt || '' },
+        { header: t('common.status'), value: (p) => (isPostOnline(data?.stateByPost.get(p.id)) ? t('status.online') : t('status.offline')) },
+        { header: t('pages.posts.export.number'), value: (p) => String(p.postNumber) },
+        { header: t('pages.posts.export.object'), value: (p) => washName(p.washId) },
+        { header: t('pages.posts.export.name'), value: (p) => p.name },
+        { header: t('pages.posts.export.serialNumber'), value: (p) => p.serialNumber },
+        { header: t('pages.posts.export.mqttLogin'), value: (p) => readPostMqttSettings(p.settings).mqttLogin },
+        { header: t('pages.posts.export.createdAt'), value: (p) => p.createdAt || '' },
       ]),
     ];
 
     if (canDelete) {
       actions.push({
         id: 'delete',
-        label: 'Удалить',
+        label: t('common.delete'),
         variant: 'danger',
         confirmMessage: (_rows, ids) =>
-          `Удалить ${ids.length} постов и все связанные данные?`,
+          t('pages.posts.confirmDeleteMany', { count: ids.length }),
         onAction: async (_rows, ids) => {
           await bulkDelete('/crm/posts', ids);
           await applyMqttSync();
@@ -284,7 +286,7 @@ export function PostsPage() {
     }
 
     return actions;
-  }, [canDelete, washName, refresh, data?.stateByPost]);
+  }, [canDelete, washName, refresh, data?.stateByPost, t]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -321,7 +323,7 @@ export function PostsPage() {
       setModal(false);
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     }
   };
 
@@ -330,9 +332,9 @@ export function PostsPage() {
   return (
     <div>
       <PageHeader
-        title="Посты"
-        subtitle="Посты объектов самообслуживания"
-        actions={canEdit && <button type="button" className="btn-primary" onClick={openCreate}><Plus size={16} /> Добавить</button>}
+        title={t('pages.posts.title')}
+        subtitle={t('pages.posts.subtitle')}
+        actions={canEdit && <button type="button" className="btn-primary" onClick={openCreate}><Plus size={16} /> {t('pages.posts.add')}</button>}
       />
       {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
       <DataTable
@@ -341,49 +343,46 @@ export function PostsPage() {
         data={data?.posts || []}
         rowKey={(p) => p.id}
         filters={filters}
-        searchPlaceholder="Поиск постов…"
+        searchPlaceholder={t('pages.posts.searchPlaceholder')}
         bulkActions={bulkActions}
         onRowClick={(p) => navigate(`/posts/${p.id}`)}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать пост' : 'Новый пост'}>
+      <Modal open={modal} onClose={() => setModal(false)} title={editId ? t('pages.posts.editTitle') : t('pages.posts.newTitle')}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label">Объект</label>
+            <label className="label">{t('pages.posts.fields.object')}</label>
             <select className="input" value={form.washId} onChange={(e) => setForm({ ...form, washId: e.target.value })} required>
-              <option value="">Выберите...</option>
+              <option value="">{t('pages.posts.selectObject')}</option>
               {(data?.washes || []).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="label">Номер поста</label>
+            <label className="label">{t('pages.posts.fields.postNumber')}</label>
             <input className="input" type="number" min={1} value={form.postNumber} onChange={(e) => setForm({ ...form, postNumber: Number(e.target.value) })} required />
           </div>
           <div>
-            <label className="label">Название</label>
+            <label className="label">{t('pages.posts.fields.name')}</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div>
-            <label className="label">Серийный номер</label>
+            <label className="label">{t('pages.posts.fields.serialNumber')}</label>
             <input className="input font-mono" value={form.serialNumber} onChange={(e) => updateSerialNumber(e.target.value)} required />
           </div>
 
           <div className="space-y-3 rounded-panel border border-panel-border bg-panel-canvas/60 p-4 dark:border-panel-border-dark dark:bg-[#0d1218]/60">
             <div>
-              <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">Подключение MQTT</h3>
+              <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">{t('pages.posts.mqtt.title')}</h3>
               <p className="field-hint mt-1">
-                Укажите на панели в NVS: <span className="font-mono">rm_addr</span> — IP сервера CRM,{' '}
-                <span className="font-mono">rm_port</span> — {brokerEndpoint.split(':')[1] || '1883'},{' '}
-                <span className="font-mono">rm_login</span> / <span className="font-mono">rm_pass</span> — значения ниже.
-                Не используйте логин <span className="font-mono">system</span> — он только для CRM.
+                {t('pages.posts.mqtt.hint', { port: brokerEndpoint.split(':')[1] || '1883' })}
               </p>
             </div>
             <div>
-              <label className="label">Брокер (rm_addr:rm_port)</label>
+              <label className="label">{t('pages.posts.mqtt.broker')}</label>
               <input className="input font-mono text-sm" value={brokerEndpoint} readOnly />
             </div>
             <div>
-              <label className="label">Логин MQTT (rm_login)</label>
+              <label className="label">{t('pages.posts.mqtt.login')}</label>
               <input
                 className="input font-mono"
                 value={form.mqttLogin}
@@ -395,7 +394,7 @@ export function PostsPage() {
               />
             </div>
             <div>
-              <label className="label">Пароль MQTT (rm_pass)</label>
+              <label className="label">{t('pages.posts.mqtt.password')}</label>
               <div className="flex gap-2">
                 <input
                   className="input font-mono"
@@ -407,7 +406,7 @@ export function PostsPage() {
                 <button
                   type="button"
                   className="btn-secondary btn-sm shrink-0"
-                  title="Сгенерировать пароль"
+                  title={t('pages.posts.mqtt.generatePassword')}
                   onClick={() => setForm({ ...form, mqttPassword: generateMqttPassword() })}
                 >
                   <RefreshCw size={14} />
@@ -416,7 +415,7 @@ export function PostsPage() {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary w-full">Сохранить</button>
+          <button type="submit" className="btn-primary w-full">{t('common.save')}</button>
         </form>
       </Modal>
     </div>

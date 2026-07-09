@@ -7,8 +7,10 @@ import { usePolling } from '../hooks/usePolling';
 import { deriveLogLevel, formatDateTime } from '../utils/format';
 import { createExportBulkAction } from '../utils/export';
 import type { LogEntry } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
 export function LogsPage() {
+  const { t } = useLocale();
   const [apiPage, setApiPage] = useState(1);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -37,7 +39,7 @@ export function LogsPage() {
     () => [
       {
         id: 'level',
-        label: 'Уровень',
+        label: t('pages.logs.level'),
         options: [
           { value: 'Debug', label: 'Debug' },
           { value: 'Info', label: 'Info' },
@@ -49,47 +51,47 @@ export function LogsPage() {
       },
       {
         id: 'action',
-        label: 'Категория',
+        label: t('common.category'),
         options: [
-          { value: 'api_call', label: 'API запросы' },
-          { value: 'error', label: 'Ошибки' },
-          { value: 'webhook_dispatch', label: 'Сетевые' },
-          { value: 'cron_run', label: 'Фоновые задачи' },
-          { value: 'mcp_call', label: 'Системные' },
-          { value: 'login', label: 'Авторизация' },
+          { value: 'api_call', label: t('logs.categories.apiCall') },
+          { value: 'error', label: t('logs.categories.error') },
+          { value: 'webhook_dispatch', label: t('logs.categories.webhookDispatch') },
+          { value: 'cron_run', label: t('logs.categories.cronRun') },
+          { value: 'mcp_call', label: t('logs.categories.mcpCall') },
+          { value: 'login', label: t('logs.categories.login') },
         ],
         match: (l, v) => l.action === v,
       },
     ],
-    []
+    [t]
   );
 
   const columns: DataTableColumn<LogEntry>[] = useMemo(
     () => [
       {
         key: 'level',
-        header: 'Уровень',
+        header: t('pages.logs.level'),
         sortValue: (l) => deriveLogLevel(l),
         searchValue: (l) => deriveLogLevel(l),
         render: (l) => deriveLogLevel(l),
       },
       {
         key: 'action',
-        header: 'Категория',
+        header: t('common.category'),
         searchValue: (l) => `${l.action} ${l.source || ''}`,
         sortValue: (l) => l.action,
         render: (l) => <span className="font-mono text-xs">{l.action}</span>,
       },
       {
         key: 'message',
-        header: 'Сообщение',
+        header: t('notificationsTable.message'),
         searchValue: (l) => l.message,
         sortValue: (l) => l.message,
         render: (l) => <span className="text-sm">{l.message}</span>,
       },
       {
         key: 'statusCode',
-        header: 'Код',
+        header: t('pages.logs.code'),
         sortValue: (l) => l.statusCode || 0,
         render: (l) => l.statusCode || '—',
       },
@@ -102,30 +104,30 @@ export function LogsPage() {
       },
       {
         key: 'createdAt',
-        header: 'Дата и время',
+        header: t('notificationsTable.dateTime'),
         sortValue: (l) => l.createdAt,
         render: (l) => formatDateTime(l.createdAt),
       },
     ],
-    []
+    [t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<LogEntry>[] => [
     createExportBulkAction('system-logs.csv', [
-      { header: 'Уровень', value: (l) => deriveLogLevel(l) },
-      { header: 'Категория', value: (l) => l.action },
-      { header: 'Сообщение', value: (l) => l.message },
-      { header: 'Код', value: (l) => String(l.statusCode ?? '') },
+      { header: t('pages.logs.level'), value: (l) => deriveLogLevel(l) },
+      { header: t('common.category'), value: (l) => l.action },
+      { header: t('notificationsTable.message'), value: (l) => l.message },
+      { header: t('pages.logs.code'), value: (l) => String(l.statusCode ?? '') },
       { header: 'IP', value: (l) => l.ip || '' },
-      { header: 'Дата и время', value: (l) => l.createdAt },
+      { header: t('notificationsTable.dateTime'), value: (l) => l.createdAt },
     ]),
-  ], []);
+  ], [t]);
 
   if (loading && !logs) return <Loading />;
 
   return (
     <div>
-      <PageHeader title="Логирование и диагностика" subtitle="Сортировка, фильтры и поиск по всем полям" />
+      <PageHeader title={t('pages.logs.title')} subtitle={t('pages.logs.subtitle')} />
 
       <DataTable
         tableId="logs"
@@ -133,7 +135,7 @@ export function LogsPage() {
         data={dateFiltered}
         rowKey={(l) => l.id}
         filters={filters}
-        searchPlaceholder="Поиск в логах…"
+        searchPlaceholder={t('pages.logs.searchPlaceholder')}
         toolbar={
           <div className="toolbar-cluster">
             <input
@@ -141,7 +143,7 @@ export function LogsPage() {
               className="input-inline"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              aria-label="С"
+              aria-label={t('pages.logs.dateFrom')}
             />
             <span className="text-sm text-panel-muted">—</span>
             <input
@@ -149,7 +151,7 @@ export function LogsPage() {
               className="input-inline"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              aria-label="По"
+              aria-label={t('pages.logs.dateTo')}
             />
             <button
               type="button"
@@ -159,7 +161,9 @@ export function LogsPage() {
             >
               API −
             </button>
-            <span className="flex h-9 items-center text-sm text-panel-muted">API стр. {apiPage}</span>
+            <span className="flex h-9 items-center text-sm text-panel-muted">
+              {t('pages.logs.apiPage', { page: apiPage })}
+            </span>
             <button type="button" className="btn-secondary btn-sm" onClick={() => setApiPage((p) => p + 1)}>
               API +
             </button>

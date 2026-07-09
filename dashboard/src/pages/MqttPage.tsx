@@ -6,6 +6,7 @@ import { usePolling } from '../hooks/usePolling';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatDateTime } from '../utils/format';
 import { createExportBulkAction } from '../utils/export';
+import { useLocale } from '../i18n/LocaleContext';
 
 export interface MqttTelemetryRow {
   id: string;
@@ -17,23 +18,23 @@ export interface MqttTelemetryRow {
   receivedAt?: string;
 }
 
-const MESSAGE_TYPE_LABELS: Record<string, string> = {
-  process: 'Состояние',
-  state: 'Состояние',
-  mode: 'Режим',
-  totals: 'Финансы',
-  finance: 'Финансы',
-  usages: 'Использование',
-  statistics: 'Использование',
-  credit: 'Зачисление',
-  card: 'Карта',
-  settings: 'Настройки',
-  command: 'Команда',
-  prices: 'Цены',
-  equipment: 'Оборудование',
-  event: 'Событие',
-  dlq: 'DLQ (ошибка)',
-  unknown: 'Неизвестно',
+const MESSAGE_TYPE_LABEL_KEYS: Record<string, string> = {
+  process: 'state',
+  state: 'state',
+  mode: 'mode',
+  totals: 'finance',
+  finance: 'finance',
+  usages: 'usage',
+  statistics: 'usage',
+  credit: 'credit',
+  card: 'card',
+  settings: 'settings',
+  command: 'command',
+  prices: 'prices',
+  equipment: 'equipment',
+  event: 'event',
+  dlq: 'dlq',
+  unknown: 'unknown',
 };
 
 const MESSAGE_TYPE_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'error'> = {
@@ -53,17 +54,18 @@ const MESSAGE_TYPE_VARIANT: Record<string, 'default' | 'success' | 'warning' | '
   unknown: 'error',
 };
 
-function payloadPreview(payload: Record<string, unknown>, max = 120): string {
+function payloadPreview(payload: Record<string, unknown>, emptyFallback: string, max = 120): string {
   try {
     const text = JSON.stringify(payload);
     return text.length > max ? `${text.slice(0, max)}…` : text;
   } catch {
-    return '—';
+    return emptyFallback;
   }
 }
 
-function messageTypeLabel(type: string): string {
-  return MESSAGE_TYPE_LABELS[type] || type;
+function messageTypeLabel(type: string, t: (key: string) => string): string {
+  const key = MESSAGE_TYPE_LABEL_KEYS[type];
+  return key ? t(`pages.mqtt.messageTypes.${key}`) : type;
 }
 
 function topicSuffix(topic?: string): string {
@@ -75,6 +77,7 @@ function topicSuffix(topic?: string): string {
 const MQTT_PAGE_SIZE = 100;
 
 export function MqttPage() {
+  const { t, locale } = useLocale();
   const [pages, setPages] = useState(1);
   const [totalRows, setTotalRows] = useState<number | null>(null);
 
@@ -108,46 +111,46 @@ export function MqttPage() {
 
   const typeOptions = useMemo(() => {
     const types = new Set((rows || []).map((r) => r.messageType).filter(Boolean));
-    return [...types].sort().map((t) => ({ value: t, label: messageTypeLabel(t) }));
-  }, [rows]);
+    return [...types].sort().map((type) => ({ value: type, label: messageTypeLabel(type, t) }));
+  }, [rows, t]);
 
   const suffixOptions = useMemo(() => {
     const suffixes = new Set((rows || []).map((r) => topicSuffix(r.mqttTopic)).filter(Boolean));
-    return [...suffixes].sort().map((s) => ({ value: s, label: messageTypeLabel(s) }));
-  }, [rows]);
+    return [...suffixes].sort().map((s) => ({ value: s, label: messageTypeLabel(s, t) }));
+  }, [rows, t]);
 
   const typeCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const row of rows || []) {
-      const label = messageTypeLabel(row.messageType);
+      const label = messageTypeLabel(row.messageType, t);
       counts.set(label, (counts.get(label) || 0) + 1);
     }
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
-  }, [rows]);
+  }, [rows, t]);
 
   const filters: DataTableFilter<MqttTelemetryRow>[] = useMemo(
     () => [
       {
         id: 'messageType',
-        label: 'Тип сообщения',
+        label: t('pages.mqtt.filters.messageType'),
         options: typeOptions,
         match: (r, v) => r.messageType === v,
       },
       {
         id: 'topicSuffix',
-        label: 'Суффикс топика',
+        label: t('pages.mqtt.filters.topicSuffix'),
         options: suffixOptions,
         match: (r, v) => topicSuffix(r.mqttTopic) === v,
       },
     ],
-    [typeOptions, suffixOptions]
+    [typeOptions, suffixOptions, t]
   );
 
   const columns: DataTableColumn<MqttTelemetryRow>[] = useMemo(
     () => [
       {
         key: 'receivedAt',
-        header: 'Получено',
+        header: t('pages.mqtt.columns.receivedAt'),
         className: 'table-cell-nowrap',
         sortable: true,
         sortValue: (r) => r.receivedAt || '',
@@ -155,62 +158,62 @@ export function MqttPage() {
       },
       {
         key: 'messageType',
-        header: 'Тип',
+        header: t('notificationsTable.type'),
         className: 'table-cell-nowrap',
         sortable: true,
-        searchValue: (r) => `${r.messageType} ${messageTypeLabel(r.messageType)}`,
+        searchValue: (r) => `${r.messageType} ${messageTypeLabel(r.messageType, t)}`,
         sortValue: (r) => r.messageType,
         render: (r) => (
           <Badge variant={MESSAGE_TYPE_VARIANT[r.messageType] || 'default'}>
-            {messageTypeLabel(r.messageType)}
+            {messageTypeLabel(r.messageType, t)}
           </Badge>
         ),
       },
       {
         key: 'mqttTopic',
-        header: 'Топик MQTT',
+        header: t('pages.mqtt.columns.topic'),
         sortable: true,
         searchValue: (r) => r.mqttTopic || '',
         sortValue: (r) => r.mqttTopic || '',
         render: (r) => (
-          <code className="text-xs text-brand-700 dark:text-brand-300">{r.mqttTopic || '—'}</code>
+          <code className="text-xs text-brand-700 dark:text-brand-300">{r.mqttTopic || t('common.notAvailable')}</code>
         ),
       },
       {
         key: 'postSerial',
-        header: 'Пост',
+        header: t('refs.post'),
         className: 'table-cell-nowrap',
         sortable: true,
         searchValue: (r) => r.postSerial || '',
         sortValue: (r) => r.postSerial || '',
-        render: (r) => <span className="font-mono text-sm">{r.postSerial || '—'}</span>,
+        render: (r) => <span className="font-mono text-sm">{r.postSerial || t('common.notAvailable')}</span>,
       },
       {
         key: 'payload',
-        header: 'Данные (как пришли)',
-        searchValue: (r) => payloadPreview(r.payload, 500),
+        header: t('pages.mqtt.columns.payload'),
+        searchValue: (r) => payloadPreview(r.payload, t('common.notAvailable'), 500),
         render: (r) => (
           <pre
             className="max-w-[min(100%,20rem)] overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-panel-canvas px-2 py-1 font-mono text-[11px] text-panel-muted dark:bg-panel-canvas-dark dark:text-panel-muted-dark sm:max-w-md"
             title={JSON.stringify(r.payload, null, 2)}
           >
-            {payloadPreview(r.payload)}
+            {payloadPreview(r.payload, t('common.notAvailable'))}
           </pre>
         ),
       },
     ],
-    []
+    [t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<MqttTelemetryRow>[] => [
     createExportBulkAction('mqtt-messages.csv', [
-      { header: 'Получено', value: (r) => r.receivedAt || '' },
-      { header: 'Тип', value: (r) => r.messageType },
-      { header: 'Топик', value: (r) => r.mqttTopic || '' },
-      { header: 'Пост', value: (r) => r.postSerial || '' },
-      { header: 'Данные', value: (r) => JSON.stringify(r.payload) },
+      { header: t('pages.mqtt.columns.receivedAt'), value: (r) => r.receivedAt || '' },
+      { header: t('notificationsTable.type'), value: (r) => r.messageType },
+      { header: t('pages.mqtt.columns.topic'), value: (r) => r.mqttTopic || '' },
+      { header: t('refs.post'), value: (r) => r.postSerial || '' },
+      { header: t('pages.mqtt.columns.payloadData'), value: (r) => JSON.stringify(r.payload) },
     ]),
-  ], []);
+  ], [t]);
 
   if (loading && !rows) return <Loading />;
 
@@ -218,31 +221,35 @@ export function MqttPage() {
     .slice(0, 6)
     .map(([label, n]) => `${label}: ${n}`)
     .join(' · ');
+  const subtitle = `${t('pages.mqtt.subtitleBase', { shown: rows?.length ?? 0 })}${
+    totalRows != null ? t('pages.mqtt.subtitleOfTotal', { total: totalRows }) : ''
+  }${countSummary ? t('pages.mqtt.subtitleCounts', { counts: countSummary }) : ''}${t('pages.mqtt.subtitleUpdated', {
+    updatedAt: lastUpdatedAt
+      ? new Date(lastUpdatedAt).toLocaleTimeString(locale === 'ru' ? 'ru-RU' : 'en-US')
+      : t('common.notAvailable'),
+  })}`;
 
   return (
     <div>
       <PageHeader
         title="MQTT"
-        subtitle={`Все входящие сообщения брокера · показано ${rows?.length ?? 0}${
-          totalRows != null ? ` из ${totalRows}` : ''
-        }${countSummary ? ` · ${countSummary}` : ''} · обновлено ${
-          lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString('ru') : '—'
-        }`}
+        subtitle={subtitle}
       />
       <p className="mb-4 text-sm text-panel-muted dark:text-panel-muted-dark">
-        Журнал фиксирует <strong>каждое</strong> MQTT-сообщение как есть:{' '}
-        <code className="text-xs">state/process</code> (состояние),{' '}
-        <code className="text-xs">state/totals</code> (финансы),{' '}
-        <code className="text-xs">state/usages</code> (использование),{' '}
+        {t('pages.mqtt.descriptionIntro')} <strong>{t('pages.mqtt.descriptionEvery')}</strong>{' '}
+        {t('pages.mqtt.descriptionAsIs')}{' '}
+        <code className="text-xs">state/process</code> ({t('pages.mqtt.messageTypes.state')}),{' '}
+        <code className="text-xs">state/totals</code> ({t('pages.mqtt.messageTypes.finance')}),{' '}
+        <code className="text-xs">state/usages</code> ({t('pages.mqtt.messageTypes.usage')}),{' '}
         <code className="text-xs">state/credit</code>, <code className="text-xs">state/card</code>,{' '}
-        <code className="text-xs">set/*</code> (настройки, команды, цены),{' '}
-        <code className="text-xs">dlq</code> (ошибки обработки) и legacy{' '}
+        <code className="text-xs">set/*</code> ({t('pages.mqtt.descriptionSetFamily')}),{' '}
+        <code className="text-xs">dlq</code> ({t('pages.mqtt.descriptionDlq')}) {t('pages.mqtt.descriptionLegacy')}{' '}
         <code className="text-xs">wash/telemetry/*</code>.
       </p>
       {hasMore && (
         <div className="mb-4">
           <button type="button" className="btn-secondary btn-sm" onClick={() => setPages((p) => p + 1)}>
-            Загрузить ещё ({MQTT_PAGE_SIZE} записей)
+            {t('pages.mqtt.loadMore', { count: MQTT_PAGE_SIZE })}
           </button>
         </div>
       )}
@@ -252,7 +259,7 @@ export function MqttPage() {
         data={rows || []}
         rowKey={(r) => r.id}
         filters={filters}
-        searchPlaceholder="Поиск по топику, посту, типу, данным…"
+        searchPlaceholder={t('pages.mqtt.searchPlaceholder')}
         bulkActions={bulkActions}
       />
     </div>

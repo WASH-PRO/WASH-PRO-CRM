@@ -24,6 +24,7 @@ import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
+import { useLocale } from '../i18n/LocaleContext';
 
 interface BotForm {
   name: string;
@@ -51,12 +52,17 @@ function resolveBotType(bot: TelegramBot): TelegramBotType {
 
 type PageState = 'loading' | 'ready' | 'unavailable';
 
-function runStatus(bot: TelegramBot): { label: string; variant: 'success' | 'warning' | 'default' | 'error' } {
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+
+function runStatus(
+  bot: TelegramBot,
+  t: TranslateFn
+): { label: string; variant: 'success' | 'warning' | 'default' | 'error' } {
   const run = bot.active_run;
-  if (run?.status === 'running') return { label: 'Запущен', variant: 'success' };
-  if (run?.status === 'queued') return { label: 'Запуск…', variant: 'warning' };
-  if (bot.status === 'disabled') return { label: 'Остановлен', variant: 'default' };
-  return { label: 'Остановлен', variant: 'default' };
+  if (run?.status === 'running') return { label: t('status.started'), variant: 'success' };
+  if (run?.status === 'queued') return { label: t('pages.telegram.starting'), variant: 'warning' };
+  if (bot.status === 'disabled') return { label: t('status.stopped'), variant: 'default' };
+  return { label: t('status.stopped'), variant: 'default' };
 }
 
 function botRunState(bot: TelegramBot): 'running' | 'queued' | 'stopped' {
@@ -86,6 +92,7 @@ function applyTelegramBotPatches(base: TelegramBot[], patches: Map<string, Teleg
 }
 
 export function TelegramPage() {
+  const { t } = useLocale();
   const [pageState, setPageState] = useState<PageState>('loading');
   const [serviceError, setServiceError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -107,15 +114,15 @@ export function TelegramPage() {
     try {
       const health = await checkTelegramBridgeHealth();
       if (!health.ok) {
-        throw new Error(health.error ?? 'PyOrchestrator недоступен');
+        throw new Error(health.error ?? t('telegram.errors.pyorchUnavailable'));
       }
       setPageState('ready');
     } catch (err) {
       setPageState('unavailable');
-      const msg = err instanceof Error ? err.message : 'Сервис недоступен';
+      const msg = err instanceof Error ? err.message : t('pages.telegram.serviceUnavailable');
       if (msg.includes('Failed to fetch') || msg.includes('502') || msg.includes('503')) {
         setServiceError(
-          'PyOrchestrator не запущен. Убедитесь, что в .env стоит PYORCHESTRATOR_ENABLED=true, затем выполните: ./scripts/start.sh'
+          t('pages.telegram.pyorchDisabledHelp')
         );
       } else {
         setServiceError(msg);
@@ -229,7 +236,7 @@ export function TelegramPage() {
         rememberBot(updated);
       } else {
         if (!form.token.trim()) {
-          setFormError('Укажите токен бота от @BotFather');
+          setFormError(t('pages.telegram.tokenRequired'));
           return;
         }
         const created = await createTelegramBot({
@@ -246,7 +253,7 @@ export function TelegramPage() {
       setModalOpen(false);
       void refresh();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setFormError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -260,7 +267,7 @@ export function TelegramPage() {
       rememberBot(updated);
       void refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Не удалось запустить');
+      alert(err instanceof Error ? err.message : t('pages.telegram.startFailed'));
     } finally {
       setActionId(null);
     }
@@ -274,14 +281,14 @@ export function TelegramPage() {
       rememberBot(updated);
       void refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Не удалось остановить');
+      alert(err instanceof Error ? err.message : t('pages.telegram.stopFailed'));
     } finally {
       setActionId(null);
     }
   };
 
   const handleDelete = async (bot: TelegramBot) => {
-    if (!confirm(`Удалить бота «${bot.name}»?`)) return;
+    if (!confirm(t('pages.telegram.confirmDeleteOne', { name: bot.name }))) return;
     setActionId(bot.id);
     try {
       await deleteTelegramBot(bot.id);
@@ -289,7 +296,7 @@ export function TelegramPage() {
       setBots((prev) => (prev ?? []).filter((item) => String(item.id) !== String(bot.id)));
       void refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Не удалось удалить');
+      alert(err instanceof Error ? err.message : t('pages.telegram.deleteFailed'));
     } finally {
       setActionId(null);
     }
@@ -304,7 +311,7 @@ export function TelegramPage() {
       const link = await getTelegramBotLink(bot.id);
       setQrLink(link);
     } catch (err) {
-      setQrError(err instanceof Error ? err.message : 'Не удалось получить ссылку на бота');
+      setQrError(err instanceof Error ? err.message : t('pages.telegram.qrFailed'));
     } finally {
       setQrLoading(false);
     }
@@ -325,12 +332,12 @@ export function TelegramPage() {
   const bulkActions: DataTableBulkAction<TelegramBot>[] = useMemo(
     () => [
       createExportBulkAction('telegram-bots.csv', [
-        { header: 'Название', value: (bot) => bot.name },
-        { header: 'Описание', value: (bot) => bot.description || '' },
-        { header: 'Тип', value: (bot) => TELEGRAM_BOT_TYPE_LABELS[resolveBotType(bot)] },
-        { header: 'Статус', value: (bot) => runStatus(bot).label },
+        { header: t('pages.telegram.name'), value: (bot) => bot.name },
+        { header: t('pages.telegram.description'), value: (bot) => bot.description || '' },
+        { header: t('pages.telegram.type'), value: (bot) => TELEGRAM_BOT_TYPE_LABELS[resolveBotType(bot)] },
+        { header: t('common.status'), value: (bot) => runStatus(bot, t).label },
         {
-          header: 'Команды',
+          header: t('pages.telegram.commands'),
           value: (bot) => {
             const type = resolveBotType(bot);
             const cmds = bot.metadata.allowed_commands?.length
@@ -339,11 +346,11 @@ export function TelegramPage() {
             return cmds.join(', ');
           },
         },
-        { header: 'Дата создания', value: (bot) => bot.created_at || '' },
+        { header: t('pages.telegram.createdAt'), value: (bot) => bot.created_at || '' },
       ]),
       {
         id: 'start',
-        label: 'Запустить',
+        label: t('status.started'),
         variant: 'primary',
         disabled: (rows) => !rows.some((bot) => botRunState(bot) === 'stopped'),
         onAction: async (rows) => {
@@ -354,18 +361,23 @@ export function TelegramPage() {
               const updated = await startTelegramBot(bot.id);
               rememberBot(updated);
             } catch (err) {
-              errors.push(`${bot.name}: ${err instanceof Error ? err.message : 'ошибка'}`);
+              errors.push(`${bot.name}: ${err instanceof Error ? err.message : t('status.error')}`);
             }
           }
           void refresh();
           if (errors.length > 0) {
-            throw new Error(`Запущено ${targets.length - errors.length} из ${targets.length}.\n${errors.join('\n')}`);
+            throw new Error(
+              t('pages.telegram.bulkStarted', {
+                done: targets.length - errors.length,
+                total: targets.length,
+              }) + `.\n${errors.join('\n')}`
+            );
           }
         },
       },
       {
         id: 'stop',
-        label: 'Остановить',
+        label: t('status.stopped'),
         disabled: (rows) => !rows.some((bot) => botRunState(bot) === 'running' || botRunState(bot) === 'queued'),
         onAction: async (rows) => {
           const targets = rows.filter(
@@ -377,20 +389,25 @@ export function TelegramPage() {
               const updated = await stopTelegramBot(bot.id);
               rememberBot(updated);
             } catch (err) {
-              errors.push(`${bot.name}: ${err instanceof Error ? err.message : 'ошибка'}`);
+              errors.push(`${bot.name}: ${err instanceof Error ? err.message : t('status.error')}`);
             }
           }
           void refresh();
           if (errors.length > 0) {
-            throw new Error(`Остановлено ${targets.length - errors.length} из ${targets.length}.\n${errors.join('\n')}`);
+            throw new Error(
+              t('pages.telegram.bulkStopped', {
+                done: targets.length - errors.length,
+                total: targets.length,
+              }) + `.\n${errors.join('\n')}`
+            );
           }
         },
       },
       {
         id: 'delete',
-        label: 'Удалить',
+        label: t('common.delete'),
         variant: 'danger',
-        confirmMessage: (_rows, ids) => `Удалить ${ids.length} Telegram-ботов? Это действие необратимо.`,
+        confirmMessage: (_rows, ids) => t('pages.telegram.confirmDeleteMany', { count: ids.length }),
         onAction: async (rows) => {
           const errors: string[] = [];
           for (const bot of rows) {
@@ -399,40 +416,45 @@ export function TelegramPage() {
               forgetBot(bot.id);
               setBots((prev) => (prev ?? []).filter((item) => String(item.id) !== String(bot.id)));
             } catch (err) {
-              errors.push(`${bot.name}: ${err instanceof Error ? err.message : 'ошибка'}`);
+              errors.push(`${bot.name}: ${err instanceof Error ? err.message : t('status.error')}`);
             }
           }
           void refresh();
           if (errors.length > 0) {
-            throw new Error(`Удалено ${rows.length - errors.length} из ${rows.length}.\n${errors.join('\n')}`);
+            throw new Error(
+              t('pages.telegram.bulkDeleted', {
+                done: rows.length - errors.length,
+                total: rows.length,
+              }) + `.\n${errors.join('\n')}`
+            );
           }
         },
       },
     ],
-    [forgetBot, rememberBot, refresh, setBots]
+    [forgetBot, rememberBot, refresh, setBots, t]
   );
 
   const filters: DataTableFilter<TelegramBot>[] = useMemo(
     () => [
       {
         id: 'status',
-        label: 'Статус',
+        label: t('common.status'),
         options: [
-          { value: 'running', label: 'Запущен' },
-          { value: 'queued', label: 'Запуск…' },
-          { value: 'stopped', label: 'Остановлен' },
+          { value: 'running', label: t('status.started') },
+          { value: 'queued', label: t('pages.telegram.starting') },
+          { value: 'stopped', label: t('status.stopped') },
         ],
         match: (bot, value) => botRunState(bot) === value,
       },
     ],
-    []
+    [t]
   );
 
   const columns: DataTableColumn<TelegramBot>[] = useMemo(
     () => [
       {
         key: 'name',
-        header: 'Бот',
+        header: t('pages.telegram.bot'),
         sortable: true,
         sortValue: (bot) => bot.name,
         searchValue: (bot) => `${bot.name} ${bot.description || ''}`,
@@ -447,25 +469,25 @@ export function TelegramPage() {
       },
       {
         key: 'bot_type',
-        header: 'Тип',
+        header: t('pages.telegram.type'),
         sortable: true,
         sortValue: (bot) => resolveBotType(bot),
         render: (bot) => TELEGRAM_BOT_TYPE_LABELS[resolveBotType(bot)],
       },
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (bot) => botRunState(bot),
-        searchValue: (bot) => runStatus(bot).label,
+        searchValue: (bot) => runStatus(bot, t).label,
         render: (bot) => {
-          const st = runStatus(bot);
+          const st = runStatus(bot, t);
           return <Badge variant={st.variant}>{st.label}</Badge>;
         },
       },
       {
         key: 'commands',
-        header: 'Команды',
+        header: t('pages.telegram.commands'),
         sortable: true,
         sortValue: (bot) => {
           const type = resolveBotType(bot);
@@ -503,7 +525,7 @@ export function TelegramPage() {
       },
       {
         key: 'created_at',
-        header: 'Дата создания',
+        header: t('pages.telegram.createdAt'),
         sortable: true,
         sortValue: (bot) => bot.created_at || '',
         render: (bot) => formatDateTime(bot.created_at),
@@ -520,7 +542,7 @@ export function TelegramPage() {
                 <button
                   type="button"
                   className="btn-icon text-emerald-600"
-                  title="Запустить"
+                  title={t('status.started')}
                   disabled={busy}
                   onClick={() => void handleStart(bot)}
                 >
@@ -530,7 +552,7 @@ export function TelegramPage() {
                 <button
                   type="button"
                   className="btn-icon text-amber-600"
-                  title="Остановить"
+                  title={t('status.stopped')}
                   disabled={busy}
                   onClick={() => void handleStop(bot)}
                 >
@@ -540,19 +562,19 @@ export function TelegramPage() {
               <button
                 type="button"
                 className="btn-icon"
-                title="QR-код и ссылка на бота"
+                title={t('pages.telegram.qrTitle')}
                 disabled={busy}
                 onClick={() => void openQrModal(bot)}
               >
                 <QrCode size={16} />
               </button>
-              <button type="button" className="btn-icon" title="Настройки" onClick={() => openEdit(bot)}>
+              <button type="button" className="btn-icon" title={t('nav.items.settings')} onClick={() => openEdit(bot)}>
                 <Pencil size={16} />
               </button>
               <button
                 type="button"
                 className="btn-icon text-red-500"
-                title="Удалить"
+                title={t('common.delete')}
                 disabled={busy}
                 onClick={() => void handleDelete(bot)}
               >
@@ -563,13 +585,13 @@ export function TelegramPage() {
         },
       },
     ],
-    [actionId]
+    [actionId, t]
   );
 
   if (pageState === 'loading') {
     return (
       <div>
-        <PageHeader title="Telegram боты" subtitle="Создание и управление ботами из WASH PRO" />
+        <PageHeader title={t('nav.items.telegram')} subtitle={t('pages.telegram.subtitleShort')} />
         <Loading />
       </div>
     );
@@ -578,12 +600,12 @@ export function TelegramPage() {
   if (pageState === 'unavailable') {
     return (
       <div>
-        <PageHeader title="Telegram боты" subtitle="Создание и управление ботами из WASH PRO" />
+        <PageHeader title={t('nav.items.telegram')} subtitle={t('pages.telegram.subtitleShort')} />
         <div className="card max-w-xl space-y-4">
-          <ErrorMessage message={serviceError ?? 'Сервис Telegram-ботов недоступен'} />
+          <ErrorMessage message={serviceError ?? t('pages.telegram.serviceUnavailable')} />
           <button type="button" className="btn-secondary inline-flex items-center gap-2" onClick={() => void checkService()}>
             <RefreshCw size={16} />
-            Повторить
+            {t('common.refresh')}
           </button>
         </div>
       </div>
@@ -593,12 +615,12 @@ export function TelegramPage() {
   return (
     <div>
       <PageHeader
-        title="Telegram боты"
-        subtitle="Боты «Управление» и «Сервисный» — доступ по Telegram ID в карточке пользователя. «Информационный» — публичный, без регистрации."
+        title={t('nav.items.telegram')}
+        subtitle={t('pages.telegram.subtitle')}
         actions={
           <button type="button" className="btn-primary" onClick={openCreate}>
             <Plus size={16} className="mr-1.5 inline" />
-            Создать бота
+            {t('pages.telegram.createBot')}
           </button>
         }
       />
@@ -613,11 +635,11 @@ export function TelegramPage() {
         <Loading />
       ) : botList.length === 0 ? (
         <div className="card">
-          <Empty message="Telegram-ботов пока нет" />
+          <Empty message={t('pages.telegram.empty')} />
           <div className="mt-4 flex justify-center pb-4">
             <button type="button" className="btn-primary" onClick={openCreate}>
               <Plus size={16} className="mr-1.5 inline" />
-              Создать первого бота
+              {t('pages.telegram.createFirst')}
             </button>
           </div>
         </div>
@@ -632,12 +654,12 @@ export function TelegramPage() {
           onFilterChange={(id, value) => {
             if (id === 'status') setStatusFilter(value);
           }}
-          searchPlaceholder="Поиск ботов…"
+          searchPlaceholder={t('pages.telegram.searchPlaceholder')}
           bulkActions={bulkActions}
           emptyMessage={
             botList.length > 0 && statusFilter
-              ? 'Нет ботов с выбранным статусом'
-              : 'Telegram-ботов пока нет'
+              ? t('pages.telegram.noBotsByStatus')
+              : t('pages.telegram.empty')
           }
         />
       )}
@@ -645,34 +667,34 @@ export function TelegramPage() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Настройки бота' : 'Новый Telegram-бот'}
+        title={editing ? t('pages.telegram.editBot') : t('pages.telegram.newBot')}
       >
         <form onSubmit={handleSaveBot} className="space-y-4">
           {formError && <ErrorMessage message={formError} />}
 
           <div>
-            <label className="label">Название</label>
+            <label className="label">{t('pages.telegram.name')}</label>
             <input
               className="input"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Бот для мойки на Ленина"
+              placeholder={t('pages.telegram.namePlaceholder')}
               required
             />
           </div>
 
           <div>
-            <label className="label">Описание</label>
+            <label className="label">{t('pages.telegram.description')}</label>
             <input
               className="input"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Необязательно"
+              placeholder={t('pages.groups.optional')}
             />
           </div>
 
           <div>
-            <label className="label">Тип бота</label>
+            <label className="label">{t('pages.telegram.type')}</label>
             <select
               className="input"
               value={form.botType}
@@ -690,7 +712,9 @@ export function TelegramPage() {
           </div>
 
           <div>
-            <label className="label">Token {editing ? '(оставьте пустым, чтобы не менять)' : ''}</label>
+            <label className="label">
+              Token {editing ? t('pages.telegram.tokenEditHint') : ''}
+            </label>
             <input
               className="input font-mono text-xs"
               value={form.token}
@@ -702,16 +726,18 @@ export function TelegramPage() {
 
           {form.botType === 'informational' ? (
             <div className="rounded-lg border border-panel-border p-3 text-sm dark:border-panel-border-dark">
-              <p className="font-medium text-panel-ink dark:text-panel-ink-dark">Меню информационного бота</p>
+              <p className="font-medium text-panel-ink dark:text-panel-ink-dark">{t('pages.telegram.infoBotMenu')}</p>
               <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
-                📰 Новости · 💰 Цены · 🅿️ Занятость · 🎁 Акции. Публичный доступ — Telegram ID не требуется.
-                Каждый пользователь пишет боту в личном чате — диалоги изолированы, группы не поддерживаются.
-                Контент — в разделе <Link to="/info-messages" className="text-brand-600 hover:underline dark:text-brand-400">Информация</Link>.
+                {t('pages.telegram.infoBotHintStart')}{' '}
+                <Link to="/info-messages" className="text-brand-600 hover:underline dark:text-brand-400">
+                  {t('nav.items.infoMessages')}
+                </Link>
+                .
               </p>
             </div>
           ) : (
             <div>
-              <label className="label mb-2">Разрешённые команды</label>
+              <label className="label mb-2">{t('pages.telegram.allowedCommands')}</label>
               <div className="space-y-3">
                 {WASH_TELEGRAM_COMMAND_GROUPS.map((group) => (
                   <div key={group.label}>
@@ -740,22 +766,26 @@ export function TelegramPage() {
                 checked={form.startAfterCreate}
                 onChange={(e) => setForm({ ...form, startAfterCreate: e.target.checked })}
               />
-              Запустить сразу после создания
+              {t('pages.telegram.startAfterCreate')}
             </label>
           )}
 
           <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <button type="button" className="btn-secondary" onClick={() => setModalOpen(false)}>
-              Отмена
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? 'Сохранение…' : editing ? 'Сохранить' : 'Создать бота'}
+              {saving ? t('common.saving') : editing ? t('common.save') : t('pages.telegram.createBot')}
             </button>
           </div>
         </form>
       </Modal>
 
-      <Modal open={Boolean(qrBot)} onClose={closeQrModal} title={qrBot ? `Ссылка на бота «${qrBot.name}»` : 'Ссылка на бота'}>
+      <Modal
+        open={Boolean(qrBot)}
+        onClose={closeQrModal}
+        title={qrBot ? t('pages.telegram.botLinkWithName', { name: qrBot.name }) : t('pages.telegram.botLink')}
+      >
         {qrLoading && <Loading />}
         {qrError && <ErrorMessage message={qrError} />}
         {qrLink && (
@@ -763,12 +793,12 @@ export function TelegramPage() {
             <div className="flex justify-center">
               <img
                 src={qrLink.qrUrl}
-                alt={`QR-код бота @${qrLink.username}`}
+                alt={t('pages.telegram.qrAlt', { username: qrLink.username })}
                 className="h-52 w-52 rounded-lg border border-panel-border bg-white p-2 dark:border-panel-border-dark"
               />
             </div>
             <div className="space-y-2 text-sm">
-              <div className="text-panel-muted dark:text-panel-muted-dark">Ссылка для клиентов</div>
+              <div className="text-panel-muted dark:text-panel-muted-dark">{t('pages.telegram.clientLink')}</div>
               <a
                 href={qrLink.url}
                 target="_blank"

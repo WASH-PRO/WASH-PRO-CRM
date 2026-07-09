@@ -2,11 +2,15 @@ import type { InfoMessage } from '../types';
 
 export type InfoMessageDisplayStatus = 'draft' | 'scheduled' | 'published';
 
-export const INFO_MESSAGE_STATUS_LABELS: Record<InfoMessageDisplayStatus, string> = {
-  draft: 'Черновик',
-  scheduled: 'По расписанию',
-  published: 'Опубликовано',
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+
+export function getInfoMessageStatusLabels(t: TranslateFn): Record<InfoMessageDisplayStatus, string> {
+  return {
+    draft: t('status.draft'),
+    scheduled: t('status.scheduled'),
+    published: t('status.published'),
+  };
+}
 
 export const INFO_MESSAGE_STATUS_VARIANT: Record<InfoMessageDisplayStatus, 'default' | 'warning' | 'success'> = {
   draft: 'default',

@@ -5,6 +5,7 @@ import { getProfile, setStoredUser, updateProfile } from '../api/client';
 import { listDapGroups } from '../api/admin';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, Badge, ErrorMessage } from '../components/UI';
+import { useLocale } from '../i18n/LocaleContext';
 import { entityId, resolveGroupLabel } from '../utils/rbac';
 import { formatDateTime } from '../utils/format';
 import type { DapUser, User } from '../types';
@@ -13,6 +14,7 @@ type ProfileData = User & Partial<Pick<DapUser, 'status' | 'lastLoginAt' | 'crea
 
 export function ProfilePage() {
   const { user, hasPermission, refreshUser } = useAuth();
+  const { t } = useLocale();
   const [searchParams] = useSearchParams();
   const startEditing = searchParams.get('edit') === '1';
 
@@ -47,11 +49,11 @@ export function ProfilePage() {
         password: '',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить профиль');
+      setError(err instanceof Error ? err.message : t('pages.profile.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -87,7 +89,7 @@ export function ProfilePage() {
       setEditing(false);
       setForm((prev) => ({ ...prev, password: '' }));
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      setFormError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -98,12 +100,12 @@ export function ProfilePage() {
   return (
     <div>
       <PageHeader
-        title="Мой профиль"
-        subtitle="Учётная запись и персональные настройки"
+        title={t('pages.profile.title')}
+        subtitle={t('pages.profile.subtitle')}
         actions={
           !editing && (
             <button type="button" className="btn-primary" onClick={() => setEditing(true)}>
-              <Pencil size={16} /> Редактировать
+              <Pencil size={16} /> {t('common.edit')}
             </button>
           )
         }
@@ -119,11 +121,11 @@ export function ProfilePage() {
         <div className="card max-w-2xl space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="label !mb-1">Логин</p>
+              <p className="label !mb-1">{t('pages.profile.login')}</p>
               <p className="font-mono text-sm text-panel-ink dark:text-panel-ink-dark">{profile.login}</p>
             </div>
             <div>
-              <p className="label !mb-1">Имя</p>
+              <p className="label !mb-1">{t('pages.profile.name')}</p>
               <p className="text-sm text-panel-ink dark:text-panel-ink-dark">{profile.name}</p>
             </div>
             <div>
@@ -132,7 +134,7 @@ export function ProfilePage() {
             </div>
             {'status' in profile && profile.status && (
               <div>
-                <p className="label !mb-1">Статус</p>
+                <p className="label !mb-1">{t('common.status')}</p>
                 <Badge variant={profile.status === 'active' ? 'success' : profile.status === 'suspended' ? 'error' : 'default'}>
                   {profile.status}
                 </Badge>
@@ -141,7 +143,7 @@ export function ProfilePage() {
           </div>
 
           <div>
-            <p className="label !mb-2">Группы доступа</p>
+            <p className="label !mb-2">{t('pages.profile.accessGroups')}</p>
             <div className="flex flex-wrap gap-2">
               {groupLabels.length ? (
                 groupLabels.map(({ key, label }) => (
@@ -150,14 +152,14 @@ export function ProfilePage() {
                   </span>
                 ))
               ) : (
-                <span className="text-sm text-panel-muted">—</span>
+                <span className="text-sm text-panel-muted">{t('common.notAvailable')}</span>
               )}
             </div>
           </div>
 
           {profile.lastLoginAt && (
             <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-              Последний вход: {formatDateTime(profile.lastLoginAt)}
+              {t('pages.profile.lastLogin', { value: formatDateTime(profile.lastLoginAt) })}
             </p>
           )}
 
@@ -167,7 +169,7 @@ export function ProfilePage() {
                 to={`/users?edit=${encodeURIComponent(userId)}`}
                 className="text-sm text-brand-600 hover:underline dark:text-brand-400"
               >
-                Расширенное редактирование (группы, статус) →
+                {t('pages.profile.advancedEdit')}
               </Link>
             </div>
           )}
@@ -178,11 +180,11 @@ export function ProfilePage() {
         <form onSubmit={handleSubmit} className="card max-w-2xl space-y-4">
           {formError && <ErrorMessage message={formError} />}
           <div>
-            <label className="label">Логин</label>
+            <label className="label">{t('pages.profile.login')}</label>
             <input className="input font-mono" value={profile.login} disabled readOnly />
           </div>
           <div>
-            <label className="label">Имя</label>
+            <label className="label">{t('pages.profile.name')}</label>
             <input
               className="input"
               value={form.name}
@@ -201,7 +203,7 @@ export function ProfilePage() {
             />
           </div>
           <div>
-            <label className="label">Новый пароль (необязательно)</label>
+            <label className="label">{t('pages.profile.newPasswordOptional')}</label>
             <input
               className="input"
               type="password"
@@ -220,17 +222,17 @@ export function ProfilePage() {
                 setFormError(null);
               }}
             >
-              Отмена
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? 'Сохранение…' : 'Сохранить'}
+              {saving ? t('common.saving') : t('common.save')}
             </button>
           </div>
           {canManageUsers && userId && (
             <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-              Для смены групп и статуса используйте{' '}
+              {t('pages.profile.groupsStatusHint')}{' '}
               <Link to={`/users?edit=${encodeURIComponent(userId)}`} className="text-brand-600 hover:underline dark:text-brand-400">
-                редактирование пользователя
+                {t('pages.profile.userEditLink')}
               </Link>
               .
             </p>

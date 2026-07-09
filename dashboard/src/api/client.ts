@@ -1,3 +1,5 @@
+import { tGlobal } from '../i18n/runtime';
+
 const TOKEN_KEY = 'wash_crm_token';
 const REFRESH_KEY = 'wash_crm_refresh';
 const USER_KEY = 'wash_crm_user';
@@ -104,12 +106,12 @@ async function fetchApi<T>(
 
   if (res.status === 401) {
     notifyAuthExpired();
-    throw new Error('Сессия истекла. Войдите снова.');
+    throw new Error(tGlobal('errors.sessionExpired'));
   }
 
   const text = await res.text();
   if (!text.trim()) {
-    if (!res.ok) throw new Error(`Ошибка запроса: ${res.status}`);
+    if (!res.ok) throw new Error(tGlobal('errors.requestFailed', { status: res.status }));
     return { success: true };
   }
 
@@ -118,12 +120,12 @@ async function fetchApi<T>(
     json = JSON.parse(text) as ApiResult<T>;
   } catch {
     throw new Error(
-      res.ok ? 'Некорректный ответ сервера' : text.slice(0, 200) || `Ошибка запроса: ${res.status}`
+      res.ok ? tGlobal('errors.invalidServerResponse') : text.slice(0, 200) || tGlobal('errors.requestFailed', { status: res.status })
     );
   }
 
   if (!json.success) {
-    throw new Error(json.error || `Ошибка запроса: ${res.status}`);
+    throw new Error(json.error || tGlobal('errors.requestFailed', { status: res.status }));
   }
   return json as ApiResult<T> & Record<string, unknown>;
 }
@@ -228,8 +230,8 @@ export function formatWashDeleteSummary(
   const objects = results.length;
   const posts = results.reduce((sum, row) => sum + (row.deletedPosts ?? 0), 0);
   const related = results.reduce((sum, row) => sum + (row.deletedRelated ?? 0), 0);
-  const label = options?.objectLabel ?? 'объект(ов)';
-  return `Удалено: ${objects} ${label}, ${posts} постов, ${related} связанных записей (состояния, карты, статистика, телеметрия, уведомления).`;
+  const label = options?.objectLabel ?? tGlobal('api.objectLabel');
+  return tGlobal('api.deleteSummary', { objects, label, posts, related });
 }
 
 export async function deleteWash(id: string): Promise<WashDeleteResult> {
@@ -379,7 +381,7 @@ export async function login(login: string, password: string) {
     refreshToken: string;
     user: unknown & { permissions?: import('../types').Permission[] };
   }>;
-  if (!json.success || !json.data) throw new Error(json.error || 'Ошибка входа');
+  if (!json.success || !json.data) throw new Error(json.error || tGlobal('errors.loginFailed'));
   setTokens(json.data.accessToken, json.data.refreshToken);
   setStoredUser(json.data.user);
   setStoredPermissions(decodeJwtPermissions(json.data.accessToken));

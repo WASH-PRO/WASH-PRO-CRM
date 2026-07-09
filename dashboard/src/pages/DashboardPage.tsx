@@ -7,6 +7,7 @@ import { DashboardCharts } from '../components/DashboardCharts';
 import { LIVE_INTERVAL_DASHBOARD_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { useCurrency } from '../hooks/useCurrency';
+import { useLocale } from '../i18n/LocaleContext';
 import { formatMoney } from '../utils/format';
 import { bulkDelete } from '../utils/bulk';
 import {
@@ -34,6 +35,7 @@ export function DashboardPage() {
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const { currency } = useCurrency();
+  const { t } = useLocale();
 
   const fetchData = useCallback(async (signal: AbortSignal): Promise<DashboardData> => {
     const [washes, posts, states, notificationPage, usageStats, financeStats] = await Promise.all([
@@ -68,7 +70,7 @@ export function DashboardPage() {
 
   const deleteOne = async (id: string) => {
     if (!canEdit) return;
-    if (!confirm('Удалить уведомление?')) return;
+    if (!confirm(t('pages.dashboard.confirmDeleteNotification'))) return;
     await bulkDelete('/crm/notifications', [id]);
     refresh();
   };
@@ -130,10 +132,10 @@ export function DashboardPage() {
   if (error && !data) {
     return (
       <div>
-        <PageHeader title="Обзор" />
+        <PageHeader title={t('pages.dashboard.title')} />
         <ErrorMessage message={error} />
         <button type="button" className="btn-secondary mt-4" onClick={() => void refresh()}>
-          Повторить
+          {t('pages.dashboard.retry')}
         </button>
       </div>
     );
@@ -142,18 +144,37 @@ export function DashboardPage() {
 
   const notificationHint =
     data.notificationTotal > NOTIFICATIONS_DASHBOARD_LIMIT
-      ? ` · последние ${NOTIFICATIONS_DASHBOARD_LIMIT} из ${data.notificationTotal}`
+      ? t('pages.dashboard.notificationHint', { limit: NOTIFICATIONS_DASHBOARD_LIMIT, total: data.notificationTotal })
       : '';
 
   return (
     <div>
-      <PageHeader title="Обзор" subtitle={`До инкассации · ${data.posts.length} постов · ${data.washes.length} автомоек`} />
+      <PageHeader
+        title={t('pages.dashboard.title')}
+        subtitle={t('pages.dashboard.subtitle', { posts: data.posts.length, washes: data.washes.length })}
+      />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Наличная выручка" value={formatMoney(finance.cash, currency)} hint="До инкассации" />
-        <StatCard label="Безналичная выручка" value={formatMoney(finance.cashless, currency)} hint="До инкассации" />
-        <StatCard label="Общая выручка" value={formatMoney(finance.revenue, currency)} hint="До инкассации" />
-        <StatCard label="Сумма скидок" value={formatMoney(finance.discounts, currency)} hint="До инкассации" />
+        <StatCard
+          label={t('pages.dashboard.cashRevenue')}
+          value={formatMoney(finance.cash, currency)}
+          hint={t('pages.dashboard.beforeCollection')}
+        />
+        <StatCard
+          label={t('pages.dashboard.cashlessRevenue')}
+          value={formatMoney(finance.cashless, currency)}
+          hint={t('pages.dashboard.beforeCollection')}
+        />
+        <StatCard
+          label={t('pages.dashboard.totalRevenue')}
+          value={formatMoney(finance.revenue, currency)}
+          hint={t('pages.dashboard.beforeCollection')}
+        />
+        <StatCard
+          label={t('pages.dashboard.discountAmount')}
+          value={formatMoney(finance.discounts, currency)}
+          hint={t('pages.dashboard.beforeCollection')}
+        />
       </div>
 
       <DashboardCharts
@@ -168,9 +189,9 @@ export function DashboardPage() {
       />
 
       <div className="card">
-        <h2 className="mb-1 font-semibold text-panel-ink dark:text-panel-ink-dark">Последние уведомления</h2>
+        <h2 className="mb-1 font-semibold text-panel-ink dark:text-panel-ink-dark">{t('pages.dashboard.latestNotifications')}</h2>
         {notificationHint && (
-          <p className="field-hint mb-4">Показаны{notificationHint}</p>
+          <p className="field-hint mb-4">{t('pages.dashboard.shownNotifications', { hint: notificationHint })}</p>
         )}
         {!notificationHint && <div className="mb-4" />}
         <DataTable
@@ -179,9 +200,9 @@ export function DashboardPage() {
           data={data.notifications}
           rowKey={(n) => n.id}
           filters={notificationFilters(false)}
-          searchPlaceholder="Поиск уведомлений…"
+          searchPlaceholder={t('pages.dashboard.searchPlaceholder')}
           pageSize={10}
-          emptyMessage="Нет уведомлений"
+          emptyMessage={t('pages.dashboard.empty')}
           defaultSortKey="date"
           defaultSortDir="desc"
           bulkActions={notificationBulkActions}

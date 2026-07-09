@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
+import { useLocale } from '../i18n/LocaleContext';
 
 export interface TabNavItem {
   to: string;
@@ -19,8 +20,9 @@ const columnClass: Record<NonNullable<TabNavProps['columns']>, string> = {
 };
 
 export function TabNav({ items, columns = 3, className }: TabNavProps) {
+  const { t } = useLocale();
   return (
-    <nav className={clsx('tab-bar', columnClass[columns], className)} aria-label="Подразделы">
+    <nav className={clsx('tab-bar', columnClass[columns], className)} aria-label={t('tabNav.ariaLabel')}>
       {items.map((item) => (
         <NavLink
           key={item.to}

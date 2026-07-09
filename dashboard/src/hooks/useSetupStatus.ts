@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { loadSetupSettings } from '../api/setup';
 import type { SetupSettings } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
 export function useSetupStatus() {
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ export function useSetupStatus() {
       setSettings(result.settings);
       setSettingId(result.settingId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить статус установки');
+      setError(err instanceof Error ? err.message : tGlobal('setup.statusLoadFailed'));
     } finally {
       setLoading(false);
     }

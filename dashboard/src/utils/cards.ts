@@ -1,11 +1,18 @@
 import type { CardStatus } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
 export type { CardStatus };
 
-export const CARD_STATUS_LABELS: Record<CardStatus, string> = {
-  success: 'Успешно',
-  rejected: 'Отклонено',
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
+
+export function getCardStatusLabels(t: TranslateFn): Record<CardStatus, string> {
+  return {
+    success: t('cards.status.success'),
+    rejected: t('cards.status.rejected'),
+  };
+}
+
+export const CARD_STATUS_LABELS: Record<CardStatus, string> = getCardStatusLabels(tGlobal);
 
 const LEGACY_SUCCESS = new Set(['active']);
 
@@ -18,7 +25,7 @@ export function normalizeCardStatus(status: string): CardStatus {
 }
 
 export function getCardStatusLabel(status: string): string {
-  return CARD_STATUS_LABELS[normalizeCardStatus(status)];
+  return getCardStatusLabels(tGlobal)[normalizeCardStatus(status)];
 }
 
 export function getCardStatusBadgeVariant(status: string): 'success' | 'error' {

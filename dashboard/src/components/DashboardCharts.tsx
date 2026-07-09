@@ -16,11 +16,12 @@ import { useTheme } from '../context/ThemeContext';
 import { formatMoney, type CurrencyConfig } from '../utils/format';
 import { buildDashboardPaymentShareSeries, buildDashboardUsageShareSeries } from '../utils/statsAggregation';
 import type { FinanceStat, Post, UsageStat } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
-function formatUsageSeconds(seconds: number): string {
-  if (seconds >= 3600) return `${(seconds / 3600).toFixed(1)} ч`;
-  if (seconds >= 60) return `${Math.round(seconds / 60)} мин`;
-  return `${seconds} сек`;
+function formatUsageSeconds(seconds: number, t: (key: string, params?: Record<string, string | number>) => string): string {
+  if (seconds >= 3600) return t('dashboardCharts.hoursShort', { value: (seconds / 3600).toFixed(1) });
+  if (seconds >= 60) return t('dashboardCharts.minutesShort', { value: Math.round(seconds / 60) });
+  return t('dashboardCharts.secondsShort', { value: seconds });
 }
 
 interface ShareSlice {
@@ -41,12 +42,22 @@ interface DashboardChartsProps {
   errorCount: number;
 }
 
-function ChartCard({ title, children, empty }: { title: string; children: React.ReactNode; empty?: boolean }) {
+function ChartCard({
+  title,
+  children,
+  empty,
+  emptyMessage,
+}: {
+  title: string;
+  children: React.ReactNode;
+  empty?: boolean;
+  emptyMessage: string;
+}) {
   return (
     <div className="card">
       <h2 className="mb-4 font-semibold">{title}</h2>
       {empty ? (
-        <p className="flex h-64 items-center justify-center text-sm text-panel-muted dark:text-panel-muted-dark sm:h-80">Нет данных для графика</p>
+        <p className="flex h-64 items-center justify-center text-sm text-panel-muted dark:text-panel-muted-dark sm:h-80">{emptyMessage}</p>
       ) : (
         <div className="h-64 sm:h-80">{children}</div>
       )}
@@ -111,6 +122,7 @@ export function DashboardCharts({
   maintenanceCount,
   errorCount,
 }: DashboardChartsProps) {
+  const { t, locale } = useLocale();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -124,10 +136,10 @@ export function DashboardCharts({
   };
 
   const postStatusCards = [
-    { label: 'Постов онлайн', value: online, color: 'text-emerald-600', bg: 'panel-stat', hint: 'данные за 30 сек' },
-    { label: 'Постов офлайн', value: offline, color: 'text-panel-muted', bg: 'panel-stat', hint: 'нет данных > 30 сек' },
-    { label: 'Постов в обслуживании', value: maintenanceCount, color: 'text-amber-600', bg: 'panel-stat' },
-    { label: 'Постов в ошибке', value: errorCount, color: 'text-red-600', bg: 'panel-stat' },
+    { label: t('dashboardCharts.postsOnline'), value: online, color: 'text-emerald-600', bg: 'panel-stat', hint: t('dashboardCharts.onlineHint') },
+    { label: t('dashboardCharts.postsOffline'), value: offline, color: 'text-panel-muted', bg: 'panel-stat', hint: t('dashboardCharts.offlineHint') },
+    { label: t('dashboardCharts.postsMaintenance'), value: maintenanceCount, color: 'text-amber-600', bg: 'panel-stat' },
+    { label: t('dashboardCharts.postsError'), value: errorCount, color: 'text-red-600', bg: 'panel-stat' },
   ];
 
   const usageShare = useMemo(
@@ -155,8 +167,8 @@ export function DashboardCharts({
     financeStats.forEach((s) => {
       const ts = s.recordedAt ? new Date(s.recordedAt).getTime() : 0;
       const key = s.recordedAt
-        ? new Date(s.recordedAt).toLocaleDateString('ru', { day: '2-digit', month: 'short' })
-        : 'Текущий';
+        ? new Date(s.recordedAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: '2-digit', month: 'short' })
+        : t('dashboardCharts.current');
       if (!byDate[key]) byDate[key] = { revenue: 0, ts };
       byDate[key].revenue += s.totalRevenue || 0;
       byDate[key].ts = Math.max(byDate[key].ts, ts);
@@ -175,14 +187,14 @@ export function DashboardCharts({
             <div className="text-xs font-medium uppercase tracking-wide text-panel-muted dark:text-panel-muted-dark">{c.label}</div>
             <div className={`mt-2 text-3xl font-semibold tracking-tight ${c.color}`}>{c.value}</div>
             <div className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
-              {c.hint ? c.hint : `из ${posts.length} постов`}
+              {c.hint ? c.hint : t('dashboardCharts.outOfPosts', { count: posts.length })}
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="Использование" empty={usageShareTotal <= 0}>
+        <ChartCard title={t('dashboardCharts.usageTitle')} empty={usageShareTotal <= 0} emptyMessage={t('dashboardCharts.empty')}>
           <ShareDonutChart
             data={usageShare}
             total={usageShareTotal}
@@ -190,12 +202,12 @@ export function DashboardCharts({
             tooltipStyle={tooltipStyle}
             formatValue={(value, total) => {
               const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-              return `${formatUsageSeconds(value)} (${pct}%)`;
+              return `${formatUsageSeconds(value, t)} (${pct}%)`;
             }}
           />
         </ChartCard>
 
-        <ChartCard title="Доли поступлений" empty={paymentShareTotal <= 0}>
+        <ChartCard title={t('dashboardCharts.paymentShareTitle')} empty={paymentShareTotal <= 0} emptyMessage={t('dashboardCharts.empty')}>
           <ShareDonutChart
             data={paymentShare}
             total={paymentShareTotal}
@@ -209,7 +221,7 @@ export function DashboardCharts({
         </ChartCard>
 
         <div className="lg:col-span-2">
-          <ChartCard title="Выручка" empty={revenueTimeline.length === 0}>
+          <ChartCard title={t('dashboardCharts.revenueTitle')} empty={revenueTimeline.length === 0} emptyMessage={t('dashboardCharts.empty')}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={revenueTimeline} margin={{ top: 8, right: 12, left: 4, bottom: 24 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -217,7 +229,7 @@ export function DashboardCharts({
                 <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} width={56} />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value: number) => [formatMoney(value, currency), 'Выручка']}
+                  formatter={(value: number) => [formatMoney(value, currency), t('dashboardCharts.revenueTitle')]}
                 />
                 <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>

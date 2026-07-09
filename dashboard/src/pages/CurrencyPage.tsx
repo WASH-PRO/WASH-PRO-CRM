@@ -10,10 +10,12 @@ import type { Currency } from '../types';
 import { bulkDelete } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
+import { useLocale } from '../i18n/LocaleContext';
 
 const emptyForm = { code: '', name: '', symbol: '', isDefault: false };
 
 export function CurrencyPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('create', 'update', 'delete');
   const [modal, setModal] = useState(false);
@@ -56,7 +58,7 @@ export function CurrencyPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Удалить валюту?')) return;
+    if (!confirm(t('pages.currency.confirmDeleteOne'))) return;
     await api(`/crm/currencies/${id}`, { method: 'DELETE' });
     refresh();
   };
@@ -87,8 +89,8 @@ export function CurrencyPage() {
   const filters: DataTableFilter<Currency>[] = [
     {
       id: 'isDefault',
-      label: 'По умолчанию',
-      options: [{ value: 'yes', label: 'Активная' }],
+      label: t('pages.currency.default'),
+      options: [{ value: 'yes', label: t('pages.currency.active') }],
       match: (c, v) => v === 'yes' && c.isDefault,
     },
   ];
@@ -97,7 +99,7 @@ export function CurrencyPage() {
     () => [
       {
         key: 'code',
-        header: 'Код',
+        header: t('pages.currency.code'),
         sortable: true,
         searchValue: (c) => `${c.code} ${c.name} ${c.symbol}`,
         sortValue: (c) => c.code,
@@ -105,29 +107,29 @@ export function CurrencyPage() {
       },
       {
         key: 'name',
-        header: 'Название',
+        header: t('pages.currency.name'),
         sortable: true,
         sortValue: (c) => c.name,
         render: (c) => c.name,
       },
       {
         key: 'symbol',
-        header: 'Символ',
+        header: t('pages.currency.symbol'),
         sortable: true,
         sortValue: (c) => c.symbol,
         render: (c) => <span className="text-lg">{c.symbol}</span>,
       },
       {
         key: 'isDefault',
-        header: 'По умолчанию',
+        header: t('pages.currency.default'),
         sortable: true,
         sortValue: (c) => (c.isDefault ? 1 : 0),
         render: (c) =>
           c.isDefault ? (
-            <Badge variant="success">Активна</Badge>
+            <Badge variant="success">{t('pages.currency.active')}</Badge>
           ) : canEdit ? (
             <button type="button" className="btn-secondary !py-1 !px-2 text-xs" onClick={() => setAsDefault(c)}>
-              Сделать активной
+              {t('pages.currency.makeActive')}
             </button>
           ) : (
             '—'
@@ -135,7 +137,7 @@ export function CurrencyPage() {
       },
       {
         key: 'createdAt',
-        header: 'Дата создания',
+        header: t('pages.currency.createdAt'),
         sortable: true,
         sortValue: (c) => c.createdAt || '',
         render: (c) => formatDateTime(c.createdAt),
@@ -151,7 +153,7 @@ export function CurrencyPage() {
                     type="button"
                     className="btn-secondary !px-2 !py-1"
                     onClick={() => openEdit(c)}
-                    title="Изменить"
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -160,7 +162,7 @@ export function CurrencyPage() {
                       type="button"
                       className="btn-secondary !px-2 !py-1 text-red-600"
                       onClick={() => handleDelete(c.id)}
-                      title="Удалить"
+                      title={t('common.delete')}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -171,25 +173,25 @@ export function CurrencyPage() {
           ]
         : []),
     ],
-    [canEdit, currencies]
+    [canEdit, currencies, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<Currency>[] => {
     const actions: DataTableBulkAction<Currency>[] = [
       createExportBulkAction('currencies.csv', [
-        { header: 'Код', value: (c) => c.code },
-        { header: 'Название', value: (c) => c.name },
-        { header: 'Символ', value: (c) => c.symbol },
-        { header: 'По умолчанию', value: (c) => (c.isDefault ? 'да' : 'нет') },
-        { header: 'Дата создания', value: (c) => c.createdAt || '' },
+        { header: t('pages.currency.code'), value: (c) => c.code },
+        { header: t('pages.currency.name'), value: (c) => c.name },
+        { header: t('pages.currency.symbol'), value: (c) => c.symbol },
+        { header: t('pages.currency.default'), value: (c) => (c.isDefault ? t('common.yes') : t('common.no')) },
+        { header: t('pages.currency.createdAt'), value: (c) => c.createdAt || '' },
       ]),
     ];
     if (canEdit) {
       actions.push({
         id: 'delete',
-        label: 'Удалить',
+        label: t('common.delete'),
         variant: 'danger',
-        confirmMessage: (_rows, ids) => `Удалить ${ids.length} валют?`,
+        confirmMessage: (_rows, ids) => t('pages.currency.confirmDeleteMany', { count: ids.length }),
         disabled: (rows) => rows.some((c) => c.isDefault),
         onAction: async (_rows, ids) => {
           await bulkDelete('/crm/currencies', ids);
@@ -198,38 +200,65 @@ export function CurrencyPage() {
       });
     }
     return actions;
-  }, [canEdit, refresh]);
+  }, [canEdit, refresh, t]);
 
   if (loading && !currencies) return <Loading />;
 
   return (
     <div>
       <PageHeader
-        title="Валюты"
-        subtitle="Справочник валют — название и символ хранятся в /api/crm/currencies"
-        actions={canEdit && <button type="button" className="btn-primary" onClick={openCreate}><Plus size={16} /> Добавить</button>}
+        title={t('nav.items.currency')}
+        subtitle={t('pages.currency.subtitle')}
+        actions={
+          canEdit && (
+            <button type="button" className="btn-primary" onClick={openCreate}>
+              <Plus size={16} /> {t('pages.currency.add')}
+            </button>
+          )
+        }
       />
-      <DataTable tableId="currency" columns={columns} data={currencies || []} rowKey={(c) => c.id} filters={filters} searchPlaceholder="Поиск валют…" bulkActions={bulkActions} isRowSelectable={(c) => !c.isDefault} />
+      <DataTable
+        tableId="currency"
+        columns={columns}
+        data={currencies || []}
+        rowKey={(c) => c.id}
+        filters={filters}
+        searchPlaceholder={t('pages.currency.searchPlaceholder')}
+        bulkActions={bulkActions}
+        isRowSelectable={(c) => !c.isDefault}
+      />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? 'Редактировать валюту' : 'Новая валюта'}>
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        title={editId ? t('pages.currency.edit') : t('pages.currency.new')}
+      >
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="label">Код ISO</label>
+            <label className="label">{t('pages.currency.isoCode')}</label>
             <input className="input font-mono" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required maxLength={3} placeholder="RUB" />
           </div>
           <div>
-            <label className="label">Название валюты</label>
-            <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Российский рубль" />
+            <label className="label">{t('pages.currency.currencyName')}</label>
+            <input
+              className="input"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+              placeholder={t('pages.currency.namePlaceholder')}
+            />
           </div>
           <div>
-            <label className="label">Символ</label>
+            <label className="label">{t('pages.currency.symbol')}</label>
             <input className="input" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} required placeholder="₽" />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} />
-            Использовать по умолчанию в интерфейсе
+            {t('pages.currency.useDefault')}
           </label>
-          <button type="submit" className="btn-primary w-full">Сохранить</button>
+          <button type="submit" className="btn-primary w-full">
+            {t('common.save')}
+          </button>
         </form>
       </Modal>
     </div>

@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { Empty } from './UI';
 import { TableColumnPicker } from './TableColumnPicker';
 import { useTableColumnVisibility } from '../hooks/useTableColumnVisibility';
+import { useLocale } from '../i18n/LocaleContext';
 
 export interface DataTableColumn<T> {
   key: string;
@@ -83,9 +84,9 @@ export function DataTable<T>({
   columns,
   data,
   rowKey,
-  searchPlaceholder = 'Поиск…',
+  searchPlaceholder,
   pageSize: initialPageSize = DEFAULT_PAGE_SIZE,
-  emptyMessage = 'Нет данных',
+  emptyMessage,
   toolbar,
   toolbarPlacement = 'end',
   filters = [],
@@ -98,6 +99,9 @@ export function DataTable<T>({
   defaultSortKey = null,
   defaultSortDir = 'asc',
 }: DataTableProps<T>) {
+  const { t } = useLocale();
+  const searchPlaceholderText = searchPlaceholder ?? t('dataTable.searchPlaceholder');
+  const emptyMessageText = emptyMessage ?? t('common.noData');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(defaultSortDir);
@@ -320,7 +324,7 @@ export function DataTable<T>({
               <Search size={16} className="search-field-icon" />
               <input
                 className="input-search"
-                placeholder={searchPlaceholder}
+                placeholder={searchPlaceholderText}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -349,7 +353,7 @@ export function DataTable<T>({
                   value={mergedFilterValues[f.id] || ''}
                   onChange={(e) => setFilter(f.id, e.target.value)}
                 >
-                  <option value="">{f.allLabel ?? 'Все'}</option>
+                  <option value="">{f.allLabel ?? t('common.all')}</option>
                   {f.options.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
@@ -363,7 +367,7 @@ export function DataTable<T>({
       {selectable && selectedIds.size > 0 && (
         <div className="table-selection-bar">
           <span className="font-medium text-brand-800 dark:text-brand-300">
-            Выбрано: {selectedIds.size}
+            {t('dataTable.selected', { count: selectedIds.size })}
           </span>
           {bulkActions.map((action) => {
             const ids = selectedRows.map((row) => rowKey(row));
@@ -376,12 +380,12 @@ export function DataTable<T>({
                 disabled={disabled}
                 onClick={() => runBulkAction(action)}
               >
-                {runningActionId === action.id ? 'Выполняется…' : action.label}
+                {runningActionId === action.id ? t('dataTable.runningAction') : action.label}
               </button>
             );
           })}
           <button type="button" className="btn-secondary btn-sm" onClick={clearSelection}>
-            Снять выделение
+            {t('dataTable.clearSelection')}
           </button>
         </div>
       )}
@@ -398,7 +402,7 @@ export function DataTable<T>({
                     className="rounded border-slate-300"
                     checked={pageAllSelected}
                     onChange={togglePage}
-                    aria-label="Выбрать все на странице"
+                    aria-label={t('dataTable.selectAllOnPage')}
                   />
                 </th>
               )}
@@ -430,7 +434,7 @@ export function DataTable<T>({
             {paged.length === 0 ? (
               <tr>
                 <td colSpan={displayColumns.length + (selectable ? 1 : 0)}>
-                  <Empty message={emptyMessage} />
+                  <Empty message={emptyMessageText} />
                 </td>
               </tr>
             ) : (
@@ -460,7 +464,7 @@ export function DataTable<T>({
                           checked={selectedIds.has(id)}
                           disabled={!rowSelectable}
                           onChange={() => toggleRow(id)}
-                          aria-label="Выбрать строку"
+                          aria-label={t('dataTable.selectRow')}
                         />
                       </td>
                     )}
@@ -486,9 +490,10 @@ export function DataTable<T>({
       <div className="table-footer">
         <div className="flex flex-col gap-1">
           <span>
-            {sorted.length} записей
-            {totalPagesInLoaded > 1 && ` · стр. ${currentPage} из ${totalPagesInLoaded}`}
-            {canLoadMore && ` · загружено ${effectiveLoaded}`}
+            {t('dataTable.recordsCount', { count: sorted.length })}
+            {totalPagesInLoaded > 1 &&
+              ` · ${t('dataTable.pageOf', { page: currentPage, total: totalPagesInLoaded })}`}
+            {canLoadMore && ` · ${t('dataTable.loadedCount', { count: effectiveLoaded })}`}
           </span>
           {selectable && sorted.length > 0 && !allFilteredSelected && selectableFilteredIds.length > selectablePageIds.length && (
             <button
@@ -496,18 +501,18 @@ export function DataTable<T>({
               className="text-left text-brand-600 hover:underline dark:text-brand-400"
               onClick={selectAllFiltered}
             >
-              Выбрать все {selectableFilteredIds.length} записей
+              {t('dataTable.selectAllRecords', { count: selectableFilteredIds.length })}
             </button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-panel-muted dark:text-panel-muted-dark">
-            <span>На странице:</span>
+            <span>{t('dataTable.perPage')}</span>
             <select
               className="input input-sm w-auto"
               value={pageSize}
               onChange={(e) => changePageSize(Number(e.target.value))}
-              aria-label="Записей на странице"
+              aria-label={t('dataTable.perPageAria')}
             >
               {pageSizeOptions.map((o) => (
                 <option key={o} value={o}>{o}</option>
@@ -520,7 +525,7 @@ export function DataTable<T>({
             disabled={!hasPrev}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
-            Назад
+            {t('dataTable.prev')}
           </button>
           <button
             type="button"
@@ -528,11 +533,13 @@ export function DataTable<T>({
             disabled={!hasNext}
             onClick={() => setPage((p) => Math.min(totalPagesInLoaded, p + 1))}
           >
-            Далее
+            {t('dataTable.next')}
           </button>
           {canLoadMore && (
             <button type="button" className="btn-secondary btn-sm" onClick={loadMore}>
-              Загрузить ещё ({Math.min(pageSize, sorted.length - effectiveLoaded)} записей)
+              {t('dataTable.loadMore', {
+                count: Math.min(pageSize, sorted.length - effectiveLoaded),
+              })}
             </button>
           )}
         </div>

@@ -7,6 +7,7 @@ import { PageHeader, Loading, ErrorMessage, Badge, Empty } from '../components/U
 import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { usePolling } from '../hooks/usePolling';
 import { useEmbeddedServices } from '../hooks/useEmbeddedServices';
+import { useLocale } from '../i18n/LocaleContext';
 
 type ServiceId = 'dynamic-api' | 'pyorchestrator';
 
@@ -16,16 +17,6 @@ interface McpToolRow {
   category?: string;
   method?: string;
 }
-
-const PYORCH_CATEGORY_LABELS: Record<string, string> = {
-  auth: 'Авторизация',
-  scripts: 'Скрипты',
-  runs: 'Запуски',
-  organization: 'Организация',
-  automation: 'Автоматизация',
-  secrets: 'Секреты',
-  platform: 'Платформа',
-};
 
 function inferHttpMethod(toolName: string): string | undefined {
   const match = toolName.match(/^(get|post|put|patch|delete)_/i);
@@ -51,7 +42,6 @@ function methodBadgeVariant(method: string): 'default' | 'success' | 'warning' |
 interface ServiceMeta {
   id: ServiceId;
   label: string;
-  subtitle: string;
   mcpPath: string;
   panelMcpPath: string;
   needsAuth: boolean;
@@ -61,7 +51,6 @@ const SERVICES: ServiceMeta[] = [
   {
     id: 'dynamic-api',
     label: 'Dynamic API',
-    subtitle: 'CRM, SCADA, карты, статистика — все endpoints платформы',
     mcpPath: '/api/mcp',
     panelMcpPath: '/mcp',
     needsAuth: true,
@@ -69,14 +58,13 @@ const SERVICES: ServiceMeta[] = [
   {
     id: 'pyorchestrator',
     label: 'PyOrchestrator',
-    subtitle: 'Скрипты, Telegram-боты, расписания, webhooks',
     mcpPath: '/api/pyorch-mcp/mcp',
     panelMcpPath: '/mcp',
     needsAuth: false,
   },
 ];
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, title }: { text: string; title: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(text);
@@ -84,35 +72,42 @@ function CopyButton({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button type="button" onClick={() => void copy()} className="btn-secondary !px-2 !py-1.5 text-xs" title="Копировать">
+    <button type="button" onClick={() => void copy()} className="btn-secondary !px-2 !py-1.5 text-xs" title={title}>
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
     </button>
   );
 }
 
-function CodeBlock({ code }: { code: string }) {
+function CodeBlock({ code, copyTitle }: { code: string; copyTitle: string }) {
   return (
     <div className="relative">
       <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs leading-relaxed text-slate-100 dark:bg-slate-950">
         <code>{code}</code>
       </pre>
       <div className="absolute right-2 top-2">
-        <CopyButton text={code} />
+        <CopyButton text={code} title={copyTitle} />
       </div>
     </div>
   );
 }
 
-function statusLabel(status: string): string {
-  if (status === 'online') return 'Запущен';
-  if (status === 'offline') return 'Остановлен';
-  return 'Проверка…';
-}
-
 export function McpPage() {
+  const { t } = useLocale();
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
   const embedded = useEmbeddedServices();
   const [activeId, setActiveId] = useState<ServiceId>('dynamic-api');
+  const pyorchCategoryLabels: Record<string, string> = useMemo(
+    () => ({
+      auth: t('pages.mcp.category.auth'),
+      scripts: t('pages.mcp.category.scripts'),
+      runs: t('pages.mcp.category.runs'),
+      organization: t('pages.mcp.category.organization'),
+      automation: t('pages.mcp.category.automation'),
+      secrets: t('pages.mcp.category.secrets'),
+      platform: t('pages.mcp.category.platform'),
+    }),
+    [t]
+  );
 
   const fetchDapTools = useCallback((signal: AbortSignal) => getDapMcpTools(signal), []);
   const { data: dapTools, loading: dapLoading, error: dapError } = usePolling(fetchDapTools, [], {
@@ -155,7 +150,7 @@ export function McpPage() {
     if (service.id === 'dynamic-api') {
       cols.push({
         key: 'method',
-        header: 'Метод',
+        header: t('pages.mcp.method'),
         className: 'w-0 whitespace-nowrap',
         sortValue: (t) => t.method ?? '',
         searchValue: (t) => t.method ?? '',
@@ -169,19 +164,19 @@ export function McpPage() {
     } else {
       cols.push({
         key: 'category',
-        header: 'Категория',
+        header: t('common.category'),
         className: 'w-0 whitespace-nowrap',
         sortValue: (t) => t.category ?? '',
-        searchValue: (t) => PYORCH_CATEGORY_LABELS[t.category ?? ''] ?? t.category ?? '',
+        searchValue: (t) => pyorchCategoryLabels[t.category ?? ''] ?? t.category ?? '',
         render: (t) => (
-          <Badge variant="default">{PYORCH_CATEGORY_LABELS[t.category ?? ''] ?? t.category ?? '—'}</Badge>
+          <Badge variant="default">{pyorchCategoryLabels[t.category ?? ''] ?? t.category ?? '—'}</Badge>
         ),
       });
     }
     cols.push(
       {
         key: 'name',
-        header: 'Инструмент',
+        header: t('pages.mcp.tool'),
         sortValue: (t) => t.name,
         searchValue: (t) => `${t.name} ${t.description}`,
         render: (t) => (
@@ -192,7 +187,7 @@ export function McpPage() {
       },
       {
         key: 'description',
-        header: 'Описание',
+        header: t('pages.mcp.description'),
         sortValue: (t) => t.description,
         searchValue: (t) => t.description,
         render: (t) => (
@@ -201,7 +196,7 @@ export function McpPage() {
       }
     );
     return cols;
-  }, [service.id]);
+  }, [pyorchCategoryLabels, service.id, t]);
 
   const toolFilters: DataTableFilter<McpToolRow>[] = useMemo(() => {
     if (service.id !== 'pyorchestrator') return [];
@@ -209,21 +204,21 @@ export function McpPage() {
     return [
       {
         id: 'category',
-        label: 'Категория',
-        options: categories.map((c) => ({ value: c, label: PYORCH_CATEGORY_LABELS[c] ?? c })),
+        label: t('common.category'),
+        options: categories.map((c) => ({ value: c, label: pyorchCategoryLabels[c] ?? c })),
         match: (t, v) => t.category === v,
       },
     ];
-  }, [service.id]);
+  }, [pyorchCategoryLabels, service.id, t]);
 
   const sampleTool = tools[0]?.name ?? (service.id === 'dynamic-api' ? 'get_api_crm_washes' : 'list_scripts');
-  const tokenPlaceholder = getToken() ? '<ваш_JWT_из_сессии_CRM>' : '<access_token>';
+  const tokenPlaceholder = getToken() ? '<your_crm_jwt_token>' : '<access_token>';
 
   const authHeadersExample = `Authorization: Bearer ${tokenPlaceholder}
-# или
-X-API-Key: dap_<ваш_ключ>
-# или
-Authorization: ApiKey dap_<ваш_ключ>`;
+# or
+X-API-Key: dap_<your_key>
+# or
+Authorization: ApiKey dap_<your_key>`;
 
   const listToolsExample = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }, null, 2);
 
@@ -274,8 +269,8 @@ Authorization: ApiKey dap_<ваш_ключ>`;
   return (
     <div>
       <PageHeader
-        title="MCP сервер"
-        subtitle="Model Context Protocol — AI-агенты (Cursor и др.) работают с CRM через HTTP, без сборки"
+        title={t('pages.mcp.title')}
+        subtitle={t('pages.mcp.subtitle')}
         icon={Bot}
       />
 
@@ -305,7 +300,13 @@ Authorization: ApiKey dap_<ваш_ключ>`;
                 />
                 <span className="font-medium text-panel-ink dark:text-panel-ink-dark">{svc.label}</span>
               </div>
-              <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">{statusLabel(emb?.status ?? 'checking')}</p>
+              <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+                {emb?.status === 'online'
+                  ? t('embeddedServices.status.online')
+                  : emb?.status === 'offline'
+                    ? t('embeddedServices.status.offline')
+                    : t('embeddedServices.status.checking')}
+              </p>
             </button>
           );
         })}
@@ -322,14 +323,14 @@ Authorization: ApiKey dap_<ваш_ключ>`;
             {service.needsAuth && (
               <>
                 {' '}
-                — на каждый запрос нужна авторизация (JWT сессии CRM или API key Dynamic API).
+                {t('pages.mcp.authRequiredHint')}
               </>
             )}
             {!service.needsAuth && (
-              <> — сервис в Docker, учётные данные PyOrchestrator заданы в окружении контейнера.</>
+              <>{t('pages.mcp.dockerHint')}</>
             )}
             {' '}
-            Методы: <code className="text-brand-700 dark:text-brand-300">initialize</code>,{' '}
+            {t('pages.mcp.methods')}: <code className="text-brand-700 dark:text-brand-300">initialize</code>,{' '}
             <code className="text-brand-700 dark:text-brand-300">tools/list</code>,{' '}
             <code className="text-brand-700 dark:text-brand-300">tools/call</code>
             {service.id === 'dynamic-api' && (
@@ -342,7 +343,7 @@ Authorization: ApiKey dap_<ваш_ключ>`;
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <code className="rounded bg-panel-canvas px-2 py-1 text-xs dark:bg-panel-sidebar-hover">{mcpUrl}</code>
-            <CopyButton text={mcpUrl} />
+            <CopyButton text={mcpUrl} title={t('pages.mcp.copy')} />
             {panelUrl && (
               <a
                 href={panelUrl}
@@ -350,49 +351,47 @@ Authorization: ApiKey dap_<ваш_ключ>`;
                 rel="noopener noreferrer"
                 className="btn-secondary btn-sm inline-flex items-center gap-1"
               >
-                Панель {service.label} <ExternalLink size={14} />
+                {t('pages.mcp.panel', { service: service.label })} <ExternalLink size={14} />
               </a>
             )}
           </div>
           {!online && service.id === 'pyorchestrator' && (
             <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-              PyOrchestrator или MCP-сервис не запущен. Включите{' '}
-              <code className="text-xs">PYORCHESTRATOR_ENABLED=true</code> и перезапустите стек.
+              {t('pages.mcp.pyorchUnavailable')}{' '}
+              <code className="text-xs">PYORCHESTRATOR_ENABLED=true</code>.
             </p>
           )}
         </div>
       </div>
 
       <div className="card mb-6 space-y-4 p-4">
-        <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">Cursor — готовый конфиг (HTTP)</h3>
+        <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">{t('pages.mcp.cursorConfig')}</h3>
         <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
-          Settings → MCP или <code className="text-xs">~/.cursor/mcp.json</code>. Сборка не требуется — только URL через Dashboard.
+          {t('pages.mcp.cursorConfigHint')}
         </p>
-        <CodeBlock code={cursorConfig} />
+        <CodeBlock code={cursorConfig} copyTitle={t('pages.mcp.copy')} />
       </div>
 
       {service.needsAuth && (
         <div className="mb-6 grid gap-4 lg:grid-cols-2">
           <div className="card p-4">
-            <h3 className="mb-1 text-sm font-semibold">Заголовки авторизации</h3>
+            <h3 className="mb-1 text-sm font-semibold">{t('pages.mcp.authHeaders')}</h3>
             <p className="mb-3 text-xs text-panel-muted dark:text-panel-muted-dark">
-              Те же учётные данные, что для прямых вызовов <code className="text-brand-700 dark:text-brand-300">/api/…</code>.
-              API keys создаются в панели Dynamic API.
+              {t('pages.mcp.authHeadersHint')}
             </p>
-            <CodeBlock code={authHeadersExample} />
+            <CodeBlock code={authHeadersExample} copyTitle={t('pages.mcp.copy')} />
           </div>
           <div className="card p-4">
-            <h3 className="mb-1 text-sm font-semibold">Правила доступа</h3>
+            <h3 className="mb-1 text-sm font-semibold">{t('pages.mcp.accessRules')}</h3>
             <ul className="list-disc space-y-1.5 pl-4 text-xs text-panel-muted dark:text-panel-muted-dark">
               <li>
-                <code className="text-brand-700 dark:text-brand-300">tools/list</code> — только инструменты, доступные токену.
+                <code className="text-brand-700 dark:text-brand-300">tools/list</code> — {t('pages.mcp.accessRulesList')}
               </li>
               <li>
-                <code className="text-brand-700 dark:text-brand-300">tools/call</code> — те же проверки{' '}
-                <code className="text-brand-700 dark:text-brand-300">accessType</code>, что у endpoint.
+                <code className="text-brand-700 dark:text-brand-300">tools/call</code> — {t('pages.mcp.accessRulesCall')}
               </li>
-              <li>Таблица ниже — полный список (вид администратора).</li>
-              <li>Без токена — <strong>401 Unauthorized</strong>.</li>
+              <li>{t('pages.mcp.accessRulesTable')}</li>
+              <li>{t('pages.mcp.accessRulesUnauthorized')}</li>
             </ul>
           </div>
         </div>
@@ -400,16 +399,18 @@ Authorization: ApiKey dap_<ваш_ключ>`;
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <h3 className="mb-1 text-sm font-semibold">tools/list — тело запроса</h3>
+          <h3 className="mb-1 text-sm font-semibold">{t('pages.mcp.toolsListBody')}</h3>
           <p className="mb-2 text-xs text-panel-muted dark:text-panel-muted-dark">
-            {service.needsAuth ? 'Добавьте заголовки авторизации.' : 'POST на URL выше.'}
+            {service.needsAuth ? t('pages.mcp.addAuthHeaders') : t('pages.mcp.postToUrl')}
           </p>
-          <CodeBlock code={listToolsExample} />
+          <CodeBlock code={listToolsExample} copyTitle={t('pages.mcp.copy')} />
         </div>
         <div className="card p-4">
-          <h3 className="mb-1 text-sm font-semibold">tools/call — тело запроса</h3>
-          <p className="mb-2 text-xs text-panel-muted dark:text-panel-muted-dark">Пример с инструментом «{sampleTool}».</p>
-          <CodeBlock code={callToolExample} />
+          <h3 className="mb-1 text-sm font-semibold">{t('pages.mcp.toolsCallBody')}</h3>
+          <p className="mb-2 text-xs text-panel-muted dark:text-panel-muted-dark">
+            {t('pages.mcp.toolExample', { name: sampleTool })}
+          </p>
+          <CodeBlock code={callToolExample} copyTitle={t('pages.mcp.copy')} />
         </div>
       </div>
 
@@ -417,11 +418,11 @@ Authorization: ApiKey dap_<ваш_ключ>`;
         <div className="mb-6 grid gap-4 lg:grid-cols-2">
           <div className="card p-4">
             <h3 className="mb-2 text-sm font-semibold">curl — tools/list</h3>
-            <CodeBlock code={curlListExample} />
+            <CodeBlock code={curlListExample} copyTitle={t('pages.mcp.copy')} />
           </div>
           <div className="card p-4">
             <h3 className="mb-2 text-sm font-semibold">curl — tools/call</h3>
-            <CodeBlock code={curlCallExample} />
+            <CodeBlock code={curlCallExample} copyTitle={t('pages.mcp.copy')} />
           </div>
         </div>
       )}
@@ -429,15 +430,15 @@ Authorization: ApiKey dap_<ваш_ключ>`;
       <section className="space-y-3">
         <div>
           <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">
-            Зарегистрированные инструменты
+            {t('pages.mcp.registeredTools')}
             {tools.length > 0 && (
               <span className="ml-2 font-normal text-panel-muted dark:text-panel-muted-dark">({tools.length})</span>
             )}
           </h3>
           <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
             {service.id === 'dynamic-api'
-              ? 'Все включённые endpoints CRM (вид администратора).'
-              : 'Инструменты MCP-сервера PyOrchestrator в Docker.'}
+              ? t('pages.mcp.dynamicToolsHint')
+              : t('pages.mcp.pyorchToolsHint')}
           </p>
         </div>
 
@@ -450,8 +451,8 @@ Authorization: ApiKey dap_<ваш_ключ>`;
             <Empty
               message={
                 service.id === 'pyorchestrator' && !online
-                  ? 'MCP PyOrchestrator недоступен.'
-                  : 'Инструменты пока не зарегистрированы.'
+                  ? t('pages.mcp.pyorchUnavailableShort')
+                  : t('pages.mcp.toolsNotRegistered')
               }
             />
           </div>
@@ -461,12 +462,12 @@ Authorization: ApiKey dap_<ваш_ключ>`;
             columns={toolColumns}
             data={tools}
             rowKey={(t) => t.name}
-            searchPlaceholder="Поиск по имени или описанию…"
+            searchPlaceholder={t('pages.mcp.searchPlaceholder')}
             filters={toolFilters}
             defaultSortKey="name"
             defaultSortDir="asc"
             pageSize={40}
-            emptyMessage="Ничего не найдено"
+            emptyMessage={t('pages.mcp.emptyMessage')}
           />
         )}
       </section>

@@ -1,5 +1,6 @@
 import { refId, resolveWashAddress, UNDEFINED_WASH_LABEL } from './refs';
 import type { FinanceStat, Post, PostIdRef, UsageStat, Wash, WashRef } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
 import { POST_ONLINE_THRESHOLD_MS } from '../constants/live';
 
@@ -88,9 +89,9 @@ export function buildDashboardUsageShareSeries(stats: UsageStat[]): CardUsageCha
   const vip = resolveCategoryUsageSeconds(before, 'unlimited');
 
   return [
-    { key: 'clients', name: 'Использование клиентами', value: clients, fill: USAGE_SHARE_COLORS.clients },
-    { key: 'service', name: 'Сервисное использование', value: service, fill: USAGE_SHARE_COLORS.service },
-    { key: 'vip', name: 'VIP-использование', value: vip, fill: USAGE_SHARE_COLORS.vip },
+    { key: 'clients', name: tGlobal('statsAggregation.usage.clients'), value: clients, fill: USAGE_SHARE_COLORS.clients },
+    { key: 'service', name: tGlobal('statsAggregation.usage.service'), value: service, fill: USAGE_SHARE_COLORS.service },
+    { key: 'vip', name: tGlobal('statsAggregation.usage.vip'), value: vip, fill: USAGE_SHARE_COLORS.vip },
   ];
 }
 
@@ -115,9 +116,9 @@ export function buildDashboardPaymentShareSeries(stats: FinanceStat[]): PaymentS
   const discounts = latest.reduce((sum, row) => sum + (row.discountOps || 0), 0);
 
   return [
-    { key: 'cash', name: 'Наличные', value: cash, fill: PAYMENT_SHARE_COLORS.cash },
-    { key: 'cashless', name: 'Внешние (безналичные)', value: cashless, fill: PAYMENT_SHARE_COLORS.cashless },
-    { key: 'discount', name: 'Скидки', value: discounts, fill: PAYMENT_SHARE_COLORS.discount },
+    { key: 'cash', name: tGlobal('statsAggregation.payment.cash'), value: cash, fill: PAYMENT_SHARE_COLORS.cash },
+    { key: 'cashless', name: tGlobal('statsAggregation.payment.cashless'), value: cashless, fill: PAYMENT_SHARE_COLORS.cashless },
+    { key: 'discount', name: tGlobal('statsAggregation.payment.discount'), value: discounts, fill: PAYMENT_SHARE_COLORS.discount },
   ];
 }
 
@@ -187,9 +188,9 @@ export function resolvePostNumber(
     return String(postId.postNumber);
   }
   const id = refId(postId);
-  if (!id) return '—';
+  if (!id) return tGlobal('common.notAvailable');
   const post = postById.get(id);
-  return post ? String(post.postNumber) : '—';
+  return post ? String(post.postNumber) : tGlobal('common.notAvailable');
 }
 
 export function resolveStatPostId(postId: PostIdRef | string | undefined): string {
@@ -206,7 +207,7 @@ export function resolveStatWashAddress(
     return washId.address;
   }
   const fromStat = resolveWashAddress(washId, washById);
-  if (fromStat !== '—' && fromStat !== UNDEFINED_WASH_LABEL) return fromStat;
+  if (fromStat !== tGlobal('common.notAvailable') && fromStat !== UNDEFINED_WASH_LABEL) return fromStat;
 
   const post =
     postId != null && typeof postId === 'object'

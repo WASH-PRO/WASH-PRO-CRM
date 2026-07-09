@@ -16,10 +16,12 @@ import {
   workModeType,
 } from '../utils/workModes';
 import type { WorkMode, WorkModeStatus, WorkModeType } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
 const emptyForm = { name: '', status: 'active' as WorkModeStatus };
 
 export function WorkModesPage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const [modal, setModal] = useState(false);
@@ -46,7 +48,7 @@ export function WorkModesPage() {
     () => [
       {
         id: 'modeType',
-        label: 'Тип',
+        label: t('pages.workModes.type'),
         options: (['system', 'user'] as const).map((t) => ({
           value: t,
           label: WORK_MODE_TYPE_LABELS[t],
@@ -55,13 +57,13 @@ export function WorkModesPage() {
       },
       {
         id: 'code',
-        label: 'Код',
+        label: t('pages.workModes.code'),
         options: sorted.map((m) => ({ value: m.code, label: m.code })),
         match: (m, value) => m.code === value,
       },
       {
         id: 'status',
-        label: 'Статус',
+        label: t('common.status'),
         options: (['active', 'inactive'] as const).map((s) => ({
           value: s,
           label: WORK_MODE_STATUS_LABELS[s],
@@ -69,7 +71,7 @@ export function WorkModesPage() {
         match: (m, value) => workModeStatus(m) === value,
       },
     ],
-    [sorted]
+    [sorted, t]
   );
 
   const openEdit = (item: WorkMode) => {
@@ -100,7 +102,7 @@ export function WorkModesPage() {
     () => [
       {
         key: 'code',
-        header: 'Код',
+        header: t('pages.workModes.code'),
         sortable: true,
         sortValue: (m) => m.code,
         searchValue: (m) => `${m.code} ${m.name}`,
@@ -108,7 +110,7 @@ export function WorkModesPage() {
       },
       {
         key: 'name',
-        header: 'Название',
+        header: t('pages.workModes.name'),
         sortable: true,
         sortValue: (m) => m.name,
         searchValue: (m) => m.name,
@@ -116,7 +118,7 @@ export function WorkModesPage() {
       },
       {
         key: 'modeType',
-        header: 'Тип',
+        header: t('pages.workModes.type'),
         sortable: true,
         sortValue: (m) => workModeType(m),
         searchValue: (m) => WORK_MODE_TYPE_LABELS[workModeType(m)],
@@ -131,7 +133,7 @@ export function WorkModesPage() {
       },
       {
         key: 'status',
-        header: 'Статус',
+        header: t('common.status'),
         sortable: true,
         sortValue: (m) => workModeStatus(m),
         searchValue: (m) => WORK_MODE_STATUS_LABELS[workModeStatus(m)],
@@ -146,7 +148,7 @@ export function WorkModesPage() {
       },
       {
         key: 'createdAt',
-        header: 'Дата создания',
+        header: t('pages.workModes.createdAt'),
         sortable: true,
         sortValue: (m) => m.createdAt || '',
         searchValue: (m) => formatDateTime(m.createdAt),
@@ -163,7 +165,7 @@ export function WorkModesPage() {
                     type="button"
                     className="btn-secondary !px-2 !py-1"
                     onClick={() => openEdit(m)}
-                    title="Изменить"
+                    title={t('common.edit')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -173,24 +175,24 @@ export function WorkModesPage() {
           ]
         : []),
     ],
-    [canEdit]
+    [canEdit, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<WorkMode>[] => [
     createExportBulkAction('work-modes.csv', [
-      { header: 'Код', value: (m) => m.code },
-      { header: 'Название', value: (m) => m.name },
-      { header: 'Тип', value: (m) => WORK_MODE_TYPE_LABELS[workModeType(m)] },
-      { header: 'Статус', value: (m) => WORK_MODE_STATUS_LABELS[workModeStatus(m)] },
-      { header: 'Дата создания', value: (m) => m.createdAt || '' },
+      { header: t('pages.workModes.code'), value: (m) => m.code },
+      { header: t('pages.workModes.name'), value: (m) => m.name },
+      { header: t('pages.workModes.type'), value: (m) => WORK_MODE_TYPE_LABELS[workModeType(m)] },
+      { header: t('common.status'), value: (m) => WORK_MODE_STATUS_LABELS[workModeStatus(m)] },
+      { header: t('pages.workModes.createdAt'), value: (m) => m.createdAt || '' },
     ]),
-  ], []);
+  ], [t]);
 
   if (loading && !modes) return <Loading />;
   if (error && !modes) {
     return (
       <div>
-        <PageHeader title="Режимы работы" />
+        <PageHeader title={t('nav.items.workModes')} />
         <ErrorMessage message={error} />
       </div>
     );
@@ -199,8 +201,8 @@ export function WorkModesPage() {
   return (
     <div>
       <PageHeader
-        title="Режимы работы"
-        subtitle="Справочник кодов программ поста: системные (из коробки) и пользовательские"
+        title={t('nav.items.workModes')}
+        subtitle={t('pages.workModes.subtitle')}
       />
       <DataTable
         tableId="work-modes"
@@ -208,23 +210,23 @@ export function WorkModesPage() {
         data={sorted}
         rowKey={(m) => m.id}
         filters={filters}
-        searchPlaceholder="Поиск режимов…"
+        searchPlaceholder={t('pages.workModes.searchPlaceholder')}
         bulkActions={bulkActions}
-        emptyMessage="Режимы работы не настроены"
+        emptyMessage={t('pages.workModes.empty')}
       />
 
       <Modal
         open={modal}
         onClose={() => setModal(false)}
-        title={editCode ? `Режим ${editCode}` : 'Режим работы'}
+        title={editCode ? t('pages.workModes.modalWithCode', { code: editCode }) : t('pages.workModes.modal')}
       >
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="label">Код</label>
+            <label className="label">{t('pages.workModes.code')}</label>
             <input className="input font-mono" value={editCode} readOnly disabled />
           </div>
           <div>
-            <label className="label">Тип</label>
+            <label className="label">{t('pages.workModes.type')}</label>
             <select
               className="input"
               value={editModeType ?? 'system'}
@@ -238,28 +240,28 @@ export function WorkModesPage() {
             </select>
           </div>
           <div>
-            <label className="label">Название</label>
+            <label className="label">{t('pages.workModes.name')}</label>
             <input
               className="input"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              placeholder="Например: Пена"
+              placeholder={t('pages.workModes.namePlaceholder')}
             />
           </div>
           <div>
-            <label className="label">Статус</label>
+            <label className="label">{t('common.status')}</label>
             <select
               className="input"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value as WorkModeStatus })}
             >
-              <option value="active">Активен</option>
-              <option value="inactive">Неактивен</option>
+              <option value="active">{t('workModes.status.active')}</option>
+              <option value="inactive">{t('workModes.status.inactive')}</option>
             </select>
           </div>
           <button type="submit" className="btn-primary w-full">
-            Сохранить
+            {t('common.save')}
           </button>
         </form>
       </Modal>

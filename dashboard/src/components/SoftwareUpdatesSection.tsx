@@ -10,8 +10,19 @@ import {
   type UpdateJob,
 } from '../api/updates';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
+import { useLocale } from '../i18n/LocaleContext';
 
-function VersionRow({ current, latest, updateAvailable }: { current: string; latest: string | null; updateAvailable: boolean }) {
+function VersionRow({
+  current,
+  latest,
+  updateAvailable,
+  availableLabel,
+}: {
+  current: string;
+  latest: string | null;
+  updateAvailable: boolean;
+  availableLabel: string;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="font-mono text-panel-ink dark:text-panel-ink-dark">v{current}</span>
@@ -25,19 +36,25 @@ function VersionRow({ current, latest, updateAvailable }: { current: string; lat
       )}
       {updateAvailable && (
         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-          Доступно
+          {availableLabel}
         </span>
       )}
     </div>
   );
 }
 
-function JobProgress({ job }: { job: UpdateJob }) {
+function JobProgress({
+  job,
+  title,
+}: {
+  job: UpdateJob;
+  title: string;
+}) {
   return (
     <div className="mt-4 space-y-3 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 dark:border-brand-400/20 dark:bg-brand-400/10">
       <div className="flex items-center gap-2 text-sm font-medium text-brand-900 dark:text-brand-100">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Обновление v{job.fromVersion} → v{job.targetVersion}
+        {title}
       </div>
       <div className="space-y-2">
         {job.steps.map((step) => (
@@ -71,29 +88,31 @@ function ComponentCard({
   executorAvailable,
   executorReason,
   onChanged,
+  t,
 }: {
   component: ComponentCheck;
   activeJob: UpdateJob | null;
   executorAvailable: boolean;
   executorReason: string | null;
   onChanged: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [busy, setBusy] = useState(false);
   const isActive = activeJob?.component === component.id;
 
   const runUpdate = async () => {
     if (!executorAvailable) {
-      alert(executorReason || 'Автообновление недоступно');
+      alert(executorReason || t('updates.autoUnavailable'));
       return;
     }
     if (!component.latestVersion) return;
-    if (!confirm(`Обновить ${component.label} до v${component.latestVersion}?`)) return;
+    if (!confirm(t('updates.confirmUpdate', { component: component.label, version: component.latestVersion }))) return;
     setBusy(true);
     try {
       await applyUpdate(component.id, component.latestTag || undefined);
       await onChanged();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Ошибка');
+      alert(err instanceof Error ? err.message : t('updates.error'));
     } finally {
       setBusy(false);
     }
@@ -124,6 +143,7 @@ function ComponentCard({
           current={component.currentVersion}
           latest={component.latestVersion}
           updateAvailable={component.updateAvailable}
+          availableLabel={t('updates.available')}
         />
       </div>
 
@@ -131,15 +151,20 @@ function ComponentCard({
         <p className="field-hint mt-2 line-clamp-3 whitespace-pre-wrap">{component.releaseNotes.slice(0, 280)}</p>
       )}
 
-      {isActive && activeJob && <JobProgress job={activeJob} />}
+      {isActive && activeJob && (
+        <JobProgress
+          job={activeJob}
+          title={t('updates.jobTitle', { from: activeJob.fromVersion, to: activeJob.targetVersion })}
+        />
+      )}
 
       {component.updateAvailable && !isActive && (
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" className="btn-primary btn-sm" disabled={busy || !executorAvailable} onClick={() => void runUpdate()}>
-            <ArrowUpCircle size={14} /> {busy ? 'Запуск…' : 'Обновить'}
+            <ArrowUpCircle size={14} /> {busy ? t('updates.starting') : t('updates.update')}
           </button>
           <button type="button" className="btn-secondary btn-sm" onClick={() => void runDismiss()}>
-            Скрыть уведомление
+            {t('updates.hideNotification')}
           </button>
         </div>
       )}
@@ -148,12 +173,13 @@ function ComponentCard({
 }
 
 export function SoftwareUpdatesSection() {
+  const { t, locale } = useLocale();
   const ctx = useSoftwareUpdatesContext();
   const [checking, setChecking] = useState(false);
 
   if (!ctx) {
     return (
-      <p className="text-sm text-panel-muted">Загрузка статуса обновлений…</p>
+      <p className="text-sm text-panel-muted">{t('updates.loadingStatus')}</p>
     );
   }
 
@@ -165,14 +191,14 @@ export function SoftwareUpdatesSection() {
       await checkForUpdates();
       await refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Не удалось проверить обновления');
+      alert(err instanceof Error ? err.message : t('updates.checkFailed'));
     } finally {
       setChecking(false);
     }
   };
 
   if (loading && !status) {
-    return <p className="text-sm text-panel-muted">Проверка версий на GitHub…</p>;
+    return <p className="text-sm text-panel-muted">{t('updates.checkingGithub')}</p>;
   }
 
   if (!status) return null;
@@ -182,23 +208,23 @@ export function SoftwareUpdatesSection() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-panel-muted dark:text-panel-muted-dark">
-            Обновления загружаются из GitHub Releases. Dynamic API и PyOrchestrator синхронизируются через WASH-скрипты с патчами.
+            {t('updates.description')}
           </p>
           {status.lastCheckAt && (
             <p className="field-hint mt-1">
-              Последняя проверка: {new Date(status.lastCheckAt).toLocaleString('ru')}
+              {t('updates.lastChecked')}: {new Date(status.lastCheckAt).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US')}
             </p>
           )}
         </div>
         <button type="button" className="btn-secondary btn-sm" disabled={checking} onClick={() => void handleCheck()}>
           <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
-          {checking ? 'Проверка…' : 'Проверить сейчас'}
+          {checking ? t('updates.checking') : t('updates.checkNow')}
         </button>
       </div>
 
       {!status.executorAvailable && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-          {status.executorReason || 'Автообновление недоступно — только просмотр версий.'}
+          {status.executorReason || t('updates.autoUnavailableViewOnly')}
         </div>
       )}
 
@@ -211,13 +237,14 @@ export function SoftwareUpdatesSection() {
             executorAvailable={status.executorAvailable}
             executorReason={status.executorReason}
             onChanged={refresh}
+            t={t}
           />
         ))}
       </div>
 
       {status.recentJobs.length > 0 && (
         <div>
-          <h4 className="mb-2 text-sm font-semibold">История обновлений</h4>
+          <h4 className="mb-2 text-sm font-semibold">{t('updates.historyTitle')}</h4>
           <div className="space-y-2">
             {status.recentJobs.slice(0, 5).map((job) => (
               <div

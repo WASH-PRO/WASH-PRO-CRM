@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { apiListBounded, apiListCatalog } from '../api/client';
-import { PageHeader, Loading, StatCard, periodLabel } from '../components/UI';
+import { PageHeader, Loading, StatCard, getPeriodLabelMap } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
@@ -16,6 +16,7 @@ import {
   resolveStatWashAddress,
 } from '../utils/statsAggregation';
 import type { FinanceStat, Post, Wash } from '../types';
+import { useLocale } from '../i18n/LocaleContext';
 
 interface FinancePageData {
   stats: FinanceStat[];
@@ -30,6 +31,7 @@ function PeriodSection({
   currency,
   postById,
   washById,
+  t,
 }: {
   tableId: string;
   title: string;
@@ -37,6 +39,7 @@ function PeriodSection({
   currency: { code: string; symbol?: string };
   postById: Map<string, Post>;
   washById: Map<string, Wash>;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const latest = useMemo(() => latestFinanceByPost(stats), [stats]);
 
@@ -86,18 +89,18 @@ function PeriodSection({
   const addressFilter: DataTableFilter<FinanceStat> = useMemo(
     () => ({
       id: 'address',
-      label: 'Объект',
+      label: t('common.wash'),
       options: washOptions.map((a) => ({ value: a, label: a })),
       match: (s, v) => address(s) === v,
     }),
-    [washOptions, address]
+    [washOptions, address, t]
   );
 
   const columns: DataTableColumn<FinanceStat>[] = useMemo(
     () => [
       {
         key: 'post',
-        header: 'Пост',
+        header: t('refs.post'),
         sortable: true,
         sortValue: (s) => Number(postNumber(s)) || 0,
         searchValue: (s) => postNumber(s),
@@ -105,7 +108,7 @@ function PeriodSection({
       },
       {
         key: 'address',
-        header: 'Адрес объекта',
+        header: t('pages.finance.columns.washAddress'),
         sortable: true,
         sortValue: (s) => address(s),
         searchValue: (s) => address(s),
@@ -113,54 +116,54 @@ function PeriodSection({
       },
       {
         key: 'cash',
-        header: 'Наличные',
+        header: t('statsAggregation.payment.cash'),
         sortable: true,
         sortValue: (s) => s.cash,
         render: (s) => formatMoney(s.cash, currency),
       },
       {
         key: 'cashless',
-        header: 'Внешние (безнал)',
+        header: t('statsAggregation.payment.cashless'),
         sortable: true,
         sortValue: (s) => s.cashless,
         render: (s) => formatMoney(s.cashless, currency),
       },
       {
         key: 'discountOps',
-        header: 'Скидочные средства',
+        header: t('pages.finance.columns.discountFunds'),
         sortable: true,
         sortValue: (s) => s.discountOps,
         render: (s) => formatMoney(s.discountOps, currency),
       },
       {
         key: 'totalRevenue',
-        header: 'Выручка',
+        header: t('dashboardCharts.revenueTitle'),
         sortable: true,
         sortValue: (s) => s.totalRevenue,
         render: (s) => <span className="font-medium">{formatMoney(s.totalRevenue, currency)}</span>,
       },
       {
         key: 'recordedAt',
-        header: 'Дата и время',
+        header: t('notificationsTable.dateTime'),
         sortable: true,
         sortValue: (s) => s.recordedAt || '',
         render: (s) => formatDateTime(s.recordedAt),
       },
     ],
-    [currency, postNumber, address]
+    [currency, postNumber, address, t]
   );
 
   const bulkActions = useMemo((): DataTableBulkAction<FinanceStat>[] => [
     createExportBulkAction(`finance-${title}.csv`, [
-      { header: 'Пост', value: (s) => postNumber(s) },
-      { header: 'Адрес объекта', value: (s) => address(s) },
-      { header: 'Наличные', value: (s) => String(s.cash ?? 0) },
-      { header: 'Безнал', value: (s) => String(s.cashless ?? 0) },
-      { header: 'Скидки', value: (s) => String(s.discountOps ?? 0) },
-      { header: 'Выручка', value: (s) => String(s.totalRevenue ?? 0) },
-      { header: 'Дата и время', value: (s) => s.recordedAt || '' },
+      { header: t('refs.post'), value: (s) => postNumber(s) },
+      { header: t('pages.finance.columns.washAddress'), value: (s) => address(s) },
+      { header: t('statsAggregation.payment.cash'), value: (s) => String(s.cash ?? 0) },
+      { header: t('pages.finance.export.cashlessShort'), value: (s) => String(s.cashless ?? 0) },
+      { header: t('statsAggregation.payment.discount'), value: (s) => String(s.discountOps ?? 0) },
+      { header: t('dashboardCharts.revenueTitle'), value: (s) => String(s.totalRevenue ?? 0) },
+      { header: t('notificationsTable.dateTime'), value: (s) => s.recordedAt || '' },
     ]),
-  ], [title, postNumber, address]);
+  ], [title, postNumber, address, t]);
 
   const handleFilterChange = useCallback(
     (id: string, value: string) => {
@@ -173,13 +176,13 @@ function PeriodSection({
     <section className="mb-8">
       <h2 className="mb-4 text-lg font-semibold">{title}</h2>
       <div className="mb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-        <StatCard label="Наличные средства" value={formatMoney(totals.cash, currency)} hint={scopeHint} />
-        <StatCard label="Внешние средства" value={formatMoney(totals.cashless, currency)} hint={scopeHint} />
-        <StatCard label="Скидочные средства" value={formatMoney(totals.discount, currency)} hint={scopeHint} />
+        <StatCard label={t('pages.finance.kpi.cash')} value={formatMoney(totals.cash, currency)} hint={scopeHint} />
+        <StatCard label={t('pages.finance.kpi.external')} value={formatMoney(totals.cashless, currency)} hint={scopeHint} />
+        <StatCard label={t('pages.finance.kpi.discount')} value={formatMoney(totals.discount, currency)} hint={scopeHint} />
       </div>
       {hasScope && (
         <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-panel-muted dark:text-panel-muted-dark">Фильтр KPI и таблицы:</span>
+          <span className="text-panel-muted dark:text-panel-muted-dark">{t('pages.finance.scope.filterLabel')}</span>
           <span className="max-w-full truncate rounded-full bg-brand-500/10 px-3 py-1 font-medium text-brand-800 dark:text-brand-300">
             {scopeHint}
           </span>
@@ -187,7 +190,7 @@ function PeriodSection({
             type="button"
             className="btn-secondary !px-2 !py-1"
             onClick={clearScope}
-            title="Сбросить фильтр"
+            title={t('pages.finance.scope.clear')}
           >
             <X size={14} />
           </button>
@@ -203,8 +206,8 @@ function PeriodSection({
         onFilterChange={handleFilterChange}
         onRowClick={onPostSelect}
         isRowActive={(s) => Boolean(postFilter && postId(s) === postFilter)}
-        emptyMessage="Нет записей"
-        searchPlaceholder="Поиск…"
+        emptyMessage={t('pages.finance.empty')}
+        searchPlaceholder={t('pages.finance.searchPlaceholder')}
         bulkActions={bulkActions}
       />
     </section>
@@ -212,6 +215,8 @@ function PeriodSection({
 }
 
 export function FinancePage() {
+  const { t } = useLocale();
+  const periodLabel = getPeriodLabelMap();
   const { currency } = useCurrency();
 
   const fetchData = useCallback(async (): Promise<FinancePageData> => {
@@ -247,9 +252,9 @@ export function FinancePage() {
 
   return (
     <div>
-      <PageHeader title="Финансовая статистика" subtitle="До и после инкассации · клик по строке — фильтр по посту" />
-      <PeriodSection tableId="finance-before" title={periodLabel.before_collection} stats={before} currency={currency} postById={postById} washById={washById} />
-      <PeriodSection tableId="finance-after" title={periodLabel.after_collection} stats={after} currency={currency} postById={postById} washById={washById} />
+      <PageHeader title={t('pages.finance.title')} subtitle={t('pages.finance.subtitle')} />
+      <PeriodSection tableId="finance-before" title={periodLabel.before_collection} stats={before} currency={currency} postById={postById} washById={washById} t={t} />
+      <PeriodSection tableId="finance-after" title={periodLabel.after_collection} stats={after} currency={currency} postById={postById} washById={washById} t={t} />
     </div>
   );
 }

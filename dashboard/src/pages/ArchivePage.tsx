@@ -12,14 +12,15 @@ import { formatDateTime } from '../utils/format';
 import { executeArchiveGroup, type ArchiveGroupKey } from '../utils/archive';
 import { archiveFilenameLabel, resolveArchiveFilename } from '../utils/archiveLog';
 import { deleteArchiveFile, downloadArchiveFile, downloadJson } from '../utils/download';
+import { useLocale } from '../i18n/LocaleContext';
 
 const RETENTION_OPTIONS = [30, 90, 180, 365];
 
-const ARCHIVE_GROUPS: { key: keyof Pick<ArchiveSettings, 'cards' | 'postStates' | 'usageStats' | 'financeStats'>; label: string }[] = [
-  { key: 'cards', label: 'Архив карт' },
-  { key: 'postStates', label: 'Архив состояний постов' },
-  { key: 'usageStats', label: 'Архив статистики использования' },
-  { key: 'financeStats', label: 'Архив финансовой статистики' },
+const ARCHIVE_GROUPS: Array<keyof Pick<ArchiveSettings, 'cards' | 'postStates' | 'usageStats' | 'financeStats'>> = [
+  'cards',
+  'postStates',
+  'usageStats',
+  'financeStats',
 ];
 
 const defaultGroup = (): ArchiveGroupSettings => ({
@@ -38,8 +39,8 @@ function normalizeArchiveSettings(raw: Record<string, unknown>): ArchiveSettings
     autoDelete: (raw.autoDelete as boolean) ?? false,
   };
   for (const g of ARCHIVE_GROUPS) {
-    const existing = raw[g.key] as ArchiveGroupSettings | undefined;
-    base[g.key] = existing ? { ...defaultGroup(), ...existing } : defaultGroup();
+    const existing = raw[g] as ArchiveGroupSettings | undefined;
+    base[g] = existing ? { ...defaultGroup(), ...existing } : defaultGroup();
   }
   return base;
 }
@@ -51,6 +52,7 @@ interface ArchivePageData {
 }
 
 export function ArchivePage() {
+  const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update', 'delete');
   const canDelete = hasPermission('delete');
@@ -95,7 +97,7 @@ export function ArchivePage() {
       method: 'PUT',
       body: JSON.stringify({ key: 'archive', value: setting }),
     });
-    setMessage('Настройки архивирования сохранены');
+    setMessage(t('pages.archive.messages.settingsSaved'));
     settingsInitialized.current = false;
     refresh();
   };
@@ -103,7 +105,7 @@ export function ArchivePage() {
   const runArchive = async (groupKey: ArchiveGroupKey) => {
     const group = setting[groupKey] as ArchiveGroupSettings;
     if (!group.enabled) {
-      setError('Архивирование для этой группы отключено');
+      setError(t('pages.archive.errors.groupDisabled'));
       setMessage('');
       return;
     }
@@ -129,15 +131,20 @@ export function ArchivePage() {
           },
         }),
       });
-      const label = ARCHIVE_GROUPS.find((g) => g.key === groupKey)?.label ?? groupKey;
+      const label = t(`pages.archive.groups.${groupKey}`);
       setMessage(
         result.affected > 0
-          ? `${label}: обработано ${result.affected} записей${group.deleteAfter ? ', исходные данные удалены' : ''}${result.filename ? `, архив ${result.filename}` : ''}`
-          : `${label}: нет записей старше ${group.retentionDays} дней`
+          ? t('pages.archive.messages.groupProcessed', {
+              label,
+              affected: result.affected,
+              deleted: group.deleteAfter ? t('pages.archive.messages.sourceDeleted') : '',
+              filename: result.filename ? t('pages.archive.messages.archiveFile', { filename: result.filename }) : '',
+            })
+          : t('pages.archive.messages.noRecordsOlderThan', { label, days: group.retentionDays })
       );
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка архивирования');
+      setError(err instanceof Error ? err.message : t('pages.archive.errors.archiveFailed'));
       setMessage('');
     } finally {
       setRunningGroup(null);
@@ -160,7 +167,7 @@ export function ArchivePage() {
       }
       downloadJson(`archive-log-${log.id}.json`, log);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось скачать архив');
+      setError(err instanceof Error ? err.message : t('pages.archive.errors.downloadFailed'));
     }
   };
 
@@ -183,7 +190,7 @@ export function ArchivePage() {
         }
 
         if (!log.id) {
-          dbErrors.push('запись без id');
+          dbErrors.push(t('pages.archive.errors.entryWithoutId'));
           continue;
         }
 
@@ -198,26 +205,26 @@ export function ArchivePage() {
       await refresh();
 
       if (deleted === 0) {
-        throw new Error('Не удалось удалить выбранные записи. Проверьте права доступа.');
+        throw new Error(t('pages.archive.errors.deleteSelectedFailed'));
       }
       if (dbErrors.length > 0 || fileErrors.length > 0) {
         const parts: string[] = [];
-        if (dbErrors.length) parts.push(`записей в журнале: ${dbErrors.length}`);
-        if (fileErrors.length) parts.push(`файлов архива: ${fileErrors.length}`);
-        throw new Error(`Удалено ${deleted} из ${selected.length}. Ошибки (${parts.join(', ')})`);
+        if (dbErrors.length) parts.push(t('pages.archive.errors.logEntriesCount', { count: dbErrors.length }));
+        if (fileErrors.length) parts.push(t('pages.archive.errors.archiveFilesCount', { count: fileErrors.length }));
+        throw new Error(t('pages.archive.errors.deletedWithErrors', { deleted, total: selected.length, errors: parts.join(', ') }));
       }
     },
     [refresh]
   );
 
   const deleteLog = async (log: ArchiveLog) => {
-    if (!confirm('Удалить запись из журнала архивирования?')) return;
+    if (!confirm(t('pages.archive.confirmDeleteLog'))) return;
     try {
       await deleteLogs([log]);
-      setMessage('Запись удалена');
+      setMessage(t('pages.archive.messages.entryDeleted'));
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось удалить запись');
+      setError(err instanceof Error ? err.message : t('pages.archive.errors.deleteEntryFailed'));
       setMessage('');
     }
   };
@@ -225,7 +232,7 @@ export function ArchivePage() {
   const logFilters: DataTableFilter<ArchiveLog>[] = [
     {
       id: 'action',
-      label: 'Действие',
+      label: t('pages.archive.columns.action'),
       options: [
         { value: 'archive', label: 'archive' },
         { value: 'delete', label: 'delete' },
@@ -238,7 +245,7 @@ export function ArchivePage() {
   const logColumns: DataTableColumn<ArchiveLog>[] = [
     {
       key: 'action',
-      header: 'Действие',
+      header: t('pages.archive.columns.action'),
       sortable: true,
       searchValue: (l) => l.action,
       sortValue: (l) => l.action,
@@ -246,31 +253,31 @@ export function ArchivePage() {
     },
     {
       key: 'group',
-      header: 'Группа',
-      render: (l) => (l.details?.group as string) || '—',
+      header: t('pages.archive.columns.group'),
+      render: (l) => (l.details?.group as string) || t('common.notAvailable'),
     },
     {
       key: 'records',
-      header: 'Записей',
+      header: t('pages.archive.columns.records'),
       sortable: true,
       sortValue: (l) => l.recordsAffected,
       render: (l) => l.recordsAffected,
     },
     {
       key: 'policy',
-      header: 'Срок хранения',
-      render: (l) => `${l.policyDays} дней`,
+      header: t('pages.archive.columns.retention'),
+      render: (l) => t('pages.archive.daysLabel', { days: l.policyDays }),
     },
     {
       key: 'date',
-      header: 'Дата и время',
+      header: t('notificationsTable.dateTime'),
       sortable: true,
       sortValue: (l) => l.createdAt || '',
       render: (l) => formatDateTime(l.createdAt),
     },
     {
       key: 'file',
-      header: 'Имя файла',
+      header: t('pages.archive.columns.filename'),
       sortable: true,
       sortValue: (l) => resolveArchiveFilename(l) || '',
       searchValue: (l) => archiveFilenameLabel(l),
@@ -295,7 +302,7 @@ export function ArchivePage() {
                   type="button"
                   className="btn-secondary !px-2 !py-1"
                   onClick={() => downloadLog(l)}
-                  title="Скачать"
+                  title={t('pages.archive.actions.download')}
                 >
                   <Download size={14} />
                 </button>
@@ -303,7 +310,7 @@ export function ArchivePage() {
                   type="button"
                   className="btn-secondary !px-2 !py-1 text-red-600"
                   onClick={() => deleteLog(l)}
-                  title="Удалить"
+                  title={t('common.delete')}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -317,49 +324,50 @@ export function ArchivePage() {
   const logBulkActions = useMemo((): DataTableBulkAction<ArchiveLog>[] => {
     const actions: DataTableBulkAction<ArchiveLog>[] = [
       createExportBulkAction('archive-logs.csv', [
-        { header: 'Действие', value: (l) => l.action },
-        { header: 'Группа', value: (l) => (l.details?.group as string) || '' },
-        { header: 'Записей', value: (l) => String(l.recordsAffected ?? '') },
-        { header: 'Срок хранения', value: (l) => String(l.policyDays ?? '') },
-        { header: 'Имя файла', value: (l) => archiveFilenameLabel(l) },
-        { header: 'Дата и время', value: (l) => l.createdAt || '' },
+        { header: t('pages.archive.columns.action'), value: (l) => l.action },
+        { header: t('pages.archive.columns.group'), value: (l) => (l.details?.group as string) || '' },
+        { header: t('pages.archive.columns.records'), value: (l) => String(l.recordsAffected ?? '') },
+        { header: t('pages.archive.columns.retention'), value: (l) => String(l.policyDays ?? '') },
+        { header: t('pages.archive.columns.filename'), value: (l) => archiveFilenameLabel(l) },
+        { header: t('notificationsTable.dateTime'), value: (l) => l.createdAt || '' },
       ]),
     ];
     if (canDelete) {
       actions.push({
         id: 'delete',
-        label: 'Удалить',
+        label: t('common.delete'),
         variant: 'danger',
         confirmMessage: (_rows, ids) =>
-          `Удалить ${ids.length} записей из журнала (и связанные файлы архивов)?`,
+          t('pages.archive.confirmDeleteMany', { count: ids.length }),
         onAction: async (rows) => {
           try {
             await deleteLogs(rows);
-            setMessage(`Удалено записей: ${rows.length}`);
+            setMessage(t('pages.archive.messages.deletedCount', { count: rows.length }));
             setError('');
           } catch (err) {
-            setError(err instanceof Error ? err.message : 'Не удалось удалить записи');
+            setError(err instanceof Error ? err.message : t('pages.archive.errors.deleteEntriesFailed'));
             setMessage('');
           }
         },
       });
     }
     return actions;
-  }, [canDelete, deleteLogs]);
+  }, [canDelete, deleteLogs, t]);
 
   if (loading && !data) return <Loading />;
 
   return (
     <div>
-      <PageHeader title="Архивирование" subtitle="Аналитика → Архивирование" />
+      <PageHeader title={t('pages.archive.title')} subtitle={t('pages.archive.subtitle')} />
       {message && <p className="mb-4 text-sm text-emerald-600">{message}</p>}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       <form onSubmit={savePolicy} className="card mb-6 space-y-6">
-        <h2 className="font-semibold">Настройки архивирования</h2>
+        <h2 className="font-semibold">{t('pages.archive.settingsTitle')}</h2>
 
-        {ARCHIVE_GROUPS.map(({ key, label }) => {
+        {ARCHIVE_GROUPS.map((key) => {
           const group = setting[key] as ArchiveGroupSettings;
+          const label = t(`pages.archive.groups.${key}`);
           return (
             <div
               key={key}
@@ -374,7 +382,7 @@ export function ArchivePage() {
                     disabled={runningGroup === key}
                     onClick={() => runArchive(key)}
                   >
-                    {runningGroup === key ? 'Запуск…' : 'Запустить'}
+                    {runningGroup === key ? t('pages.archive.actions.starting') : t('pages.archive.actions.start')}
                   </button>
                 )}
               </div>
@@ -387,7 +395,7 @@ export function ArchivePage() {
                     onChange={(e) => updateGroup(key, { enabled: e.target.checked })}
                     disabled={!canEdit}
                   />
-                  Включение архивирования
+                  {t('pages.archive.settings.enableArchive')}
                 </label>
                 <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
@@ -397,10 +405,11 @@ export function ArchivePage() {
                     onChange={(e) => updateGroup(key, { autoRun: e.target.checked })}
                     disabled={!canEdit}
                   />
-                  Автозапуск архивирования
+                  {t('pages.archive.settings.enableAutoRun')}
                 </label>
                 <p className="text-xs text-panel-muted dark:text-panel-muted-dark md:col-span-2">
-                  Автозапуск выполняет сервис <span className="font-mono">wash-backup</span> по расписанию (по умолчанию 03:00).
+                  {t('pages.archive.settings.autoRunHintPrefix')} <span className="font-mono">wash-backup</span>{' '}
+                  {t('pages.archive.settings.autoRunHintSuffix')}
                 </p>
                 <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
@@ -410,7 +419,7 @@ export function ArchivePage() {
                     onChange={(e) => updateGroup(key, { saveArchive: e.target.checked })}
                     disabled={!canEdit}
                   />
-                  Сохранение архива
+                  {t('pages.archive.settings.saveArchive')}
                 </label>
                 <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
@@ -420,12 +429,12 @@ export function ArchivePage() {
                     onChange={(e) => updateGroup(key, { deleteAfter: e.target.checked })}
                     disabled={!canEdit}
                   />
-                  Удаление исходных данных после архивирования
+                  {t('pages.archive.settings.deleteSource')}
                 </label>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
-                  <label className="label">Срок хранения данных</label>
+                  <label className="label">{t('pages.archive.settings.retentionDays')}</label>
                   <select
                     className="select"
                     value={group.retentionDays}
@@ -434,22 +443,22 @@ export function ArchivePage() {
                   >
                     {RETENTION_OPTIONS.map((d) => (
                       <option key={d} value={d}>
-                        {d} дней
+                        {t('pages.archive.daysLabel', { days: d })}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Политика хранения</label>
+                  <label className="label">{t('pages.archive.settings.policy')}</label>
                   <select
                     className="select"
                     value={group.policy}
                     onChange={(e) => updateGroup(key, { policy: e.target.value })}
                     disabled={!canEdit}
                   >
-                    <option value="standard">Стандартная</option>
-                    <option value="compressed">Сжатие</option>
-                    <option value="cold">Холодное хранение</option>
+                    <option value="standard">{t('pages.archive.policy.standard')}</option>
+                    <option value="compressed">{t('pages.archive.policy.compressed')}</option>
+                    <option value="cold">{t('pages.archive.policy.cold')}</option>
                   </select>
                 </div>
               </div>
@@ -460,14 +469,14 @@ export function ArchivePage() {
         {canEdit && (
           <div className="border-t border-panel-border pt-4 dark:border-panel-border-dark">
             <button type="submit" className="btn-primary">
-              Сохранить настройки
+              {t('pages.archive.actions.saveSettings')}
             </button>
           </div>
         )}
       </form>
 
-      <h2 className="mb-3 font-semibold">Журнал архивирования</h2>
-      <DataTable tableId="archive-logs" columns={logColumns} data={logs} rowKey={(l) => l.id} filters={logFilters} searchPlaceholder="Поиск в журнале…" bulkActions={logBulkActions} />
+      <h2 className="mb-3 font-semibold">{t('pages.archive.logTitle')}</h2>
+      <DataTable tableId="archive-logs" columns={logColumns} data={logs} rowKey={(l) => l.id} filters={logFilters} searchPlaceholder={t('pages.archive.searchPlaceholder')} bulkActions={logBulkActions} />
     </div>
   );
 }

@@ -1,14 +1,24 @@
 import type { WorkMode } from '../types';
+import { tGlobal } from '../i18n/runtime';
 
-export const WORK_MODE_STATUS_LABELS: Record<NonNullable<WorkMode['status']>, string> = {
-  active: 'Активен',
-  inactive: 'Неактивен',
-};
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
-export const WORK_MODE_TYPE_LABELS: Record<NonNullable<WorkMode['modeType']>, string> = {
-  system: 'Системный',
-  user: 'Пользовательский',
-};
+export function getWorkModeStatusLabels(t: TranslateFn): Record<NonNullable<WorkMode['status']>, string> {
+  return {
+    active: t('workModes.status.active'),
+    inactive: t('workModes.status.inactive'),
+  };
+}
+
+export function getWorkModeTypeLabels(t: TranslateFn): Record<NonNullable<WorkMode['modeType']>, string> {
+  return {
+    system: t('workModes.type.system'),
+    user: t('workModes.type.user'),
+  };
+}
+
+export const WORK_MODE_STATUS_LABELS: Record<NonNullable<WorkMode['status']>, string> = getWorkModeStatusLabels(tGlobal);
+export const WORK_MODE_TYPE_LABELS: Record<NonNullable<WorkMode['modeType']>, string> = getWorkModeTypeLabels(tGlobal);
 
 export function workModeStatus(mode: WorkMode): NonNullable<WorkMode['status']> {
   return mode.status ?? 'active';

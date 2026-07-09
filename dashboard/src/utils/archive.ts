@@ -1,6 +1,7 @@
 import { api, apiList, getToken } from '../api/client';
 import type { ArchiveGroupSettings } from '../types';
 import { protectedLatestStatIds } from './statsAggregation';
+import { tGlobal } from '../i18n/runtime';
 
 export type ArchiveGroupKey = 'cards' | 'postStates' | 'usageStats' | 'financeStats';
 
@@ -60,7 +61,7 @@ export async function executeArchiveGroup(
       }),
     });
     if (!res.ok) {
-      throw new Error('Не удалось сохранить файл архива');
+      throw new Error(tGlobal('archive.errors.saveFile'));
     }
     const json = (await res.json()) as { filename?: string; data?: { filename?: string } };
     filename = json.filename ?? json.data?.filename;

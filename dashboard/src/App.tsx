@@ -8,6 +8,7 @@ import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { Loading } from './components/UI';
 import { LoginPage } from './pages/LoginPage';
 import { lazyPage } from './utils/lazyPage';
+import { LocaleProvider } from './i18n/LocaleContext';
 
 const DashboardPage = lazyPage(() => import('./pages/DashboardPage'), 'DashboardPage');
 const WashesPage = lazyPage(() => import('./pages/WashesPage'), 'WashesPage');
@@ -120,16 +121,18 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <RouteErrorBoundary>
-            <Suspense fallback={<Loading fullScreen />}>
-              <AppRoutes />
-            </Suspense>
-          </RouteErrorBoundary>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <LocaleProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <RouteErrorBoundary>
+              <Suspense fallback={<Loading fullScreen />}>
+                <AppRoutes />
+              </Suspense>
+            </RouteErrorBoundary>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </LocaleProvider>
   );
 }

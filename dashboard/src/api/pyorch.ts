@@ -1,3 +1,5 @@
+import { tGlobal } from '../i18n/runtime';
+
 const PYORCH_BASE = '/pyorch/api/v1';
 const PYORCH_TOKEN_KEY = 'wash_pyorch_token';
 
@@ -61,7 +63,7 @@ export async function pyorchLogin(email: string, password: string): Promise<void
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(typeof err.detail === 'string' ? err.detail : 'Не удалось войти в PyOrchestrator');
+    throw new Error(typeof err.detail === 'string' ? err.detail : tGlobal('pyorch.loginFailed'));
   }
   const data = (await res.json()) as { access_token: string };
   sessionStorage.setItem(PYORCH_TOKEN_KEY, data.access_token);
@@ -69,7 +71,7 @@ export async function pyorchLogin(email: string, password: string): Promise<void
 
 async function pyorchFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getPyorchToken();
-  if (!token) throw new Error('PyOrchestrator: требуется авторизация');
+  if (!token) throw new Error(tGlobal('pyorch.authRequired'));
 
   const res = await fetch(`${PYORCH_BASE}${path}`, {
     ...options,
@@ -82,7 +84,7 @@ async function pyorchFetch<T>(path: string, options: RequestInit = {}): Promise<
 
   if (res.status === 401) {
     clearPyorchToken();
-    throw new Error('Сессия PyOrchestrator истекла — войдите снова');
+    throw new Error(tGlobal('pyorch.sessionExpired'));
   }
   if (res.status === 204) return undefined as T;
   if (!res.ok) {
@@ -122,14 +124,14 @@ export async function createWashTelegramBot(_input: {
   groupId: string | null;
   code: string;
 }): Promise<PyorchScript> {
-  throw new Error('Создавайте Telegram-ботов через раздел «Telegram» в CRM (pyorch-bridge).');
+  throw new Error(tGlobal('pyorch.createBotsViaTelegram'));
 }
 
 /** @deprecated Используйте pyorch-bridge / botTemplate.ts */
 export const WASH_TELEGRAM_BOT_MAIN = `"""Deprecated — use CRM Telegram page to create bots."""
 import sys
 
-print("Шаблон устарел. Создайте бота в CRM: Настройки → Telegram.")
+print("Template is deprecated. Create bot in CRM: Settings -> Telegram.")
 sys.exit(0)
 `;
 

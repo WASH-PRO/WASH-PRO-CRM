@@ -42,10 +42,17 @@ Default language: **English**
 Sync with [`docs/`](../docs/) when updating. To publish GitHub Wiki:
 
 ```bash
+./scripts/sync-github-wiki.sh
+```
+
+This pushes `wiki/en/` and `wiki/ru/` to [WASH-PRO-CRM.wiki](https://github.com/WASH-PRO/WASH-PRO-CRM.wiki) with a bilingual `Home.md` hub.
+
+Manual alternative:
+
+```bash
 git clone https://github.com/WASH-PRO/WASH-PRO-CRM.wiki.git
-# English pages (default):
-cp wiki/en/*.md WASH-PRO-CRM.wiki/
-# Or Russian:
-# cp wiki/ru/*.md WASH-PRO-CRM.wiki/
+cp wiki/en/*.md WASH-PRO-CRM.wiki/en/
+cp wiki/ru/*.md WASH-PRO-CRM.wiki/ru/
+# update Home.md — see scripts/sync-github-wiki.sh
 cd WASH-PRO-CRM.wiki && git add -A && git commit -m "Sync wiki" && git push
 ```

@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { pino } from 'pino';
+import { BOT_COMMAND_PRESETS, DEFAULT_DEMO_BOTS } from './botPresets.js';
 import { generateBotMain, type WashBotType } from './botTemplate.js';
 import { notifyCrm } from './notify.js';
 
@@ -291,6 +292,120 @@ async function restartWashBot(bot: PyorchScript, commands?: string[], type?: Was
   await pyorchFetch(`/runs/scripts/${bot.id}/run`, { method: 'POST' });
 }
 
+interface CreateWashBotInput {
+  name: string;
+  description?: string;
+  token?: string;
+  adminIds?: number[];
+  commands?: string[];
+  botType?: WashBotType;
+  start?: boolean;
+  demo?: boolean;
+}
+
+async function createWashBot(input: CreateWashBotInput): Promise<PyorchScript> {
+  const kind: WashBotType = input.botType ?? 'management';
+  const adminIds = input.adminIds ?? [];
+  const commands = input.commands ?? [...BOT_COMMAND_PRESETS[kind]];
+  const token = input.token?.trim() ?? '';
+  const isDemo = input.demo === true;
+
+  if (!isDemo && !token) {
+    throw new Error('token required');
+  }
+
+  const groupId = await getBotsGroupId();
+  const telegramUsername = token ? await resolveTelegramUsername(token) : null;
+  const botMeta = {
+    wash_telegram_bot: true,
+    source: 'wash-pro-crm',
+    admin_ids: kind === 'informational' ? [] : adminIds,
+    allowed_commands: commands,
+    bot_type: kind,
+    public_access: kind === 'informational',
+    ...(isDemo ? { demo_bot: true } : {}),
+    ...(telegramUsername ? { telegram_username: telegramUsername } : {}),
+  };
+
+  let script: PyorchScript | undefined;
+  try {
+    script = await pyorchFetch<PyorchScript>('/scripts', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: input.name.trim(),
+        description: input.description?.trim() || 'Telegram-бот WASH PRO CRM',
+        group_id: groupId,
+        script_type: 'bot',
+        entrypoint: 'main.py',
+        code: generateBotMain(commands, kind),
+        metadata: botMeta,
+      }),
+    });
+
+    await pyorchFetch(`/scripts/${script.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        max_runtime_seconds: 86400,
+        max_concurrent_runs: 1,
+        metadata: botMeta,
+      }),
+    });
+
+    await applySecrets(
+      script.id,
+      { token: token || undefined, adminIds, commands },
+      Boolean(token),
+      kind
+    );
+    await syncBotCode(script, commands, kind);
+
+    if (input.start === true) {
+      await pyorchFetch(`/scripts/${script.id}/enable`, { method: 'POST' });
+      await stopLegacyDuplicateBots();
+      await pyorchFetch(`/runs/scripts/${script.id}/run`, { method: 'POST' });
+    } else {
+      await pyorchFetch(`/scripts/${script.id}/disable`, { method: 'POST' }).catch(() => undefined);
+    }
+  } catch (err) {
+    if (script?.id) {
+      await pyorchFetch(`/runs/scripts/${script.id}/stop`, { method: 'POST' }).catch(() => undefined);
+      await pyorchFetch(`/scripts/${script.id}`, { method: 'DELETE' }).catch(() => undefined);
+    }
+    throw err;
+  }
+
+  const bots = await listWashBots();
+  return bots.find((b) => b.id === script!.id) ?? script!;
+}
+
+async function ensureDefaultDemoBots(): Promise<void> {
+  try {
+    await pyorchLogin();
+    const bots = await listWashBots();
+    if (bots.some((bot) => bot.metadata?.demo_bot === true)) {
+      logger.info('Default demo telegram bots already seeded');
+      return;
+    }
+    if (bots.length > 0) {
+      logger.info('Default demo telegram bots skipped: custom bots already exist');
+      return;
+    }
+
+    for (const def of DEFAULT_DEMO_BOTS) {
+      logger.info({ botType: def.botType, name: def.name }, 'Creating default demo telegram bot');
+      await createWashBot({
+        name: def.name,
+        commands: def.commands,
+        botType: def.botType,
+        start: false,
+        demo: true,
+      });
+    }
+  } catch (err) {
+    logger.warn({ err }, 'Default demo telegram bots seed failed');
+  }
+}
+
 async function refreshAllWashBots(restartRunning: boolean): Promise<void> {
   try {
     await pyorchLogin();
@@ -488,68 +603,16 @@ export function startServer(): void {
           return;
         }
 
-        const groupId = await getBotsGroupId();
-        const adminIds = body.adminIds ?? [];
-        const commands = body.commands ?? [];
         const kind: WashBotType = body.botType ?? 'management';
-        const telegramUsername = await resolveTelegramUsername(body.token);
-        const botMeta = {
-          wash_telegram_bot: true,
-          source: 'wash-pro-crm',
-          admin_ids: kind === 'informational' ? [] : adminIds,
-          allowed_commands: commands,
-          bot_type: kind,
-          public_access: kind === 'informational',
-          ...(telegramUsername ? { telegram_username: telegramUsername } : {}),
-        };
-
-        let script: PyorchScript | undefined;
-        try {
-          script = await pyorchFetch<PyorchScript>('/scripts', {
-            method: 'POST',
-            body: JSON.stringify({
-              name: body.name.trim(),
-              description: body.description?.trim() || 'Telegram-бот WASH PRO CRM',
-              group_id: groupId,
-              script_type: 'bot',
-              entrypoint: 'main.py',
-              code: generateBotMain(commands, kind),
-              metadata: botMeta,
-            }),
-          });
-
-          await pyorchFetch(`/scripts/${script.id}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-              max_runtime_seconds: 86400,
-              max_concurrent_runs: 1,
-              metadata: botMeta,
-            }),
-          });
-
-          await applySecrets(
-            script.id,
-            { token: body.token, adminIds, commands: body.commands ?? [] },
-            true,
-            kind
-          );
-          await pyorchFetch(`/scripts/${script.id}/enable`, { method: 'POST' });
-
-          if (body.start !== false) {
-            await stopLegacyDuplicateBots();
-            await syncBotCode(script, commands, kind);
-            await pyorchFetch(`/runs/scripts/${script.id}/run`, { method: 'POST' });
-          }
-        } catch (err) {
-          if (script?.id) {
-            await pyorchFetch(`/runs/scripts/${script.id}/stop`, { method: 'POST' }).catch(() => undefined);
-            await pyorchFetch(`/scripts/${script.id}`, { method: 'DELETE' }).catch(() => undefined);
-          }
-          throw err;
-        }
-
-        const bots = await listWashBots();
-        const created = bots.find((b) => b.id === script.id) ?? script;
+        const created = await createWashBot({
+          name: body.name.trim(),
+          description: body.description,
+          token: body.token,
+          adminIds: body.adminIds ?? [],
+          commands: body.commands ?? [...BOT_COMMAND_PRESETS[kind]],
+          botType: kind,
+          start: body.start !== false,
+        });
         void notifyCrm('telegram_bot_created', `Создан Telegram-бот: ${created.name}`);
         json(res, 201, { success: true, data: created });
         return;
@@ -707,7 +770,10 @@ export function startServer(): void {
 
   server.listen(PORT, () => {
     logger.info({ port: PORT }, 'pyorch-bridge listening');
-    void refreshAllWashBots(true);
+    void (async () => {
+      await ensureDefaultDemoBots();
+      await refreshAllWashBots(true);
+    })();
   });
 }
 

@@ -94,7 +94,7 @@ async def create_script_endpoint(
     user: Annotated[User, Depends(require_permission("scripts:write"))],
 ):
     files = None
-    meta = body.metadata or {}
+    meta = body.metadata
     if body.code:
         files = {body.entrypoint: body.code, "requirements.txt": ""}
     script = await create_script(

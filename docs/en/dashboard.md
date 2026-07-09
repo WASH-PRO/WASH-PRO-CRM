@@ -32,6 +32,15 @@ Sections marked admin are available only to **Administrator** (`manage_users` or
 
 More about embedded platforms: [Embedded services](embedded-services.md).
 
+## Interface language (v1.1.13)
+
+| Element | Description |
+|---------|-------------|
+| **Locales** | English (default), Russian |
+| **Switcher** | Header (🇺🇸/🇷🇺 flags; single flag on mobile) and **Settings → Language** |
+| **Scope** | Menu, statuses, messages, table labels, logs UI; user data is not translated |
+| **Storage** | `localStorage` (`wash_locale`) |
+
 ## Live mode
 
 Operational data refreshes automatically (`usePolling`). Header shows a live-mode indicator.
@@ -152,7 +161,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 | **Setup wizard** | `/setup` | Initial CRM setup; restart `/setup?restart=1` *(Admin/Operator)* |
 | **Users** | `/users` | Dynamic API accounts, **Telegram user_id**, group assignment *(Admin)* |
 | **Groups & permissions** | `/groups` | RBAC groups and permission matrix *(Admin)* |
-| **Settings** | `/settings` | MQTT, Telegram notify, CRM update, default currency |
+| **Settings** | `/settings` | MQTT, Telegram notify, CRM update, default currency, **interface language** |
 | Logs | `/logs` | Dynamic API audit *(Admin)* |
 | **Information** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
 | Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.1 / **v1.9** *(Admin, PyOrch)* |
@@ -167,6 +176,11 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 - retry loading JS chunks on network failure (`lazyPage`);
 - `RouteErrorBoundary` instead of gray screen;
 - polling timeout 60 s; on Overview — error message instead of endless Loading.
+
+### Mobile header (v1.1.13)
+
+- language switcher — single icon with the current locale flag;
+- Live/Static — single icon (radio / pause); on `sm+` — segmented control with labels.
 
 ### Login page (`/login`)
 

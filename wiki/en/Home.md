@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.12** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.13** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -19,6 +19,7 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - Web + Telegram notifications, configurable event types
 - Users and RBAC groups, **Telegram user_id**, profile
 - **Telegram bots:** Management / Service / **Information (v1.9)**; QR link; **private chats only**
+- **Dashboard localization** — English / Russian; default English; switcher in header and Settings (v1.1.13)
 - **MCP server** in Dashboard — Dynamic API + PyOrchestrator for AI agents (v1.1.12)
 - Stdio MCP `services/crm-mcp` for Cursor (v1.1.9+)
 - MQTT (Mosquitto): post isolation by serial
@@ -55,6 +56,15 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](MCP)
 - [Embedded services](Embedded-Services)
 - [Database schema](Database-Schema)
+
+## Changelog v1.1.13
+
+- **Dashboard i18n (EN/RU)** — full UI translation; English default; 🇺🇸/🇷🇺 flags in header
+- **Docs and wiki** — `en/` and `ru/` catalogs; README EN + README.ru.md
+- **Mobile header** — compact language and Live/Static icon toggles
+- **Information** — green "Published" badge when scheduled time has passed
+
+Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.12
 

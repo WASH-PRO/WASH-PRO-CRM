@@ -4,7 +4,7 @@
 
 Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en/dashboard/)
 
-## Menu (v1.1.12)
+## Menu (v1.1.13)
 
 | Group | Sections |
 |-------|----------|
@@ -18,6 +18,12 @@ Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en
 | **System** | Notifications, Users, Groups, Settings, Logs |
 
 Admin sections — **Administrator** only. Profile — in the header (`/profile`). Setup wizard — `/setup`.
+
+## Interface language (v1.1.13)
+
+- **English** (default) and **Russian** — menu, statuses, messages, logs UI
+- Switcher in the **header** (🇺🇸/🇷🇺 flags; single flag on mobile) and in **Settings**
+- Choice is saved in the browser (`wash_locale`); user-entered data is not translated
 
 ## Post online/offline status
 
@@ -68,17 +74,23 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 5 s | Overview |
 | 10–15 s | Others |
 
-## Recent changes (v1.1.12)
+## Recent changes (v1.1.13)
+
+- **EN/RU localization** — full UI translation; English default
+- Language switcher: flags in header; compact icon on mobile
+- Live/Static: single icon on mobile
+- **Information**: green "Published" badge when scheduled time has passed
+
+## Earlier (v1.1.12)
 
 - **Automation** group: Information, Telegram, **MCP**, Backups
 - **Status** under **Main**
 - MCP: HTTP for Cursor without build
-- Information: actual publish status
 - Navigation stability (chunk retry, error boundary)
 
 ## Earlier
 
-- v1.1.11: information bot, private chat isolation
+- v1.1.12: **Automation** group, MCP, navigation stability
 - Table pagination: 20/40/60/80/100
 - Setup wizard, post online/offline
 - Web + Telegram notifications

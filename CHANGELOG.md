@@ -6,6 +6,23 @@
 
 ## [Unreleased]
 
+## [1.1.13] — 2026-07-09
+
+### Добавлено
+
+- **Локализация Dashboard (EN/RU)** — полный перевод интерфейса (меню, статусы, сообщения, логи UI); по умолчанию **English**; переключатель в шапке (флаги 🇺🇸/🇷🇺) и в **Настройках**; выбор сохраняется в `localStorage` (`wash_locale`)
+- **Многоязычная документация GitHub Pages** — каталоги `docs/en/` и `docs/ru/`; корень `/` → редирект по сохранённому языку; English по умолчанию
+- **Wiki EN/RU** — `wiki/en/` и `wiki/ru/` с переключателем языка
+- **README** — English `README.md` + `README.ru.md` с переключателем
+
+### Изменено
+
+- **Мобильная шапка Dashboard** — переключатель языка (один флаг текущей локали) и Live/Static (одна иконка); на `sm+` — полные контролы с подписями
+
+### Исправлено
+
+- **Раздел «Информация»** — зелёный бейдж **«Опубликовано»** для статуса «По расписанию» с прошедшей датой публикации
+
 ## [1.1.12] — 2026-07-09
 
 ### Добавлено
@@ -195,7 +212,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.12...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.13...HEAD
+[1.1.13]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.13
 [1.1.12]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.12
 [1.1.11]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.11
 [1.1.10]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.10

@@ -1,4 +1,4 @@
-> **[English](../en/Getting-Started.md)** · **Русский**
+> **[English](en/Getting-Started)** · **Русский** · [← Wiki](../Home)
 
 # Быстрый старт
 

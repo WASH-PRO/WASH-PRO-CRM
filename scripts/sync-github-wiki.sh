@@ -13,7 +13,7 @@ cd "$CLONE_DIR"
 cat > Home.md <<'EOF'
 # WASH PRO CRM Wiki
 
-**Language:** **English** · [Русский](ru/README)
+**Language:** **[English](en/Home)** · [Русский](ru/Home)
 
 Sources synced from the main repository. **Default language: English.**
 

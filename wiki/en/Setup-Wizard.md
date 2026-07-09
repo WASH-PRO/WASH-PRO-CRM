@@ -1,4 +1,4 @@
-> **English** · **[Русский](../ru/Setup-Wizard.md)**
+> **English** · **[Русский](ru/Setup-Wizard)** · [← Wiki](../Home)
 
 # Setup Wizard
 

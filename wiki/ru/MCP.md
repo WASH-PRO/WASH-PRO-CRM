@@ -1,8 +1,8 @@
-> **[English](../en/MCP.md)** · **Русский**
+> **[English](en/MCP)** · **Русский** · [← Wiki](../Home)
 
 # MCP для AI-агентов
 
-Полная документация: [docs/mcp.md](../../docs/mcp.md) · [GitHub Pages — MCP](https://wash-pro.github.io/WASH-PRO-CRM/ru/mcp/)
+Полная документация: [GitHub Pages — MCP](https://wash-pro.github.io/WASH-PRO-CRM/ru/mcp/)
 
 ## v1.1.12 — кратко
 

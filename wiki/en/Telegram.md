@@ -1,8 +1,8 @@
-> **English** · **[Русский](../ru/Telegram.md)**
+> **English** · **[Русский](ru/Telegram)** · [← Wiki](../Home)
 
 # Telegram Bots
 
-Full documentation: [docs/telegram.md](https://wash-pro.github.io/WASH-PRO-CRM/en/telegram/) · [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-PRO-CRM/en/telegram/)
+Full documentation: [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-PRO-CRM/en/telegram/)
 
 ## v1.1.12 — summary
 

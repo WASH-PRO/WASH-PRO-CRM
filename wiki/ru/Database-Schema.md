@@ -1,4 +1,4 @@
-> **[English](../en/Database-Schema.md)** · **Русский**
+> **[English](en/Database-Schema)** · **Русский** · [← Wiki](../Home)
 
 # Схема данных
 

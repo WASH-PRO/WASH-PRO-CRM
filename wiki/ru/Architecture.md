@@ -1,4 +1,4 @@
-> **[English](../en/Architecture.md)** · **Русский**
+> **[English](en/Architecture)** · **Русский** · [← Wiki](../Home)
 
 # Архитектура
 

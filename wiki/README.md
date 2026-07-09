@@ -1,6 +1,6 @@
 # WASH PRO CRM Wiki
 
-**Language:** **[English](en/README.md)** · [Русский](ru/README.md)
+**Language:** **[English](en/README)** · [Русский](ru/README)
 
 Sources for [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
@@ -13,36 +13,37 @@ Default language: **English**
 
 | File | Topic |
 |------|-------|
-| [Home](en/Home.md) | Overview |
-| [Getting-Started](en/Getting-Started.md) | Quick start |
-| [Setup-Wizard](en/Setup-Wizard.md) | Setup wizard |
-| [Architecture](en/Architecture.md) | Architecture |
-| [Dashboard](en/Dashboard.md) | Dashboard |
-| [Embedded-Services](en/Embedded-Services.md) | Embedded services |
-| [MQTT](en/MQTT.md) | MQTT |
-| [Telegram](en/Telegram.md) | Telegram bots |
-| [MCP](en/MCP.md) | MCP for AI agents |
-| [Database-Schema](en/Database-Schema.md) | Database schema |
+| [Home](en/Home) | Overview |
+| [Getting-Started](en/Getting-Started) | Quick start |
+| [Setup-Wizard](en/Setup-Wizard) | Setup wizard |
+| [Architecture](en/Architecture) | Architecture |
+| [Dashboard](en/Dashboard) | Dashboard |
+| [Embedded-Services](en/Embedded-Services) | Embedded services |
+| [MQTT](en/MQTT) | MQTT |
+| [Telegram](en/Telegram) | Telegram bots |
+| [MCP](en/MCP) | MCP for AI agents |
+| [Database-Schema](en/Database-Schema) | Database schema |
 
 ## Русский
 
 | Файл | Раздел |
 |------|--------|
-| [Home](ru/Home.md) | Обзор |
-| [Getting-Started](ru/Getting-Started.md) | Быстрый старт |
-| [Setup-Wizard](ru/Setup-Wizard.md) | Мастер настройки |
-| [Architecture](ru/Architecture.md) | Архитектура |
-| [Dashboard](ru/Dashboard.md) | Dashboard |
-| [Embedded-Services](ru/Embedded-Services.md) | Встроенные сервисы |
-| [MQTT](ru/MQTT.md) | MQTT |
-| [Telegram](ru/Telegram.md) | Telegram-боты |
-| [MCP](ru/MCP.md) | MCP |
-| [Database-Schema](ru/Database-Schema.md) | Схема данных |
+| [Home](ru/Home) | Обзор |
+| [Getting-Started](ru/Getting-Started) | Быстрый старт |
+| [Setup-Wizard](ru/Setup-Wizard) | Мастер настройки |
+| [Architecture](ru/Architecture) | Архитектура |
+| [Dashboard](ru/Dashboard) | Dashboard |
+| [Embedded-Services](ru/Embedded-Services) | Встроенные сервисы |
+| [MQTT](ru/MQTT) | MQTT |
+| [Telegram](ru/Telegram) | Telegram-боты |
+| [MCP](ru/MCP) | MCP |
+| [Database-Schema](ru/Database-Schema) | Схема данных |
 
 Sync with [`docs/`](../docs/) when updating. To publish GitHub Wiki:
 
 ```bash
 ./scripts/sync-github-wiki.sh
+./scripts/validate-wiki-links.sh   # optional check before publish
 ```
 
 This pushes `wiki/en/` and `wiki/ru/` to [WASH-PRO-CRM.wiki](https://github.com/WASH-PRO/WASH-PRO-CRM.wiki) with a bilingual `Home.md` hub.

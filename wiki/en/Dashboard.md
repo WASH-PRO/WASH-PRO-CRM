@@ -1,4 +1,4 @@
-> **English** · **[Русский](../ru/Dashboard.md)**
+> **English** · **[Русский](ru/Dashboard)** · [← Wiki](../Home)
 
 # Dashboard
 

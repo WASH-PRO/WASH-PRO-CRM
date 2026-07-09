@@ -1,4 +1,4 @@
-> **English** · **[Русский](../ru/Home.md)**
+> **English** · **[Русский](ru/Home)** · [← Wiki](../Home)
 
 # WASH PRO CRM / SCADA
 

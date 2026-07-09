@@ -1,4 +1,4 @@
-> **[English](../en/Setup-Wizard.md)** · **Русский**
+> **[English](en/Setup-Wizard)** · **Русский** · [← Wiki](../Home)
 
 # Мастер настройки
 

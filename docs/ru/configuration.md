@@ -2,8 +2,6 @@
 layout: default
 title: Конфигурация
 description: Переменные окружения .env
-redirect_from:
-  - /configuration/
 ---
 
 Все настройки задаются в `.env` (шаблон — `.env.example`).

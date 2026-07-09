@@ -1,7 +1,5 @@
 ---
 layout: default
-redirect_from:
-  - /index.html
 ---
 
 {% assign ui = site.data.ui[page.lang] %}
@@ -18,12 +16,7 @@ redirect_from:
 
 **{{ ui.hero_summary }}**
 
-<p class="quick-links">
-  {% assign nav_items = site.data.nav[page.lang] %}
-  {% for item in nav_items offset:1 limit:8 %}
-    <a href="{% include lhref.html slug=item.slug %}">{{ item.title }}</a>{% unless forloop.last %} · {% endunless %}
-  {% endfor %}
-</p>
+{% include quick-links.html %}
 
 ## Возможности WASH PRO CRM
 

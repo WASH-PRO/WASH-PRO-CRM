@@ -16,12 +16,7 @@ layout: default
 
 **{{ ui.hero_summary }}**
 
-<p class="quick-links">
-  {% assign nav_items = site.data.nav[page.lang] %}
-  {% for item in nav_items offset:1 limit:8 %}
-    <a href="{% include lhref.html slug=item.slug %}">{{ item.title }}</a>{% unless forloop.last %} · {% endunless %}
-  {% endfor %}
-</p>
+{% include quick-links.html %}
 
 ## WASH PRO CRM мүмкіндіктері
 

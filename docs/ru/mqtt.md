@@ -2,9 +2,6 @@
 layout: default
 title: MQTT
 description: Интеграция контроллеров постов через MQTT
-redirect_from:
-  - /rabbitmq/
-  - /rabbitmq.html
 ---
 
 ## Параметры подключения

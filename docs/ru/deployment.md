@@ -2,8 +2,6 @@
 layout: default
 title: Развёртывание
 description: Production, обновление и восстановление
-redirect_from:
-  - /deployment/
 ---
 
 ## Production checklist

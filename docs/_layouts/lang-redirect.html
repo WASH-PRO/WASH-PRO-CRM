@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecting…</title>
+  <script>
+    (function () {
+      var supported = ['ru', 'en', 'kk'];
+      var saved = localStorage.getItem('wash-docs-lang');
+      var browser = (navigator.language || 'ru').slice(0, 2).toLowerCase();
+      var lang = supported.indexOf(saved) >= 0 ? saved : (supported.indexOf(browser) >= 0 ? browser : 'ru');
+      var base = '{{ "/" | relative_url }}';
+      var slug = '{{ page.slug_path }}';
+      var target = slug ? base + lang + '/' + slug + '/' : base + lang + '/';
+      window.location.replace(target);
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting…</p>
+</body>
+</html>

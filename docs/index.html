@@ -2,7 +2,7 @@
 permalink: /
 ---
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,16 +18,15 @@ permalink: /
       window.location.replace(base + lang + '/');
     })();
   </script>
-  <meta http-equiv="refresh" content="0;url={{ '/ru/' | relative_url }}">
 </head>
 <body>
   <main class="lang-picker">
     <h1>WASH PRO CRM</h1>
     <p>Выберите язык / Choose language / Тілді таңдаңыз</p>
     <div class="lang-picker-links">
-      <a href="{{ '/ru/' | relative_url }}">Русский</a>
-      <a href="{{ '/en/' | relative_url }}">English</a>
-      <a href="{{ '/kk/' | relative_url }}">Қазақша</a>
+      <a href="{{ '/ru/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','ru')}catch(e){}">Русский</a>
+      <a href="{{ '/en/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','en')}catch(e){}">English</a>
+      <a href="{{ '/kk/' | relative_url }}" onclick="try{localStorage.setItem('wash-docs-lang','kk')}catch(e){}">Қазақша</a>
     </div>
   </main>
 </body>

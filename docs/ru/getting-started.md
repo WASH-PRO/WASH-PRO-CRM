@@ -2,8 +2,6 @@
 layout: default
 title: Быстрый старт
 description: Установка и первый запуск WASH PRO CRM
-redirect_from:
-  - /getting-started/
 ---
 
 ## Требования

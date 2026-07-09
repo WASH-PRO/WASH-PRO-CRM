@@ -12,9 +12,11 @@ import uuid
 import urllib.error
 import urllib.parse
 import urllib.request
+import struct
+import zlib
 from datetime import datetime
 
-BOT_VERSION = "2.2"
+BOT_VERSION = "2.3"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -63,6 +65,7 @@ MENU_BUTTONS = {
     "📰 Новости": "news",
     "💰 Цены": "prices",
     "🅿️ Занятость": "occupancy",
+    "📊 Загруженность": "workload",
     "🎁 Акции": "promotions",
     "🏠 Главное меню": "main",
 }
@@ -414,7 +417,8 @@ def main_keyboard() -> dict:
     return {
         "keyboard": [
             [{"text": "📰 Новости"}, {"text": "💰 Цены"}],
-            [{"text": "🅿️ Занятость"}, {"text": "🎁 Акции"}],
+            [{"text": "🅿️ Занятость"}, {"text": "📊 Загруженность"}],
+            [{"text": "🎁 Акции"}],
             [{"text": "🏠 Главное меню"}],
         ],
         "resize_keyboard": True,
@@ -634,7 +638,8 @@ def welcome_text() -> str:
         "Бот доступен <b>всем</b> — регистрация и Telegram ID не нужны.\\n\\n"
         "📰 <b>Новости</b> — лента обновлений\\n"
         "💰 <b>Цены</b> — стоимость режимов на мойке\\n"
-        "🅿️ <b>Занятость</b> — свободные и занятые посты\\n"
+        "🅿️ <b>Занятость</b> — свободные и занятые посты сейчас\\n"
+        "📊 <b>Загруженность</b> — график использования по дням\\n"
         "🎁 <b>Акции</b> — специальные предложения\\n\\n"
         f"<i>Шаблон бота v{esc(BOT_VERSION)}</i>"
     )
@@ -679,6 +684,197 @@ def show_prices_prompt(chat_id: int) -> None:
 def show_occupancy_prompt(chat_id: int) -> None:
     set_flow(chat_id, "occupancy", "wash", {})
     send_text(chat_id, "🅿️ <b>Занятость постов</b>\\nВыберите автомойку:", washes_keyboard("o"))
+
+
+def show_workload_prompt(chat_id: int) -> None:
+    set_flow(chat_id, "workload", "wash", {})
+    send_text(chat_id, "📊 <b>Загруженность</b>\\nВыберите автомойку:", washes_keyboard("w"))
+
+
+_WORKLOAD_CHART_DAYS = 14
+_WORKLOAD_CHART_WIDTH = 720
+_WORKLOAD_CHART_HEIGHT = 400
+
+
+def usage_seconds(row: dict) -> float:
+    usage_time = row.get("usageTime")
+    if usage_time is not None and float(usage_time) > 0:
+        return float(usage_time)
+    client_count = row.get("clientCount")
+    if client_count is not None and float(client_count) > 0:
+        return float(client_count) * 60.0
+    launch_count = row.get("launchCount")
+    if launch_count is not None and float(launch_count) > 0:
+        return float(launch_count) * 60.0
+    return 0.0
+
+
+def format_duration_short(seconds: float) -> str:
+    if seconds >= 3600:
+        return f"{seconds / 3600:.1f} ч"
+    if seconds >= 60:
+        return f"{seconds / 60:.0f} мин"
+    return f"{int(seconds)} сек"
+
+
+def workload_series_for_wash(wash_id: str, max_days: int = _WORKLOAD_CHART_DAYS) -> list[tuple[str, float]]:
+    posts = [p for p in (api_get("/api/crm/posts?limit=200") or []) if ref_id(p.get("washId")) == wash_id]
+    post_ids = {ref_id(p) for p in posts if ref_id(p)}
+    if not post_ids:
+        return []
+    stats = api_get("/api/crm/usage-stats?limit=500") or []
+    by_day: dict[str, float] = {}
+    ts_by_day: dict[str, float] = {}
+    for row in stats:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("period") or "") != "before_collection":
+            continue
+        pid = ref_id(row.get("postId"))
+        if pid not in post_ids:
+            continue
+        recorded = row.get("recordedAt")
+        if not recorded:
+            continue
+        ts = parse_ts(recorded)
+        if ts <= 0:
+            continue
+        day_label = datetime.fromtimestamp(ts).strftime("%d.%m")
+        by_day[day_label] = by_day.get(day_label, 0.0) + usage_seconds(row)
+        ts_by_day[day_label] = max(ts_by_day.get(day_label, 0.0), ts)
+    ordered = sorted(by_day.keys(), key=lambda key: ts_by_day.get(key, 0.0))
+    if len(ordered) > max_days:
+        ordered = ordered[-max_days:]
+    return [(day, by_day[day]) for day in ordered]
+
+
+def _fill_rect(
+    pixels: bytearray,
+    width: int,
+    height: int,
+    x0: int,
+    y0: int,
+    x1: int,
+    y1: int,
+    color: tuple[int, int, int],
+) -> None:
+    left, right = max(0, min(x0, x1)), min(width, max(x0, x1))
+    top, bottom = max(0, min(y0, y1)), min(height, max(y0, y1))
+    r, g, b = color
+    for y in range(top, bottom):
+        row = y * width * 3
+        for x in range(left, right):
+            i = row + x * 3
+            pixels[i] = r
+            pixels[i + 1] = g
+            pixels[i + 2] = b
+
+
+def _hline(pixels: bytearray, width: int, x0: int, y: int, x1: int, color: tuple[int, int, int]) -> None:
+    if y < 0:
+        return
+    r, g, b = color
+    left, right = max(0, x0), min(width, x1)
+    row = y * width * 3
+    for x in range(left, right):
+        i = row + x * 3
+        pixels[i] = r
+        pixels[i + 1] = g
+        pixels[i + 2] = b
+
+
+def _encode_png_rgb(width: int, height: int, pixels: bytes) -> bytes:
+    rows = []
+    stride = width * 3
+    for y in range(height):
+        rows.append(b"\\x00" + pixels[y * stride:(y + 1) * stride])
+    compressed = zlib.compress(b"".join(rows), 9)
+    signature = b"\\x89PNG\\r\\n\\x1a\\n"
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return (
+        signature
+        + _png_chunk(b"IHDR", ihdr)
+        + _png_chunk(b"IDAT", compressed)
+        + _png_chunk(b"IEND", b"")
+    )
+
+
+def _png_chunk(tag: bytes, data: bytes) -> bytes:
+    crc = zlib.crc32(tag + data) & 0xFFFFFFFF
+    return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+
+
+def render_workload_chart_png(series: list[tuple[str, float]]) -> bytes | None:
+    if not series:
+        return None
+    width = _WORKLOAD_CHART_WIDTH
+    height = _WORKLOAD_CHART_HEIGHT
+    pixels = bytearray([255, 255, 255] * width * height)
+    margin_l, margin_r, margin_t, margin_b = 40, 24, 28, 40
+    chart_w = width - margin_l - margin_r
+    chart_h = height - margin_t - margin_b
+    max_val = max(value for _, value in series) or 1.0
+    grid_color = (226, 232, 240)
+    bar_color = (8, 145, 178)
+    axis_color = (148, 163, 184)
+    _hline(pixels, width, margin_l, margin_t + chart_h, width - margin_r, axis_color)
+    for step in range(1, 5):
+        y = margin_t + int(chart_h * step / 5)
+        _hline(pixels, width, margin_l, y, width - margin_r, grid_color)
+    count = len(series)
+    gap = 10
+    bar_w = max(12, (chart_w - gap * (count + 1)) // max(count, 1))
+    for index, (_, value) in enumerate(series):
+        bar_h = int((value / max_val) * chart_h) if max_val > 0 else 0
+        x0 = margin_l + gap + index * (bar_w + gap)
+        y0 = margin_t + chart_h - bar_h
+        x1 = x0 + bar_w
+        y1 = margin_t + chart_h
+        _fill_rect(pixels, width, height, x0, y0, x1, y1, bar_color)
+    return _encode_png_rgb(width, height, bytes(pixels))
+
+
+def show_workload_for_wash(chat_id: int, wash_id: str) -> None:
+    washes = {ref_id(w): w for w in (api_get("/api/crm/washes?limit=100") or [])}
+    wash = washes.get(wash_id) or {}
+    name = str(wash.get("name") or "Мойка")
+    try:
+        series = workload_series_for_wash(wash_id)
+    except Exception as exc:
+        send_text(chat_id, f"⚠️ Не удалось загрузить статистику: {esc(exc)}", main_keyboard())
+        clear_flow(chat_id)
+        return
+    if not series:
+        send_text(
+            chat_id,
+            f"<b>{esc(name)}</b>\\n\\nНет данных по загруженности за последние дни.",
+            main_keyboard(),
+        )
+        clear_flow(chat_id)
+        return
+    lines = [
+        f"<b>{esc(name)}</b>",
+        "📊 <b>Загруженность по дням</b>",
+        "",
+    ]
+    total = 0.0
+    for label, seconds in series:
+        total += seconds
+        lines.append(f"• {esc(label)} — <b>{esc(format_duration_short(seconds))}</b>")
+    lines.append("")
+    lines.append(f"Итого за период: <b>{esc(format_duration_short(total))}</b>")
+    lines.append("<i>Источник: статистика использования (до инкассации)</i>")
+    caption = "\\n".join(lines)[:1024]
+    png = render_workload_chart_png(series)
+    if png:
+        try:
+            send_photo_upload(chat_id, png, "workload.png", "image/png", caption, "HTML", main_keyboard())
+            clear_flow(chat_id)
+            return
+        except Exception as exc:
+            print(f"workload chart photo failed: {exc}")
+    send_text(chat_id, "\\n".join(lines), main_keyboard())
+    clear_flow(chat_id)
 
 
 def state_row_ts(row: dict) -> float:
@@ -800,6 +996,9 @@ def handle_callback(chat_id: int, callback_id: str, data: str) -> None:
         return
     if data.startswith("o:"):
         show_occupancy_for_wash(chat_id, data[2:])
+        return
+    if data.startswith("w:"):
+        show_workload_for_wash(chat_id, data[2:])
 
 
 def handle_text(chat_id: int, text: str) -> None:
@@ -823,6 +1022,8 @@ def handle_text(chat_id: int, text: str) -> None:
             show_prices_prompt(chat_id)
         elif action == "occupancy":
             show_occupancy_prompt(chat_id)
+        elif action == "workload":
+            show_workload_prompt(chat_id)
         return
     send_text(chat_id, "Выберите пункт меню или нажмите 🏠 Главное меню", main_keyboard())
 

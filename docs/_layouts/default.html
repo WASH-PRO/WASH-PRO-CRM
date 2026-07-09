@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ page.lang | default: 'ru' }}">
 <head>
   {% include head.html %}
 </head>
-<body>
+<body data-menu-open="{{ site.data.ui[page.lang | default: 'ru'].menu_open }}" data-menu-close="{{ site.data.ui[page.lang | default: 'ru'].menu_close }}">
   <div class="site">
     {% include mobile-header.html %}
     {% include sidebar.html %}

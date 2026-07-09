@@ -1,9 +1,15 @@
+{%- assign current_lang = page.lang | default: 'ru' -%}
+{%- assign ui = site.data.ui[current_lang] -%}
+
 <header class="mobile-header">
-  <button type="button" class="menu-toggle" aria-label="Открыть меню" aria-expanded="false">
+  <button type="button" class="menu-toggle" aria-label="{{ ui.menu_open }}" aria-expanded="false">
     <span class="menu-toggle-bar"></span>
     <span class="menu-toggle-bar"></span>
     <span class="menu-toggle-bar"></span>
   </button>
   <span class="mobile-title">{{ page.title | default: site.title }}</span>
+  <div class="mobile-lang-switcher">
+    {% include lang-switcher.html %}
+  </div>
 </header>
 <div class="sidebar-overlay" aria-hidden="true"></div>

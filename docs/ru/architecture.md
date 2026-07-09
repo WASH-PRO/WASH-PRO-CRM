@@ -2,6 +2,8 @@
 layout: default
 title: Архитектура
 description: Компоненты и потоки данных WASH PRO CRM
+redirect_from:
+  - /architecture/
 ---
 
 ## Общая схема

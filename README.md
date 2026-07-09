@@ -124,7 +124,15 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 
 ## Документация
 
-Полная документация в папке [`docs/`](docs/) и на **GitHub Pages** (после настройки):
+Полная документация в папке [`docs/`](docs/) и на **GitHub Pages**:
+
+| Язык | URL |
+|------|-----|
+| Русский | https://wash-pro.github.io/WASH-PRO-CRM/ru/ |
+| English | https://wash-pro.github.io/WASH-PRO-CRM/en/ |
+| Қазақша | https://wash-pro.github.io/WASH-PRO-CRM/kk/ |
+
+Корень `/` автоматически перенаправляет на язык браузера (или `/ru/`).
 
 | Раздел | Описание |
 |--------|----------|

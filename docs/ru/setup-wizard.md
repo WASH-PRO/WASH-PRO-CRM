@@ -2,6 +2,8 @@
 layout: default
 title: Мастер настройки
 description: Первичная настройка CRM после установки
+redirect_from:
+  - /setup-wizard/
 ---
 
 После первого входа Dashboard перенаправляет на **мастер настройки** (`/setup`), пока в CRM не установлен флаг `settings.setup.complete = true`.

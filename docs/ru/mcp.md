@@ -2,6 +2,8 @@
 layout: default
 title: MCP для AI-агентов
 description: HTTP MCP Dynamic API и PyOrchestrator, раздел Dashboard и stdio crm-mcp
+redirect_from:
+  - /mcp/
 ---
 
 WASH PRO CRM предоставляет **Model Context Protocol (MCP)** для подключения AI-агентов (Cursor, Claude Desktop и др.) к CRM, SCADA и автоматизации.

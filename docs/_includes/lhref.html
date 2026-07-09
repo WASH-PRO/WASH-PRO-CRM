@@ -1,0 +1,7 @@
+{%- assign lng = include.lang | default: page.lang | default: 'ru' -%}
+{%- assign slug = include.slug | default: '' -%}
+{%- if slug == '' or slug == 'index' -%}
+{{- '/' | append: lng | append: '/' | relative_url -}}
+{%- else -%}
+{{- '/' | append: lng | append: '/' | append: slug | append: '/' | relative_url -}}
+{%- endif -%}

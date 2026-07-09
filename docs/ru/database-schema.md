@@ -2,6 +2,8 @@
 layout: default
 title: Схема данных
 description: CRM endpoints и коллекции MongoDB
+redirect_from:
+  - /database-schema/
 ---
 
 Данные хранятся в **MongoDB** через [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13**.

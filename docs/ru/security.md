@@ -2,6 +2,8 @@
 layout: default
 title: Безопасность
 description: RBAC, сеть и рекомендации
+redirect_from:
+  - /security/
 ---
 
 ## Принципы

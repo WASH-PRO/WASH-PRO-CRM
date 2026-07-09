@@ -3,6 +3,7 @@
 Исходники для [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
 **Полная документация (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/  
+Языки: [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/) · [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [KK](https://wash-pro.github.io/WASH-PRO-CRM/kk/)  
 **Текущая версия:** v1.1.12
 
 | Файл | Wiki |

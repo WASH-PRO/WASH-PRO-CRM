@@ -1,28 +1,28 @@
 ---
 layout: default
+redirect_from:
+  - /index.html
 ---
+
+{% assign ui = site.data.ui[page.lang] %}
 
 <div class="hero">
   <img class="banner" src="{{ '/assets/banner.png' | relative_url }}" alt="WASH PRO CRM / SCADA">
   {% include hero-badges.html %}
   <p class="hero-lead">
-    Локальная CRM/SCADA-система для автомоек самообслуживания на базе
+    {{ ui.hero_lead }}
     <a href="https://github.com/Dynamic-API-Platform/Dynamic-API-Platform">Dynamic API Platform</a>
-    и опционально <a href="https://github.com/PyOrchestrator/PyOrchestrator">PyOrchestrator</a>
+    {{ ui.hero_optional }} <a href="https://github.com/PyOrchestrator/PyOrchestrator">PyOrchestrator</a>
   </p>
 </div>
 
-**Локальная система управления автомойками** — SCADA в реальном времени, карты клиентов, аналитика, RBAC, встроенные платформы Dynamic API и PyOrchestrator.
+**{{ ui.hero_summary }}**
 
 <p class="quick-links">
-  <a href="{{ '/getting-started/' | relative_url }}">Быстрый старт</a> ·
-  <a href="{{ '/setup-wizard/' | relative_url }}">Мастер настройки</a> ·
-  <a href="{{ '/architecture/' | relative_url }}">Архитектура</a> ·
-  <a href="{{ '/mqtt/' | relative_url }}">MQTT</a> ·
-  <a href="{{ '/telegram/' | relative_url }}">Telegram</a> ·
-  <a href="{{ '/mcp/' | relative_url }}">MCP</a> ·
-  <a href="{{ '/embedded-services/' | relative_url }}">Встроенные сервисы</a> ·
-  <a href="{{ '/dashboard/' | relative_url }}">Dashboard</a>
+  {% assign nav_items = site.data.nav[page.lang] %}
+  {% for item in nav_items offset:1 limit:8 %}
+    <a href="{% include lhref.html slug=item.slug %}">{{ item.title }}</a>{% unless forloop.last %} · {% endunless %}
+  {% endfor %}
 </p>
 
 ## Возможности WASH PRO CRM

@@ -3,6 +3,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 _site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
 *.log
 .DS_Store
 # Persistent runtime data (see data/README.md)

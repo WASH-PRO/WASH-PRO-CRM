@@ -1,0 +1,87 @@
+ru:
+  - slug: ""
+    title: Главная
+  - slug: getting-started
+    title: Быстрый старт
+  - slug: setup-wizard
+    title: Мастер настройки
+  - slug: architecture
+    title: Архитектура
+  - slug: dashboard
+    title: Dashboard
+  - slug: embedded-services
+    title: Встроенные сервисы
+  - slug: mqtt
+    title: MQTT
+  - slug: telegram
+    title: Telegram-боты
+  - slug: mcp
+    title: MCP
+  - slug: database-schema
+    title: Схема данных
+  - slug: deployment
+    title: Развёртывание
+  - slug: configuration
+    title: Конфигурация
+  - slug: security
+    title: Безопасность
+  - slug: troubleshooting
+    title: Устранение неполадок
+en:
+  - slug: ""
+    title: Home
+  - slug: getting-started
+    title: Quick start
+  - slug: setup-wizard
+    title: Setup wizard
+  - slug: architecture
+    title: Architecture
+  - slug: dashboard
+    title: Dashboard
+  - slug: embedded-services
+    title: Embedded services
+  - slug: mqtt
+    title: MQTT
+  - slug: telegram
+    title: Telegram bots
+  - slug: mcp
+    title: MCP
+  - slug: database-schema
+    title: Database schema
+  - slug: deployment
+    title: Deployment
+  - slug: configuration
+    title: Configuration
+  - slug: security
+    title: Security
+  - slug: troubleshooting
+    title: Troubleshooting
+kk:
+  - slug: ""
+    title: Басты бет
+  - slug: getting-started
+    title: Жылдам бастау
+  - slug: setup-wizard
+    title: Орнату шебері
+  - slug: architecture
+    title: Сәулет
+  - slug: dashboard
+    title: Dashboard
+  - slug: embedded-services
+    title: Кіріктірілген сервистер
+  - slug: mqtt
+    title: MQTT
+  - slug: telegram
+    title: Telegram боттары
+  - slug: mcp
+    title: MCP
+  - slug: database-schema
+    title: Дерекқор схемасы
+  - slug: deployment
+    title: Орналастыру
+  - slug: configuration
+    title: Конфигурация
+  - slug: security
+    title: Қауіпсіздік
+  - slug: troubleshooting
+    title: Ақаулықтарды жою

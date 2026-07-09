@@ -2,6 +2,8 @@
 layout: default
 title: Устранение неполадок
 description: Типичные проблемы и решения
+redirect_from:
+  - /troubleshooting/
 ---
 
 ## Обновление Dynamic API Platform

@@ -1117,6 +1117,10 @@ export const en = {
       readonlySuffix: ' · view-only',
       searchPlaceholder: 'Search notifications...',
       confirmDeleteOne: 'Delete notification?',
+      deleteAll: 'Delete all',
+      deletingAll: 'Deleting...',
+      confirmDeleteAll: 'Delete all {{count}} notifications? This action is irreversible.',
+      deleteAllFailed: 'Failed to delete notifications',
       limitHint: {
         shownLatest: ' · latest {{limit}} of {{total}} shown',
         total: ' · {{total}} total',

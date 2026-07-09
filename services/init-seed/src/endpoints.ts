@@ -557,6 +557,27 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Создать уведомление', slug: 'crm-notifications-create', path: '/api/crm/notifications', method: 'POST', schema: notificationFields, accessType: 'group', groupKey: 'notifications', description: 'Создать уведомление' },
   { name: 'Обновить уведомление', slug: 'crm-notifications-update', path: '/api/crm/notifications/:id', method: 'PATCH', schema: notificationFields, accessType: 'group', groupKey: 'notifications', description: 'Обновить уведомление' },
   { name: 'Удалить уведомление', slug: 'crm-notifications-delete', path: '/api/crm/notifications/:id', method: 'DELETE', schema: [], accessType: 'authenticated', groupKey: 'notifications', description: 'Удалить уведомление' },
+  {
+    name: 'Удалить все уведомления',
+    slug: 'crm-notifications-delete-all',
+    path: '/api/crm/notifications',
+    method: 'DELETE',
+    schema: [],
+    accessType: 'authenticated',
+    groupKey: 'notifications',
+    description: 'Удалить все уведомления',
+    handlers: [
+      {
+        name: 'delete-all-notifications',
+        type: 'javascript',
+        enabled: true,
+        code: `async function handler(req, db) {
+  const deleted = await db.deleteMany({});
+  return { success: true, data: { deleted } };
+}`,
+      },
+    ],
+  },
 
   { name: 'Резервные копии', slug: 'crm-backups-list', path: '/api/crm/backups', method: 'GET', schema: [], accessType: 'group', groupKey: 'backup', description: 'Список резервных копий' },
   { name: 'Создать запись бэкапа', slug: 'crm-backups-create', path: '/api/crm/backups', method: 'POST', schema: backupFields, accessType: 'group', groupKey: 'backup', description: 'Зарегистрировать бэкап' },

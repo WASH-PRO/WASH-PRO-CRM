@@ -1,10 +1,12 @@
 // Публичный информационный Telegram-бот: без проверки Telegram ID, доступен всем.
 export const WASH_TELEGRAM_INFO_BOT_MAIN = `"""WASH PRO CRM — информационный Telegram-бот."""
 import fcntl
+import hashlib
 import html
 import json
 import os
 import re
+import signal
 import time
 import uuid
 import urllib.error
@@ -12,7 +14,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "1.9"
+BOT_VERSION = "2.2"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -52,6 +54,8 @@ _PRIVATE_HINT_SENT: set[int] = set()
 _GLOBAL_LAST_BROADCAST_TS: dict[str, float] = {"news": 0.0, "promotion": 0.0}
 _FEED_HISTORY_LIMIT = 10
 _BROADCAST_POLL_SEC = 30
+_POLL_LOCK_FILE = None
+_SHUTDOWN = False
 _STATE_PATH = os.path.join(os.environ.get("PYORCH_WORKDIR", "."), "info_bot_state.json")
 _POST_ONLINE_SEC = 30
 
@@ -692,26 +696,35 @@ def post_online(state: dict | None) -> bool:
     return ts > 0 and time.time() - ts <= _POST_ONLINE_SEC
 
 
+def resolve_program_number(state: dict) -> int | None:
+    mode = str(state.get("mode") or "").strip().lower()
+    if mode == "idle":
+        return None
+    if mode.startswith("program_"):
+        try:
+            return int(mode.split("_", 1)[1])
+        except (IndexError, ValueError):
+            return None
+    mode_number = state.get("modeNumber")
+    if mode_number is not None:
+        try:
+            return int(mode_number)
+        except (TypeError, ValueError):
+            pass
+    return None
+
+
 def post_busy(state: dict | None) -> bool:
-    if not post_online(state):
+    """Пост занят, если онлайн и режим не program_9 (внесение оплаты = свободен)."""
+    if not state or not post_online(state):
         return False
     mode = str(state.get("mode") or "").strip().lower()
     if mode == "idle":
         return False
-    if mode.startswith("program_"):
-        try:
-            return int(mode.split("_", 1)[1]) >= 0
-        except (IndexError, ValueError):
-            return True
-    mode_number = state.get("modeNumber")
-    if mode_number is not None:
-        try:
-            return int(mode_number) >= 0
-        except (TypeError, ValueError):
-            pass
-    if float(state.get("modeTime") or 0) > 0:
-        return True
-    return False
+    program_num = resolve_program_number(state)
+    if program_num == 9:
+        return False
+    return True
 
 
 def latest_states() -> dict[str, dict]:
@@ -814,14 +827,50 @@ def handle_text(chat_id: int, text: str) -> None:
     send_text(chat_id, "Выберите пункт меню или нажмите 🏠 Главное меню", main_keyboard())
 
 
-def acquire_poll_lock() -> bool:
-    lock_path = os.path.join(os.environ.get("PYORCH_WORKDIR", "."), "telegram_info_poll.lock")
+def acquire_poll_lock(retries: int = 10, delay_sec: float = 2.0) -> bool:
+    global _POLL_LOCK_FILE
+    token = TELEGRAM_TOKEN.strip() or "no-token"
+    digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:24]
+    lock_dir = os.environ.get("TELEGRAM_POLL_LOCK_DIR", "/tmp/wash-telegram-locks")
+    os.makedirs(lock_dir, exist_ok=True)
+    lock_path = os.path.join(lock_dir, f"poll_{digest}.lock")
+    for attempt in range(retries):
+        try:
+            handle = open(lock_path, "w", encoding="utf-8")
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            handle.write(str(os.getpid()))
+            handle.flush()
+            _POLL_LOCK_FILE = handle
+            print(f"Polling lock acquired ({lock_path}) pid={os.getpid()} bot v{BOT_VERSION}")
+            return True
+        except OSError as exc:
+            print(f"polling lock denied (attempt {attempt + 1}/{retries}): {exc}")
+            if attempt < retries - 1:
+                time.sleep(delay_sec)
+    return False
+
+
+def release_poll_lock() -> None:
+    global _POLL_LOCK_FILE
+    if not _POLL_LOCK_FILE:
+        return
     try:
-        fd = os.open(lock_path, os.O_CREAT | os.O_RDWR)
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return True
-    except OSError:
-        return False
+        fcntl.flock(_POLL_LOCK_FILE.fileno(), fcntl.LOCK_UN)
+        _POLL_LOCK_FILE.close()
+    except Exception as exc:
+        print(f"release poll lock warning: {exc}")
+    _POLL_LOCK_FILE = None
+
+
+def _handle_shutdown(signum, frame) -> None:
+    global _SHUTDOWN
+    _SHUTDOWN = True
+    print(f"Shutdown signal {signum}, stopping bot v{BOT_VERSION}")
+    release_poll_lock()
+
+
+signal.signal(signal.SIGTERM, _handle_shutdown)
+signal.signal(signal.SIGINT, _handle_shutdown)
 
 
 def main() -> None:
@@ -832,12 +881,12 @@ def main() -> None:
     register_bot_username()
     time.sleep(2)
     if not acquire_poll_lock():
-        print("Another info bot instance is polling this token. Exit.")
+        print("Another bot instance is already polling this Telegram token. Exit.")
         return
     load_state()
     offset = 0
     last_broadcast_check = 0.0
-    while True:
+    while not _SHUTDOWN:
         try:
             now = time.time()
             if now - last_broadcast_check >= _BROADCAST_POLL_SEC:

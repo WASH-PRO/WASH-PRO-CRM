@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
+import logging
 from typing import Annotated
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, require_permission
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.enums import RunStatus
 from app.models.run import Run
@@ -16,6 +19,20 @@ from app.services.notification_service import dispatch_run_event_notifications
 from app.services.script_service import get_script_or_404, queue_run, redis_service
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+async def _kill_runtime_script_orphans(script_id: UUID) -> None:
+    url = f"{settings.runtime_internal_url.rstrip('/')}/internal/kill-script/{script_id}"
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            res = await client.post(
+                url,
+                headers={"X-Internal-Key": settings.internal_api_key},
+            )
+            res.raise_for_status()
+    except Exception as exc:
+        logger.warning("Runtime orphan cleanup failed script_id=%s: %s", script_id, exc)
 
 
 @router.post("/scripts/{script_id}/run", response_model=RunResponse)
@@ -50,6 +67,7 @@ async def stop_script(
         run.status = RunStatus.CANCELLED.value
         run.finished_at = datetime.now(timezone.utc)
         await dispatch_run_event_notifications(db, run, "cancelled")
+    await _kill_runtime_script_orphans(script_id)
     await db.flush()
     return {"stopped": len(runs)}
 

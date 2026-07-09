@@ -73,6 +73,7 @@ function botRunState(bot: TelegramBot): 'running' | 'queued' | 'stopped' {
 }
 
 function mergeTelegramBots(base: TelegramBot[], patch: TelegramBot): TelegramBot[] {
+  if (base.length === 0) return base;
   const patchId = String(patch.id);
   const index = base.findIndex((bot) => String(bot.id) === patchId);
   if (index >= 0) {
@@ -141,7 +142,6 @@ export function TelegramPage() {
 
   const {
     data: bots,
-    setData: setBots,
     loading: botsLoading,
     error: botsError,
     refresh,
@@ -168,8 +168,7 @@ export function TelegramPage() {
 
   const rememberBot = useCallback((bot: TelegramBot) => {
     setBotPatches((prev) => new Map(prev).set(String(bot.id), bot));
-    setBots((prev) => mergeTelegramBots(prev ?? [], bot));
-  }, [setBots]);
+  }, []);
 
   const forgetBot = useCallback((botId: string) => {
     const id = String(botId);
@@ -251,7 +250,7 @@ export function TelegramPage() {
       }
 
       setModalOpen(false);
-      void refresh();
+      await refresh();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
@@ -265,7 +264,7 @@ export function TelegramPage() {
     try {
       const updated = await startTelegramBot(bot.id);
       rememberBot(updated);
-      void refresh();
+      await refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : t('pages.telegram.startFailed'));
     } finally {
@@ -279,7 +278,7 @@ export function TelegramPage() {
     try {
       const updated = await stopTelegramBot(bot.id);
       rememberBot(updated);
-      void refresh();
+      await refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : t('pages.telegram.stopFailed'));
     } finally {
@@ -293,8 +292,7 @@ export function TelegramPage() {
     try {
       await deleteTelegramBot(bot.id);
       forgetBot(bot.id);
-      setBots((prev) => (prev ?? []).filter((item) => String(item.id) !== String(bot.id)));
-      void refresh();
+      await refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : t('pages.telegram.deleteFailed'));
     } finally {
@@ -364,7 +362,7 @@ export function TelegramPage() {
               errors.push(`${bot.name}: ${err instanceof Error ? err.message : t('status.error')}`);
             }
           }
-          void refresh();
+          await refresh();
           if (errors.length > 0) {
             throw new Error(
               t('pages.telegram.bulkStarted', {
@@ -392,7 +390,7 @@ export function TelegramPage() {
               errors.push(`${bot.name}: ${err instanceof Error ? err.message : t('status.error')}`);
             }
           }
-          void refresh();
+          await refresh();
           if (errors.length > 0) {
             throw new Error(
               t('pages.telegram.bulkStopped', {
@@ -414,12 +412,11 @@ export function TelegramPage() {
             try {
               await deleteTelegramBot(bot.id);
               forgetBot(bot.id);
-              setBots((prev) => (prev ?? []).filter((item) => String(item.id) !== String(bot.id)));
             } catch (err) {
               errors.push(`${bot.name}: ${err instanceof Error ? err.message : t('status.error')}`);
             }
           }
-          void refresh();
+          await refresh();
           if (errors.length > 0) {
             throw new Error(
               t('pages.telegram.bulkDeleted', {
@@ -431,7 +428,7 @@ export function TelegramPage() {
         },
       },
     ],
-    [forgetBot, rememberBot, refresh, setBots, t]
+    [forgetBot, rememberBot, refresh, t]
   );
 
   const filters: DataTableFilter<TelegramBot>[] = useMemo(

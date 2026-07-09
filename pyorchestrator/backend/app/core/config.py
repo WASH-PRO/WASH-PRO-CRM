@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
 
     runtime_queue_key: str = "runtime:jobs"
+    runtime_internal_url: str = "http://pyorch-runtime:9091"
     internal_api_key: str = "internal-dev-key"
     scheduler_reload_channel: str = "scheduler:reload"
     script_updated_channel: str = "script:updated"

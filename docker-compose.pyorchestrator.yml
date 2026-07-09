@@ -33,6 +33,7 @@ services:
       JWT_SECRET: ${PYORCH_JWT_SECRET:-jwt-dev-secret-change-in-prod}
       CORS_ORIGINS: ${PYORCH_CORS_ORIGINS:-http://localhost,http://localhost:8090}
       INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
+      RUNTIME_INTERNAL_URL: http://pyorch-runtime:9091
       RUNTIME_QUEUE_KEY: runtime:jobs
       UPDATE_EXECUTOR_ENABLED: "false"
       # Upstream defaults: http://mcp:8010 — в WASH сервис называется pyorch-mcp

@@ -1118,6 +1118,10 @@ export const ru = {
       readonlySuffix: ' · только просмотр',
       searchPlaceholder: 'Поиск уведомлений…',
       confirmDeleteOne: 'Удалить уведомление?',
+      deleteAll: 'Удалить все',
+      deletingAll: 'Удаление…',
+      confirmDeleteAll: 'Удалить все уведомления ({{count}})? Это действие необратимо.',
+      deleteAllFailed: 'Не удалось удалить уведомления',
       limitHint: {
         shownLatest: ' · показаны последние {{limit}} из {{total}}',
         total: ' · {{total}} всего',

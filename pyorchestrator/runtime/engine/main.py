@@ -19,7 +19,7 @@ import redis.asyncio as aioredis
 import redis.exceptions as redis_exc
 from prometheus_client import start_http_server
 
-from engine.sandbox import SandboxConfig, SandboxPool
+from engine.sandbox import SandboxConfig, SandboxPool, kill_orphan_workspace_processes
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("pyorch.runtime")
@@ -31,9 +31,13 @@ BACKEND_URL = os.getenv("BACKEND_INTERNAL_URL", "http://backend:8000")
 INTERNAL_KEY = os.getenv("INTERNAL_API_KEY", "internal-dev-key")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 HOSTNAME = socket.gethostname()
+_runtime_pool: SandboxPool | None = None
 
 
 class HealthHandler(BaseHTTPRequestHandler):
+    def _internal_authorized(self) -> bool:
+        return self.headers.get("X-Internal-Key", "") == INTERNAL_KEY
+
     def do_GET(self):
         if self.path == "/health":
             self.send_response(200)
@@ -43,6 +47,21 @@ class HealthHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
+
+    def do_POST(self):
+        if self.path.startswith("/internal/kill-script/") and self._internal_authorized():
+            script_id = self.path.rsplit("/", 1)[-1].strip()
+            pool = _runtime_pool
+            killed = pool.kill_script_orphans(script_id) if pool and script_id else kill_orphan_workspace_processes(script_id)
+            body = json.dumps({"script_id": script_id, "killed": killed}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        self.send_response(404)
+        self.end_headers()
 
     def log_message(self, format, *args):
         pass
@@ -86,7 +105,7 @@ async def publish_log(redis: aioredis.Redis, run_id: str, level: str, message: s
         logger.warning("Backend log publish failed run_id=%s: %s", run_id, exc)
 
 
-async def watch_stop(redis: aioredis.Redis, run_id: str, pool: SandboxPool) -> None:
+async def watch_stop(redis: aioredis.Redis, run_id: str, script_id: str, pool: SandboxPool) -> None:
     pubsub = redis.pubsub()
     channel = f"run:{run_id}:control"
     try:
@@ -100,6 +119,14 @@ async def watch_stop(redis: aioredis.Redis, run_id: str, pool: SandboxPool) -> N
                 continue
             if msg and msg.get("type") == "message" and msg.get("data") == "stop":
                 pool.stop_run(run_id)
+                killed = pool.kill_script_orphans(script_id)
+                if killed:
+                    logger.warning(
+                        "Cleaned orphan process(es) after stop run_id=%s script_id=%s killed=%s",
+                        run_id,
+                        script_id,
+                        killed,
+                    )
                 return
             await asyncio.sleep(0.1)
     finally:
@@ -161,7 +188,7 @@ async def process_job(pool: SandboxPool, redis: aioredis.Redis, job: dict) -> No
             logger.info("Run already cancelled run_id=%s", run_id)
             return
 
-        stop_watcher = asyncio.create_task(watch_stop(redis, run_id, pool))
+        stop_watcher = asyncio.create_task(watch_stop(redis, run_id, script_id, pool))
         try:
             result = await pool.execute(config, code, on_line=on_line)
         finally:
@@ -203,7 +230,9 @@ async def create_redis_client() -> aioredis.Redis:
 
 
 async def main_loop() -> None:
+    global _runtime_pool
     pool = SandboxPool(max_concurrent=MAX_CONCURRENT)
+    _runtime_pool = pool
     start_health_server()
     start_http_server(9093)
 

@@ -5,6 +5,7 @@ PyOrchestrator Runtime Engine — isolated Python sandbox supervisor.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import resource
@@ -54,7 +55,8 @@ class Sandbox:
         self.config = config
         self._process: subprocess.Popen[str] | None = None
 
-    def _child_setup(self) -> None:
+    def _child_preexec(self) -> None:
+        os.setsid()
         mem = self.config.max_memory_bytes
         cpu = self.config.max_cpu_seconds
         try:
@@ -98,7 +100,7 @@ class Sandbox:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            preexec_fn=self._child_setup,
+            preexec_fn=self._child_preexec,
         )
 
         async def stream(pipe, level: str, chunks: list[str]):
@@ -161,12 +163,66 @@ class Sandbox:
         return str(python_bin)
 
     def stop(self) -> None:
-        if self._process and self._process.poll() is None:
+        proc = self._process
+        if not proc or proc.poll() is not None:
+            return
+        pid = proc.pid
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except (ProcessLookupError, PermissionError, OSError):
+            with contextlib.suppress(Exception):
+                proc.send_signal(signal.SIGTERM)
+        try:
+            proc.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            with contextlib.suppress(ProcessLookupError, PermissionError, OSError):
+                os.killpg(os.getpgid(pid), signal.SIGKILL)
+            with contextlib.suppress(Exception):
+                proc.kill()
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                proc.wait(timeout=2)
+
+
+def kill_orphan_workspace_processes(
+    script_id: str, workspaces_root: Path | None = None
+) -> int:
+    """Kill orphaned bot processes still running under a script workspace."""
+    root = workspaces_root or Path(os.getenv("WORKSPACES_ROOT", "/workspaces"))
+    needle = f"{root / script_id}/"
+    proc_root = Path("/proc")
+    if not proc_root.exists():
+        return 0
+
+    def _matching_pids() -> list[int]:
+        pids: list[int] = []
+        for entry in proc_root.iterdir():
+            if not entry.name.isdigit():
+                continue
+            pid = int(entry.name)
+            if pid == os.getpid():
+                continue
             try:
-                self._process.send_signal(signal.SIGTERM)
-                self._process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self._process.kill()
+                cmdline = (entry / "cmdline").read_bytes().decode("utf-8", "replace").replace("\x00", " ")
+            except OSError:
+                continue
+            if needle in cmdline and "main.py" in cmdline:
+                pids.append(pid)
+        return pids
+
+    killed = 0
+    for pid in _matching_pids():
+        with contextlib.suppress(ProcessLookupError, PermissionError, OSError):
+            os.kill(pid, signal.SIGTERM)
+            killed += 1
+    if killed:
+        time.sleep(0.5)
+    for pid in _matching_pids():
+        with contextlib.suppress(ProcessLookupError, PermissionError, OSError):
+            os.kill(pid, signal.SIGKILL)
+            killed += 1
+    if killed:
+        logger.warning("Killed %s orphan workspace process(es) for script_id=%s", killed, script_id)
+    return killed
 
 
 class SandboxPool:
@@ -194,3 +250,9 @@ class SandboxPool:
             sandbox.stop()
             return True
         return False
+
+    def kill_script_orphans(self, script_id: str) -> int:
+        for sandbox in list(self._active.values()):
+            if sandbox.config.script_id == script_id:
+                sandbox.stop()
+        return kill_orphan_workspace_processes(script_id)

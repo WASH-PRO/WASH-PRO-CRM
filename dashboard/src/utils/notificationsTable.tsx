@@ -1,5 +1,5 @@
 import { CheckCheck, Trash2 } from 'lucide-react';
-import { apiListPage } from '../api/client';
+import { api, apiListPage } from '../api/client';
 import { Badge } from '../components/UI';
 import type { DataTableBulkAction, DataTableColumn, DataTableFilter } from '../components/DataTable';
 import { bulkDelete, bulkPatch } from './bulk';
@@ -24,6 +24,11 @@ export async function fetchRecentNotifications(
       (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );
   return { items, total: pagination.total };
+}
+
+export async function deleteAllNotifications(): Promise<number> {
+  const result = await api<{ deleted: number }>('/crm/notifications', { method: 'DELETE' });
+  return result.deleted ?? 0;
 }
 
 export async function countUnreadWebNotifications(signal?: AbortSignal): Promise<number> {

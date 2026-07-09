@@ -6,13 +6,14 @@ import json
 import os
 import re
 import secrets
+import signal
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "3.1"
+BOT_VERSION = "3.2"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -73,6 +74,7 @@ _PROCESSED_CALLBACKS: set[str] = set()
 _PROCESSED_CALLBACK_ORDER: list[str] = []
 _MAX_PROCESSED_CALLBACKS = 2000
 _POLL_LOCK_FILE = None
+_SHUTDOWN = False
 _LAST_SENT: dict[int, tuple[str, float]] = {}
 _SEND_DEDUP_SEC = 3.0
 
@@ -357,6 +359,29 @@ def acquire_poll_lock(retries: int = 10, delay_sec: float = 2.0) -> bool:
             if attempt < retries - 1:
                 time.sleep(delay_sec)
     return False
+
+
+def release_poll_lock() -> None:
+    global _POLL_LOCK_FILE
+    if not _POLL_LOCK_FILE:
+        return
+    try:
+        fcntl.flock(_POLL_LOCK_FILE.fileno(), fcntl.LOCK_UN)
+        _POLL_LOCK_FILE.close()
+    except Exception as exc:
+        print(f"release poll lock warning: {exc}")
+    _POLL_LOCK_FILE = None
+
+
+def _handle_shutdown(signum, frame) -> None:
+    global _SHUTDOWN
+    _SHUTDOWN = True
+    print(f"Shutdown signal {signum}, stopping bot v{BOT_VERSION}")
+    release_poll_lock()
+
+
+signal.signal(signal.SIGTERM, _handle_shutdown)
+signal.signal(signal.SIGINT, _handle_shutdown)
 
 
 def bootstrap_polling() -> int:
@@ -1802,7 +1827,7 @@ def main() -> None:
         print("Another bot instance is already polling this Telegram token. Exit.")
         return
     offset = bootstrap_polling()
-    while True:
+    while not _SHUTDOWN:
         try:
             params = urllib.parse.urlencode({
                 "offset": offset,

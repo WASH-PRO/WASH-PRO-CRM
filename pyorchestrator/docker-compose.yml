@@ -40,6 +40,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-jwt-dev-secret-change-in-prod}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal-dev-key}
+      RUNTIME_INTERNAL_URL: http://runtime:9091
       RUNTIME_QUEUE_KEY: runtime:jobs
       GITHUB_UPDATE_REPO: ${GITHUB_UPDATE_REPO:-PyOrchestrator/PyOrchestrator}
       GITHUB_UPDATE_TOKEN: ${GITHUB_UPDATE_TOKEN:-}

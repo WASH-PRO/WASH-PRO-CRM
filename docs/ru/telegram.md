@@ -53,7 +53,7 @@ Dynamic API  —  CRM endpoints (JWT service или public)
 |--------|------------|
 | 📰 Новости | Последние 10 опубликованных новостей |
 | 💰 Цены | Режимы и цены по выбранной мойке |
-| 🅿️ Занятость | Свободные/занятые посты |
+| 🅿️ Занятость | Свободные/занятые посты (v2.2: **свободен** только режим `program_9` — внесение оплаты) |
 | 🎁 Акции | Последние 10 акций |
 
 ### Контент — раздел «Информация»
@@ -151,6 +151,7 @@ docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d 
 | DELETE | `/api/telegram-bots/bots/:id` | Удалить |
 | POST | `/api/telegram-bots/bots/:id/start` | Запуск |
 | POST | `/api/telegram-bots/bots/:id/stop` | Остановка |
+| POST | `/api/telegram-bots/bots/stop-all` | Остановить все боты (v1.1.15) |
 | GET | `/api/telegram-bots/bots/:id/link` | QR и ссылка `t.me/...` |
 | POST | `/api/telegram-bots/bots/refresh` | Синхронизация шаблона + restart |
 

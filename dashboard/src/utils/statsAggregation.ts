@@ -122,6 +122,60 @@ export function buildDashboardPaymentShareSeries(stats: FinanceStat[]): PaymentS
   ];
 }
 
+/** Точка дневного графика на главной. */
+export interface DashboardTimelinePoint {
+  name: string;
+  value: number;
+}
+
+function buildDashboardTimelineByDate<T extends { recordedAt?: string }>(
+  items: T[],
+  locale: string,
+  currentLabel: string,
+  valueOf: (item: T) => number
+): DashboardTimelinePoint[] {
+  const byDate: Record<string, { value: number; ts: number }> = {};
+  for (const item of items) {
+    const ts = item.recordedAt ? new Date(item.recordedAt).getTime() : 0;
+    const key = item.recordedAt
+      ? new Date(item.recordedAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', {
+          day: '2-digit',
+          month: 'short',
+        })
+      : currentLabel;
+    if (!byDate[key]) byDate[key] = { value: 0, ts };
+    byDate[key].value += valueOf(item);
+    byDate[key].ts = Math.max(byDate[key].ts, ts);
+  }
+  return Object.entries(byDate)
+    .map(([name, { value, ts }]) => ({ name, value, ts }))
+    .sort((a, b) => a.ts - b.ts)
+    .map(({ name, value }) => ({ name, value }));
+}
+
+/** Выручка по дням (главная). */
+export function buildDashboardRevenueTimeline(
+  stats: FinanceStat[],
+  locale: string,
+  currentLabel: string
+): DashboardTimelinePoint[] {
+  return buildDashboardTimelineByDate(stats, locale, currentLabel, (s) => s.totalRevenue || 0).map(
+    ({ name, value }) => ({ name, value: Math.round(value) })
+  );
+}
+
+/** Загруженность (секунды использования) по дням (главная). */
+export function buildDashboardWorkloadTimeline(
+  stats: UsageStat[],
+  locale: string,
+  currentLabel: string
+): DashboardTimelinePoint[] {
+  return buildDashboardTimelineByDate(stats, locale, currentLabel, resolveUsageSeconds).map(({ name, value }) => ({
+    name,
+    value: Math.round(value),
+  }));
+}
+
 /** Последняя запись на каждый пост (состояние). */
 export function latestPostStateByPost(states: Array<{
   id: string;

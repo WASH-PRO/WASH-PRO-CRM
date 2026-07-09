@@ -1182,6 +1182,7 @@ export const ru = {
     usageTitle: 'Использование',
     paymentShareTitle: 'Доли поступлений',
     revenueTitle: 'Выручка',
+    workloadTitle: 'Загруженность',
     empty: 'Нет данных для графика',
   },
   postStatesChart: {

@@ -9,7 +9,7 @@ Full documentation: [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-
 | Topic | Details |
 |-------|---------|
 | **CRM menu** | **Automation →** Telegram, Information |
-| **Information v1.9** | Photo + caption in one message; correct post occupancy |
+| **Information v2.2** | Photo + caption in one message; occupancy: free only in `program_9` |
 | **Information** | "Scheduled" → "Published" after publish time passes |
 
 ## v1.1.11 — summary

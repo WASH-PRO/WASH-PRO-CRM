@@ -53,7 +53,7 @@ All bots work **only in private messages**:
 |--------|---------|
 | 📰 News | Latest 10 published news items |
 | 💰 Prices | Modes and prices for selected wash |
-| 🅿️ Occupancy | Free/busy posts |
+| 🅿️ Occupancy | Free/busy posts (v2.2: **free** only in `program_9` — payment entry) |
 | 🎁 Promotions | Latest 10 promotions |
 
 ### Content — Information section
@@ -151,6 +151,7 @@ Details: [Troubleshooting](troubleshooting.md).
 | DELETE | `/api/telegram-bots/bots/:id` | Delete |
 | POST | `/api/telegram-bots/bots/:id/start` | Start |
 | POST | `/api/telegram-bots/bots/:id/stop` | Stop |
+| POST | `/api/telegram-bots/bots/stop-all` | Stop all bots (v1.1.15) |
 | GET | `/api/telegram-bots/bots/:id/link` | QR and `t.me/...` link |
 | POST | `/api/telegram-bots/bots/refresh` | Template sync + restart |
 

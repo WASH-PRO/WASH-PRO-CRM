@@ -1181,6 +1181,7 @@ export const en = {
     usageTitle: 'Usage',
     paymentShareTitle: 'Payment shares',
     revenueTitle: 'Revenue',
+    workloadTitle: 'Workload',
     empty: 'No data for chart',
   },
   postStatesChart: {

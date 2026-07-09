@@ -6,6 +6,29 @@
 
 ## [Unreleased]
 
+## [1.1.15] — 2026-07-09
+
+### Добавлено
+
+- **График загруженности** на Обзоре — по дням, под графиком «Выручка» (сумма времени использования из `usage-stats`)
+- **Удалить все** на странице «Уведомления» (`DELETE /api/crm/notifications`)
+- **Демо Telegram-боты** при первой установке — Управление / Сервисный / Информационный, без токенов, остановлены
+- **`POST /api/telegram-bots/bots/stop-all`** — остановка всех ботов с очисткой зависших sandbox-процессов
+- **`scripts/seed-info-messages.mjs`** — расширенные шаблоны новостей и акций, микс 50/50 (`COUNT`, `INTERVAL_MIN`)
+
+### Исправлено
+
+- **Создание второго Telegram-бота** — поле `metadata` в `ScriptCreate` PyOrchestrator (500 Internal Server Error)
+- **Список ботов на странице Telegram** — исчезновение записей после start/stop до перезагрузки
+- **«Фантомный» бот** — процесс sandbox продолжал polling после stop в CRM; kill process group + orphan cleanup в runtime
+- **Гонка двух ботов** — общий poll lock по токену, stagger restart, grace period, `deleteWebhook` при stop
+- **Занятость в информационном боте v2.2** — пост **свободен** только в режиме `program_9`; любой другой онлайн-режим = занят
+
+### Изменено
+
+- **Остановка ботов** — `stopWashBot()`: ожидание полной остановки, снятие webhook, disable скрипта
+- **pyorch-bridge** — при старте синхронизация шаблонов без массового restart running-ботов
+
 ## [1.1.14] — 2026-07-09
 
 ### Исправлено
@@ -228,7 +251,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.14...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.15...HEAD
+[1.1.15]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.15
 [1.1.14]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.14
 [1.1.13]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.13
 [1.1.12]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.12

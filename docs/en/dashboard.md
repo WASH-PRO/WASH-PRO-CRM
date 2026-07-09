@@ -105,7 +105,7 @@ KPI cards before collection: cash / cashless / total revenue / discount total / 
 
 Finance and usage totals — **sum of the latest record per post** (not all historical rows).
 
-Charts (Recharts): post status, **pie charts** for "Usage" (clients / service / VIP) and payment shares (cash / cashless / discounts), revenue by date. Recent notifications table.
+Charts (Recharts): post status, **pie charts** for "Usage" (clients / service / VIP) and payment shares (cash / cashless / discounts), revenue by date, **workload by date** (v1.1.15). Recent notifications table.
 
 ### Car washes (`/washes`)
 
@@ -168,7 +168,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 | **Settings** | `/settings` | MQTT, Telegram notify, CRM update, default currency, **interface language** |
 | Logs | `/logs` | Dynamic API audit *(Admin)* |
 | **Information** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
-| Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.1 / **v1.9** *(Admin, PyOrch)* |
+| Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP server** | `/mcp` | Dynamic API and PyOrchestrator HTTP MCP; tools table; Cursor config *(Admin)* |
 | Backups | `/backups` | MongoDB backup, manual run, download *(Admin)* |
 | Work modes | `/work-modes` | Mode reference 0–9 *(Admin)* |

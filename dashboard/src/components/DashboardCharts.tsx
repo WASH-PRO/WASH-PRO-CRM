@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 import { formatMoney, type CurrencyConfig } from '../utils/format';
-import { buildDashboardPaymentShareSeries, buildDashboardUsageShareSeries } from '../utils/statsAggregation';
+import { buildDashboardPaymentShareSeries, buildDashboardUsageShareSeries, buildDashboardRevenueTimeline, buildDashboardWorkloadTimeline } from '../utils/statsAggregation';
 import type { FinanceStat, Post, UsageStat } from '../types';
 import { useLocale } from '../i18n/LocaleContext';
 
@@ -162,22 +162,23 @@ export function DashboardCharts({
     [paymentShare]
   );
 
-  const revenueTimeline = useMemo(() => {
-    const byDate: Record<string, { revenue: number; ts: number }> = {};
-    financeStats.forEach((s) => {
-      const ts = s.recordedAt ? new Date(s.recordedAt).getTime() : 0;
-      const key = s.recordedAt
-        ? new Date(s.recordedAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: '2-digit', month: 'short' })
-        : t('dashboardCharts.current');
-      if (!byDate[key]) byDate[key] = { revenue: 0, ts };
-      byDate[key].revenue += s.totalRevenue || 0;
-      byDate[key].ts = Math.max(byDate[key].ts, ts);
-    });
-    return Object.entries(byDate)
-      .map(([name, { revenue, ts }]) => ({ name, revenue: Math.round(revenue), ts }))
-      .sort((a, b) => a.ts - b.ts)
-      .map(({ name, revenue }) => ({ name, revenue }));
-  }, [financeStats]);
+  const revenueTimeline = useMemo(
+    () =>
+      buildDashboardRevenueTimeline(financeStats, locale, t('dashboardCharts.current')).map(({ name, value }) => ({
+        name,
+        revenue: value,
+      })),
+    [financeStats, locale, t]
+  );
+
+  const workloadTimeline = useMemo(
+    () =>
+      buildDashboardWorkloadTimeline(usageStats, locale, t('dashboardCharts.current')).map(({ name, value }) => ({
+        name,
+        workload: value,
+      })),
+    [usageStats, locale, t]
+  );
 
   return (
     <div className="mb-6 space-y-6">
@@ -232,6 +233,29 @@ export function DashboardCharts({
                   formatter={(value: number) => [formatMoney(value, currency), t('dashboardCharts.revenueTitle')]}
                 />
                 <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        <div className="lg:col-span-2">
+          <ChartCard title={t('dashboardCharts.workloadTitle')} empty={workloadTimeline.length === 0} emptyMessage={t('dashboardCharts.empty')}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={workloadTimeline} margin={{ top: 8, right: 12, left: 4, bottom: 24 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis
+                  tick={{ fill: axisColor, fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={56}
+                  tickFormatter={(value: number) => formatUsageSeconds(value, t)}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value: number) => [formatUsageSeconds(value, t), t('dashboardCharts.workloadTitle')]}
+                />
+                <Line type="monotone" dataKey="workload" stroke="#0891b2" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>

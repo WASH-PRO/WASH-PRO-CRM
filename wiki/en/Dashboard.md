@@ -78,6 +78,12 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 5 s | Overview |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.15)
+
+- **Overview** — **daily workload** line chart below revenue
+- **Notifications** — delete all button
+- **Telegram** — reliable stop, `stop-all`, demo bots on install; informational bot v2.2 (free only in `program_9`)
+
 ## Recent changes (v1.1.14)
 
 - **Notifications i18n** — prepared phrases by event type; legacy records follow active language

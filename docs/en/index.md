@@ -31,7 +31,7 @@ layout: default
 | **Cards** | Discount / service / VIP; NFC application log |
 | **Analytics** | Usage and finances before/after collection |
 | **System** | Notifications (web + Telegram), users (Telegram ID), RBAC groups, settings, logs |
-| **Automation** | **Information**, **Telegram bots** (management / service / **information v1.9**), **MCP server**, backups |
+| **Automation** | **Information**, **Telegram bots** (management / service / **information v2.2**), **MCP server**, backups |
 | **Resources** | Status and links to Dynamic API and PyOrchestrator panels |
 | **Live data** | Auto-refresh every 3–15 s; tables with pagination 20–100 and "Load more" |
 

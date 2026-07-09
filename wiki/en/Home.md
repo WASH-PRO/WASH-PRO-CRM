@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.14** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.15** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -18,7 +18,8 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - Analytics before/after collection, archive, MongoDB backups
 - Web + Telegram notifications, configurable event types
 - Users and RBAC groups, **Telegram user_id**, profile
-- **Telegram bots:** Management / Service / **Information (v1.9)**; QR link; **private chats only**
+- **Telegram bots:** Management / Service / **Information (v2.2)**; QR link; **private chats only**; demo bots on install (v1.1.15)
+- **Workload chart** on Overview — daily line chart below revenue (v1.1.15)
 - **Dashboard localization** — English / Russian; default English; switcher in header and Settings (v1.1.13+)
 - **Localized notifications** — list messages by event type follow UI language, including legacy DB records (v1.1.14)
 - **MCP server** in Dashboard — Dynamic API + PyOrchestrator for AI agents (v1.1.12)
@@ -57,6 +58,14 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.15
+
+- **Workload chart** on Overview (daily, below revenue)
+- **Telegram** — reliable bot stop, `stop-all`, demo bots on install; occupancy v2.2 (`program_9` = free)
+- **Notifications** — delete all button
+
+Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.14
 

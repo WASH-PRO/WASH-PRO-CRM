@@ -1,4 +1,4 @@
-> **[English](en/MQTT)** · **Русский** · [← Wiki](../Home)
+> **[English](en-MQTT)** · **Русский** · [← Wiki](Home)
 
 # MQTT и управление постами
 

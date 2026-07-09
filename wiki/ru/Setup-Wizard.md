@@ -1,4 +1,4 @@
-> **[English](en/Setup-Wizard)** · **Русский** · [← Wiki](../Home)
+> **[English](en-Setup-Wizard)** · **Русский** · [← Wiki](Home)
 
 # Мастер настройки
 

@@ -1,4 +1,4 @@
-> **[English](en/Getting-Started)** · **Русский** · [← Wiki](../Home)
+> **[English](en-Getting-Started)** · **Русский** · [← Wiki](Home)
 
 # Быстрый старт
 
@@ -40,7 +40,7 @@ chmod +x scripts/*.sh
 
 - Пост: `mqtt://<mqttLogin>:<mqttPassword>@<IP>:1883`
 - CRM: `system` — пароль в **Настройки → MQTT (CRM)** (`MQTT_USER` / `MQTT_PASSWORD` в `.env` при первом запуске)
-- Подробнее: [MQTT](MQTT)
+- Подробнее: [MQTT](ru-MQTT)
 
 ## Миграция с RabbitMQ
 

@@ -1,4 +1,4 @@
-> **[English](en/Dashboard)** · **Русский** · [← Wiki](../Home)
+> **[English](en-Dashboard)** · **Русский** · [← Wiki](Home)
 
 # Dashboard
 
@@ -53,7 +53,7 @@ node scripts/seed-info-messages.mjs
 - HTTP URL и конфиг для Cursor
 - Таблица зарегистрированных инструментов
 
-См. [MCP](MCP).
+См. [MCP](ru-MCP).
 
 ## Настройки устройства поста
 

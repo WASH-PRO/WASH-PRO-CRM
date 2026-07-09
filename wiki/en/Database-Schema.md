@@ -1,4 +1,4 @@
-> **English** · **[Русский](ru/Database-Schema)** · [← Wiki](../Home)
+> **English** · **[Русский](ru-Database-Schema)** · [← Wiki](Home)
 
 # Database Schema
 

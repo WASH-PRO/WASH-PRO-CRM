@@ -1,4 +1,4 @@
-> **[English](en/Home)** · **Русский** · [← Wiki](../Home)
+> **[English](en-Home)** · **Русский** · [← Wiki](Home)
 
 # WASH PRO CRM / SCADA
 
@@ -48,15 +48,15 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 
 ## Wiki
 
-- [Быстрый старт](Getting-Started)
-- [Мастер настройки](Setup-Wizard)
-- [Dashboard](Dashboard)
-- [Архитектура](Architecture)
-- [MQTT и управление постами](MQTT)
-- [Telegram-боты](Telegram)
-- [MCP для AI-агентов](MCP)
-- [Встроенные сервисы](Embedded-Services)
-- [Схема данных](Database-Schema)
+- [Быстрый старт](ru-Getting-Started)
+- [Мастер настройки](ru-Setup-Wizard)
+- [Dashboard](ru-Dashboard)
+- [Архитектура](ru-Architecture)
+- [MQTT и управление постами](ru-MQTT)
+- [Telegram-боты](ru-Telegram)
+- [MCP для AI-агентов](ru-MCP)
+- [Встроенные сервисы](ru-Embedded-Services)
+- [Схема данных](ru-Database-Schema)
 
 ## Changelog v1.1.14
 

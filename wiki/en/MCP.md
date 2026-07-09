@@ -1,4 +1,4 @@
-> **English** · **[Русский](ru/MCP)** · [← Wiki](../Home)
+> **English** · **[Русский](ru-MCP)** · [← Wiki](Home)
 
 # MCP for AI Agents
 
@@ -31,4 +31,4 @@ On `/mcp` page: service switcher, tools table, ready-made JSON for **Cursor** (n
 | PyOrch unreachable | `docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d pyorch-mcp` |
 | 401 Dynamic API | Refresh JWT / API key in config |
 
-See [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/en/troubleshooting/), [Dashboard](Dashboard).
+See [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/en/troubleshooting/), [Dashboard](en-Dashboard).

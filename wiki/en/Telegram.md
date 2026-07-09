@@ -1,4 +1,4 @@
-> **English** · **[Русский](ru/Telegram)** · [← Wiki](../Home)
+> **English** · **[Русский](ru-Telegram)** · [← Wiki](Home)
 
 # Telegram Bots
 
@@ -43,4 +43,4 @@ docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d 
 # Dashboard → Telegram → restart bots
 ```
 
-See [Embedded-Services](Embedded-Services), [MCP](MCP), [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/en/troubleshooting/).
+See [Embedded-Services](en-Embedded-Services), [MCP](en-MCP), [Troubleshooting](https://wash-pro.github.io/WASH-PRO-CRM/en/troubleshooting/).

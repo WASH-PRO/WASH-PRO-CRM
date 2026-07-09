@@ -1,4 +1,4 @@
-> **English** · **[Русский](ru/Getting-Started)** · [← Wiki](../Home)
+> **English** · **[Русский](ru-Getting-Started)** · [← Wiki](Home)
 
 # Getting Started
 
@@ -40,7 +40,7 @@ First login → **setup wizard** (`/setup`).
 
 - Post: `mqtt://<mqttLogin>:<mqttPassword>@<IP>:1883`
 - CRM: `system` — password in **Settings → MQTT (CRM)** (`MQTT_USER` / `MQTT_PASSWORD` in `.env` on first start)
-- Details: [MQTT](MQTT)
+- Details: [MQTT](en-MQTT)
 
 ## Migration from RabbitMQ
 

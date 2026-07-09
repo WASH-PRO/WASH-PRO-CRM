@@ -1,4 +1,4 @@
-> **English** · **[Русский](ru/Embedded-Services)** · [← Wiki](../Home)
+> **English** · **[Русский](ru-Embedded-Services)** · [← Wiki](Home)
 
 # Embedded Services
 

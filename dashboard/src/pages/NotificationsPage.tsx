@@ -46,12 +46,11 @@ export function NotificationsPage() {
   };
 
   const columns = useMemo(
-    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, canEdit }),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refresh, canEdit]
+    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, canEdit, t }),
+    [refresh, canEdit, t]
   );
 
-  const bulkActions = useMemo(() => createNotificationBulkActions(refresh, canEdit), [refresh, canEdit]);
+  const bulkActions = useMemo(() => createNotificationBulkActions(refresh, canEdit, t), [refresh, canEdit, t]);
 
   const limitHint =
     totalCount != null && totalCount > NOTIFICATIONS_PAGE_LIMIT
@@ -73,7 +72,7 @@ export function NotificationsPage() {
         columns={columns}
         data={items || []}
         rowKey={(n) => n.id}
-        filters={notificationFilters(true)}
+        filters={notificationFilters(t, true)}
         searchPlaceholder={t('pages.notifications.searchPlaceholder')}
         defaultSortKey="date"
         defaultSortDir="desc"

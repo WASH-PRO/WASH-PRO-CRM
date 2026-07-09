@@ -76,12 +76,14 @@ export function DashboardPage() {
   };
 
   const notificationColumns = useMemo(
-    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, compact: true, canEdit }),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refresh, canEdit]
+    () => createNotificationColumns({ onMarkRead: markRead, onDelete: deleteOne, compact: true, canEdit, t }),
+    [refresh, canEdit, t]
   );
 
-  const notificationBulkActions = useMemo(() => createNotificationBulkActions(refresh, canEdit), [refresh, canEdit]);
+  const notificationBulkActions = useMemo(
+    () => createNotificationBulkActions(refresh, canEdit, t),
+    [refresh, canEdit, t]
+  );
 
   const finance = useMemo(() => {
     if (!data) return { cash: 0, cashless: 0, revenue: 0, discounts: 0 };
@@ -199,7 +201,7 @@ export function DashboardPage() {
           columns={notificationColumns}
           data={data.notifications}
           rowKey={(n) => n.id}
-          filters={notificationFilters(false)}
+          filters={notificationFilters(t, false)}
           searchPlaceholder={t('pages.dashboard.searchPlaceholder')}
           pageSize={10}
           emptyMessage={t('pages.dashboard.empty')}

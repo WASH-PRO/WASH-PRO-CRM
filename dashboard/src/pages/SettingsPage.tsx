@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import {
@@ -157,7 +157,7 @@ export function SettingsPage() {
   const [mqttBroker, setMqttBroker] = useState<MqttBrokerSettings>(DEFAULT_MQTT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const notificationEventGroups = getNotificationEventGroups();
+  const notificationEventGroups = useMemo(() => getNotificationEventGroups(t), [t]);
 
   const applySettings = useCallback((rows: CrmSetting[]) => {
     const idMap: Record<string, string | null> = {

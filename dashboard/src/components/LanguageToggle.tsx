@@ -1,9 +1,13 @@
-import { Languages } from 'lucide-react';
 import clsx from 'clsx';
 import { useLocale } from '../i18n/LocaleContext';
 import type { Locale } from '../i18n/types';
 
 const ORDER: Locale[] = ['en', 'ru'];
+
+const LOCALE_FLAGS: Record<Locale, string> = {
+  en: '🇺🇸',
+  ru: '🇷🇺',
+};
 
 export function LanguageToggle({ className, showLabel = false }: { className?: string; showLabel?: boolean }) {
   const { locale, setLocale, t } = useLocale();
@@ -17,13 +21,24 @@ export function LanguageToggle({ className, showLabel = false }: { className?: s
     <button
       type="button"
       onClick={cycle}
-      className={className ?? 'btn-icon'}
+      className={className ?? 'btn-icon !w-auto gap-0.5 px-1.5'}
       title={t('language.switchTitle', { lang: t(`language.names.${locale}`) })}
       aria-label={t('language.switchTitle', { lang: t(`language.names.${locale}`) })}
     >
-      <Languages size={18} />
+      {ORDER.map((code) => (
+        <span
+          key={code}
+          className={clsx(
+            'text-base leading-none transition-opacity',
+            locale === code ? 'opacity-100' : 'opacity-35'
+          )}
+          aria-hidden
+        >
+          {LOCALE_FLAGS[code]}
+        </span>
+      ))}
       {showLabel && (
-        <span className={clsx('ml-1.5 text-xs font-medium uppercase')}>{locale}</span>
+        <span className={clsx('ml-1 text-xs font-medium uppercase')}>{locale}</span>
       )}
     </button>
   );

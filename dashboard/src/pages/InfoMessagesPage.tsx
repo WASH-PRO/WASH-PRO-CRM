@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, apiListDictionary } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,26 @@ import {
   INFO_MESSAGE_STATUS_VARIANT,
   resolveInfoMessageDisplayStatus,
 } from '../utils/infoMessages';
+
+/** Перерисовка таблицы, когда наступает время публикации (даже в режиме «Статика»). */
+function useScheduledStatusClock(messages: InfoMessage[] | null | undefined, intervalMs = 30_000) {
+  const [, setTick] = useState(0);
+
+  const hasPendingSchedule = useMemo(() => {
+    const now = Date.now();
+    return (messages ?? []).some((row) => {
+      if (String(row.status ?? '').trim().toLowerCase() !== 'scheduled') return false;
+      const t = row.publishedAt ? new Date(row.publishedAt).getTime() : NaN;
+      return !Number.isNaN(t) && t > now;
+    });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!hasPendingSchedule) return;
+    const id = window.setInterval(() => setTick((n) => n + 1), intervalMs);
+    return () => clearInterval(id);
+  }, [hasPendingSchedule, intervalMs]);
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   news: 'Новость',
@@ -66,6 +86,8 @@ export function InfoMessagesPage() {
 
   const { data: messages, loading, refresh } = usePolling(fetchMessages, [], { intervalMs: LIVE_INTERVAL_SLOW_MS });
   const { data: washes } = usePolling(fetchWashes, [], { intervalMs: LIVE_INTERVAL_SLOW_MS, live: false });
+
+  useScheduledStatusClock(messages);
 
   const washById = useMemo(() => {
     const map = new Map<string, Wash>();
@@ -180,16 +202,23 @@ export function InfoMessagesPage() {
         sortValue: (r) => resolveInfoMessageDisplayStatus(r),
         render: (r) => {
           const displayStatus = resolveInfoMessageDisplayStatus(r);
-          const scheduledPending =
-            r.status === 'scheduled' && displayStatus === 'scheduled' && r.publishedAt;
+          const rawScheduled = String(r.status ?? '').trim().toLowerCase() === 'scheduled';
+          const scheduledPending = rawScheduled && displayStatus === 'scheduled' && r.publishedAt;
           return (
             <div className="space-y-0.5">
-              <Badge variant={INFO_MESSAGE_STATUS_VARIANT[displayStatus]}>
+              <Badge
+                variant={INFO_MESSAGE_STATUS_VARIANT[displayStatus]}
+                className={
+                  displayStatus === 'published'
+                    ? '!bg-green-100 !text-green-800 ring-green-500/30 dark:!bg-green-500/20 dark:!text-green-300'
+                    : undefined
+                }
+              >
                 {INFO_MESSAGE_STATUS_LABELS[displayStatus]}
               </Badge>
               {scheduledPending && (
                 <div className="text-[11px] text-panel-muted dark:text-panel-muted-dark">
-                  с {formatDateTime(r.publishedAt)}
+                  публикация с {formatDateTime(r.publishedAt)}
                 </div>
               )}
             </div>

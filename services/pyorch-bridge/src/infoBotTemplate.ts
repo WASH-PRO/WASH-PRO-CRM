@@ -16,7 +16,7 @@ import struct
 import zlib
 from datetime import datetime
 
-BOT_VERSION = "2.3"
+BOT_VERSION = "2.3.1"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -139,10 +139,16 @@ def auth_headers() -> dict[str, str]:
     return {"Authorization": f"Bearer {_access_token}"}
 
 
+def _api_auth_required(exc: Exception) -> bool:
+    msg = str(exc)
+    return "HTTP 401" in msg or "HTTP 403" in msg or "Unauthorized" in msg or "Forbidden" in msg
+
+
 def api_get(path: str):
-    """Чтение CRM: сначала публично, при 401/403 — сервисный JWT."""
+    """Чтение CRM: при наличии сервисных учётных данных — с JWT, иначе публично."""
+    attempts = (True, False) if API_PASSWORD else (False,)
     last_error: Exception | None = None
-    for use_auth in (False, True):
+    for use_auth in attempts:
         try:
             headers = auth_headers() if use_auth else None
             data = request_json("GET", path, headers=headers)
@@ -154,8 +160,7 @@ def api_get(path: str):
                 raise RuntimeError(err)
             return data.get("data")
         except RuntimeError as exc:
-            msg = str(exc)
-            if not use_auth and API_PASSWORD and ("HTTP 401" in msg or "HTTP 403" in msg or "Unauthorized" in msg or "Forbidden" in msg):
+            if not use_auth and API_PASSWORD and _api_auth_required(exc):
                 last_error = exc
                 continue
             raise

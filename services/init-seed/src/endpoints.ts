@@ -521,7 +521,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
   { name: 'Обновить карту', slug: 'crm-cards-update', path: '/api/crm/cards/:id', method: 'PUT', schema: cardFields, accessType: 'group', groupKey: 'cards', description: 'Обновить карту' },
   { name: 'Удалить карту', slug: 'crm-cards-delete', path: '/api/crm/cards/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'cards', description: 'Удалить карту' },
 
-  { name: 'Статистика использования', slug: 'crm-usage-stats-list', path: '/api/crm/usage-stats', method: 'GET', schema: usageStatsFields, accessType: 'authenticated', groupKey: 'statistics', description: 'Статистика использования' },
+  { name: 'Статистика использования', slug: 'crm-usage-stats-list', path: '/api/crm/usage-stats', method: 'GET', schema: usageStatsFields, accessType: 'public', groupKey: 'statistics', description: 'Статистика использования (публично — график загруженности в информационном боте)' },
   { name: 'Записать статистику', slug: 'crm-usage-stats-create', path: '/api/crm/usage-stats', method: 'POST', schema: usageStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Записать статистику' },
   { name: 'Обновить статистику', slug: 'crm-usage-stats-update', path: '/api/crm/usage-stats/:id', method: 'PATCH', schema: usageStatsFields, accessType: 'group', groupKey: 'statistics', description: 'Обновить статистику использования' },
   { name: 'Удалить статистику использования', slug: 'crm-usage-stats-delete', path: '/api/crm/usage-stats/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'statistics', description: 'Удалить запись статистики' },

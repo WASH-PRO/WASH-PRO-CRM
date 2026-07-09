@@ -258,7 +258,7 @@ docker compose down
 docker compose up -d --build
 ```
 
-Данные MongoDB и остальные сервисы лежат в `DATA_DIR` (по умолчанию `./data`), см. [data/README.md](../data/README.md).
+Данные MongoDB и остальные сервисы лежат в `DATA_DIR` (по умолчанию `./data`), см. [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
 
 ## Помощь
 

@@ -7,6 +7,7 @@ ru:
   menu_close: Закрыть меню
   language: Язык
   footer_docs: Документация
+  footer_wiki: Wiki
   redirecting: Перенаправление…
   redirect_docs: документацию
   choose_language: Выберите язык
@@ -22,6 +23,7 @@ en:
   menu_close: Close menu
   language: Language
   footer_docs: Documentation
+  footer_wiki: Wiki
   redirecting: Redirecting…
   redirect_docs: documentation
   choose_language: Choose language

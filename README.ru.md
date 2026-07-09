@@ -26,9 +26,9 @@
 <p align="center">
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/ru/"><strong>Документация</strong></a>
   ·
-  <a href="docs/ru/getting-started.md">Быстрый старт</a>
+  <a href="https://wash-pro.github.io/WASH-PRO-CRM/ru/getting-started/">Быстрый старт</a>
   ·
-  <a href="docs/ru/architecture.md">Архитектура</a>
+  <a href="https://wash-pro.github.io/WASH-PRO-CRM/ru/architecture/">Архитектура</a>
   ·
   <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/issues">Issues</a>
 </p>
@@ -73,7 +73,7 @@
 | [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) | **v1.5.13** | REST API, MongoDB, CRM endpoints, RBAC, automation |
 | [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) | **v0.1.13** *(опц.)* | Python-скрипты и Telegram-боты через `pyorch-bridge` |
 
-Подробно: [docs/ru/embedded-services.md](docs/ru/embedded-services.md)
+Подробно: [docs/ru/embedded-services.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/embedded-services/)
 
 ## Архитектура
 
@@ -95,7 +95,7 @@ Dashboard (React) ──────────── nginx /api proxy ──�
 | `crm-mcp` *(опц.)* | MCP-сервер для AI-агентов (Cursor) | stdio |
 | `mosquitto`, `mosquitto-init` | MQTT-брокер, ACL/passwd | — |
 
-Подробнее: [docs/ru/architecture.md](docs/ru/architecture.md)
+Подробнее: [docs/ru/architecture.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/architecture/)
 
 ## Быстрый старт
 
@@ -142,15 +142,15 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 
 | Раздел | Описание |
 |--------|----------|
-| [Быстрый старт](docs/ru/getting-started.md) | Установка и первый вход |
-| [Мастер настройки](docs/ru/setup-wizard.md) | Первичная настройка CRM |
-| [Архитектура](docs/ru/architecture.md) | Сервисы и потоки данных |
-| [Dashboard](docs/ru/dashboard.md) | Модули UI, live-режим, RBAC |
-| [MCP](docs/ru/mcp.md) | HTTP MCP для AI-агентов |
-| [MQTT](docs/ru/mqtt.md) | Телеметрия и управление постами |
+| [Быстрый старт](https://wash-pro.github.io/WASH-PRO-CRM/ru/getting-started/) | Установка и первый вход |
+| [Мастер настройки](https://wash-pro.github.io/WASH-PRO-CRM/ru/setup-wizard/) | Первичная настройка CRM |
+| [Архитектура](https://wash-pro.github.io/WASH-PRO-CRM/ru/architecture/) | Сервисы и потоки данных |
+| [Dashboard](https://wash-pro.github.io/WASH-PRO-CRM/ru/dashboard/) | Модули UI, live-режим, RBAC |
+| [MCP](https://wash-pro.github.io/WASH-PRO-CRM/ru/mcp/) | HTTP MCP для AI-агентов |
+| [MQTT](https://wash-pro.github.io/WASH-PRO-CRM/ru/mqtt/) | Телеметрия и управление постами |
 | [Changelog](CHANGELOG.md) | История изменений |
-| [Wiki (EN)](wiki/en/Home.md) | GitHub Wiki (English) |
-| [Wiki (RU)](wiki/ru/Home.md) | GitHub Wiki (русский) |
+| [Wiki (EN)](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Home) | GitHub Wiki (English) |
+| [Wiki (RU)](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Home) | GitHub Wiki (русский) |
 
 ## Структура проекта
 

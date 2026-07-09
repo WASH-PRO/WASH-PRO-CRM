@@ -258,7 +258,7 @@ docker compose down
 docker compose up -d --build
 ```
 
-MongoDB and other service data in `DATA_DIR` (default `./data`), see [data/README.md](../data/README.md).
+MongoDB and other service data in `DATA_DIR` (default `./data`), see [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
 
 ## Help
 

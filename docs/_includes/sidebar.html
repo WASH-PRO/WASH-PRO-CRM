@@ -27,6 +27,7 @@
   <div class="sidebar-footer">
     <div class="sidebar-resources-title">{{ ui.resources }}</div>
     <a href="{% include lhref.html slug='' %}" rel="noopener">{{ ui.documentation }}</a>
+    <a href="{% if current_lang == 'ru' %}https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Home{% else %}https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Home{% endif %}" target="_blank" rel="noopener">{{ ui.footer_wiki }}</a>
     <a href="https://github.com/WASH-PRO/WASH-PRO-CRM" target="_blank" rel="noopener">{{ ui.github }}</a>
   </div>
 </aside>

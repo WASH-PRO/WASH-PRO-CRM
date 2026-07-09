@@ -54,7 +54,7 @@ docker compose up -d --build
 PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 ```
 
-Данные хранятся на диске хоста в каталоге `DATA_DIR` (по умолчанию `./data`), а не в Docker volumes. Пересборка образов и `docker compose down` **не удаляют** этот каталог. Подробнее: [data/README.md](../data/README.md).
+Данные хранятся на диске хоста в каталоге `DATA_DIR` (по умолчанию `./data`), а не в Docker volumes. Пересборка образов и `docker compose down` **не удаляют** этот каталог. Подробнее: [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
 
 Миграция со старых named volumes (однократно):
 

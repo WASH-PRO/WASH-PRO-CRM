@@ -54,7 +54,7 @@ docker compose up -d --build
 PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 ```
 
-Data is stored on the host disk in `DATA_DIR` (default `./data`), not in Docker volumes. Image rebuild and `docker compose down` **do not delete** this directory. Details: [data/README.md](../data/README.md).
+Data is stored on the host disk in `DATA_DIR` (default `./data`), not in Docker volumes. Image rebuild and `docker compose down` **do not delete** this directory. Details: [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
 
 One-time migration from old named volumes:
 

@@ -44,6 +44,7 @@ Sync with [`docs/`](https://github.com/WASH-PRO/WASH-PRO-CRM/tree/main/docs) whe
 ```bash
 ./scripts/sync-github-wiki.sh
 ./scripts/validate-wiki-links.sh   # optional check before publish
+./scripts/validate-docs-links.sh   # README + GitHub Pages link patterns
 ```
 
 This flattens `wiki/en/` and `wiki/ru/` to `en-Page.md` / `ru-Page.md` on [WASH-PRO-CRM.wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki) (GitHub Wiki does not support nested paths).

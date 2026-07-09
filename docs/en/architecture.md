@@ -128,7 +128,7 @@ Default `./data` on the host (bind mount). Rebuild and `docker compose down` do 
 | `mosquitto/config/` | MQTT passwd, ACL, mosquitto.conf |
 | `pyorchestrator/` | PostgreSQL, Redis, MinIO, runtime *(opt.)* |
 
-Details: [data/README.md](../data/README.md).
+Details: [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
 
 ## Dynamic API Platform (vendored v1.5.13)
 

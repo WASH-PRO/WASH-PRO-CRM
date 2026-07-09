@@ -108,6 +108,15 @@ WASH-PRO-CRM/
 └── wiki/                      # GitHub Wiki
 ```
 
+## Wiki
+
+Short reference on [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki) (separate from this site):
+
+| Language | Home |
+|----------|------|
+| English | [Wiki — EN](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Home) |
+| Русский | [Wiki — RU](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Home) |
+
 ## License
 
 WASH PRO CRM is a proprietary project.  

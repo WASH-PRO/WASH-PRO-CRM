@@ -26,9 +26,9 @@
 <p align="center">
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/"><strong>Documentation</strong></a>
   ·
-  <a href="docs/en/getting-started.md">Quick start</a>
+  <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/getting-started/">Quick start</a>
   ·
-  <a href="docs/en/architecture.md">Architecture</a>
+  <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/architecture/">Architecture</a>
   ·
   <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/issues">Issues</a>
 </p>
@@ -73,7 +73,7 @@
 | [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) | **v1.5.13** | REST API, MongoDB, CRM endpoints, RBAC, automation |
 | [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) | **v0.1.13** *(opt.)* | Python scripts and Telegram bots via `pyorch-bridge` |
 
-Details: [docs/en/embedded-services.md](docs/en/embedded-services.md)
+Details: [docs/en/embedded-services.md](https://wash-pro.github.io/WASH-PRO-CRM/en/embedded-services/)
 
 ## Architecture
 
@@ -95,7 +95,7 @@ Dashboard (React) ──────────── nginx /api proxy ──�
 | `crm-mcp` *(opt.)* | MCP server for AI agents (Cursor) | stdio |
 | `mosquitto`, `mosquitto-init` | MQTT broker, ACL/passwd | — |
 
-More: [docs/en/architecture.md](docs/en/architecture.md)
+More: [docs/en/architecture.md](https://wash-pro.github.io/WASH-PRO-CRM/en/architecture/)
 
 ## Quick start
 
@@ -142,15 +142,15 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 
 | Section | Description |
 |---------|-------------|
-| [Quick start](docs/en/getting-started.md) | Installation and first login |
-| [Setup wizard](docs/en/setup-wizard.md) | Initial CRM setup |
-| [Architecture](docs/en/architecture.md) | Services and data flow |
-| [Dashboard](docs/en/dashboard.md) | UI modules, live mode, RBAC |
-| [MCP](docs/en/mcp.md) | HTTP MCP for AI agents |
-| [MQTT](docs/en/mqtt.md) | Telemetry and post control |
+| [Quick start](https://wash-pro.github.io/WASH-PRO-CRM/en/getting-started/) | Installation and first login |
+| [Setup wizard](https://wash-pro.github.io/WASH-PRO-CRM/en/setup-wizard/) | Initial CRM setup |
+| [Architecture](https://wash-pro.github.io/WASH-PRO-CRM/en/architecture/) | Services and data flow |
+| [Dashboard](https://wash-pro.github.io/WASH-PRO-CRM/en/dashboard/) | UI modules, live mode, RBAC |
+| [MCP](https://wash-pro.github.io/WASH-PRO-CRM/en/mcp/) | HTTP MCP for AI agents |
+| [MQTT](https://wash-pro.github.io/WASH-PRO-CRM/en/mqtt/) | Telemetry and post control |
 | [Changelog](CHANGELOG.md) | Release history |
-| [Wiki (EN)](wiki/en/Home.md) | GitHub Wiki (English) |
-| [Wiki (RU)](wiki/ru/Home.md) | GitHub Wiki (Russian) |
+| [Wiki (EN)](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Home) | GitHub Wiki (English) |
+| [Wiki (RU)](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Home) | GitHub Wiki (Russian) |
 
 ## Project structure
 
@@ -193,7 +193,7 @@ docker compose up -d --build
 | MQTT auth / ACL | `./scripts/fix-mqtt.sh`, then sync MQTT in setup wizard |
 | Missing CRM endpoints | `./scripts/run-init-seed.sh` |
 
-More: [docs/en/troubleshooting.md](docs/en/troubleshooting.md)
+More: [docs/en/troubleshooting.md](https://wash-pro.github.io/WASH-PRO-CRM/en/troubleshooting/)
 
 ## Security
 

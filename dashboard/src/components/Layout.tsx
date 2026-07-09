@@ -9,7 +9,7 @@ import {
   PanelLeftOpen,
   Wand2,
 } from 'lucide-react';
-import { useMemo, useState, type CSSProperties } from 'react';
+import { Suspense, useMemo, useState, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 import { useSidebarSize } from '../hooks/useSidebarSize';
@@ -25,6 +25,8 @@ import { BreadcrumbProvider, useBreadcrumbLastLabelOverride } from '../context/B
 import { SoftwareUpdatesProvider } from '../context/SoftwareUpdatesContext';
 import { BrandLogo } from './BrandLogo';
 import { UpdateBanner } from './UpdateBanner';
+import { RouteErrorBoundary } from './RouteErrorBoundary';
+import { Loading } from './UI';
 
 function LayoutInner() {
   const { user, logout, isAdmin } = useAuth();
@@ -228,7 +230,11 @@ function LayoutInner() {
                   </span>
                 ))}
               </nav>
-              <Outlet />
+              <RouteErrorBoundary compact>
+                <Suspense fallback={<Loading />}>
+                  <Outlet />
+                </Suspense>
+              </RouteErrorBoundary>
             </div>
           </main>
       </div>

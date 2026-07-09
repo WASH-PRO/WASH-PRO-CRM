@@ -6,18 +6,51 @@ export type PollingFetcher<T> = (signal: AbortSignal) => Promise<T>;
 interface UsePollingOptions {
   intervalMs?: number;
   enabled?: boolean;
+  /** Таймаут одного запроса, мс */
+  timeoutMs?: number;
   /** @deprecated Используйте глобальный переключатель Live/Статика в шапке */
   live?: boolean;
 }
+
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
+async function runWithTimeout<T>(fetcher: PollingFetcher<T>, signal: AbortSignal, timeoutMs: number): Promise<T> {
+  if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error('Превышено время ожидания ответа сервера'));
+    }, timeoutMs);
+
+    const onAbort = () => {
+      window.clearTimeout(timer);
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
+
+    signal.addEventListener('abort', onAbort, { once: true });
+
+    fetcher(signal)
+      .then((value) => {
+        window.clearTimeout(timer);
+        signal.removeEventListener('abort', onAbort);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      });
+  });
+}
+
 export function usePolling<T>(
   fetcher: PollingFetcher<T>,
   deps: unknown[] = [],
-  { intervalMs = 5000, enabled = true }: UsePollingOptions = {}
+  { intervalMs = 5000, enabled = true, timeoutMs = DEFAULT_TIMEOUT_MS }: UsePollingOptions = {}
 ) {
   const { liveEnabled } = useLiveMode();
   const [data, setData] = useState<T | null>(null);
@@ -34,7 +67,7 @@ export function usePolling<T>(
     const requestId = ++requestIdRef.current;
 
     try {
-      const result = await fetcher(controller.signal);
+      const result = await runWithTimeout(fetcher, controller.signal, timeoutMs);
       if (!mounted.current || requestId !== requestIdRef.current) return;
       setData(result);
       setError(null);
@@ -49,13 +82,16 @@ export function usePolling<T>(
         setLoading(false);
       }
     }
-  }, [fetcher]);
+  }, [fetcher, timeoutMs]);
 
   useEffect(() => {
     mounted.current = true;
     if (!enabled) {
       setLoading(false);
-      return;
+      return () => {
+        mounted.current = false;
+        requestIdRef.current += 1;
+      };
     }
     setLoading(true);
     refresh();

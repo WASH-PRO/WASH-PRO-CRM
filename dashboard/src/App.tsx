@@ -1,15 +1,13 @@
-import { Suspense, lazy, type ComponentType, type ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
 import { SetupGuard } from './components/SetupGuard';
+import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { Loading } from './components/UI';
 import { LoginPage } from './pages/LoginPage';
-
-function lazyPage<T extends Record<string, ComponentType>>(loader: () => Promise<T>, name: keyof T) {
-  return lazy(() => loader().then((m) => ({ default: m[name] as ComponentType })));
-}
+import { lazyPage } from './utils/lazyPage';
 
 const DashboardPage = lazyPage(() => import('./pages/DashboardPage'), 'DashboardPage');
 const WashesPage = lazyPage(() => import('./pages/WashesPage'), 'WashesPage');
@@ -21,6 +19,7 @@ const FinancePage = lazyPage(() => import('./pages/FinancePage'), 'FinancePage')
 const ArchivePage = lazyPage(() => import('./pages/ArchivePage'), 'ArchivePage');
 const BackupsPage = lazyPage(() => import('./pages/BackupsPage'), 'BackupsPage');
 const TelegramPage = lazyPage(() => import('./pages/TelegramPage'), 'TelegramPage');
+const McpPage = lazyPage(() => import('./pages/McpPage'), 'McpPage');
 const InfoMessagesPage = lazyPage(() => import('./pages/InfoMessagesPage'), 'InfoMessagesPage');
 const NotificationsPage = lazyPage(() => import('./pages/NotificationsPage'), 'NotificationsPage');
 const CurrencyPage = lazyPage(() => import('./pages/CurrencyPage'), 'CurrencyPage');
@@ -105,6 +104,7 @@ function AppRoutes() {
         <Route path="groups" element={<AdminRoute><GroupsPage /></AdminRoute>} />
         <Route path="backups" element={<AdminRoute><BackupsPage /></AdminRoute>} />
         <Route path="telegram" element={<AdminRoute><TelegramPage /></AdminRoute>} />
+        <Route path="mcp" element={<AdminRoute><McpPage /></AdminRoute>} />
         <Route path="info-messages" element={<AdminRoute><InfoMessagesPage /></AdminRoute>} />
         <Route path="work-modes" element={<AdminRoute><WorkModesPage /></AdminRoute>} />
         <Route path="currency" element={<AdminRoute><CurrencyPage /></AdminRoute>} />
@@ -123,9 +123,11 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <AppRoutes />
-          </Suspense>
+          <RouteErrorBoundary>
+            <Suspense fallback={<Loading fullScreen />}>
+              <AppRoutes />
+            </Suspense>
+          </RouteErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

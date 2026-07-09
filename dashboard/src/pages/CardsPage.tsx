@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { apiListCatalog, apiListPage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -184,7 +184,9 @@ export function CardsLayout() {
     <div>
       <PageHeader title="Карты" subtitle="Журнал применений: каждое считывание NFC — отдельная строка" />
       <TabNav items={CARD_TABS} columns={4} />
-      <Outlet />
+      <Suspense fallback={<Loading />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }

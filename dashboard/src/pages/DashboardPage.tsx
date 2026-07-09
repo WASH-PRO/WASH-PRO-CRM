@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { api, apiListBounded, apiListCatalog } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { PageHeader, StatCard, Loading } from '../components/UI';
+import { PageHeader, StatCard, Loading, ErrorMessage } from '../components/UI';
 import { DataTable } from '../components/DataTable';
 import { DashboardCharts } from '../components/DashboardCharts';
 import { LIVE_INTERVAL_DASHBOARD_MS } from '../constants/live';
@@ -55,7 +55,7 @@ export function DashboardPage() {
     };
   }, []);
 
-  const { data, loading, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_DASHBOARD_MS });
+  const { data, loading, error, refresh } = usePolling(fetchData, [], { intervalMs: LIVE_INTERVAL_DASHBOARD_MS });
 
   const markRead = async (id: string) => {
     if (!canEdit) return;
@@ -127,6 +127,17 @@ export function DashboardPage() {
   }, [data]);
 
   if (loading && !data) return <Loading />;
+  if (error && !data) {
+    return (
+      <div>
+        <PageHeader title="Обзор" />
+        <ErrorMessage message={error} />
+        <button type="button" className="btn-secondary mt-4" onClick={() => void refresh()}>
+          Повторить
+        </button>
+      </div>
+    );
+  }
   if (!data) return <Loading />;
 
   const notificationHint =

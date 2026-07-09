@@ -37,6 +37,8 @@ nav:
     url: /mqtt/
   - title: Telegram-боты
     url: /telegram/
+  - title: MCP
+    url: /mcp/
   - title: Схема данных
     url: /database-schema/
   - title: Развёртывание

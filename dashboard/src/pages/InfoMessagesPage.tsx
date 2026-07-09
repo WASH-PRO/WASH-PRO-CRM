@@ -10,23 +10,16 @@ import type { InfoMessage, Wash } from '../types';
 import { bulkDelete } from '../utils/bulk';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
+import {
+  INFO_MESSAGE_STATUS_LABELS,
+  INFO_MESSAGE_STATUS_VARIANT,
+  resolveInfoMessageDisplayStatus,
+} from '../utils/infoMessages';
 
 const CATEGORY_LABELS: Record<string, string> = {
   news: 'Новость',
   promotion: 'Акция',
   general: 'Общее',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Черновик',
-  scheduled: 'По расписанию',
-  published: 'Опубликовано',
-};
-
-const STATUS_VARIANT: Record<string, 'default' | 'warning' | 'success'> = {
-  draft: 'default',
-  scheduled: 'warning',
-  published: 'success',
 };
 
 const emptyForm = {
@@ -145,8 +138,8 @@ export function InfoMessagesPage() {
       {
         id: 'status',
         label: 'Статус',
-        options: Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
-        match: (row, value) => row.status === value,
+        options: Object.entries(INFO_MESSAGE_STATUS_LABELS).map(([value, label]) => ({ value, label })),
+        match: (row, value) => resolveInfoMessageDisplayStatus(row) === value,
       },
       {
         id: 'category',
@@ -184,8 +177,24 @@ export function InfoMessagesPage() {
         key: 'status',
         header: 'Статус',
         sortable: true,
-        sortValue: (r) => r.status,
-        render: (r) => <Badge variant={STATUS_VARIANT[r.status] ?? 'default'}>{STATUS_LABELS[r.status] ?? r.status}</Badge>,
+        sortValue: (r) => resolveInfoMessageDisplayStatus(r),
+        render: (r) => {
+          const displayStatus = resolveInfoMessageDisplayStatus(r);
+          const scheduledPending =
+            r.status === 'scheduled' && displayStatus === 'scheduled' && r.publishedAt;
+          return (
+            <div className="space-y-0.5">
+              <Badge variant={INFO_MESSAGE_STATUS_VARIANT[displayStatus]}>
+                {INFO_MESSAGE_STATUS_LABELS[displayStatus]}
+              </Badge>
+              {scheduledPending && (
+                <div className="text-[11px] text-panel-muted dark:text-panel-muted-dark">
+                  с {formatDateTime(r.publishedAt)}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: 'publishedAt',
@@ -225,7 +234,7 @@ export function InfoMessagesPage() {
             createExportBulkAction('info-messages.csv', [
               { header: 'Заголовок', value: (r) => r.title },
               { header: 'Категория', value: (r) => r.category },
-              { header: 'Статус', value: (r) => r.status },
+              { header: 'Статус', value: (r) => INFO_MESSAGE_STATUS_LABELS[resolveInfoMessageDisplayStatus(r)] },
               { header: 'Публикация', value: (r) => r.publishedAt ?? '' },
             ]),
             {

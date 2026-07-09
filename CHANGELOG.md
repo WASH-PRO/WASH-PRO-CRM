@@ -6,6 +6,24 @@
 
 ## [Unreleased]
 
+## [1.1.12] — 2026-07-09
+
+### Добавлено
+
+- **Раздел «MCP сервер»** (`/mcp`) — переключатель Dynamic API / PyOrchestrator; таблица инструментов; готовый HTTP-конфиг для Cursor без сборки; прокси nginx `/api/mcp` и `/api/pyorch-mcp/mcp`
+- **Скрипт `scripts/seed-info-messages.mjs`** — массовое создание новостей/акций со статусом «По расписанию» (интервал и задержка через env)
+- **Документация MCP** — страница [docs/mcp.md](docs/mcp.md), обновлены Dashboard, wiki, README
+
+### Изменено
+
+- **Меню Dashboard** — группа **«Автоматизация»**: Информация, Telegram, MCP, Бэкапы; **«Состояние»** перенесено в **«Главное»**; справочники вынесены в отдельную группу
+- **Раздел «Информация»** — фактический статус: «По расписанию» с прошедшей датой отображается как **«Опубликовано»** (фильтр, сортировка, CSV)
+- **Информационный бот v1.9** — одно сообщение (фото + подпись) без дубля текста; корректная занятость постов (`post_online` / `post_busy`)
+
+### Исправлено
+
+- **Серый экран при навигации** — retry загрузки JS-чанков, `RouteErrorBoundary`, таймаут polling 60 с, ошибка вместо вечного Loading на Обзоре
+
 ## [1.1.11] — 2026-07-09
 
 ### Добавлено
@@ -177,7 +195,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.11...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.12...HEAD
+[1.1.12]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.12
 [1.1.11]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.11
 [1.1.10]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.10
 [1.1.9]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.9

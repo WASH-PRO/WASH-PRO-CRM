@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-BOT_VERSION = "1.8"
+BOT_VERSION = "1.9"
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -362,44 +362,39 @@ def send_item(chat_id: int, title: str, body: str, image_url: str | None = None,
     body_text = body_plain_text(body_html)
     text_html = f"<b>{esc(title_text)}</b>\\n\\n{body_html}"[:4096]
     text_plain = f"{title_text}\\n\\n{body_text}"[:4096]
+    caption_html = text_html[:1024]
+    caption_plain = text_plain[:1024]
     photo_url = (image_url or "").strip()
     errors: list[str] = []
 
     downloaded = download_image(photo_url) if photo_url else None
     if downloaded:
         image_bytes, filename, mime = downloaded
-        for caption, mode in ((None, None), (title_text[:1024], None)):
+        for caption, mode in ((caption_html, "HTML"), (caption_plain, None), (title_text[:1024], None)):
             try:
-                send_photo_upload(chat_id, image_bytes, filename, mime, caption, mode, None)
-                for text, mode in ((text_html, "HTML"), (text_plain, None)):
-                    try:
-                        send_message(chat_id, text, reply_markup, mode)
-                        return
-                    except Exception as exc:
-                        errors.append(str(exc))
+                send_photo_upload(chat_id, image_bytes, filename, mime, caption, mode, reply_markup)
                 return
             except Exception as exc:
                 errors.append(str(exc))
 
     if photo_url:
-        payload: dict[str, object] = {
-            "chat_id": chat_id,
-            "photo": photo_url,
-            "caption": title_text[:1024],
-        }
-        try:
-            parsed = telegram_api("sendPhoto", payload)
-            if parsed.get("ok"):
-                for text, mode in ((text_html, "HTML"), (text_plain, None)):
-                    try:
-                        send_message(chat_id, text, reply_markup, mode)
-                        return
-                    except Exception as exc:
-                        errors.append(str(exc))
-                return
-            errors.append(str(parsed.get("description") or "sendPhoto url failed"))
-        except Exception as exc:
-            errors.append(str(exc))
+        for caption, mode in ((caption_html, "HTML"), (caption_plain, None), (title_text[:1024], None)):
+            payload: dict[str, object] = {
+                "chat_id": chat_id,
+                "photo": photo_url,
+                "caption": caption,
+            }
+            if mode:
+                payload["parse_mode"] = mode
+            if reply_markup:
+                payload["reply_markup"] = reply_markup
+            try:
+                parsed = telegram_api("sendPhoto", payload)
+                if parsed.get("ok"):
+                    return
+                errors.append(str(parsed.get("description") or "sendPhoto url failed"))
+            except Exception as exc:
+                errors.append(str(exc))
 
     for text, mode in ((text_html, "HTML"), (text_plain, None)):
         try:
@@ -682,27 +677,54 @@ def show_occupancy_prompt(chat_id: int) -> None:
     send_text(chat_id, "🅿️ <b>Занятость постов</b>\\nВыберите автомойку:", washes_keyboard("o"))
 
 
-def post_busy(state: dict | None) -> bool:
+def state_row_ts(row: dict) -> float:
+    for key in ("lastMessageAt", "recordedAt", "updatedAt", "createdAt"):
+        ts = parse_ts(row.get(key))
+        if ts > 0:
+            return ts
+    return 0.0
+
+
+def post_online(state: dict | None) -> bool:
     if not state:
         return False
-    ts = parse_ts(state.get("lastMessageAt") or state.get("createdAt"))
-    if ts <= 0 or time.time() - ts > _POST_ONLINE_SEC:
+    ts = state_row_ts(state)
+    return ts > 0 and time.time() - ts <= _POST_ONLINE_SEC
+
+
+def post_busy(state: dict | None) -> bool:
+    if not post_online(state):
         return False
-    if float(state.get("balance") or 0) > 0:
-        return True
+    mode = str(state.get("mode") or "").strip().lower()
+    if mode == "idle":
+        return False
+    if mode.startswith("program_"):
+        try:
+            return int(mode.split("_", 1)[1]) >= 0
+        except (IndexError, ValueError):
+            return True
+    mode_number = state.get("modeNumber")
+    if mode_number is not None:
+        try:
+            return int(mode_number) >= 0
+        except (TypeError, ValueError):
+            pass
     if float(state.get("modeTime") or 0) > 0:
         return True
-    mode = str(state.get("mode") or "").strip().lower()
-    return bool(mode and mode not in ("idle", "free", "0"))
+    return False
 
 
 def latest_states() -> dict[str, dict]:
     states = api_get("/api/crm/post-states?limit=500") or []
     by_post: dict[str, dict] = {}
     for row in states:
+        if not isinstance(row, dict):
+            continue
         pid = ref_id(row.get("postId"))
+        if not pid:
+            continue
         prev = by_post.get(pid)
-        if not prev or parse_ts(row) >= parse_ts(prev):
+        if not prev or state_row_ts(row) >= state_row_ts(prev):
             by_post[pid] = row
     return by_post
 
@@ -744,12 +766,12 @@ def show_occupancy_for_wash(chat_id: int, wash_id: str) -> None:
     else:
         for post in posts:
             state = state_by_post.get(ref_id(post))
-            if post_busy(state):
-                status = "🔴 Занят"
-            elif state and parse_ts(state.get("lastMessageAt")) > time.time() - _POST_ONLINE_SEC:
-                status = "🟢 Свободен"
-            else:
+            if not post_online(state):
                 status = "⚪ Нет связи"
+            elif post_busy(state):
+                status = "🔴 Занят"
+            else:
+                status = "🟢 Свободен"
             lines.append(f"#{esc(post.get('postNumber', '?'))} {esc(post.get('name') or '—')}: {status}")
     send_text(chat_id, "\\n".join(lines), main_keyboard())
     clear_flow(chat_id)

@@ -20,6 +20,7 @@ import {
   Settings,
   SlidersHorizontal,
   Newspaper,
+  Cpu,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -41,7 +42,7 @@ export const navGroups: NavGroup[] = [
     title: 'Главное',
     items: [
       { to: '/', label: 'Обзор', icon: LayoutDashboard },
-      { to: '/info-messages', label: 'Информация', icon: Newspaper, admin: true },
+      { to: '/states', label: 'Состояние', shortLabel: 'Состояние', icon: Activity },
     ],
   },
   {
@@ -49,7 +50,6 @@ export const navGroups: NavGroup[] = [
     items: [
       { to: '/washes', label: 'Автомойки', shortLabel: 'Мойки', icon: Building2 },
       { to: '/posts', label: 'Посты', icon: Columns3 },
-      { to: '/states', label: 'Состояние', shortLabel: 'Состояние', icon: Activity },
     ],
   },
   {
@@ -82,13 +82,20 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
+    title: 'Автоматизация',
+    items: [
+      { to: '/info-messages', label: 'Информация', icon: Newspaper, admin: true },
+      { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
+      { to: '/mcp', label: 'MCP сервер', shortLabel: 'MCP', icon: Cpu, admin: true },
+      { to: '/backups', label: 'Резервные копии', shortLabel: 'Бэкапы', icon: HardDrive, admin: true },
+    ],
+  },
+  {
     title: 'Система',
     items: [
       { to: '/notifications', label: 'Уведомления', icon: Bell },
       { to: '/users', label: 'Пользователи', icon: Users, admin: true },
       { to: '/groups', label: 'Группы и права', icon: Shield, admin: true },
-      { to: '/backups', label: 'Резервные копии', shortLabel: 'Бэкапы', icon: HardDrive, admin: true },
-      { to: '/telegram', label: 'Telegram', icon: Bot, admin: true },
       { to: '/settings', label: 'Настройки', icon: Settings },
       { to: '/logs', label: 'Логи', icon: FileText, admin: true },
     ],

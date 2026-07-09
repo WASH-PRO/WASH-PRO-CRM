@@ -77,11 +77,16 @@ export function Badge({ children, variant = 'default' }: { children: ReactNode; 
   );
 }
 
-export function Loading() {
+export function Loading({ fullScreen = false }: { fullScreen?: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-28">
+    <div
+      className={clsx(
+        'flex flex-col items-center justify-center gap-3',
+        fullScreen ? 'min-h-screen bg-panel-canvas dark:bg-panel-canvas-dark' : 'py-28'
+      )}
+    >
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-      <span className="text-sm text-panel-muted dark:text-panel-muted-dark">Загрузка данных…</span>
+      <span className="text-sm text-panel-muted dark:text-panel-muted-dark">Загрузка…</span>
     </div>
   );
 }

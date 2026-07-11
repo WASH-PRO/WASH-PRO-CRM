@@ -52,7 +52,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
 
   if (component === 'crm') {
     if (stepId === 'pull') {
-      return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main && ${syncEnvVersion(`${root}/.env`, 'APP_VERSION', parseTagVersion(targetTag))}`;
+      return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main && ([ ! -x ${root}/local/apply-server-patches.sh ] || ${root}/local/apply-server-patches.sh) && ${syncEnvVersion(`${root}/.env`, 'APP_VERSION', parseTagVersion(targetTag))}`;
     }
     if (stepId === 'build') {
       // NB: update-bridge и mosquitto исключены — пересборка бриджа убивает процесс

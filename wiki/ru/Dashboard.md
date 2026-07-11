@@ -79,6 +79,11 @@ node scripts/seed-info-messages.mjs
 | 30 с | **Система** (состояние платформы) |
 | 10–15 с | Остальные |
 
+## Недавние изменения (v1.1.17)
+
+- **Настройки → Целостность и исправление** — диагностика `WASH_HOST_PROJECT_ROOT`, `DATA_DIR`, ключевых файлов; исправления (Mosquitto, `init-seed`, зависшие обновления)
+- **`update-bridge`** — `GET/POST /api/crm/updates/repair`
+
 ## Недавние изменения (v1.1.16)
 
 - **Система** (`/system`) в **«Главное»** — ресурсы сервера, версия WASH PRO CRM, стек Dynamic API / PyOrchestrator

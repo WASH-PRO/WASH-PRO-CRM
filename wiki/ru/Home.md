@@ -4,13 +4,14 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**Версия WASH PRO:** **v1.1.16** · **Документация:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**Версия WASH PRO:** **v1.1.17** · **Документация:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
 
 - **Мастер настройки** — первичная настройка после установки (`/setup`)
 - **Состояние** — все посты, онлайн/оффлайн, интерактивный график *(Главное)*
+- **Целостность и исправление** — мастер в Настройках: пути, `.env`, сбойные обновления (v1.1.17)
 - **Система** — ресурсы сервера, версия CRM, встроенные компоненты *(Главное)* (v1.1.16)
 - **Информация** — новости и акции для **информационного Telegram-бота** *(Автоматизация)*
 - SCADA: MQTT, телеметрия, команды и цены постов
@@ -59,6 +60,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.17
+
+- **Мастер «Целостность и исправление»** в Настройках — диагностика путей/`.env` и исправления через `update-bridge`
+- **`scripts/start.sh`** — опциональный `docker-compose.override.yml`
+
+Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.16
 

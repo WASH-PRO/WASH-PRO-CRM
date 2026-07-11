@@ -67,12 +67,7 @@ function detectViaDockerInspect(): string | null {
   return null;
 }
 
-export function resolveHostProjectRoot(): string {
-  const override = process.env.HOST_PROJECT_ROOT?.trim() || process.env.WASH_HOST_PROJECT_ROOT?.trim();
-  if (override && override !== '.' && override !== DEPLOY_ROOT && isAbsolute(override)) {
-    return override.replace(/\/+$/, '');
-  }
-
+export function detectHostProjectRoot(): string | null {
   const detected =
     detectViaDockerInspect() ||
     detectDeployMountSource() ||
@@ -82,7 +77,16 @@ export function resolveHostProjectRoot(): string {
     return detected.replace(/\/+$/, '');
   }
 
-  return DEPLOY_ROOT;
+  return null;
+}
+
+export function resolveHostProjectRoot(): string {
+  const override = process.env.HOST_PROJECT_ROOT?.trim() || process.env.WASH_HOST_PROJECT_ROOT?.trim();
+  if (override && override !== '.' && override !== DEPLOY_ROOT && isAbsolute(override)) {
+    return override.replace(/\/+$/, '');
+  }
+
+  return detectHostProjectRoot() ?? DEPLOY_ROOT;
 }
 
 export function resolveHostDataDir(): string {

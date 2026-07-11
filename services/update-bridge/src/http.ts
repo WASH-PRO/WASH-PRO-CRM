@@ -1,6 +1,7 @@
 import http from 'node:http';
 import fetch from 'node-fetch';
 import { pino } from 'pino';
+import { applyRepair, diagnoseRepair } from './repair.js';
 import {
   checkAllComponents,
   dismissComponentUpdate,
@@ -138,6 +139,30 @@ export function startUpdateHttpServer(): void {
         json(res, 200, { success: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Dismiss failed';
+        json(res, 500, { success: false, error: message });
+      }
+      return;
+    }
+
+    if (req.method === 'GET' && url === '/repair') {
+      try {
+        const data = await diagnoseRepair();
+        json(res, 200, { success: true, data });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Diagnose failed';
+        json(res, 500, { success: false, error: message });
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && url === '/repair') {
+      try {
+        const raw = await readBody(req);
+        const body = raw ? (JSON.parse(raw) as { actions?: string[] }) : {};
+        const data = await applyRepair(body.actions ?? []);
+        json(res, 200, { success: true, data });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Repair failed';
         json(res, 500, { success: false, error: message });
       }
       return;

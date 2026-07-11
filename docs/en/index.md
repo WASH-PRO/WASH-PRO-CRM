@@ -24,6 +24,7 @@ layout: default
 |--------|-------------|
 | **Overview** | KPIs, usage and payment pie charts, live notifications |
 | **Status** | All posts, online/offline, live timer, **interactive chart** *(Main)* |
+| **Integrity repair** | Settings wizard for paths, `.env`, failed updates *(v1.1.17)* |
 | **System** | Server resources, WASH CRM version, embedded stack versions *(Main)* (v1.1.16) |
 | **Information** | News and promotions for the **information Telegram bot** *(Automation)* |
 | **SCADA / MQTT** | Telemetry, commands, and post prices |

@@ -17,6 +17,9 @@ set +a
 "$ROOT/scripts/ensure-data-dirs.sh"
 
 COMPOSE_FILES="-f docker-compose.yml"
+if [ -f docker-compose.override.yml ]; then
+  COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.override.yml"
+fi
 if [ "${REDIS_ENABLED:-false}" = "true" ]; then
   COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.redis.yml"
 fi

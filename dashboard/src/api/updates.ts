@@ -94,3 +94,50 @@ export async function dismissUpdate(component: UpdateComponentId, version: strin
 export function componentById(status: UpdatesStatus | null, id: UpdateComponentId): ComponentCheck | undefined {
   return status?.components.find((c) => c.id === id);
 }
+
+export type RepairIssueSeverity = 'ok' | 'warning' | 'error';
+
+export interface RepairIssue {
+  code: string;
+  severity: RepairIssueSeverity;
+  detail?: string;
+  fixId?: string;
+}
+
+export interface RepairPaths {
+  deployRoot: string;
+  hostProjectRoot: string;
+  detectedHostRoot: string | null;
+  hostDataDir: string;
+  envFile: string;
+  envWashHostRoot: string | null;
+  envDataDir: string | null;
+}
+
+export interface RepairDiagnoseResult {
+  checkedAt: string;
+  paths: RepairPaths;
+  issues: RepairIssue[];
+  healthy: boolean;
+}
+
+export interface RepairApplyResult {
+  applied: string[];
+  failed: Array<{ action: string; error: string }>;
+  logs: string[];
+  diagnose: RepairDiagnoseResult;
+}
+
+export async function diagnoseIntegrity(): Promise<RepairDiagnoseResult> {
+  const res = await fetchWithAuth('/api/crm/updates/repair');
+  return parseJson(res);
+}
+
+export async function applyIntegrityRepair(actions: string[]): Promise<RepairApplyResult> {
+  const res = await fetchWithAuth('/api/crm/updates/repair', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actions }),
+  });
+  return parseJson(res);
+}

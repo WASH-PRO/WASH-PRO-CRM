@@ -15,6 +15,28 @@ docker compose up -d --build dynamic-api dynamic-api-panel
 
 Current vendored version: **v1.5.13**.
 
+## CRM update failed or wrong paths
+
+WASH uses **`update-bridge`** for in-Dashboard updates (not the Dynamic API panel updater).
+
+1. Open **Dashboard → Settings → Integrity and repair** (administrator).
+2. Click **Check integrity** — review paths (`WASH_HOST_PROJECT_ROOT`, `DATA_DIR`), missing files, Docker socket, stuck jobs.
+3. Select fixes and click **Apply fixes** (sync `.env`, Mosquitto repair, `init-seed`, clear stuck job).
+4. Rebuild if needed:
+
+```bash
+docker compose up -d --build update-bridge dashboard
+```
+
+Manual fallback:
+
+```bash
+./scripts/fix-mqtt.sh
+docker compose run --rm init-seed
+```
+
+Ensure `.env` has correct `WASH_HOST_PROJECT_ROOT` (absolute host path to the project) and `DATA_DIR=./data`.
+
 ## init-seed: Exited status
 
 `Exited (0)` is normal (one-time container).

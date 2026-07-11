@@ -153,6 +153,17 @@ Platform status page in **Main** (not the admin **System** group with notificati
 
 Live refresh every **30 s** (`GET /api/dashboard/system` via Dynamic API).
 
+### Integrity and repair (`/settings`) — v1.1.17
+
+Section in **Settings** (before Software updates). Administrators only (`manage_users` / `manage_api`).
+
+| Action | Description |
+|--------|-------------|
+| **Check integrity** | Diagnose `/deploy` mount, `WASH_HOST_PROJECT_ROOT`, `DATA_DIR`, `.env`, critical files, Docker socket, `docker compose config`, stuck update jobs |
+| **Apply fixes** | Selected repairs: sync host root to `.env`, normalize `DATA_DIR`, `git safe.directory`, clear stuck job, Mosquitto repair (`fix-mqtt.sh`), `init-seed` |
+
+API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
+
 ### Cards (`/cards`)
 
 | Subsection | `cardType` |
@@ -180,7 +191,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 | **Setup wizard** | `/setup` | Initial CRM setup; restart `/setup?restart=1` *(Admin/Operator)* |
 | **Users** | `/users` | Dynamic API accounts, **Telegram user_id**, group assignment *(Admin)* |
 | **Groups & permissions** | `/groups` | RBAC groups and permission matrix *(Admin)* |
-| **Settings** | `/settings` | MQTT, Telegram notify, CRM update, default currency, **interface language** |
+| **Settings** | `/settings` | MQTT, Telegram notify, **integrity repair**, CRM update, default currency, **interface language** |
 | Logs | `/logs` | Dynamic API audit *(Admin)* |
 | **Information** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
 | Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |

@@ -15,6 +15,28 @@ docker compose up -d --build dynamic-api dynamic-api-panel
 
 Актуальная vendored-версия: **v1.5.13**.
 
+## Обновление CRM не проходит / неверные пути
+
+В WASH автообновление из Dashboard выполняет **`update-bridge`** (не in-app updater панели Dynamic API).
+
+1. Откройте **Dashboard → Настройки → Целостность и исправление** (администратор).
+2. Нажмите **Проверить целостность** — пути (`WASH_HOST_PROJECT_ROOT`, `DATA_DIR`), отсутствующие файлы, Docker socket, зависшие задачи.
+3. Выберите исправления и нажмите **Применить исправления** (синхронизация `.env`, Mosquitto, `init-seed`, сброс job).
+4. При необходимости пересоберите:
+
+```bash
+docker compose up -d --build update-bridge dashboard
+```
+
+Ручной fallback:
+
+```bash
+./scripts/fix-mqtt.sh
+docker compose run --rm init-seed
+```
+
+Проверьте `.env`: `WASH_HOST_PROJECT_ROOT` — абсолютный путь к проекту на хосте, `DATA_DIR=./data`.
+
 ## init-seed: статус Exited
 
 `Exited (0)` — норма (одноразовый контейнер).

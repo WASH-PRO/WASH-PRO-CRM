@@ -10,11 +10,13 @@ import {
   ArrowUpCircle,
   RefreshCw,
   Radio,
+  ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
 import { syncMqttUsers } from '../api/postDevice';
 import { SoftwareUpdatesSection, componentVersionLabel } from '../components/SoftwareUpdatesSection';
+import { IntegrityRepairSection } from '../components/IntegrityRepairSection';
 import { LanguageSelect } from '../components/LanguageToggle';
 import { useAuth } from '../context/AuthContext';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
@@ -147,6 +149,7 @@ export function SettingsPage() {
   const { t } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
+  const canManageRepair = hasPermission('manage_users', 'manage_api');
   const updatesCtx = useSoftwareUpdatesContext();
   const [ids, setIds] = useState<Record<string, string | null>>({});
   const [backup, setBackup] = useState<BackupSettings>(DEFAULT_BACKUP);
@@ -592,6 +595,10 @@ export function SettingsPage() {
               ))}
             </div>
           </Field>
+        </SettingSection>
+
+        <SettingSection title={t('pages.settings.repair.title')} icon={ShieldCheck}>
+          <IntegrityRepairSection canManage={canManageRepair} />
         </SettingSection>
 
         <SettingSection title={t('pages.settings.softwareUpdates')} icon={ArrowUpCircle}>

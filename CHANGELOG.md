@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+## [1.1.17] — 2026-07-11
+
+### Добавлено
+
+- **Мастер «Целостность и исправление»** в **Настройках** — диагностика путей, `.env`, ключевых файлов, Docker socket и готовности автообновления
+- **Repair API** (`update-bridge`) — `GET/POST /api/crm/updates/repair` для администраторов
+- **Диагностика** — `WASH_HOST_PROJECT_ROOT`, `DATA_DIR`, bind-mount, критичные файлы/каталоги, `docker compose config`, зависшие задачи обновления
+- **Исправления** — синхронизация корня в `.env`, нормализация `DATA_DIR`, `git safe.directory`, сброс зависшего job, Mosquitto repair, `init-seed`
+- **Локализация** — полные подписи EN/RU для мастера исправления
+
+### Изменено
+
+- **`scripts/start.sh`** — учитывает `docker-compose.override.yml`
+- **Обновление CRM (pull)** — опциональный `local/apply-server-patches.sh` после `git pull`
+
 ## [1.1.16] — 2026-07-11
 
 ### Добавлено
@@ -266,7 +281,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.16...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.17...HEAD
+[1.1.17]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.17
 [1.1.16]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.16
 [1.1.15]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.15
 [1.1.14]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.14

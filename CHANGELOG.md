@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+## [1.1.25] — 2026-07-11
+
+### Изменено
+
+- **Таймаут Docker Hub** — понятное сообщение в `update-bridge` вместо сырого `DeadlineExceeded` / «Команда завершилась с кодом 1»
+- **Документация** — раздел устранения неполадок для Mac/localhost (docker pull, VPN, DNS Docker Desktop)
+- **UI** — подсказка при failed job и раздел «Настройки» во встроенной справке про Docker Hub
+
 ## [1.1.24] — 2026-07-11
 
 ### Исправлено
@@ -360,7 +368,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.24...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.25...HEAD
+[1.1.25]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.25
 [1.1.24]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.24
 [1.1.23]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.23
 [1.1.22]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.22

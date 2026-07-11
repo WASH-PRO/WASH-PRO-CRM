@@ -301,8 +301,9 @@ export const helpEn = {
     settings: {
       title: 'Settings',
       summary: 'Language, MQTT, Telegram notify, integrity, CRM updates, currency.',
-      howItWorks: 'CRM settings in MongoDB. Repair/Updates via update-bridge. Language — localStorage + API.',
-      example: 'Integrity → Check → git safe.directory; Updates → Update to v1.1.22.',
+      howItWorks:
+        'CRM settings in MongoDB. Repair/Updates via update-bridge. Language — localStorage + API. On Mac, if Build fails with Docker Hub timeout — see troubleshooting (docker pull, VPN).',
+      example: 'Integrity → Check; Updates → if Hub unreachable, run docker pull node:20-alpine on host, then retry.',
       regions: {
         language: 'Interface language',
         sections: 'MQTT, backup, PyOrch, notifications',

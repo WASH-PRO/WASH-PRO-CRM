@@ -110,6 +110,23 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
   throw new Error(`Unknown step ${component}/${stepId}`);
 }
 
+function formatShellError(lines: string[], code: number | null): string {
+  const blob = lines.filter((l) => !l.startsWith('$ ')).join('\n');
+  if (
+    /DeadlineExceeded|registry-1\.docker\.io|failed to resolve source metadata|context deadline exceeded/i.test(
+      blob
+    )
+  ) {
+    return (
+      'Не удалось связаться с Docker Hub (таймаут). Проверьте интернет, VPN и DNS в Docker Desktop. ' +
+      'Выполните на хосте: docker pull node:20-alpine && docker pull nginx:alpine — затем повторите обновление. ' +
+      'На сервере с доступом к registry сборка проходит нормально; на Mac dev-среде это частая сетевая проблема, не ошибка CRM.'
+    );
+  }
+  const tail = lines.filter((l) => !l.startsWith('$ ')).slice(-4).join('; ');
+  return tail || `Команда завершилась с кодом ${code ?? 'unknown'}`;
+}
+
 export async function runShell(
   command: string,
   onLog: (line: string) => void,
@@ -139,8 +156,7 @@ export async function runShell(
     child.on('close', (code) => {
       if (code === 0) resolve();
       else {
-        const tail = lines.filter((l) => !l.startsWith('$ ')).slice(-4).join('; ');
-        reject(new Error(tail || `Команда завершилась с кодом ${code ?? 'unknown'}`));
+        reject(new Error(formatShellError(lines, code)));
       }
     });
   });

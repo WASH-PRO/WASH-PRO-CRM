@@ -1379,7 +1379,7 @@ export const ru = {
     error: 'Ошибка',
     jobTitle: 'Обновление v{{from}} -> v{{to}}',
     jobFailed: 'Ошибка обновления v{{from}} -> v{{to}}',
-    jobFailedHint: 'Смотрите лог шага ниже. Частые причины: нет доступа к Docker Hub (timeout), локальные правки git или нехватка места на диске.',
+    jobFailedHint: 'Смотрите лог шага ниже. Частые причины: таймаут Docker Hub на Mac (docker pull node:20-alpine), локальные правки git или нехватка места на диске.',
     retry: 'Повторить',
     hideError: 'Скрыть ошибку',
     starting: 'Запуск...',

@@ -1,5 +1,6 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readRunningDashboardVersion } from './runtime-version.js';
 import type { UpdateComponentId } from './types.js';
 
 const DEPLOY_ROOT = process.env.DEPLOY_ROOT || '/deploy';
@@ -43,8 +44,9 @@ export const COMPONENTS: ComponentDef[] = [
     label: 'WASH-PRO-CRM',
     githubRepo: process.env.CRM_GITHUB_REPO || 'WASH-PRO/WASH-PRO-CRM',
     readCurrentVersion: () =>
-      readDeployEnvVersion('APP_VERSION') ||
+      readRunningDashboardVersion() ||
       readJsonVersion(join(DEPLOY_ROOT, 'dashboard/package.json')) ||
+      readDeployEnvVersion('APP_VERSION') ||
       '0.0.0',
   },
   {

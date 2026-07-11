@@ -91,11 +91,13 @@ function JobProgress({
 function latestComponentJob(
   activeJob: UpdateJob | null,
   recentJobs: UpdateJob[],
-  componentId: UpdateComponentId
+  componentId: UpdateComponentId,
+  dismissedFailedJobId?: string
 ): UpdateJob | null {
   if (activeJob?.component === componentId) return activeJob;
   const latest = recentJobs.find((j) => j.component === componentId);
   if (!latest || latest.status === 'completed') return null;
+  if (latest.status === 'failed' && dismissedFailedJobId === latest.id) return null;
   return latest;
 }
 
@@ -103,6 +105,7 @@ function ComponentCard({
   component,
   activeJob,
   recentJobs,
+  dismissedFailedJobIds,
   executorAvailable,
   executorReason,
   onChanged,
@@ -111,13 +114,19 @@ function ComponentCard({
   component: ComponentCheck;
   activeJob: UpdateJob | null;
   recentJobs: UpdateJob[];
+  dismissedFailedJobIds: Record<string, string>;
   executorAvailable: boolean;
   executorReason: string | null;
   onChanged: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [busy, setBusy] = useState(false);
-  const componentJob = latestComponentJob(activeJob, recentJobs, component.id);
+  const componentJob = latestComponentJob(
+    activeJob,
+    recentJobs,
+    component.id,
+    dismissedFailedJobIds[component.id]
+  );
   const isActive = componentJob?.status === 'running' || componentJob?.status === 'queued';
   const isFailed = componentJob?.status === 'failed';
 
@@ -126,11 +135,13 @@ function ComponentCard({
       alert(executorReason || t('updates.autoUnavailable'));
       return;
     }
-    if (!component.latestVersion) return;
-    if (!confirm(t('updates.confirmUpdate', { component: component.label, version: component.latestVersion }))) return;
+    const targetVersion = component.latestVersion || componentJob?.targetVersion;
+    const targetTag = component.latestTag || (targetVersion ? `v${targetVersion}` : undefined);
+    if (!targetVersion || !targetTag) return;
+    if (!confirm(t('updates.confirmUpdate', { component: component.label, version: targetVersion }))) return;
     setBusy(true);
     try {
-      await applyUpdate(component.id, component.latestTag || undefined);
+      await applyUpdate(component.id, targetTag);
       await onChanged();
     } catch (err) {
       alert(err instanceof Error ? err.message : t('updates.error'));
@@ -140,8 +151,16 @@ function ComponentCard({
   };
 
   const runDismiss = async () => {
-    if (!component.latestVersion) return;
-    await dismissUpdate(component.id, component.latestVersion);
+    const version = component.latestVersion || componentJob?.targetVersion;
+    if (!version) return;
+    await dismissUpdate(component.id, version, componentJob?.id);
+    await onChanged();
+  };
+
+  const runDismissFailed = async () => {
+    if (!componentJob) return;
+    const version = component.latestVersion || componentJob.targetVersion;
+    await dismissUpdate(component.id, version, componentJob.id);
     await onChanged();
   };
 
@@ -184,13 +203,13 @@ function ComponentCard({
         />
       )}
 
-      {component.updateAvailable && !isActive && !isFailed && (
+      {(component.updateAvailable || isFailed) && !isActive && (
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" className="btn-primary btn-sm" disabled={busy || !executorAvailable} onClick={() => void runUpdate()}>
-            <ArrowUpCircle size={14} /> {busy ? t('updates.starting') : t('updates.update')}
+            <ArrowUpCircle size={14} /> {busy ? t('updates.starting') : isFailed ? t('updates.retry') : t('updates.update')}
           </button>
-          <button type="button" className="btn-secondary btn-sm" onClick={() => void runDismiss()}>
-            {t('updates.hideNotification')}
+          <button type="button" className="btn-secondary btn-sm" onClick={() => void (isFailed ? runDismissFailed() : runDismiss())}>
+            {isFailed ? t('updates.hideError') : t('updates.hideNotification')}
           </button>
         </div>
       )}
@@ -260,6 +279,7 @@ export function SoftwareUpdatesSection() {
             component={component}
             activeJob={status.activeJob}
             recentJobs={status.recentJobs}
+            dismissedFailedJobIds={status.dismissedFailedJobIds ?? {}}
             executorAvailable={status.executorAvailable}
             executorReason={status.executorReason}
             onChanged={refresh}

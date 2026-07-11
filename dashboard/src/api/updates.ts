@@ -51,6 +51,7 @@ export interface UpdatesStatus {
   activeJob: UpdateJob | null;
   recentJobs: UpdateJob[];
   showNotification: boolean;
+  dismissedFailedJobIds: Record<string, string>;
 }
 
 async function parseJson<T>(res: Response): Promise<T> {
@@ -82,11 +83,15 @@ export async function applyUpdate(component: UpdateComponentId, targetTag?: stri
   return parseJson(res);
 }
 
-export async function dismissUpdate(component: UpdateComponentId, version: string): Promise<void> {
+export async function dismissUpdate(
+  component: UpdateComponentId,
+  version: string,
+  jobId?: string
+): Promise<void> {
   const res = await fetchWithAuth(`/api/crm/updates/dismiss/${component}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ version }),
+    body: JSON.stringify({ version, jobId }),
   });
   await parseJson(res);
 }

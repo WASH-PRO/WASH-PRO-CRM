@@ -79,6 +79,12 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.23)
+
+- **Auto-update** — `APP_VERSION` in `.env` only after successful job; revert on failure
+- **CRM version** — from running dashboard `/version.json`
+- **Failed job** — Retry and Hide error buttons
+
 ## Recent changes (v1.1.22)
 
 - **Built-in help** — fullscreen modal from header (book icon), 26 sections, screen wireframes, EN/RU

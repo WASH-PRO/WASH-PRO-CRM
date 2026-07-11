@@ -4,9 +4,12 @@ import { isNewerVersion } from './semver.js';
 import { COMPONENTS, getComponent } from './components.js';
 import {
   addJob,
+  clearDismissedFailedJob,
+  dismissFailedJob,
   dismissVersion,
   getActiveJob,
   getCachedComponents,
+  getDismissedFailedJobIds,
   getRecentJobs,
   getState,
   loadState,
@@ -14,7 +17,7 @@ import {
   setLastCheck,
   updateJob,
 } from './state.js';
-import { createSteps, getStepCommand, isExecutorAvailable, runShell, usesCompose } from './executor.js';
+import { createSteps, crmAppVersionSyncCommand, getStepCommand, isExecutorAvailable, runShell, usesCompose } from './executor.js';
 import { composeCommandEnv } from './host-path.js';
 import type { ComponentCheck, UpdateComponentId, UpdateJob, UpdatesStatus } from './types.js';
 
@@ -104,6 +107,7 @@ export function buildStatus(components: ComponentCheck[]): UpdatesStatus {
     activeJob,
     recentJobs: getRecentJobs(8),
     showNotification,
+    dismissedFailedJobIds: getDismissedFailedJobIds(),
   };
 }
 
@@ -121,9 +125,14 @@ export async function getUpdatesStatus(refresh = false): Promise<UpdatesStatus> 
   return buildStatus(components);
 }
 
-export async function dismissComponentUpdate(component: UpdateComponentId, version: string): Promise<void> {
+export async function dismissComponentUpdate(
+  component: UpdateComponentId,
+  version: string,
+  failedJobId?: string
+): Promise<void> {
   await loadState();
   dismissVersion(component, version);
+  if (failedJobId) dismissFailedJob(component, failedJobId);
   await saveState();
 }
 
@@ -151,6 +160,7 @@ export async function startUpdate(componentId: UpdateComponentId, targetTag?: st
   };
 
   addJob(job);
+  clearDismissedFailedJob(componentId);
   await saveState();
   void runJob(job.id, tag);
   return job;
@@ -206,12 +216,25 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
 
     job.status = 'completed';
     job.finishedAt = new Date().toISOString();
+    if (job.component === 'crm') {
+      appendLog(`$ ${crmAppVersionSyncCommand(job.targetVersion)}`);
+      await runShell(crmAppVersionSyncCommand(job.targetVersion), appendLog);
+    }
     await checkAllComponents();
   } catch (err) {
     job.status = 'failed';
     job.error = err instanceof Error ? err.message : 'Update failed';
     job.finishedAt = new Date().toISOString();
     appendLog(`ERROR: ${job.error}`);
+    if (job.component === 'crm' && job.fromVersion !== job.targetVersion) {
+      try {
+        appendLog(`$ ${crmAppVersionSyncCommand(job.fromVersion)}`);
+        await runShell(crmAppVersionSyncCommand(job.fromVersion), appendLog);
+      } catch (revertErr) {
+        const msg = revertErr instanceof Error ? revertErr.message : 'Revert APP_VERSION failed';
+        appendLog(`WARN: ${msg}`);
+      }
+    }
   }
 
   updateJob(job);

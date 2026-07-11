@@ -214,6 +214,12 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
       const cmd = getStepCommand(job.component, step.id, targetTag);
       appendLog(`$ ${cmd}`);
       try {
+        // CRM build reads APP_VERSION from .env for VITE_APP_VERSION / version.json — set before compose build.
+        if (job.component === 'crm' && step.id === 'build') {
+          const versionCmd = crmAppVersionSyncCommand(job.targetVersion);
+          appendLog(`$ ${versionCmd}`);
+          await runShell(versionCmd, appendLog);
+        }
         const env = usesCompose(step.id) ? composeCommandEnv() : undefined;
         if (env) {
           appendLog(`DATA_DIR=${env.DATA_DIR}`);
@@ -235,10 +241,6 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
 
     job.status = 'completed';
     job.finishedAt = new Date().toISOString();
-    if (job.component === 'crm') {
-      appendLog(`$ ${crmAppVersionSyncCommand(job.targetVersion)}`);
-      await runShell(crmAppVersionSyncCommand(job.targetVersion), appendLog);
-    }
     await checkAllComponents();
   } catch (err) {
     job.status = 'failed';

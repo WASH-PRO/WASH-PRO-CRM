@@ -1378,7 +1378,7 @@ export const en = {
     error: 'Error',
     jobTitle: 'Update v{{from}} -> v{{to}}',
     jobFailed: 'Update failed v{{from}} -> v{{to}}',
-    jobFailedHint: 'See step log below. Common causes: Docker Hub timeout, local git edits, or insufficient disk space.',
+    jobFailedHint: 'See step log below. Common causes: Docker Hub timeout on Mac (try docker pull node:20-alpine), local git edits, or insufficient disk space.',
     retry: 'Retry',
     hideError: 'Hide error',
     starting: 'Starting...',

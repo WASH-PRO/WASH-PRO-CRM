@@ -96,6 +96,37 @@ git checkout -- docker-compose.yml
 
 See [Deployment](deployment.md), [Configuration](configuration.md).
 
+## Update fails at build: Docker Hub timeout (Mac / localhost)
+
+**Symptoms:** CRM update in Dashboard reaches **Build** and fails; job log shows `DeadlineExceeded`, `registry-1.docker.io`, `failed to resolve source metadata`, or exit code 1. GitHub (source fetch) succeeds.
+
+**Cause:** Docker on Mac cannot pull base images (`node:20-alpine`, `nginx:alpine`) from Docker Hub in time — network, VPN, Docker Desktop DNS, or registry blocking. This is **not a CRM logic bug**; on a server with normal Hub access (e.g. 192.168.1.151) the same release builds fine.
+
+**Diagnose on the host:**
+
+```bash
+docker pull node:20-alpine
+docker pull nginx:alpine
+```
+
+If these hang or fail with `DeadlineExceeded`, the issue is Docker Hub access, not WASH.
+
+**What to do:**
+
+1. Check internet; disable or change VPN if it blocks `registry-1.docker.io`.
+2. Docker Desktop → Settings → Docker Engine — for DNS issues, temporarily add `"dns": ["8.8.8.8", "1.1.1.1"]` and restart Docker.
+3. After successful `docker pull`, retry update from Dashboard (**Settings → Software updates**).
+4. For UI dev without full rebuild: `cd dashboard && npm run dev` (port 5173).
+5. Manual build on host (when pull works):
+
+```bash
+cd /path/to/WASH-PRO-CRM
+git fetch origin && git checkout v1.1.25
+docker compose up -d --build dashboard update-bridge
+```
+
+**v1.1.25:** `update-bridge` shows a clear message instead of raw log tail on Hub timeout.
+
 ## “/deploy is not a git repository” in integrity (v1.1.21+)
 
 **Symptoms:** warning “/deploy is not a git repository” or “Git in /deploy unavailable” despite `git clone` install.

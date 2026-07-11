@@ -79,6 +79,15 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.25)
+
+- **Docker Hub** — clear timeout error; troubleshooting for Mac/localhost
+- **Help and hints** — failed job and Settings section
+
+## Recent changes (v1.1.24)
+
+- **Failed job** — stale error hidden when version is already newer
+
 ## Recent changes (v1.1.23)
 
 - **Auto-update** — `APP_VERSION` in `.env` only after successful job; revert on failure

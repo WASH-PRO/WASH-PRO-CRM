@@ -96,6 +96,37 @@ git checkout -- docker-compose.yml   # если уже были правки
 
 Подробнее: [Развёртывание](deployment.md), [Конфигурация](configuration.md).
 
+## Обновление падает на сборке: таймаут Docker Hub (Mac / localhost)
+
+**Симптомы:** в Dashboard обновление CRM доходит до шага **«Сборка»** и падает с `failed`; в логе job — `DeadlineExceeded`, `registry-1.docker.io`, `failed to resolve source metadata` или «Команда завершилась с кодом 1». GitHub (загрузка исходников) проходит успешно.
+
+**Причина:** Docker на Mac не может вовремя скачать базовые образы (`node:20-alpine`, `nginx:alpine`) с Docker Hub — сеть, VPN, DNS Docker Desktop или блокировка registry. Это **не ошибка логики CRM**; на сервере с нормальным доступом к Hub (например 192.168.1.151) тот же релиз собирается.
+
+**Диагностика на хосте:**
+
+```bash
+docker pull node:20-alpine
+docker pull nginx:alpine
+```
+
+Если команды тоже зависают или падают с `DeadlineExceeded` — проблема в доступе к Docker Hub, не в WASH.
+
+**Что сделать:**
+
+1. Проверьте интернет и отключите/смените VPN, если он режет `registry-1.docker.io`.
+2. Docker Desktop → Settings → Docker Engine — при проблемах с DNS можно временно добавить `"dns": ["8.8.8.8", "1.1.1.1"]` и перезапустить Docker.
+3. После успешного `docker pull` повторите обновление из Dashboard (**Настройки → Обновления ПО**).
+4. Для разработки UI без полной пересборки: `cd dashboard && npm run dev` (порт 5173) — CRM в Docker можно не обновлять на каждый коммит.
+5. Ручная сборка на хосте (когда pull работает):
+
+```bash
+cd /path/to/WASH-PRO-CRM   # или каталог с docker-compose.yml
+git fetch origin && git checkout v1.1.25   # нужный тег
+docker compose up -d --build dashboard update-bridge
+```
+
+**v1.1.25:** `update-bridge` показывает понятное сообщение вместо сырого хвоста лога при таймауте Hub.
+
 ## «/deploy не git-репозиторий» в целостности (v1.1.21+)
 
 **Симптомы:** предупреждение «Каталог /deploy не является git-репозиторием» или «Git в /deploy недоступен», хотя установка через `git clone`.

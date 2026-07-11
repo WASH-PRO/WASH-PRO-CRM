@@ -304,8 +304,8 @@ export const helpRu = {
       title: 'Настройки',
       summary: 'Язык, MQTT, Telegram notify, целостность, обновления CRM, валюта.',
       howItWorks:
-        'CRM settings в MongoDB. Repair/Updates — через update-bridge. Язык — localStorage + API.',
-      example: 'Целостность → Проверить → git safe.directory; Обновления → Обновить до v1.1.22.',
+        'CRM settings в MongoDB. Repair/Updates — через update-bridge. Язык — localStorage + API. На Mac при падении на шаге «Сборка» с таймаутом Docker Hub — см. раздел устранения неполадок (docker pull, VPN).',
+      example: 'Целостность → Проверить; Обновления → если Hub недоступен — docker pull node:20-alpine на хосте, затем повтор.',
       regions: {
         language: 'Язык интерфейса',
         sections: 'MQTT, бэкап, PyOrch, уведомления',

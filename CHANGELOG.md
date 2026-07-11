@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+## [1.1.23] — 2026-07-11
+
+### Исправлено
+
+- **Ложная версия после failed update** — `APP_VERSION` в `.env` только после успешного job; откат при ошибке
+- **Текущая версия CRM** — из `/version.json` работающего dashboard, не из `.env`
+- **Зависшая ошибка на карточке обновления** — кнопки «Повторить» и «Скрыть ошибку»; `dismissedFailedJobIds`
+
+### Изменено
+
+- Dashboard: `version.json` в nginx-образе
+- Подсказка при ошибке обновления (Docker Hub timeout)
+
 ## [1.1.22] — 2026-07-11
 
 ### Добавлено
@@ -341,7 +354,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.22...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.23...HEAD
+[1.1.23]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.23
 [1.1.22]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.22
 [1.1.21]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.21
 [1.1.20]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.20

@@ -9,6 +9,7 @@ const DEFAULT_STATE: PersistedState = {
   lastCheckAt: null,
   lastComponents: [],
   dismissedVersions: {},
+  dismissedFailedJobIds: {},
   jobs: [],
   activeJobId: null,
 };
@@ -45,6 +46,18 @@ export function getCachedComponents(): ComponentCheck[] {
 
 export function dismissVersion(component: string, version: string): void {
   cache.dismissedVersions[component] = version;
+}
+
+export function dismissFailedJob(component: string, jobId: string): void {
+  cache.dismissedFailedJobIds[component] = jobId;
+}
+
+export function clearDismissedFailedJob(component: string): void {
+  delete cache.dismissedFailedJobIds[component];
+}
+
+export function getDismissedFailedJobIds(): Record<string, string> {
+  return { ...cache.dismissedFailedJobIds };
 }
 
 export function addJob(job: UpdateJob): void {

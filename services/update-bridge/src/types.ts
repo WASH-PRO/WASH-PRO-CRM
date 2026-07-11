@@ -49,12 +49,14 @@ export interface UpdatesStatus {
   activeJob: UpdateJob | null;
   recentJobs: UpdateJob[];
   showNotification: boolean;
+  dismissedFailedJobIds: Record<string, string>;
 }
 
 export interface PersistedState {
   lastCheckAt: string | null;
   lastComponents: ComponentCheck[];
   dismissedVersions: Record<string, string>;
+  dismissedFailedJobIds: Record<string, string>;
   jobs: UpdateJob[];
   activeJobId: string | null;
 }

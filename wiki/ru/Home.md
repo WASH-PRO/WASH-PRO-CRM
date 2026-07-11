@@ -63,6 +63,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
 
+## Changelog v1.1.23
+
+- **Автообновление** — `APP_VERSION` только после успеха; откат при ошибке; версия из `version.json` dashboard
+- **UI** — «Повторить» и «Скрыть ошибку» на failed job
+
+Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
+
 ## Changelog v1.1.22
 
 - **Справка** — полноэкранное окно из шапки, 26 разделов, схемы экранов, EN/RU

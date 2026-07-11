@@ -40,10 +40,14 @@ function shellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-function syncEnvVersion(envFile: string, key: string, version: string): string {
+function envVersionSyncCommand(envFile: string, key: string, version: string): string {
   const file = shellQuote(envFile);
   const ver = shellQuote(version);
   return `if [ -f ${file} ]; then sed -i '/^${key}=/d' ${file}; printf '${key}=${ver}\\n' >> ${file}; else printf '${key}=${ver}\\n' > ${file}; fi`;
+}
+
+export function crmAppVersionSyncCommand(version: string): string {
+  return envVersionSyncCommand(`${DEPLOY_ROOT}/.env`, 'APP_VERSION', version);
 }
 
 function composeSetup(): string {
@@ -61,7 +65,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
 
   if (component === 'crm') {
     if (stepId === 'pull') {
-      return `${gitSyncMain(root)} && ([ ! -x ${root}/local/apply-server-patches.sh ] || ${root}/local/apply-server-patches.sh) && ${syncEnvVersion(`${root}/.env`, 'APP_VERSION', parseTagVersion(targetTag))}`;
+      return `${gitSyncMain(root)} && ([ ! -x ${root}/local/apply-server-patches.sh ] || ${root}/local/apply-server-patches.sh)`;
     }
     if (stepId === 'build') {
       // NB: update-bridge и mosquitto исключены — пересборка бриджа убивает процесс

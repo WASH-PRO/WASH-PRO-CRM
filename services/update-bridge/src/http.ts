@@ -134,8 +134,8 @@ export function startUpdateHttpServer(): void {
       }
       try {
         const raw = await readBody(req);
-        const body = JSON.parse(raw) as { version: string };
-        await dismissComponentUpdate(component, body.version);
+        const body = JSON.parse(raw) as { version: string; jobId?: string };
+        await dismissComponentUpdate(component, body.version, body.jobId);
         json(res, 200, { success: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Dismiss failed';

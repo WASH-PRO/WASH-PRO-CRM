@@ -23,6 +23,22 @@ import type { ComponentCheck, UpdateComponentId, UpdateJob, UpdatesStatus } from
 
 let running = false;
 
+/** Failed job is stale when CRM already reached its target (e.g. manual pull or later successful update). */
+function syncStaleFailedJobDismissals(components: ComponentCheck[]): boolean {
+  const state = getState();
+  let changed = false;
+  for (const c of components) {
+    const job = state.jobs.find((j) => j.component === c.id);
+    if (job?.status !== 'failed') continue;
+    if (state.dismissedFailedJobIds[c.id] === job.id) continue;
+    if (!isNewerVersion(job.targetVersion, c.currentVersion)) {
+      dismissFailedJob(c.id, job.id);
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 export async function checkComponent(id: UpdateComponentId): Promise<ComponentCheck> {
   const def = getComponent(id);
   const currentVersion = def.readCurrentVersion();
@@ -92,6 +108,9 @@ function withLiveVersions(cached: ComponentCheck[]): ComponentCheck[] {
 
 export function buildStatus(components: ComponentCheck[]): UpdatesStatus {
   const state = getState();
+  if (syncStaleFailedJobDismissals(components)) {
+    void saveState();
+  }
   const executor = isExecutorAvailable();
   const activeJob = getActiveJob();
   const showNotification = components.some((c) => {

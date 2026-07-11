@@ -10,6 +10,7 @@ import {
 } from '../api/updates';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { useLocale } from '../i18n/LocaleContext';
+import { isNewerVersion } from '../utils/semver';
 
 function VersionRow({
   current,
@@ -92,12 +93,16 @@ function latestComponentJob(
   activeJob: UpdateJob | null,
   recentJobs: UpdateJob[],
   componentId: UpdateComponentId,
+  currentVersion: string,
   dismissedFailedJobId?: string
 ): UpdateJob | null {
   if (activeJob?.component === componentId) return activeJob;
   const latest = recentJobs.find((j) => j.component === componentId);
   if (!latest || latest.status === 'completed') return null;
-  if (latest.status === 'failed' && dismissedFailedJobId === latest.id) return null;
+  if (latest.status === 'failed') {
+    if (dismissedFailedJobId === latest.id) return null;
+    if (!isNewerVersion(latest.targetVersion, currentVersion)) return null;
+  }
   return latest;
 }
 
@@ -125,6 +130,7 @@ function ComponentCard({
     activeJob,
     recentJobs,
     component.id,
+    component.currentVersion,
     dismissedFailedJobIds[component.id]
   );
   const isActive = componentJob?.status === 'running' || componentJob?.status === 'queued';

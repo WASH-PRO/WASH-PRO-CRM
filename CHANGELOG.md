@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [1.1.24] — 2026-07-11
+
+### Исправлено
+
+- **Устаревший failed job** — автоматически скрывается, если текущая версия ≥ цели failed job (localhost после ручного git pull / более нового релиза)
+
 ## [1.1.23] — 2026-07-11
 
 ### Исправлено
@@ -354,7 +360,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.23...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.24...HEAD
+[1.1.24]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.24
 [1.1.23]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.23
 [1.1.22]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.22
 [1.1.21]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.21

@@ -79,6 +79,11 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **System** (platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.21)
+
+- **Integrity** — false “/deploy not a git repo” fixed (`git safe.directory`)
+- **Update card** — stale failed job hidden after successful update
+
 ## Recent changes (v1.1.20)
 
 - **CRM auto-update** — `git reset --hard origin/main`; no longer blocked by accidental tracked-file edits

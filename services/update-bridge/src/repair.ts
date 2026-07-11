@@ -8,6 +8,15 @@ import { getActiveJob, recoverInterruptedJobs, saveState } from './state.js';
 const DEPLOY_ROOT = (process.env.DEPLOY_ROOT || '/deploy').replace(/\/+$/, '') || '/deploy';
 const ENV_FILE = join(DEPLOY_ROOT, '.env');
 
+function gitRepoCheckCommand(): string {
+  return `git config --global --add safe.directory ${DEPLOY_ROOT} 2>/dev/null; git -C ${DEPLOY_ROOT} rev-parse --is-inside-work-tree`;
+}
+
+export async function ensureGitSafeDirectory(): Promise<void> {
+  if (!existsSync(join(DEPLOY_ROOT, '.git'))) return;
+  await runShell(`git config --global --add safe.directory ${DEPLOY_ROOT}`, () => {});
+}
+
 const CRITICAL_FILES = [
   'docker-compose.yml',
   'scripts/update-dynamic-api.sh',
@@ -173,10 +182,24 @@ export async function diagnoseRepair(): Promise<RepairDiagnoseResult> {
     issues.push({ code: 'docker_sock_missing', severity: 'error' });
   }
 
-  try {
-    await runShell(`git -C ${DEPLOY_ROOT} rev-parse --is-inside-work-tree`, () => {});
-  } catch {
-    issues.push({ code: 'git_not_repo', severity: 'warning', fixId: 'git_safe_directory' });
+  if (!existsSync(join(DEPLOY_ROOT, '.git'))) {
+    issues.push({
+      code: 'git_not_repo',
+      severity: 'warning',
+      detail: DEPLOY_ROOT,
+      fixId: 'git_safe_directory',
+    });
+  } else {
+    try {
+      await runShell(gitRepoCheckCommand(), () => {});
+    } catch {
+      issues.push({
+        code: 'git_not_repo',
+        severity: 'warning',
+        detail: 'dubious ownership — use git safe.directory fix',
+        fixId: 'git_safe_directory',
+      });
+    }
   }
 
   try {
@@ -241,10 +264,7 @@ async function applyAction(action: RepairActionId, onLog: (line: string) => void
       return;
 
     case 'git_safe_directory':
-      await runShell(
-        `git config --global --add safe.directory ${DEPLOY_ROOT} && git -C ${DEPLOY_ROOT} rev-parse --is-inside-work-tree`,
-        onLog
-      );
+      await runShell(gitRepoCheckCommand(), onLog);
       return;
 
     case 'clear_stuck_job':

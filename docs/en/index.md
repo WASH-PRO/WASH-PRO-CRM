@@ -24,7 +24,7 @@ layout: default
 |--------|-------------|
 | **Overview** | KPIs, usage and payment pie charts, live notifications |
 | **Status** | All posts, online/offline, live timer, **interactive chart** *(Main)* |
-| **Integrity repair** | Settings wizard for paths, `.env`, failed updates; external `DATA_DIR` no longer flagged *(v1.1.19)* |
+| **Integrity repair** | Settings wizard: paths, `.env`, git safe.directory *(v1.1.21)* |
 | **Software updates** | Dashboard auto-update: `git reset --hard`, compose overrides, failed job on card *(v1.1.20)* |
 | **System** | Server resources, WASH CRM version, embedded stack versions *(Main)* (v1.1.16) |
 | **Information** | News and promotions for the **information Telegram bot** *(Automation)* |

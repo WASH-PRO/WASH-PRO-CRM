@@ -94,7 +94,9 @@ function latestComponentJob(
   componentId: UpdateComponentId
 ): UpdateJob | null {
   if (activeJob?.component === componentId) return activeJob;
-  return recentJobs.find((j) => j.component === componentId && j.status !== 'completed') ?? null;
+  const latest = recentJobs.find((j) => j.component === componentId);
+  if (!latest || latest.status === 'completed') return null;
+  return latest;
 }
 
 function ComponentCard({

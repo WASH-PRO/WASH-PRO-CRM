@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [1.1.21] — 2026-07-11
+
+### Исправлено
+
+- **Ложное «/deploy не git-репозиторий»** — проверка целостности и старт `update-bridge` регистрируют `git safe.directory /deploy` (dubious ownership)
+- **Старый failed job на карточке** — после успешного обновления не показывается устаревшая ошибка
+- **Ошибки shell** — последние строки вывода команды вместо только «код 1»
+
+### Изменено
+
+- **i18n** — уточнён текст предупреждения `git_not_repo`
+
 ## [1.1.20] — 2026-07-11
 
 ### Исправлено
@@ -315,7 +327,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.20...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.21...HEAD
+[1.1.21]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.21
 [1.1.20]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.20
 [1.1.19]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.19
 [1.1.18]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.18

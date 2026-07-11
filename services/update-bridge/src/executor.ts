@@ -112,6 +112,7 @@ export async function runShell(
   extraEnv?: NodeJS.ProcessEnv
 ): Promise<void> {
   return new Promise((resolve, reject) => {
+    const lines: string[] = [];
     const child = spawn('sh', ['-c', command], {
       cwd: DEPLOY_ROOT,
       env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...extraEnv },
@@ -121,7 +122,10 @@ export async function runShell(
       const text = chunk.toString('utf8');
       text.split('\n').forEach((line) => {
         const trimmed = line.trimEnd();
-        if (trimmed) onLog(trimmed);
+        if (trimmed) {
+          lines.push(trimmed);
+          onLog(trimmed);
+        }
       });
     };
 
@@ -130,7 +134,10 @@ export async function runShell(
     child.on('error', reject);
     child.on('close', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(`Команда завершилась с кодом ${code ?? 'unknown'}`));
+      else {
+        const tail = lines.filter((l) => !l.startsWith('$ ')).slice(-4).join('; ');
+        reject(new Error(tail || `Команда завершилась с кодом ${code ?? 'unknown'}`));
+      }
     });
   });
 }

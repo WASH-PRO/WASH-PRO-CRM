@@ -938,7 +938,7 @@ export const en = {
           file_missing: 'Missing file: {{detail}}',
           dir_missing: 'Missing directory: {{detail}}',
           docker_sock_missing: 'Docker socket is unavailable — auto-update cannot run',
-          git_not_repo: '/deploy is not a git repository',
+          git_not_repo: 'Git in /deploy unavailable (missing .git or dubious ownership — apply safe.directory fix)',
           compose_config_invalid: 'docker compose config failed: {{detail}}',
           executor_disabled: 'Auto-update is disabled: {{detail}}',
           stuck_update_job: 'Stuck update job: {{detail}}',

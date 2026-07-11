@@ -96,6 +96,20 @@ git checkout -- docker-compose.yml   # если уже были правки
 
 Подробнее: [Развёртывание](deployment.md), [Конфигурация](configuration.md).
 
+## «/deploy не git-репозиторий» в целостности (v1.1.21+)
+
+**Симптомы:** предупреждение «Каталог /deploy не является git-репозиторием» или «Git в /deploy недоступен», хотя установка через `git clone`.
+
+**Причина:** Git 2.35+ блокирует доступ при **dubious ownership** — `.git` на хосте принадлежит другому пользователю, чем процесс в контейнере `update-bridge` (root). Репозиторий **есть**, проверка ошибалась.
+
+**Решение (v1.1.21+):** `update-bridge` регистрирует `safe.directory /deploy` при старте; проверка целостности делает то же. Или вручную:
+
+```bash
+docker exec wash-update-bridge git config --global --add safe.directory /deploy
+```
+
+**Без `.git` на хосте** (копия файлов без clone) — автообновление из Dashboard **не работает**; нужен `git clone` или ручное обновление.
+
 ## init-seed: статус Exited
 
 `Exited (0)` — норма (одноразовый контейнер).

@@ -153,7 +153,7 @@ Platform status page in **Main** (not the admin **System** group with notificati
 
 Live refresh every **30 s** (`GET /api/dashboard/system` via Dynamic API).
 
-### Integrity and repair (`/settings`) — v1.1.19
+### Integrity and repair (`/settings`) — v1.1.21
 
 Section in **Settings** (before Software updates). Administrators only (`manage_users` / `manage_api`).
 
@@ -163,6 +163,8 @@ Section in **Settings** (before Software updates). Administrators only (`manage_
 | **Apply fixes** | Selected repairs: sync host root to `.env`, normalize `DATA_DIR` (only when path wrongly points inside `/deploy`), `git safe.directory`, clear stuck job, Mosquitto repair (`fix-mqtt.sh`), `init-seed` |
 
 **`DATA_DIR` *(v1.1.19+)*:** absolute host paths (`/mnt/hdd/data`, `/var/lib/wash-pro-crm`) are **valid**; warning only when `DATA_DIR` is inside `/deploy`.
+
+**Git *(v1.1.21+)*:** `/deploy` is a project bind mount; check registers `git safe.directory` (dubious ownership). Without `.git` on the host, auto-update is unavailable.
 
 API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 

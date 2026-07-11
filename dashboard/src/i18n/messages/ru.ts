@@ -937,7 +937,7 @@ export const ru = {
           file_missing: 'Отсутствует файл: {{detail}}',
           dir_missing: 'Отсутствует каталог: {{detail}}',
           docker_sock_missing: 'Docker socket недоступен — автообновление невозможно',
-          git_not_repo: 'Каталог /deploy не является git-репозиторием',
+          git_not_repo: 'Git в /deploy недоступен (нет .git или dubious ownership — примените исправление safe.directory)',
           compose_config_invalid: 'docker compose config завершился с ошибкой: {{detail}}',
           executor_disabled: 'Автообновление отключено: {{detail}}',
           stuck_update_job: 'Зависшее обновление: {{detail}}',

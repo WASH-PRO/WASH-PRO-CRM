@@ -96,6 +96,20 @@ git checkout -- docker-compose.yml
 
 See [Deployment](deployment.md), [Configuration](configuration.md).
 
+## “/deploy is not a git repository” in integrity (v1.1.21+)
+
+**Symptoms:** warning “/deploy is not a git repository” or “Git in /deploy unavailable” despite `git clone` install.
+
+**Cause:** Git 2.35+ **dubious ownership** — host `.git` owned by a different user than `update-bridge` in the container (root). The repo **exists**; the check was wrong.
+
+**Fix (v1.1.21+):** `update-bridge` registers `safe.directory /deploy` on startup; integrity check does the same. Or manually:
+
+```bash
+docker exec wash-update-bridge git config --global --add safe.directory /deploy
+```
+
+**Without `.git` on the host** (file copy without clone) — Dashboard auto-update **will not work**; use `git clone` or manual updates.
+
 ## init-seed: Exited status
 
 `Exited (0)` is normal (one-time container).

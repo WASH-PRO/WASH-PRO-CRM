@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**Версия WASH PRO:** **v1.1.20** · **Документация:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**Версия WASH PRO:** **v1.1.21** · **Документация:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -61,6 +61,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.21
+
+- **Git /deploy** — `safe.directory` при старте и в проверке целостности (dubious ownership)
+- **UI обновлений** — не показывает старый failed job после успешного обновления
+
+Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.20
 

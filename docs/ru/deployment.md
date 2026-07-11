@@ -25,6 +25,13 @@ description: Production, обновление и восстановление
 
 На конкретном сервере (другой диск для `DATA_DIR`, CPU без AVX, патчи PyOrchestrator):
 
+```env
+# пример: данные на отдельном HDD
+DATA_DIR=/mnt/hdd/data
+```
+
+Абсолютные пути на хосте вне `/deploy` — **корректны**; мастер целостности *(v1.1.19+)* не помечает их как подозрительные.
+
 ```bash
 cp docker-compose.override.yml.example docker-compose.override.yml
 mkdir -p local && cp local/apply-server-patches.sh.example local/apply-server-patches.sh

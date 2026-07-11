@@ -6,12 +6,30 @@ description: Переменные окружения .env
 
 Все настройки задаются в `.env` (шаблон — `.env.example`).
 
+## Каталог данных
+
+| Переменная | По умолчанию | Описание |
+|------------|--------------|----------|
+| `DATA_DIR` | `./data` | Каталог на **хосте** для MongoDB, MQTT, бэкапов, PyOrchestrator и кэша `update-bridge`. Bind mount — не удаляется при `docker compose down` / `--build` |
+| `WASH_HOST_PROJECT_ROOT` | *(авто)* | Абсолютный путь к проекту на хосте; нужен `update-bridge` для compose и автообновления |
+| `WASH_BUILD_ROOT` | *(авто)* | Путь build context внутри контейнера (`/deploy`); обычно не задаётся вручную |
+
+**Production:** допустимы любые пути на хосте вне mount контейнера `/deploy`, например:
+
+```env
+DATA_DIR=/var/lib/wash-pro-crm
+# или отдельный диск:
+DATA_DIR=/mnt/hdd/data
+```
+
+Мастер **Целостность и исправление** *(v1.1.19+)* предупреждает только если `DATA_DIR` ошибочно указывает **внутрь** `/deploy`. См. [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
+
 ## Dashboard
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
 | `DASHBOARD_PORT` | `80` | Порт CRM Dashboard |
-| `APP_VERSION` | `1.1.18` | Версия приложения |
+| `APP_VERSION` | `1.1.19` | Версия приложения |
 
 ## Dynamic API
 

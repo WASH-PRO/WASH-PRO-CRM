@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.19] — 2026-07-11
+
+### Исправлено
+
+- **Ложное предупреждение «Подозрительный DATA_DIR»** — мастер целостности больше не помечает внешние пути на хосте (`/mnt/hdd/data`, `/var/lib/wash-pro-crm`); предупреждение только при `DATA_DIR` внутри mount контейнера `/deploy`
+- **Локализация** — уточнённые тексты EN/RU для `data_dir_suspicious`
+
 ## [1.1.18] — 2026-07-11
 
 ### Исправлено
@@ -295,7 +302,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.18...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.19...HEAD
+[1.1.19]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.19
 [1.1.18]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.18
 [1.1.17]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.17
 [1.1.16]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.16

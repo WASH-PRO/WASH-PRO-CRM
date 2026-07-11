@@ -120,6 +120,8 @@ Details: [MQTT — post control](mqtt.md#set-prices).
 
 Default `./data` on the host (bind mount). Rebuild and `docker compose down` do not delete these files.
 
+Absolute host paths are valid (`/var/lib/wash-pro-crm`, `/mnt/hdd/data`). The integrity wizard *(v1.1.19+)* warns only when `DATA_DIR` points inside the container `/deploy` mount.
+
 | Path | Data |
 |------|------|
 | `mongodb/` | CRM MongoDB |

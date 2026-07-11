@@ -28,6 +28,7 @@ import { UpdateBanner } from './UpdateBanner';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { Loading } from './UI';
 import { LanguageToggle } from './LanguageToggle';
+import { HelpButton, HelpModal } from './HelpModal';
 import { useLocale } from '../i18n/LocaleContext';
 
 function LayoutInner() {
@@ -36,6 +37,7 @@ function LayoutInner() {
   const { unreadCount } = useUnreadNotifications();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const sidebarUserKey = user?.id || user?.login;
   const { collapsed, setCollapsed, effectiveWidth, resizing, startResize, canResize } =
     useSidebarSize(sidebarUserKey);
@@ -208,6 +210,7 @@ function LayoutInner() {
                   />
                 )}
               </Link>
+              <HelpButton onClick={() => setHelpOpen(true)} />
               <LanguageToggle />
               <ThemeToggle />
               <button type="button" onClick={() => logout()} className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-500" title={t('layout.logout')}>
@@ -242,6 +245,7 @@ function LayoutInner() {
             </div>
           </main>
       </div>
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
       </div>
   );
 }

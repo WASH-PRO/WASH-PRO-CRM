@@ -1,3 +1,5 @@
+import { helpRu } from './help/ru';
+
 export const ru = {
   common: {
     loading: 'Загрузка...',
@@ -51,7 +53,7 @@ export const ru = {
     items: {
       dashboard: 'Обзор',
       states: 'Состояние',
-      system: 'Система',
+      system: 'Информация',
       washes: 'Автомойки',
       posts: 'Посты',
       mqtt: 'MQTT',
@@ -65,7 +67,7 @@ export const ru = {
       workModes: 'Режимы работы',
       currency: 'Валюты',
       discountTypes: 'Типы скидок',
-      infoMessages: 'Информация',
+      infoMessages: 'Публикации',
       telegram: 'Telegram',
       mcp: 'MCP сервер',
       backups: 'Резервные копии',
@@ -79,7 +81,8 @@ export const ru = {
     short: {
       washes: 'Мойки',
       states: 'Состояние',
-      system: 'Система',
+      system: 'Информация',
+      usage: 'Использование',
       backups: 'Бэкапы',
       mcp: 'MCP',
       workModes: 'Режимы',
@@ -105,7 +108,7 @@ export const ru = {
     posts: 'Посты',
     post: 'Пост',
     states: 'Текущее состояние',
-    system: 'Система',
+    system: 'Информация',
     mqtt: 'MQTT',
     cards: 'Карты',
     discount: 'Скидочные',
@@ -121,7 +124,7 @@ export const ru = {
     backups: 'Резервные копии',
     telegram: 'Telegram',
     mcp: 'MCP сервер',
-    infoMessages: 'Информация',
+    infoMessages: 'Публикации',
     currency: 'Валюты',
     discountTypes: 'Типы скидок',
     workModes: 'Режимы работы',
@@ -565,7 +568,7 @@ export const ru = {
       },
     },
     system: {
-      title: 'Система',
+      title: 'Информация',
       subtitle: 'Ресурсы сервера и информация об окружении',
       loadFailed: 'Не удалось загрузить системную информацию',
       cards: {
@@ -700,7 +703,7 @@ export const ru = {
       emptyMessage: 'Ничего не найдено',
     },
     infoMessages: {
-      title: 'Информация',
+      title: 'Публикации',
       subtitle: 'Новости, акции и лента для информационных Telegram-ботов',
       bodyPlaceholder: 'Поддерживается HTML: <b>жирный</b>, <i>курсив</i>',
       expiresHint: 'Необязательно. Оставьте пустым — новость не исчезнет. Дата должна быть позже публикации.',
@@ -1574,4 +1577,5 @@ export const ru = {
     sessionExpired: 'Сессия PyOrchestrator истекла — войдите снова',
     createBotsViaTelegram: 'Создавайте Telegram-ботов через раздел "Telegram" в CRM (pyorch-bridge).',
   },
+  help: helpRu,
 } as const;

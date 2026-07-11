@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.21** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.22** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -13,8 +13,9 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - **Status** — all posts, online/offline, interactive chart *(Main)*
 - **Integrity repair** — Settings wizard for paths, `.env`, failed updates; external `DATA_DIR` paths no longer flagged (v1.1.19)
 - **Software updates** — reliable Dashboard auto-update, failed job visible on card (v1.1.20)
-- **System** — server resources, WASH CRM version, embedded stack *(Main)* (v1.1.16)
-- **Information** — news and promotions for the **information Telegram bot** *(Automation)*
+- **Information** — server resources, WASH CRM version, embedded stack *(System → Information)* (v1.1.22)
+- **Publications** — news and promotions for the **information Telegram bot** *(Automation)* (v1.1.22)
+- **Built-in help** — fullscreen in-app help from the header (v1.1.22)
 - SCADA: MQTT, telemetry, commands, and post prices
 - Car washes, posts, **MQTT accounts**, device settings
 - Cards (regular/service/VIP), NFC application log
@@ -61,6 +62,14 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.22
+
+- **Help** — fullscreen modal from header, 26 sections, screen wireframes, EN/RU
+- **Menu** — `/system` → **System → Information**; bot content → **Publications**
+- **Breadcrumbs** — menu group → section; fixed paths
+
+Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.21
 

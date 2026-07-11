@@ -8,9 +8,9 @@ Full documentation: [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-
 
 | Topic | Details |
 |-------|---------|
-| **CRM menu** | **Automation →** Telegram, Information |
+| **CRM menu** | **Automation →** Telegram, Publications |
 | **Information v2.2** | Photo + caption in one message; occupancy: free only in `program_9` |
-| **Information** | "Scheduled" → "Published" after publish time passes |
+| **Publications** | "Scheduled" → "Published" after publish time passes |
 
 ## v1.1.11 — summary
 
@@ -24,7 +24,7 @@ Full documentation: [GitHub Pages — Telegram](https://wash-pro.github.io/WASH-
 
 ## Information bot
 
-1. **Dashboard → Automation → Information** — create news, status **Published** or **Scheduled**
+1. **Dashboard → Automation → Publications** — create news, status **Published** or **Scheduled**
 2. **Dashboard → Automation → Telegram** — information bot, ▶ start
 3. Client: QR → private chat → `/start` → **📰 News**
 

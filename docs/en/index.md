@@ -26,15 +26,16 @@ layout: default
 | **Status** | All posts, online/offline, live timer, **interactive chart** *(Main)* |
 | **Integrity repair** | Settings wizard: paths, `.env`, git safe.directory *(v1.1.21)* |
 | **Software updates** | Dashboard auto-update: `git reset --hard`, compose overrides, failed job on card *(v1.1.20)* |
-| **System** | Server resources, WASH CRM version, embedded stack versions *(Main)* (v1.1.16) |
-| **Information** | News and promotions for the **information Telegram bot** *(Automation)* |
+| **Information** | Server resources, WASH CRM version, embedded stack versions *(System → Information)* (v1.1.22) |
+| **Publications** | News and promotions for the **information Telegram bot** *(Automation)* (v1.1.22) |
+| **Built-in help** | Fullscreen in-app help from the header *(v1.1.22)* |
 | **SCADA / MQTT** | Telemetry, commands, and post prices |
 | **Setup wizard** | Initial configuration after installation (`/setup`) |
 | **Sites** | Car washes, posts, **MQTT accounts**, **device settings** (prices, commands) |
 | **Cards** | Discount / service / VIP; NFC application log |
 | **Analytics** | Usage and finances before/after collection |
 | **System** | Notifications (web + Telegram), users (Telegram ID), RBAC groups, settings, logs |
-| **Automation** | **Information**, **Telegram bots** (management / service / **information v2.2**), **MCP server**, backups |
+| **Automation** | **Publications**, **Telegram bots** (management / service / **information v2.2**), **MCP server**, backups |
 | **Resources** | Status and links to Dynamic API and PyOrchestrator panels |
 | **Live data** | Auto-refresh every 3–15 s; tables with pagination 20–100 and "Load more" |
 

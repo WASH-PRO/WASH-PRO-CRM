@@ -8,14 +8,14 @@ Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en
 
 | Group | Sections |
 |-------|----------|
-| **Main** | Overview, **Status**, **System** |
+| **Main** | Overview, **Status** |
 | **Sites** | Car Washes, Posts |
 | **Data** | MQTT |
 | **Cards** | Discount, Service, VIP, Collection |
 | **Analytics** | Usage, Finance, Archive |
 | **Reference** | Work Modes, Currencies, Discount Types *(Admin)* |
-| **Automation** | **Information**, **Telegram**, **MCP Server**, Backups *(Admin)* |
-| **System** | Notifications, Users, Groups, Settings, Logs |
+| **Automation** | **Publications**, **Telegram**, **MCP Server**, Backups *(Admin)* |
+| **System** | **Information**, Notifications, Users, Groups, Settings, Logs |
 
 Admin sections — **Administrator** only. Profile — in the header (`/profile`). Setup wizard — `/setup`.
 
@@ -36,9 +36,9 @@ On **Posts**, **Status**, and **post detail** pages.
 - **Online** — telemetry within the last 30 s (`lastMessageAt`)
 - **Offline** — no data or stale
 
-## Information section
+## Publications section
 
-News and promotions for the information Telegram bot. Status **"Scheduled"** with a past publish date is shown as **"Published"** (v1.1.12).
+News and promotions for the information Telegram bot (**Automation → Publications**, `/info-messages`). Status **"Scheduled"** with a past publish date is shown as **"Published"** (v1.1.12).
 
 Bulk create test entries:
 
@@ -76,8 +76,15 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 |----------|-------|
 | 3 s | Status, Posts, post detail |
 | 5 s | Overview |
-| 30 s | **System** (platform status) |
+| 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
+
+## Recent changes (v1.1.22)
+
+- **Built-in help** — fullscreen modal from header (book icon), 26 sections, screen wireframes, EN/RU
+- **Menu** — `/system` moved to **System** group and renamed **Information**; bot content section — **Publications**
+- **Breadcrumbs** — menu group → section trail; fixed links
+- **i18n** — Russian short label for Usage in collapsed sidebar
 
 ## Recent changes (v1.1.21)
 
@@ -107,7 +114,7 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 
 ## Recent changes (v1.1.16)
 
-- **System** (`/system`) in **Main** — server resources, WASH PRO CRM version, Dynamic API / PyOrchestrator stack
+- **Information** (`/system`) in **System** group — server resources, WASH PRO CRM version, Dynamic API / PyOrchestrator stack
 - **CPU model** — readable in Docker containers (via `/proc/cpuinfo`)
 
 ## Recent changes (v1.1.15)

@@ -58,7 +58,7 @@ All bots work **only in private messages**:
 
 ### Content — Information section
 
-**Dashboard → Automation → Information** (`/info-messages`):
+**Dashboard → Automation → Publications** (`/info-messages`):
 
 | Field | Recommendation |
 |-------|----------------|

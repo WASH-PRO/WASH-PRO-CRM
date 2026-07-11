@@ -47,7 +47,6 @@ export function getNavGroups(t: TranslateFn): NavGroup[] {
       items: [
         { to: '/', label: t('nav.items.dashboard'), icon: LayoutDashboard },
         { to: '/states', label: t('nav.items.states'), shortLabel: t('nav.short.states'), icon: Activity },
-        { to: '/system', label: t('nav.items.system'), shortLabel: t('nav.short.system'), icon: Server },
       ],
     },
     {
@@ -98,6 +97,7 @@ export function getNavGroups(t: TranslateFn): NavGroup[] {
     {
       title: t('nav.groups.system'),
       items: [
+        { to: '/system', label: t('nav.items.system'), shortLabel: t('nav.short.system'), icon: Server },
         { to: '/notifications', label: t('nav.items.notifications'), icon: Bell },
         { to: '/users', label: t('nav.items.users'), icon: Users, admin: true },
         { to: '/groups', label: t('nav.items.groups'), icon: Shield, admin: true },

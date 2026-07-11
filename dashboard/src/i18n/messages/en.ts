@@ -1,3 +1,5 @@
+import { helpEn } from './help/en';
+
 export const en = {
   common: {
     loading: 'Loading...',
@@ -51,7 +53,7 @@ export const en = {
     items: {
       dashboard: 'Overview',
       states: 'State',
-      system: 'System',
+      system: 'Information',
       washes: 'Washes',
       posts: 'Posts',
       mqtt: 'MQTT',
@@ -65,7 +67,7 @@ export const en = {
       workModes: 'Work modes',
       currency: 'Currencies',
       discountTypes: 'Discount types',
-      infoMessages: 'Info messages',
+      infoMessages: 'Publications',
       telegram: 'Telegram',
       mcp: 'MCP server',
       backups: 'Backups',
@@ -79,7 +81,7 @@ export const en = {
     short: {
       washes: 'Washes',
       states: 'State',
-      system: 'System',
+      system: 'Info',
       usage: 'Usage',
       backups: 'Backups',
       mcp: 'MCP',
@@ -106,7 +108,7 @@ export const en = {
     posts: 'Posts',
     post: 'Post',
     states: 'Current state',
-    system: 'System',
+    system: 'Information',
     mqtt: 'MQTT',
     cards: 'Cards',
     discount: 'Discount',
@@ -122,7 +124,7 @@ export const en = {
     backups: 'Backups',
     telegram: 'Telegram',
     mcp: 'MCP server',
-    infoMessages: 'Info messages',
+    infoMessages: 'Publications',
     currency: 'Currencies',
     discountTypes: 'Discount types',
     workModes: 'Work modes',
@@ -566,7 +568,7 @@ export const en = {
       },
     },
     system: {
-      title: 'System',
+      title: 'Information',
       subtitle: 'Server resources and environment information',
       loadFailed: 'Failed to load system information',
       cards: {
@@ -701,7 +703,7 @@ export const en = {
       emptyMessage: 'Nothing found',
     },
     infoMessages: {
-      title: 'Info messages',
+      title: 'Publications',
       subtitle: 'News, promotions, and Telegram feed content',
       bodyPlaceholder: 'Supported HTML: <b>bold</b>, <i>italic</i>',
       expiresHint: 'Optional. Leave empty so message does not expire. Date must be after publication.',
@@ -1574,4 +1576,5 @@ export const en = {
     sessionExpired: 'PyOrchestrator session expired, sign in again',
     createBotsViaTelegram: 'Create Telegram bots in CRM via the Telegram section (pyorch-bridge).',
   },
+  help: helpEn,
 } as const;

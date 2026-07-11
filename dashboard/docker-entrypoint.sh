@@ -10,4 +10,8 @@ else
   sed '/# PYORCH_BLOCK_START/,/# PYORCH_BLOCK_END/d' "$TEMPLATE" > "$CONF"
 fi
 
+if [ -n "${APP_VERSION:-}" ]; then
+  printf '{"version":"%s"}\n' "$APP_VERSION" > /usr/share/nginx/html/version.json
+fi
+
 exec nginx -g 'daemon off;'

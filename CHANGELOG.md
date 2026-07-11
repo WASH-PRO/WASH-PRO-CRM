@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.26] — 2026-07-11
+
+### Исправлено
+
+- **Версия после обновления CRM** — `APP_VERSION` в `.env` выставляется **до** шага «Сборка», чтобы `version.json` и Vite получали целевую версию
+- **Dashboard** — при старте контейнера `version.json` синхронизируется из `APP_VERSION` (если job прошёл, но образ был из кэша)
+
 ## [1.1.25] — 2026-07-11
 
 ### Изменено
@@ -368,7 +375,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.25...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.26...HEAD
+[1.1.26]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.26
 [1.1.25]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.25
 [1.1.24]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.24
 [1.1.23]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.23

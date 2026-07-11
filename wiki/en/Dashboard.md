@@ -79,6 +79,10 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.26)
+
+- **CRM version** — `APP_VERSION` before build; `version.json` synced on container start
+
 ## Recent changes (v1.1.25)
 
 - **Docker Hub** — clear timeout error; troubleshooting for Mac/localhost

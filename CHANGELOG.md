@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+## [1.1.22] — 2026-07-11
+
+### Добавлено
+
+- **Встроенная справка** — полноэкранное модальное окно из шапки: 26 разделов, поиск, схемы экранов, примеры, EN/RU
+
+### Изменено
+
+- **Меню** — `/system` в группе **Система**, пункт **Информация** (ранее «Система» в «Главное»)
+- **Автоматизация** — раздел `/info-messages` переименован в **Публикации**
+- **Хлебные крошки** — цепочка «группа меню → раздел»; исправлены пути и подписи
+- **i18n (RU)** — `nav.short.usage` для свёрнутого меню
+- **Документация и wiki** — актуализированы навигация, справка, крошки
+
 ## [1.1.21] — 2026-07-11
 
 ### Исправлено
@@ -327,7 +341,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.21...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.22...HEAD
+[1.1.22]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.22
 [1.1.21]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.21
 [1.1.20]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.20
 [1.1.19]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.19

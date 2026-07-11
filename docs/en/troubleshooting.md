@@ -179,7 +179,7 @@ docker exec wash-mosquitto mosquitto_sub -h 127.0.0.1 -p 1884 -t '$SYS/broker/ve
 
 ## Telegram: "No news" / "News (N)" without text
 
-1. **Dashboard → Information** — status **Published** (not "Draft")
+1. **Dashboard → Publications** — status **Published** (not "Draft")
 2. **Hide after** field — leave empty or date **after** publication
 3. Rebuild and restart information bot:
 

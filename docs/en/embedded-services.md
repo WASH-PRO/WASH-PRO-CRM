@@ -141,7 +141,7 @@ Dashboard  →  /api/telegram-bots/*  →  pyorch-bridge  →  PyOrchestrator AP
 
 **Bot types:** Management (full RBAC), Service (monitoring + post commands), **Information** (public: news, prices, occupancy, promotions from CRM).
 
-**Information bot (v1.9):** content from **Dashboard → Automation → Information**; broadcast to subscribers in **private chats**; images in one message (photo + caption); correct post occupancy.
+**Information bot (v1.9):** content from **Dashboard → Automation → Publications**; broadcast to subscribers in **private chats**; images in one message (photo + caption); correct post occupancy.
 
 **Isolation (v1.1.11+):** bots respond only in private messages — each user does not see others' dialogs.
 

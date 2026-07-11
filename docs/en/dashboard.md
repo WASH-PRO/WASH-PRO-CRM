@@ -10,17 +10,41 @@ React application with **light**, **dark**, and **system** themes (follows OS se
 
 | Group | Sections |
 |-------|----------|
-| **Main** | Overview, **Status** (all posts, chart, online/offline), **System** (server resources, CRM & stack versions) |
+| **Main** | Overview, **Status** (all posts, chart, online/offline) |
 | **Sites** | Car washes, Posts |
 | **Data** | MQTT |
 | **Cards** | Discount, Service, VIP, Collection |
-| **Analytics** | Usage statistics, Financial statistics, Archiving |
+| **Analytics** | Usage, Finance, Archive |
 | **Reference data** | Work modes, Currencies, Discount types *(Admin)* |
-| **Automation** | **Information**, **Telegram**, **MCP server**, Backups *(Admin)* |
-| **System** | Notifications, **Users**, **Groups & permissions**, **Settings**, Logs *(Admin)* |
+| **Automation** | **Publications**, **Telegram**, **MCP server**, Backups *(Admin)* |
+| **System** | **Information** (server resources, CRM & stack versions), Notifications, **Users**, **Groups & permissions**, **Settings**, Logs *(Admin)* |
 
 Sections marked admin are available only to **Administrator** (`manage_users` or `view_logs` in JWT).  
 **Profile** — link in the header (`/profile`). **Setup wizard** — `/setup` (on first login or `?restart=1`).
+
+## Built-in help (v1.1.22)
+
+| Element | Description |
+|---------|-------------|
+| **Open** | Book icon in the header (between notifications and language) |
+| **Window** | Fullscreen help: TOC by menu group, search, screen wireframes, examples |
+| **Close** | Close button or **Esc** |
+| **Languages** | EN / RU (same as CRM UI) |
+| **Docs** | Link to GitHub Pages at the bottom of the help panel |
+
+## Breadcrumbs (v1.1.22)
+
+Above page content — **menu group → section** (same labels as the sidebar).
+
+| Example URL | Trail |
+|-------------|-------|
+| `/usage` | Analytics → Usage |
+| `/system` | System → Information |
+| `/info-messages` | Automation → Publications |
+| `/cards/discount` | Cards → Discount |
+| `/posts/:id` | Sites → Posts → *serial number* |
+
+The group is not a link; intermediate sections (e.g. Posts on post detail) are clickable.
 
 ### Resources (sidebar)
 
@@ -138,9 +162,9 @@ All posts across all sites. **Status** column (online/offline), status filter.
 
 Table: address, post number, balance, pause, discount, live mode timer, mode name, last message date.
 
-### System (`/system`) — v1.1.16
+### Information (`/system`) — v1.1.16, v1.1.22
 
-Platform status page in **Main** (not the admin **System** group with notifications and users).
+Platform status page in the **System** group (**Information** menu item). Not to be confused with **Publications** under Automation.
 
 | Block | Description |
 |-------|-------------|
@@ -210,6 +234,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 
 | Section | Route | Description |
 |---------|-------|-------------|
+| **Information** | `/system` | Server resources, CRM version, Dynamic API / PyOrchestrator *(System group)* |
 | Notifications | `/notifications` | CRM notifications, mark as read; web/Telegram channel settings on **Overview** |
 | **Profile** | `/profile` | Name, email, password change *(link in header)* |
 | **Setup wizard** | `/setup` | Initial CRM setup; restart `/setup?restart=1` *(Admin/Operator)* |
@@ -217,7 +242,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 | **Groups & permissions** | `/groups` | RBAC groups and permission matrix *(Admin)* |
 | **Settings** | `/settings` | MQTT, Telegram notify, **integrity repair**, CRM update, default currency, **interface language** |
 | Logs | `/logs` | Dynamic API audit *(Admin)* |
-| **Information** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
+| **Publications** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
 | Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP server** | `/mcp` | Dynamic API and PyOrchestrator HTTP MCP; tools table; Cursor config *(Admin)* |
 | Backups | `/backups` | MongoDB backup, manual run, download *(Admin)* |

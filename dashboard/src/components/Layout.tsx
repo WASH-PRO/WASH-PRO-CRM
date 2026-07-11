@@ -122,19 +122,6 @@ function LayoutInner() {
         </nav>
 
         <div className="shrink-0 space-y-2 border-t border-panel-border p-2 dark:border-panel-sidebar-border">
-          <button
-            type="button"
-            onClick={() => {
-              setHelpOpen(true);
-              setMobileOpen(false);
-            }}
-            className={clsx('nav-item w-full text-brand-700 dark:text-brand-300', collapsed && 'justify-center px-2')}
-            title={collapsed ? t('layout.help') : undefined}
-          >
-            <BookOpen size={18} strokeWidth={1.75} className="shrink-0" />
-            {!collapsed && <span className="truncate font-medium">{t('layout.help')}</span>}
-          </button>
-
           <Link
             to={setupHref}
             onClick={() => setMobileOpen(false)}
@@ -144,6 +131,22 @@ function LayoutInner() {
             <Wand2 size={18} strokeWidth={1.75} className="shrink-0" />
             {!collapsed && <span className="truncate">{t('layout.setupWizard')}</span>}
           </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              setHelpOpen(true);
+              setMobileOpen(false);
+            }}
+            className={clsx(
+              'nav-item w-full border border-brand-500/30 bg-brand-500/10 font-semibold text-brand-800 hover:bg-brand-500/15 dark:border-brand-400/30 dark:bg-brand-400/10 dark:text-brand-200 dark:hover:bg-brand-400/15',
+              collapsed && 'justify-center px-2'
+            )}
+            title={collapsed ? t('layout.help') : undefined}
+          >
+            <BookOpen size={18} strokeWidth={2} className="shrink-0" />
+            {!collapsed && <span className="truncate">{t('layout.help')}</span>}
+          </button>
 
           <EmbeddedServicesSidebar collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
 
@@ -193,6 +196,8 @@ function LayoutInner() {
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
 
+            <HelpButton onClick={() => setHelpOpen(true)} />
+
             <Link
               to="/profile"
               className="flex min-w-0 shrink-0 items-center gap-3 rounded-lg transition-colors hover:bg-panel-canvas/80 dark:hover:bg-white/[0.04]"
@@ -213,9 +218,9 @@ function LayoutInner() {
 
             <div className="flex-1" />
 
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <div className="flex min-w-0 shrink-0 items-center gap-1 overflow-x-auto sm:gap-2">
               <LiveModeIndicator />
-              <Link to="/notifications" className="btn-icon relative" title={t('layout.notifications')}>
+              <Link to="/notifications" className="btn-icon relative shrink-0" title={t('layout.notifications')}>
                 <Bell size={18} />
                 {unreadCount > 0 && (
                   <span
@@ -224,7 +229,6 @@ function LayoutInner() {
                   />
                 )}
               </Link>
-              <HelpButton onClick={() => setHelpOpen(true)} />
               <LanguageToggle />
               <ThemeToggle />
               <button type="button" onClick={() => logout()} className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-500" title={t('layout.logout')}>

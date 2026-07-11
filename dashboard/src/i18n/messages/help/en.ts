@@ -14,13 +14,13 @@ export const helpEn = {
     navigation: {
       title: 'Navigation and help',
       summary:
-        'Sidebar menu by group, breadcrumbs above the page, and built-in help: teal Help button in the header and an item at the bottom of the sidebar.',
+        'Sidebar footer: **Help** (above Resources / Documentation), then setup wizard. Header: **Help** on the left.',
       howItWorks:
         'Menu groups: **Main** (Overview, Status), **Sites**, **Data**, **Cards**, **Analytics**, **References**, **Automation** (Publications, Telegram, MCP, Backups), **System** (Information about the server, Notifications, Users, Settings…). Breadcrumbs mirror group and section — e.g. “Analytics → Usage” or “System → Information”; the group is not clickable, parent sections are links. Help opens from the header: fullscreen modal, search, screen wireframes; close with ✕ or Esc.',
       example:
         'On Publications breadcrumbs show Automation → Publications. For bot hints open help and go to the Telegram section.',
       regions: {
-        kpi: 'Header: Live, notifications, Help, language',
+        kpi: 'Sidebar: Help at bottom above docs; header: Help on the left',
         revenue: 'Breadcrumbs (group → section)',
         workload: 'Sidebar menu by groups',
         charts: 'Current page content',

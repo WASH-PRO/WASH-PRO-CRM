@@ -140,9 +140,11 @@ export async function diagnoseRepair(): Promise<RepairDiagnoseResult> {
       });
     }
 
-    if (envDataDir && envDataDir.startsWith('/') && detectedHostRoot) {
-      const expected = join(detectedHostRoot, 'data').replace(/\/+/g, '/');
-      if (normalizePath(envDataDir) !== normalizePath(expected) && !envDataDir.includes(detectedHostRoot)) {
+    // Absolute DATA_DIR on the host (/mnt/hdd/data, /var/lib/wash-pro-crm, …) is valid for production.
+    // Only warn if it mistakenly points inside the container deploy bind mount (/deploy).
+    if (envDataDir && envDataDir.startsWith('/')) {
+      const normalized = normalizePath(envDataDir);
+      if (normalized === DEPLOY_ROOT || normalized.startsWith(`${DEPLOY_ROOT}/`)) {
         issues.push({
           code: 'data_dir_suspicious',
           severity: 'warning',

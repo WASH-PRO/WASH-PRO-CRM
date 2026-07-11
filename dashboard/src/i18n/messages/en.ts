@@ -934,7 +934,7 @@ export const en = {
           env_missing: '.env file is missing: {{detail}}',
           host_root_env_missing: 'WASH_HOST_PROJECT_ROOT is not set in .env',
           host_root_env_mismatch: 'WASH_HOST_PROJECT_ROOT in .env does not match mount: {{detail}}',
-          data_dir_suspicious: 'Suspicious DATA_DIR in .env: {{detail}}',
+          data_dir_suspicious: 'DATA_DIR in .env points inside container mount /deploy — use a host path (e.g. ./data or /mnt/hdd/data): {{detail}}',
           file_missing: 'Missing file: {{detail}}',
           dir_missing: 'Missing directory: {{detail}}',
           docker_sock_missing: 'Docker socket is unavailable — auto-update cannot run',

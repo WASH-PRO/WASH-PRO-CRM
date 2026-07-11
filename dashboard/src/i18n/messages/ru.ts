@@ -933,7 +933,7 @@ export const ru = {
           env_missing: 'Файл .env отсутствует: {{detail}}',
           host_root_env_missing: 'В .env не задан WASH_HOST_PROJECT_ROOT',
           host_root_env_mismatch: 'WASH_HOST_PROJECT_ROOT в .env не совпадает с монтированием: {{detail}}',
-          data_dir_suspicious: 'Подозрительный DATA_DIR в .env: {{detail}}',
+          data_dir_suspicious: 'DATA_DIR в .env указывает внутрь mount контейнера /deploy — укажите путь на хосте (например ./data или /mnt/hdd/data): {{detail}}',
           file_missing: 'Отсутствует файл: {{detail}}',
           dir_missing: 'Отсутствует каталог: {{detail}}',
           docker_sock_missing: 'Docker socket недоступен — автообновление невозможно',

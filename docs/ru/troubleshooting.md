@@ -96,6 +96,19 @@ git checkout -- docker-compose.yml   # если уже были правки
 
 Подробнее: [Развёртывание](deployment.md), [Конфигурация](configuration.md).
 
+## «text/html is not a valid JavaScript MIME type» (v1.1.27+)
+
+**Симптомы:** экран **«Ошибка интерфейса»** или «Не удалось загрузить страницу» с текстом про `text/html` и JavaScript MIME type; часто после `docker compose up -d --build dashboard` или обновления CRM из Dashboard.
+
+**Причина:** браузер (часто Safari) держит старый `index.html` со ссылками на удалённые JS-файлы (`/assets/index-….js`). До v1.1.27 nginx мог отдавать HTML вместо 404 — браузер пытался выполнить HTML как JS.
+
+**Решение:**
+
+1. **Жёсткая перезагрузка:** `⌘⇧R` (Mac) или закройте вкладку и откройте CRM заново.
+2. Обновитесь до **v1.1.27+** и пересоберите dashboard: `docker compose up -d --build dashboard`.
+3. Не смешивайте **localhost:80** (Docker) и **localhost:5173** (`npm run dev`) в одной вкладке.
+4. При разработке UI используйте только `npm run dev` или только Docker — не оба сразу.
+
 ## Обновление падает на сборке: таймаут Docker Hub (Mac / localhost)
 
 **Симптомы:** в Dashboard обновление CRM доходит до шага **«Сборка»** и падает с `failed`; в логе job — `DeadlineExceeded`, `registry-1.docker.io`, `failed to resolve source metadata` или «Команда завершилась с кодом 1». GitHub (загрузка исходников) проходит успешно.
@@ -121,7 +134,7 @@ docker pull nginx:alpine
 
 ```bash
 cd /path/to/WASH-PRO-CRM   # или каталог с docker-compose.yml
-git fetch origin && git checkout v1.1.26   # нужный тег
+git fetch origin && git checkout v1.1.27   # нужный тег
 docker compose up -d --build dashboard update-bridge
 ```
 

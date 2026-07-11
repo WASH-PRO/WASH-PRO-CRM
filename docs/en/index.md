@@ -28,7 +28,7 @@ layout: default
 | **Software updates** | Dashboard auto-update: `git reset --hard`, compose overrides, failed job on card *(v1.1.20)* |
 | **Information** | Server resources, WASH CRM version, embedded stack versions *(System → Information)* (v1.1.22) |
 | **Publications** | News and promotions for the **information Telegram bot** *(Automation)* (v1.1.22) |
-| **Built-in help** | Fullscreen in-app help from the header *(v1.1.22)* |
+| **Built-in help** | Fullscreen help: **Help** button in header and sidebar item *(v1.1.22, v1.1.27)* |
 | **SCADA / MQTT** | Telemetry, commands, and post prices |
 | **Setup wizard** | Initial configuration after installation (`/setup`) |
 | **Sites** | Car washes, posts, **MQTT accounts**, **device settings** (prices, commands) |

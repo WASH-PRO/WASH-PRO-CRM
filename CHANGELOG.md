@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [1.1.27] — 2026-07-11
+
+### Исправлено
+
+- **Справка** — заметная кнопка «Справка» в шапке (бирюзовая) и пункт внизу бокового меню
+- **Кэш после пересборки dashboard** — nginx не отдаёт `index.html` вместо отсутствующих `/assets/*.js`; понятное сообщение вместо `'text/html' is not a valid JavaScript MIME type`
+
+### Изменено
+
+- `index.html` — заголовки `no-cache`; `/assets/` — 404 и long-term cache
+
 ## [1.1.26] — 2026-07-11
 
 ### Исправлено
@@ -375,7 +386,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.26...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.27...HEAD
+[1.1.27]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.27
 [1.1.26]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.26
 [1.1.25]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.25
 [1.1.24]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.24

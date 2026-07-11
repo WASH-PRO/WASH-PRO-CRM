@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import {
   Bell,
+  BookOpen,
   LogOut,
   Menu,
   X,
@@ -121,6 +122,19 @@ function LayoutInner() {
         </nav>
 
         <div className="shrink-0 space-y-2 border-t border-panel-border p-2 dark:border-panel-sidebar-border">
+          <button
+            type="button"
+            onClick={() => {
+              setHelpOpen(true);
+              setMobileOpen(false);
+            }}
+            className={clsx('nav-item w-full text-brand-700 dark:text-brand-300', collapsed && 'justify-center px-2')}
+            title={collapsed ? t('layout.help') : undefined}
+          >
+            <BookOpen size={18} strokeWidth={1.75} className="shrink-0" />
+            {!collapsed && <span className="truncate font-medium">{t('layout.help')}</span>}
+          </button>
+
           <Link
             to={setupHref}
             onClick={() => setMobileOpen(false)}

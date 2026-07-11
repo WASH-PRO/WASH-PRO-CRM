@@ -101,6 +101,7 @@ export const en = {
     unread: 'Unread: {{count}}',
     logout: 'Logout',
     breadcrumbs: 'Breadcrumbs',
+    help: 'Help',
   },
   breadcrumbs: {
     dashboard: 'Overview',
@@ -1258,7 +1259,7 @@ export const en = {
     chunkTitle: 'Failed to load page',
     description: 'An unexpected error occurred while rendering this section.',
     chunkDescription:
-      'This often happens right after a CRM update when the browser keeps stale cache. Reloading usually helps.',
+      'Often happens after a CRM update or dashboard rebuild when the browser keeps stale cache. Click Reload (⌘⇧R) or close the tab and open CRM again.',
     reload: 'Reload',
     retry: 'Try again',
   },

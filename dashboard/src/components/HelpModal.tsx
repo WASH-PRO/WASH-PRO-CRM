@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { BookOpen, ExternalLink, Search } from 'lucide-react';
+import { ExternalLink, Search } from 'lucide-react';
 import { FullscreenModal } from './FullscreenModal';
 import { HelpScreenMockup, HELP_MOCKUPS } from './HelpScreenMockup';
 import { HELP_SECTIONS, type HelpMockupId } from '../help/sections';

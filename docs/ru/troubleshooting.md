@@ -37,6 +37,46 @@ docker compose run --rm init-seed
 
 Проверьте `.env`: `WASH_HOST_PROJECT_ROOT` — абсолютный путь к проекту на хосте, `DATA_DIR=./data`.
 
+## Обновления не видны / сбрасываются при загрузке (v1.1.18+)
+
+**Симптомы:** баннер «доступно обновление» пропадает после F5; в карточках компонентов пустая «последняя версия»; ошибка «Превышен лимит GitHub API».
+
+**Причина (до v1.1.18):** без `GITHUB_TOKEN` лимит GitHub REST API — 60 запросов/ч с IP; Dashboard принудительно опрашивал API при каждой загрузке и каждые 3 с во время обновления.
+
+**Решение (v1.1.18+):**
+
+- `update-bridge` при лимите API переключается на **`git ls-remote`** — токен **не обязателен** для публичных репозиториев
+- обычная загрузка страницы и опрос прогресса job читают **кэш**; GitHub — только кнопка **«Проверить сейчас»**
+- при ошибке API сохраняются последние известные версии в `DATA_DIR/update-bridge/state.json`
+
+Обновитесь до **v1.1.18** и пересоберите:
+
+```bash
+git pull
+docker compose up -d --build update-bridge dashboard
+```
+
+`GITHUB_TOKEN` в `.env` **опционален** (release notes и лимит 5000/ч). Для публичных установок не требуется.
+
+## Локальные правки на сервере блокируют git pull
+
+Не редактируйте отслеживаемые файлы репозитория (`docker-compose.yml`, vendored-код) напрямую на сервере — `git pull` в апдейтере завершится ошибкой «local changes would be overwritten».
+
+**Паттерн (рекомендуется):**
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml   # MongoDB 4.4 без AVX и др.
+mkdir -p local
+cp local/apply-server-patches.sh.example local/apply-server-patches.sh
+chmod +x local/apply-server-patches.sh
+git checkout -- docker-compose.yml   # если уже были правки
+```
+
+- `docker-compose.override.yml` — не в git, подключается `scripts/start.sh`
+- `local/apply-server-patches.sh` — вызывается апдейтером после `git pull`
+
+Подробнее: [Развёртывание](deployment.md), [Конфигурация](configuration.md).
+
 ## init-seed: статус Exited
 
 `Exited (0)` — норма (одноразовый контейнер).

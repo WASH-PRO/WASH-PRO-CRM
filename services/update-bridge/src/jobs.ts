@@ -51,7 +51,29 @@ export async function checkComponent(id: UpdateComponentId): Promise<ComponentCh
 }
 
 export async function checkAllComponents(): Promise<ComponentCheck[]> {
-  const results = await Promise.all(COMPONENTS.map((c) => checkComponent(c.id)));
+  const previous = getCachedComponents();
+  const results = await Promise.all(
+    COMPONENTS.map(async (def) => {
+      const check = await checkComponent(def.id);
+      if (check.error && !check.latestVersion) {
+        const prev = previous.find((p) => p.id === def.id);
+        if (prev?.latestVersion) {
+          const currentVersion = check.currentVersion;
+          return {
+            ...check,
+            latestVersion: prev.latestVersion,
+            latestTag: prev.latestTag,
+            updateAvailable: isNewerVersion(prev.latestVersion, currentVersion),
+            releaseUrl: prev.releaseUrl ?? check.releaseUrl,
+            releaseNotes: prev.releaseNotes ?? check.releaseNotes,
+            publishedAt: prev.publishedAt ?? check.publishedAt,
+            error: check.error,
+          };
+        }
+      }
+      return check;
+    })
+  );
   setLastCheck(results);
   await saveState();
   return results;

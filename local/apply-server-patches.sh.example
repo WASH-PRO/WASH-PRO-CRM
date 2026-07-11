@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Локальные патчи после git pull (не коммитьте в git).
+# Скопируйте: mkdir -p local && cp local/apply-server-patches.sh.example local/apply-server-patches.sh && chmod +x local/apply-server-patches.sh
+#
+# Вызывается автоматически update-bridge на шаге pull CRM, если скрипт исполняемый.
+
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# PyOrchestrator: недостающие импорты в main.py (пример — удалите, когда исправлено upstream)
+PYORCH_MAIN="$ROOT/pyorchestrator/backend/app/main.py"
+if [ -f "$PYORCH_MAIN" ] && ! grep -q 'from app.services.script_service import create_script, storage_service' "$PYORCH_MAIN"; then
+  sed -i '/from app.services.update_scheduler import update_scheduler/a from app.services.script_service import create_script, storage_service' "$PYORCH_MAIN"
+  echo "Applied PyOrchestrator main.py import patch"
+fi

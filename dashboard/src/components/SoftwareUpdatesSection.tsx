@@ -3,7 +3,6 @@ import { ArrowUpCircle, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import clsx from 'clsx';
 import {
   applyUpdate,
-  checkForUpdates,
   dismissUpdate,
   type ComponentCheck,
   type UpdateComponentId,
@@ -183,13 +182,12 @@ export function SoftwareUpdatesSection() {
     );
   }
 
-  const { status, loading, refresh } = ctx;
+  const { status, loading, refresh, checkGithub } = ctx;
 
   const handleCheck = async () => {
     setChecking(true);
     try {
-      await checkForUpdates();
-      await refresh();
+      await checkGithub();
     } catch (err) {
       alert(err instanceof Error ? err.message : t('updates.checkFailed'));
     } finally {

@@ -19,7 +19,19 @@ description: Production, updates, and recovery
 ./scripts/start.sh
 ```
 
-The script attaches overlays: Redis, external MQTT, PyOrchestrator — based on `.env` variables.
+The script attaches overlays: Redis, external MQTT, PyOrchestrator, **`docker-compose.override.yml`** (if present) — based on `.env` variables.
+
+## Server-local overrides (production)
+
+On a specific host (external disk for `DATA_DIR`, CPU without AVX, PyOrchestrator patches):
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+mkdir -p local && cp local/apply-server-patches.sh.example local/apply-server-patches.sh
+chmod +x local/apply-server-patches.sh
+```
+
+Files are **not committed** — they do not block Dashboard auto-update `git pull`. See [Troubleshooting](troubleshooting.md).
 
 ## Updates
 

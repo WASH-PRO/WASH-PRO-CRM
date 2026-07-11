@@ -11,7 +11,7 @@ description: Переменные окружения .env
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
 | `DASHBOARD_PORT` | `80` | Порт CRM Dashboard |
-| `APP_VERSION` | `1.1.17` | Версия приложения |
+| `APP_VERSION` | `1.1.18` | Версия приложения |
 
 ## Dynamic API
 
@@ -30,6 +30,7 @@ description: Переменные окружения .env
 | `CRM_GITHUB_REPO` | `WASH-PRO/WASH-PRO-CRM` | Репозиторий CRM для проверки релизов |
 | `DYNAMIC_API_GITHUB_REPO` | `Dynamic-API-Platform/Dynamic-API-Platform` | Upstream Dynamic API |
 | `PYORCHESTRATOR_GITHUB_REPO` | `PyOrchestrator/PyOrchestrator` | Upstream PyOrchestrator |
+| `# GITHUB_TOKEN` | — | **Опционально.** Release notes и лимит 5000/ч; без токена версии проверяются через `git ls-remote` *(v1.1.18+)* |
 | `# DYNAMIC_API_VERSION` | из package.json | Принудительная версия (обычно не нужна) |
 
 Актуальная vendored-версия: **v1.5.13** (`dynamic-api/backend/package.json`).
@@ -112,3 +113,23 @@ PYORCHESTRATOR_ENABLED=true
 PYORCH_JWT_SECRET=change-me-in-production
 PYORCH_SECRET_MASTER_KEY=change-me-in-production-32chars!!
 ```
+
+## Локальные переопределения на сервере (v1.1.18+)
+
+Для правок, специфичных для конкретного хоста (CPU без AVX → MongoDB 4.4, патчи vendored-кода), **не изменяйте** отслеживаемые файлы git — иначе автообновление не сможет выполнить `git pull`.
+
+| Файл | Назначение |
+|------|------------|
+| `docker-compose.override.yml` | Переопределения сервисов (пример: `docker-compose.override.yml.example`); подключается `scripts/start.sh` |
+| `local/apply-server-patches.sh` | Скрипт после `git pull` (пример: `local/apply-server-patches.sh.example`); вызывается `update-bridge` |
+
+Оба файла **не коммитятся** — храните только на сервере.
+
+## Обновления ПО (Dashboard)
+
+- **Настройки → Обновления ПО** — CRM, Dynamic API, PyOrchestrator через `update-bridge`
+- **«Проверить сейчас»** — принудительный опрос GitHub (или git fallback без токена)
+- Загрузка страницы и опрос прогресса job — из кэша `DATA_DIR/update-bridge/state.json`
+- Баннер обновления — в шапке Dashboard (администратор)
+
+См. [Устранение неполадок](troubleshooting.md).

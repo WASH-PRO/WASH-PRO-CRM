@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.17** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.18** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -12,6 +12,7 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - **Setup wizard** — initial configuration after installation (`/setup`)
 - **Status** — all posts, online/offline, interactive chart *(Main)*
 - **Integrity repair** — Settings wizard for paths, `.env`, failed updates (v1.1.17)
+- **Software updates** — release checks without GitHub token, stable banner (v1.1.18)
 - **System** — server resources, WASH CRM version, embedded stack *(Main)* (v1.1.16)
 - **Information** — news and promotions for the **information Telegram bot** *(Automation)*
 - SCADA: MQTT, telemetry, commands, and post prices
@@ -60,6 +61,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.18
+
+- **Update system** — `git ls-remote` without GitHub token; cache on page load; **Check now** for API
+- **Examples** — `docker-compose.override.yml.example`, `local/apply-server-patches.sh.example`
+
+Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.17
 

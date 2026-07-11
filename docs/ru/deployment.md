@@ -19,7 +19,19 @@ description: Production, обновление и восстановление
 ./scripts/start.sh
 ```
 
-Скрипт подключает overlays: Redis, external MQTT, PyOrchestrator — по переменным в `.env`.
+Скрипт подключает overlays: Redis, external MQTT, PyOrchestrator, **`docker-compose.override.yml`** (если есть) — по переменным в `.env`.
+
+## Локальные переопределения (production)
+
+На конкретном сервере (другой диск для `DATA_DIR`, CPU без AVX, патчи PyOrchestrator):
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+mkdir -p local && cp local/apply-server-patches.sh.example local/apply-server-patches.sh
+chmod +x local/apply-server-patches.sh
+```
+
+Файлы **не коммитятся** — не блокируют `git pull` при автообновлении из Dashboard. См. [Устранение неполадок](troubleshooting.md).
 
 ## Обновление
 

@@ -79,6 +79,12 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **System** (platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.18)
+
+- **Software updates** — release checks via `git ls-remote` without `GITHUB_TOKEN`; page load no longer clears the banner
+- **Check now** — only explicit GitHub poll; job progress polling uses cache
+- **Examples** — `docker-compose.override.yml.example`, `local/apply-server-patches.sh.example` for server-specific overrides
+
 ## Recent changes (v1.1.17)
 
 - **Settings → Integrity and repair** — diagnose `WASH_HOST_PROJECT_ROOT`, `DATA_DIR`, key files; apply fixes (Mosquitto, `init-seed`, stuck updates)

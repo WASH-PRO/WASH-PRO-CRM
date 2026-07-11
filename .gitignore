@@ -7,6 +7,9 @@ docs/.jekyll-cache/
 docs/.jekyll-metadata
 *.log
 .DS_Store
+# Server-local overrides (see docker-compose.override.yml.example, local/apply-server-patches.sh.example)
+docker-compose.override.yml
+local/apply-server-patches.sh
 # Persistent runtime data (see data/README.md)
 data/**
 !data/README.md

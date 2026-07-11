@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [1.1.29] — 2026-07-11
+
+### Исправлено
+
+- **Сборка dashboard** — удалён неиспользуемый импорт `BookOpen` в `HelpModal.tsx` (TS6133 ломал `docker compose build` после v1.1.28)
+
 ## [1.1.28] — 2026-07-11
 
 ### Изменено
@@ -393,7 +399,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.28...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.29...HEAD
+[1.1.29]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.29
 [1.1.28]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.28
 [1.1.27]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.27
 [1.1.26]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.26

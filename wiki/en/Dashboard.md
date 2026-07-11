@@ -79,6 +79,10 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.29)
+
+- **Build** — fixed TypeScript error on `docker compose build dashboard`
+
 ## Recent changes (v1.1.28)
 
 - **Help** — sidebar footer item above Documentation, normal style; removed from header

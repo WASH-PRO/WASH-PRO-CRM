@@ -79,6 +79,12 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **System** (platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.20)
+
+- **CRM auto-update** — `git reset --hard origin/main`; no longer blocked by accidental tracked-file edits
+- **Error on card** — failed job with step log stays visible
+- **Compose override** — build/seed via `scripts/compose-files.sh`
+
 ## Recent changes (v1.1.19)
 
 - **Integrity check** — external `DATA_DIR` paths (`/mnt/hdd/data`, `/var/lib/wash-pro-crm`) no longer flagged; warning only when `DATA_DIR` points inside `/deploy`

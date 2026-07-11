@@ -1375,6 +1375,8 @@ export const ru = {
     confirmUpdate: 'Обновить {{component}} до v{{version}}?',
     error: 'Ошибка',
     jobTitle: 'Обновление v{{from}} -> v{{to}}',
+    jobFailed: 'Ошибка обновления v{{from}} -> v{{to}}',
+    jobFailedHint: 'Смотрите лог шага ниже. Частая причина — локальные правки отслеживаемых файлов (используйте docker-compose.override.yml и local/).',
     starting: 'Запуск...',
     update: 'Обновить',
     hideNotification: 'Скрыть уведомление',

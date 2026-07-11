@@ -166,7 +166,7 @@ Live-обновление каждые **30 с** (`GET /api/dashboard/system` ч
 
 API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 
-### Обновления ПО (`/settings#updates`) — v1.1.18
+### Обновления ПО (`/settings#updates`) — v1.1.20
 
 Секция **«Обновления ПО»** в **Настройках** и баннер в шапке. Только администраторы.
 
@@ -174,8 +174,13 @@ API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 |---------|----------|
 | **Карточки компонентов** | WASH PRO CRM, Dynamic API, PyOrchestrator — текущая и последняя версия |
 | **Проверить сейчас** | Принудительная проверка релизов (GitHub API или `git ls-remote` без токена) |
-| **Обновить** | Запуск job через `update-bridge` (pull → build → seed → health) |
+| **Обновить** | Запуск job через `update-bridge` (fetch + reset → build → seed → health) |
 | **Скрыть уведомление** | Dismiss до следующего релиза |
+| **Ошибка на карточке** | Failed job остаётся с текстом ошибки и логом шага *(v1.1.20)* |
+
+**Шаг pull CRM *(v1.1.20+)*:** `git fetch` + `git reset --hard origin/main` — сбрасывает только отслеживаемые файлы; `.env`, `DATA_DIR`, `docker-compose.override.yml`, `local/` сохраняются.
+
+**Сборка *(v1.1.20+)*:** `scripts/compose-files.sh` — те же `-f`, что у `scripts/start.sh` (override, Redis, PyOrchestrator).
 
 **Поведение v1.1.18+:** загрузка страницы и опрос прогресса job **не** обращаются к GitHub — только кэш `update-bridge`. `GITHUB_TOKEN` в `.env` **опционален** (release notes, лимит API).
 

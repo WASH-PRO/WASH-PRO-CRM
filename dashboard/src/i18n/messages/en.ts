@@ -1375,6 +1375,8 @@ export const en = {
     confirmUpdate: 'Update {{component}} to v{{version}}?',
     error: 'Error',
     jobTitle: 'Update v{{from}} -> v{{to}}',
+    jobFailed: 'Update failed v{{from}} -> v{{to}}',
+    jobFailedHint: 'See step log below. Common cause: local edits to tracked files (use docker-compose.override.yml and local/ instead).',
     starting: 'Starting...',
     update: 'Update',
     hideNotification: 'Hide notification',

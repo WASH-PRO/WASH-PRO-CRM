@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.26** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**WASH PRO version:** **v1.1.27** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -15,7 +15,7 @@
 - **Обновления ПО** — стабильное автообновление из Dashboard, ошибка видна на карточке (v1.1.20)
 - **Информация** — ресурсы сервера, версия CRM, встроенные компоненты *(Система → Информация)* (v1.1.22)
 - **Публикации** — новости и акции для **информационного Telegram-бота** *(Автоматизация)* (v1.1.22)
-- **Встроенная справка** — полноэкранная справка по разделам CRM из шапки (v1.1.22)
+- **Встроенная справка** — полноэкранная справка; кнопка **Справка** в шапке и в sidebar (v1.1.22, v1.1.27)
 - SCADA: MQTT, телеметрия, команды и цены постов
 - Автомойки, посты, **учётные записи MQTT**, настройки устройства
 - Карты (regular/service/VIP), журнал применений NFC
@@ -62,6 +62,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.27
+
+- **Справка** — кнопка «Справка» в шапке (бирюзовая) и пункт в sidebar
+- **Кэш dashboard** — исправлена ошибка `text/html is not a valid JavaScript MIME type` после пересборки
+
+Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.26
 

@@ -96,6 +96,19 @@ git checkout -- docker-compose.yml
 
 See [Deployment](deployment.md), [Configuration](configuration.md).
 
+## “text/html is not a valid JavaScript MIME type” (v1.1.27+)
+
+**Symptoms:** **Interface error** or “Failed to load page” mentioning `text/html` and JavaScript MIME type; often after `docker compose up -d --build dashboard` or a CRM update from Dashboard.
+
+**Cause:** the browser (often Safari) keeps a stale `index.html` pointing at removed JS bundles (`/assets/index-….js`). Before v1.1.27 nginx could return HTML instead of 404 — the browser tried to run HTML as JS.
+
+**Fix:**
+
+1. **Hard reload:** `⌘⇧R` (Mac) or close the tab and open CRM again.
+2. Upgrade to **v1.1.27+** and rebuild dashboard: `docker compose up -d --build dashboard`.
+3. Do not mix **localhost:80** (Docker) and **localhost:5173** (`npm run dev`) in the same workflow.
+4. For UI dev, use either `npm run dev` or Docker only.
+
 ## Update fails at build: Docker Hub timeout (Mac / localhost)
 
 **Symptoms:** CRM update in Dashboard reaches **Build** and fails; job log shows `DeadlineExceeded`, `registry-1.docker.io`, `failed to resolve source metadata`, or exit code 1. GitHub (source fetch) succeeds.
@@ -121,7 +134,7 @@ If these hang or fail with `DeadlineExceeded`, the issue is Docker Hub access, n
 
 ```bash
 cd /path/to/WASH-PRO-CRM
-git fetch origin && git checkout v1.1.26
+git fetch origin && git checkout v1.1.27
 docker compose up -d --build dashboard update-bridge
 ```
 

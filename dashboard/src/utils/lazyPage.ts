@@ -5,7 +5,7 @@ const CHUNK_RELOAD_KEY = 'wash_crm_chunk_reload';
 
 function isChunkLoadError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk \d+ failed|error loading dynamically imported module/i.test(
+  return /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk \d+ failed|error loading dynamically imported module|valid JavaScript MIME type|text\/html.*MIME|Unexpected token '<'/i.test(
     message
   );
 }

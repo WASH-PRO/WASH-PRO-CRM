@@ -145,11 +145,23 @@ export function HelpModal({ open, onClose }: { open: boolean; onClose: () => voi
   );
 }
 
-export function HelpButton({ onClick }: { onClick: () => void }) {
+export function HelpButton({ onClick, showLabel = true }: { onClick: () => void; showLabel?: boolean }) {
   const { t } = useLocale();
   return (
-    <button type="button" onClick={onClick} className="btn-icon" title={t('help.open')} aria-label={t('help.open')}>
-      <BookOpen size={18} />
+    <button
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        'inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-500/35 bg-brand-500/10 text-brand-700 transition-colors hover:border-brand-500/50 hover:bg-brand-500/15 dark:border-brand-400/35 dark:bg-brand-400/10 dark:text-brand-300 dark:hover:bg-brand-400/15',
+        showLabel ? 'px-2.5 sm:px-3' : 'w-9 px-0'
+      )}
+      title={t('help.open')}
+      aria-label={t('help.open')}
+    >
+      <BookOpen size={18} className="shrink-0" />
+      {showLabel && (
+        <span className="hidden text-xs font-semibold sm:inline">{t('help.open')}</span>
+      )}
     </button>
   );
 }

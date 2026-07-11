@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
-  <img src="https://img.shields.io/badge/version-1.1.26-0d9488?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.1.27-0d9488?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
@@ -55,6 +55,7 @@
 - **Система** — ресурсы сервера, версия CRM, версии встроенных компонентов (раздел «Главное», v1.1.16)
 - **Целостность и исправление** — мастер в Настройках: пути, `.env`, сбойные обновления; внешний `DATA_DIR` больше не помечается как подозрительный (v1.1.19)
 - **Обновления ПО** — стабильное автообновление из Dashboard (`git reset --hard`), ошибка видна на карточке (v1.1.20)
+- **Встроенная справка** — полноэкранная справка по разделам CRM; кнопка **Справка** в шапке и пункт в sidebar (v1.1.22, v1.1.27)
 - **SCADA** — телеметрия MQTT, журнал, команды и цены постов
 - **Мастер настройки** — первичная настройка после установки (объект, посты, MQTT, справочники)
 - **Объекты и посты** — автомойки, посты с серийным номером, **учётные записи MQTT**, настройки устройства (цены, команды)

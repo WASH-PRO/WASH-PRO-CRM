@@ -6,12 +6,30 @@ description: .env environment variables
 
 All settings are defined in `.env` (template — `.env.example`).
 
+## Data directory
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATA_DIR` | `./data` | **Host** directory for MongoDB, MQTT, backups, PyOrchestrator, and `update-bridge` cache. Bind mount — survives `docker compose down` / `--build` |
+| `WASH_HOST_PROJECT_ROOT` | *(auto)* | Absolute project path on the host; used by `update-bridge` for compose and auto-updates |
+| `WASH_BUILD_ROOT` | *(auto)* | Build context path inside the container (`/deploy`); rarely set manually |
+
+**Production:** any host path **outside** the container `/deploy` mount is valid, for example:
+
+```env
+DATA_DIR=/var/lib/wash-pro-crm
+# or a dedicated disk:
+DATA_DIR=/mnt/hdd/data
+```
+
+The **Integrity and repair** wizard *(v1.1.19+)* warns only when `DATA_DIR` mistakenly points **inside** `/deploy`. See [data/README.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/data/README.md).
+
 ## Dashboard
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DASHBOARD_PORT` | `80` | CRM Dashboard port |
-| `APP_VERSION` | `1.1.18` | Application version |
+| `APP_VERSION` | `1.1.19` | Application version |
 
 ## Dynamic API
 

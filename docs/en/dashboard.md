@@ -153,14 +153,16 @@ Platform status page in **Main** (not the admin **System** group with notificati
 
 Live refresh every **30 s** (`GET /api/dashboard/system` via Dynamic API).
 
-### Integrity and repair (`/settings`) — v1.1.17
+### Integrity and repair (`/settings`) — v1.1.19
 
 Section in **Settings** (before Software updates). Administrators only (`manage_users` / `manage_api`).
 
 | Action | Description |
 |--------|-------------|
 | **Check integrity** | Diagnose `/deploy` mount, `WASH_HOST_PROJECT_ROOT`, `DATA_DIR`, `.env`, critical files, Docker socket, `docker compose config`, stuck update jobs |
-| **Apply fixes** | Selected repairs: sync host root to `.env`, normalize `DATA_DIR`, `git safe.directory`, clear stuck job, Mosquitto repair (`fix-mqtt.sh`), `init-seed` |
+| **Apply fixes** | Selected repairs: sync host root to `.env`, normalize `DATA_DIR` (only when path wrongly points inside `/deploy`), `git safe.directory`, clear stuck job, Mosquitto repair (`fix-mqtt.sh`), `init-seed` |
+
+**`DATA_DIR` *(v1.1.19+)*:** absolute host paths (`/mnt/hdd/data`, `/var/lib/wash-pro-crm`) are **valid**; warning only when `DATA_DIR` is inside `/deploy`.
 
 API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 

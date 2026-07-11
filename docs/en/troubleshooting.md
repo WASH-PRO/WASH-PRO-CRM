@@ -35,7 +35,22 @@ Manual fallback:
 docker compose run --rm init-seed
 ```
 
-Ensure `.env` has correct `WASH_HOST_PROJECT_ROOT` (absolute host path to the project) and `DATA_DIR=./data`.
+Ensure `.env` has correct `WASH_HOST_PROJECT_ROOT` (absolute host path to the project) and `DATA_DIR` — host data directory (`./data`, `/var/lib/wash-pro-crm`, `/mnt/hdd/data`, etc.).
+
+## False “suspicious DATA_DIR” warning (v1.1.19+)
+
+**Symptoms:** **Integrity and repair** warns about `DATA_DIR` even though the path is valid (e.g. `/mnt/hdd/data`).
+
+**Cause (before v1.1.19):** the check flagged any absolute `DATA_DIR` that did not match `{project}/data`.
+
+**Fix (v1.1.19+):** external host paths are valid; warning only when `DATA_DIR` points inside the container `/deploy` mount. Upgrade and rebuild:
+
+```bash
+git pull
+docker compose up -d --build update-bridge dashboard
+```
+
+Do **not** apply the “Set DATA_DIR=./data” fix if your data already lives on an external disk.
 
 ## Updates not shown / reset on page load (v1.1.18+)
 

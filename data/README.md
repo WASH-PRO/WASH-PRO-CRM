@@ -13,7 +13,11 @@
 ```bash
 # в .env
 DATA_DIR=/var/lib/wash-pro-crm
+# или отдельный диск:
+DATA_DIR=/mnt/hdd/data
 ```
+
+Абсолютные пути на хосте допустимы. Мастер **Целостность и исправление** *(v1.1.19+)* предупреждает только если `DATA_DIR` ошибочно указывает внутрь mount контейнера `/deploy`.
 
 После смены `DATA_DIR` выполните миграцию из старых volumes: `./scripts/migrate-volumes-to-data.sh`
 

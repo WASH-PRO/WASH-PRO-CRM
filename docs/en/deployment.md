@@ -25,6 +25,13 @@ The script attaches overlays: Redis, external MQTT, PyOrchestrator, **`docker-co
 
 On a specific host (external disk for `DATA_DIR`, CPU without AVX, PyOrchestrator patches):
 
+```env
+# example: data on a dedicated HDD
+DATA_DIR=/mnt/hdd/data
+```
+
+Absolute host paths outside `/deploy` are **valid**; the integrity wizard *(v1.1.19+)* does not flag them as suspicious.
+
 ```bash
 cp docker-compose.override.yml.example docker-compose.override.yml
 mkdir -p local && cp local/apply-server-patches.sh.example local/apply-server-patches.sh

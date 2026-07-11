@@ -358,3 +358,45 @@ export interface LogEntry {
   ip?: string;
   source?: string;
 }
+
+export interface SystemInfo {
+  hostname: string;
+  platform: string;
+  osType: string;
+  osRelease: string;
+  osVersion: string;
+  architecture: string;
+  cpuModel: string;
+  cpuCores: number;
+  cpuSpeed: number;
+  totalMemory: number;
+  freeMemory: number;
+  usedMemory: number;
+  memoryUsagePercent: number;
+  uptime: number;
+  nodeVersion: string;
+  appVersion: string;
+  appName: string;
+  environment: string;
+  disk: {
+    total: number;
+    free: number;
+    used: number;
+    usagePercent: number;
+    mount: string;
+  };
+  files: {
+    appFiles: number;
+    logFiles: number;
+    totalProjectFiles: number;
+  };
+  network: {
+    interfaces: { name: string; address: string; family: string }[];
+  };
+  loadAverage: number[];
+  timestamp: string;
+  cronJobsActive: number;
+  cronJobsTotal: number;
+  deployMode: string;
+  updateExecutorReady: boolean;
+}

@@ -3,6 +3,7 @@ import {
   Building2,
   Columns3,
   Activity,
+  Server,
   CreditCard,
   BarChart3,
   Wallet,
@@ -46,6 +47,7 @@ export function getNavGroups(t: TranslateFn): NavGroup[] {
       items: [
         { to: '/', label: t('nav.items.dashboard'), icon: LayoutDashboard },
         { to: '/states', label: t('nav.items.states'), shortLabel: t('nav.short.states'), icon: Activity },
+        { to: '/system', label: t('nav.items.system'), shortLabel: t('nav.short.system'), icon: Server },
       ],
     },
     {

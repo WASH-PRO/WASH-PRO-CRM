@@ -12,3 +12,6 @@ export const POST_ONLINE_THRESHOLD_MS = 30_000;
 
 /** Настройки и редко меняющиеся данные */
 export const LIVE_INTERVAL_SLOW_MS = 15_000;
+
+/** Системные метрики и ресурсы сервера */
+export const LIVE_INTERVAL_SYSTEM_MS = 30_000;

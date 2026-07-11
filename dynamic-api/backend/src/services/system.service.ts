@@ -86,6 +86,35 @@ async function getDiskStats(mountPath: string) {
   }
 }
 
+async function readCpuModelFromProc(): Promise<string | null> {
+  if (process.platform !== 'linux') return null;
+  try {
+    const cpuinfo = await fs.readFile('/proc/cpuinfo', 'utf8');
+    const keys = ['model name', 'Hardware', 'Processor', 'cpu model'];
+    for (const key of keys) {
+      const prefix = `${key}:`;
+      const line = cpuinfo.split('\n').find((entry) => entry.toLowerCase().startsWith(prefix));
+      if (!line) continue;
+      const value = line.slice(prefix.length).trim();
+      if (value && !/^\d+$/.test(value)) return value;
+    }
+  } catch {
+    // ignore unreadable /proc/cpuinfo
+  }
+  return null;
+}
+
+async function resolveCpuModel(cpus: os.CpuInfo[]): Promise<string> {
+  const fromOs = cpus[0]?.model?.trim();
+  if (fromOs) return fromOs;
+
+  const fromProc = await readCpuModelFromProc();
+  if (fromProc) return fromProc;
+
+  const arch = os.arch();
+  return arch || 'Unknown';
+}
+
 export class SystemService {
   async getInfo(): Promise<SystemInfo> {
     const cpus = os.cpus();
@@ -104,12 +133,13 @@ export class SystemService {
       }
     }
 
-    const [disk, appFiles, logFiles, cronJobsTotal, cronJobsActive] = await Promise.all([
+    const [disk, appFiles, logFiles, cronJobsTotal, cronJobsActive, cpuModel] = await Promise.all([
       getDiskStats('/'),
       countFiles('/app'),
       countFiles('/app/logs').catch(() => 0),
       cronJobRepository.count(),
       cronJobRepository.countEnabled(),
+      resolveCpuModel(cpus),
     ]);
 
     return {
@@ -119,7 +149,7 @@ export class SystemService {
       osRelease: os.release(),
       osVersion: `${os.type()} ${os.release()} (${os.arch()})`,
       architecture: os.arch(),
-      cpuModel: cpus[0]?.model || 'Unknown',
+      cpuModel,
       cpuCores: cpus.length,
       cpuSpeed: cpus[0]?.speed || 0,
       totalMemory,

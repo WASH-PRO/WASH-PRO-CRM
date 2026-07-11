@@ -3,6 +3,7 @@ const ROUTE_LABEL_KEYS: Record<string, string> = {
   washes: 'breadcrumbs.washes',
   posts: 'breadcrumbs.posts',
   states: 'breadcrumbs.states',
+  system: 'breadcrumbs.system',
   mqtt: 'breadcrumbs.mqtt',
   cards: 'breadcrumbs.cards',
   discount: 'breadcrumbs.discount',

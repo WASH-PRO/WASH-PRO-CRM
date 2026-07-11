@@ -15,6 +15,7 @@ const WashesPage = lazyPage(() => import('./pages/WashesPage'), 'WashesPage');
 const PostsPage = lazyPage(() => import('./pages/PostsPage'), 'PostsPage');
 const PostDetailPage = lazyPage(() => import('./pages/PostDetailPage'), 'PostDetailPage');
 const StatesPage = lazyPage(() => import('./pages/StatesPage'), 'StatesPage');
+const SystemPage = lazyPage(() => import('./pages/SystemPage'), 'SystemPage');
 const UsagePage = lazyPage(() => import('./pages/UsagePage'), 'UsagePage');
 const FinancePage = lazyPage(() => import('./pages/FinancePage'), 'FinancePage');
 const ArchivePage = lazyPage(() => import('./pages/ArchivePage'), 'ArchivePage');
@@ -89,6 +90,7 @@ function AppRoutes() {
         <Route path="posts" element={<PostsPage />} />
         <Route path="posts/:postId" element={<PostDetailPage />} />
         <Route path="states" element={<StatesPage />} />
+        <Route path="system" element={<SystemPage />} />
         <Route path="mqtt" element={<MqttPage />} />
         <Route path="cards" element={<CardsLayout />}>
           <Route index element={<Navigate to="discount" replace />} />

@@ -29,7 +29,7 @@ DATA_DIR=/mnt/hdd/data
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
 | `DASHBOARD_PORT` | `80` | Порт CRM Dashboard |
-| `APP_VERSION` | `1.1.19` | Версия приложения |
+| `APP_VERSION` | `1.1.20` | Версия приложения |
 
 ## Dynamic API
 
@@ -138,8 +138,8 @@ PYORCH_SECRET_MASTER_KEY=change-me-in-production-32chars!!
 
 | Файл | Назначение |
 |------|------------|
-| `docker-compose.override.yml` | Переопределения сервисов (пример: `docker-compose.override.yml.example`); подключается `scripts/start.sh` |
-| `local/apply-server-patches.sh` | Скрипт после `git pull` (пример: `local/apply-server-patches.sh.example`); вызывается `update-bridge` |
+| `docker-compose.override.yml` | Переопределения сервисов (пример: `docker-compose.override.yml.example`); подключается `scripts/start.sh` и апдейтер через `scripts/compose-files.sh` |
+| `local/apply-server-patches.sh` | Скрипт после pull (пример: `local/apply-server-patches.sh.example`); вызывается `update-bridge` |
 
 Оба файла **не коммитятся** — храните только на сервере.
 

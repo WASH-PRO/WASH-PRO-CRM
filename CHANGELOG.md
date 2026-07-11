@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+## [1.1.20] — 2026-07-11
+
+### Исправлено
+
+- **Автообновление «сбрасывается»** — шаг pull CRM: `git fetch` + `git reset --hard origin/main` вместо `git pull --ff-only`; сохраняются `.env`, `DATA_DIR`, override и `local/`
+- **Ошибка обновления не видна в UI** — карточка компонента показывает failed job с логом шага
+- **Сборка без compose override** — build/seed апдейтера используют `scripts/compose-files.sh` (как `start.sh`)
+- **Дубли `APP_VERSION` в `.env`** — одна строка версии после pull
+
+### Изменено
+
+- **`scripts/compose-files.sh`** — общий список `-f` для `start.sh` и `update-bridge`
+
 ## [1.1.19] — 2026-07-11
 
 ### Исправлено
@@ -302,7 +315,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.19...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.20...HEAD
+[1.1.20]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.20
 [1.1.19]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.19
 [1.1.18]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.18
 [1.1.17]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.17

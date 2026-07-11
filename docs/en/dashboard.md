@@ -166,7 +166,7 @@ Section in **Settings** (before Software updates). Administrators only (`manage_
 
 API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 
-### Software updates (`/settings#updates`) — v1.1.18
+### Software updates (`/settings#updates`) — v1.1.20
 
 **Software updates** section in **Settings** and header banner. Administrators only.
 
@@ -174,8 +174,13 @@ API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 |---------|-------------|
 | **Component cards** | WASH PRO CRM, Dynamic API, PyOrchestrator — current and latest version |
 | **Check now** | Force release check (GitHub API or `git ls-remote` without token) |
-| **Update** | Start job via `update-bridge` (pull → build → seed → health) |
+| **Update** | Start job via `update-bridge` (fetch + reset → build → seed → health) |
 | **Hide notification** | Dismiss until next release |
+| **Error on card** | Failed job stays visible with error text and step log *(v1.1.20)* |
+
+**CRM pull step *(v1.1.20+)*:** `git fetch` + `git reset --hard origin/main` — resets tracked files only; preserves `.env`, `DATA_DIR`, `docker-compose.override.yml`, `local/`.
+
+**Build *(v1.1.20+)*:** `scripts/compose-files.sh` — same `-f` flags as `scripts/start.sh` (override, Redis, PyOrchestrator).
 
 **v1.1.18+ behavior:** page load and job progress polling **do not** call GitHub — cache only. `GITHUB_TOKEN` in `.env` is **optional** (release notes, API quota).
 

@@ -75,7 +75,11 @@ docker compose up -d --build update-bridge dashboard
 
 ## Local server edits block git pull
 
-Do not edit tracked repo files on the server (`docker-compose.yml`, vendored code) — the updater’s `git pull` fails with “local changes would be overwritten”.
+**Symptoms:** Dashboard update “resets” immediately — progress vanishes in 1–2 s, history shows `failed`, step “Fetch from GitHub”.
+
+**Cause (before v1.1.20):** `git pull --ff-only` aborts on any **tracked** file modifications (“local changes would be overwritten”). Localhost clones are often clean; production hosts after manual edits or `scp` are not.
+
+**Fix (v1.1.20+):** updater runs `git fetch` + `git reset --hard origin/main` — resets tracked files only; **preserves** `.env`, `docker-compose.override.yml`, `local/`, `DATA_DIR`.
 
 **Recommended pattern:**
 

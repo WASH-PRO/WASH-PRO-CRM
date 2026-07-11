@@ -45,16 +45,23 @@ function VersionRow({
 function JobProgress({
   job,
   title,
+  failedLabel,
 }: {
   job: UpdateJob;
   title: string;
+  failedLabel?: string;
 }) {
   return (
     <div className="mt-4 space-y-3 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 dark:border-brand-400/20 dark:bg-brand-400/10">
       <div className="flex items-center gap-2 text-sm font-medium text-brand-900 dark:text-brand-100">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        {job.status === 'running' || job.status === 'queued' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : null}
         {title}
       </div>
+      {job.status === 'failed' && (job.error || failedLabel) && (
+        <p className="text-xs font-medium text-red-600 dark:text-red-400">{job.error || failedLabel}</p>
+      )}
       <div className="space-y-2">
         {job.steps.map((step) => (
           <div key={step.id} className="flex items-center gap-2 text-xs">
@@ -81,9 +88,19 @@ function JobProgress({
   );
 }
 
+function latestComponentJob(
+  activeJob: UpdateJob | null,
+  recentJobs: UpdateJob[],
+  componentId: UpdateComponentId
+): UpdateJob | null {
+  if (activeJob?.component === componentId) return activeJob;
+  return recentJobs.find((j) => j.component === componentId && j.status !== 'completed') ?? null;
+}
+
 function ComponentCard({
   component,
   activeJob,
+  recentJobs,
   executorAvailable,
   executorReason,
   onChanged,
@@ -91,13 +108,16 @@ function ComponentCard({
 }: {
   component: ComponentCheck;
   activeJob: UpdateJob | null;
+  recentJobs: UpdateJob[];
   executorAvailable: boolean;
   executorReason: string | null;
   onChanged: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [busy, setBusy] = useState(false);
-  const isActive = activeJob?.component === component.id;
+  const componentJob = latestComponentJob(activeJob, recentJobs, component.id);
+  const isActive = componentJob?.status === 'running' || componentJob?.status === 'queued';
+  const isFailed = componentJob?.status === 'failed';
 
   const runUpdate = async () => {
     if (!executorAvailable) {
@@ -150,14 +170,19 @@ function ComponentCard({
         <p className="field-hint mt-2 line-clamp-3 whitespace-pre-wrap">{component.releaseNotes.slice(0, 280)}</p>
       )}
 
-      {isActive && activeJob && (
+      {componentJob && (isActive || isFailed) && (
         <JobProgress
-          job={activeJob}
-          title={t('updates.jobTitle', { from: activeJob.fromVersion, to: activeJob.targetVersion })}
+          job={componentJob}
+          title={
+            isFailed
+              ? t('updates.jobFailed', { from: componentJob.fromVersion, to: componentJob.targetVersion })
+              : t('updates.jobTitle', { from: componentJob.fromVersion, to: componentJob.targetVersion })
+          }
+          failedLabel={isFailed ? t('updates.jobFailedHint') : undefined}
         />
       )}
 
-      {component.updateAvailable && !isActive && (
+      {component.updateAvailable && !isActive && !isFailed && (
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" className="btn-primary btn-sm" disabled={busy || !executorAvailable} onClick={() => void runUpdate()}>
             <ArrowUpCircle size={14} /> {busy ? t('updates.starting') : t('updates.update')}
@@ -232,6 +257,7 @@ export function SoftwareUpdatesSection() {
             key={component.id}
             component={component}
             activeJob={status.activeJob}
+            recentJobs={status.recentJobs}
             executorAvailable={status.executorAvailable}
             executorReason={status.executorReason}
             onChanged={refresh}

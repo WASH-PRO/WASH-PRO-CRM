@@ -75,9 +75,13 @@ docker compose up -d --build update-bridge dashboard
 
 ## Локальные правки на сервере блокируют git pull
 
-Не редактируйте отслеживаемые файлы репозитория (`docker-compose.yml`, vendored-код) напрямую на сервере — `git pull` в апдейтере завершится ошибкой «local changes would be overwritten».
+**Симптомы:** обновление из Dashboard «сразу сбрасывается» — прогресс исчезает через 1–2 с, в истории статус `failed`, шаг «Загрузка из GitHub».
 
-**Паттерн (рекомендуется):**
+**Причина (до v1.1.20):** `git pull --ff-only` отказывается при любых локальных изменениях **отслеживаемых** файлов (ошибка «local changes would be overwritten»). На localhost репозиторий часто чистый; на production после ручных правок или `scp` — нет.
+
+**Решение (v1.1.20+):** апдейтер выполняет `git fetch` + `git reset --hard origin/main` — сбрасывает только отслеживаемые файлы; **не трогает** `.env`, `docker-compose.override.yml`, `local/`, `DATA_DIR`.
+
+**Рекомендуемый паттерн** (серверные правки без блокировки обновлений):
 
 ```bash
 cp docker-compose.override.yml.example docker-compose.override.yml   # MongoDB 4.4 без AVX и др.

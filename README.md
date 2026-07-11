@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
-  <img src="https://img.shields.io/badge/version-1.1.19-0d9488?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.1.20-0d9488?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
@@ -54,7 +54,7 @@
 - **Status** — all posts, online/offline, interactive chart *(Main)*
 - **System** — server resources, WASH CRM version, embedded stack versions *(Main)* (v1.1.16)
 - **Integrity repair** — Settings wizard for paths, `.env`, and failed updates; external `DATA_DIR` paths no longer flagged (v1.1.19)
-- **Software updates** — release checks without GitHub token, stable notification banner (v1.1.18)
+- **Software updates** — reliable Dashboard auto-update (`git reset --hard`), failed job visible on card (v1.1.20)
 - **SCADA** — MQTT telemetry, journal, post commands and prices
 - **Setup wizard** — initial configuration after install
 - **Sites & posts** — car washes, posts with serial number, **MQTT accounts**, device settings

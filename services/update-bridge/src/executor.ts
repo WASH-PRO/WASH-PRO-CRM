@@ -43,7 +43,16 @@ function shellQuote(value: string): string {
 function syncEnvVersion(envFile: string, key: string, version: string): string {
   const file = shellQuote(envFile);
   const ver = shellQuote(version);
-  return `if [ -f ${file} ]; then if grep -q '^${key}=' ${file}; then sed -i 's/^${key}=.*/${key}=${ver}/' ${file}; else printf '\\n${key}=${ver}\\n' >> ${file}; fi; else printf '${key}=${ver}\\n' > ${file}; fi`;
+  return `if [ -f ${file} ]; then sed -i '/^${key}=/d' ${file}; printf '${key}=${ver}\\n' >> ${file}; else printf '${key}=${ver}\\n' > ${file}; fi`;
+}
+
+function composeSetup(): string {
+  return `set -a && [ -f ${DEPLOY_ROOT}/.env ] && . ${DEPLOY_ROOT}/.env; set +a && . ${DEPLOY_ROOT}/scripts/compose-files.sh`;
+}
+
+function gitSyncMain(root: string): string {
+  // Reset tracked files to origin/main; untracked/gitignored (.env, override, local/) are kept.
+  return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin main && if ! git diff --quiet || ! git diff --cached --quiet; then echo 'WARN: discarding local changes to tracked files before update'; fi && git reset --hard origin/main`;
 }
 
 function stepCommand(component: UpdateComponentId, stepId: string, targetTag: string): string {
@@ -52,15 +61,15 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
 
   if (component === 'crm') {
     if (stepId === 'pull') {
-      return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin && git pull --ff-only origin main && ([ ! -x ${root}/local/apply-server-patches.sh ] || ${root}/local/apply-server-patches.sh) && ${syncEnvVersion(`${root}/.env`, 'APP_VERSION', parseTagVersion(targetTag))}`;
+      return `${gitSyncMain(root)} && ([ ! -x ${root}/local/apply-server-patches.sh ] || ${root}/local/apply-server-patches.sh) && ${syncEnvVersion(`${root}/.env`, 'APP_VERSION', parseTagVersion(targetTag))}`;
     }
     if (stepId === 'build') {
       // NB: update-bridge и mosquitto исключены — пересборка бриджа убивает процесс
       // обновления; mosquitto не требует пересборки при обновлении CRM.
-      return `cd ${root} && docker compose build init-seed && docker compose up -d --build --no-deps dynamic-api dynamic-api-panel dashboard message-processor backup`;
+      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES build init-seed && docker compose $COMPOSE_FILES up -d --build --no-deps dynamic-api dynamic-api-panel dashboard message-processor backup`;
     }
     if (stepId === 'seed') {
-      return `cd ${root} && docker compose run --rm init-seed`;
+      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES run --rm init-seed`;
     }
     if (stepId === 'health') {
       return `wget -qO- http://dynamic-api:3001/api/health >/dev/null && wget -qO- http://message-processor:3022/health >/dev/null`;
@@ -72,10 +81,10 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && DYNAMIC_API_REF=${tag} ./scripts/update-dynamic-api.sh`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose up -d --build --no-deps dynamic-api dynamic-api-panel`;
+      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES up -d --build --no-deps dynamic-api dynamic-api-panel`;
     }
     if (stepId === 'seed') {
-      return `cd ${root} && docker compose run --rm init-seed`;
+      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES run --rm init-seed`;
     }
     if (stepId === 'health') {
       return `wget -qO- http://dynamic-api:3001/api/health >/dev/null`;

@@ -29,7 +29,7 @@ The **Integrity and repair** wizard *(v1.1.19+)* warns only when `DATA_DIR` mist
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DASHBOARD_PORT` | `80` | CRM Dashboard port |
-| `APP_VERSION` | `1.1.19` | Application version |
+| `APP_VERSION` | `1.1.20` | Application version |
 
 ## Dynamic API
 
@@ -138,8 +138,8 @@ For host-specific changes (CPU without AVX → MongoDB 4.4, vendored patches), *
 
 | File | Purpose |
 |------|---------|
-| `docker-compose.override.yml` | Service overrides (see `docker-compose.override.yml.example`); loaded by `scripts/start.sh` |
-| `local/apply-server-patches.sh` | Post-`git pull` script (see `local/apply-server-patches.sh.example`); invoked by `update-bridge` |
+| `docker-compose.override.yml` | Service overrides (see `docker-compose.override.yml.example`); loaded by `scripts/start.sh` and updater via `scripts/compose-files.sh` |
+| `local/apply-server-patches.sh` | Post-pull script (see `local/apply-server-patches.sh.example`); invoked by `update-bridge` |
 
 Both files are **not committed** — keep them on the server only.
 

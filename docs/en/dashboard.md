@@ -10,7 +10,7 @@ React application with **light**, **dark**, and **system** themes (follows OS se
 
 | Group | Sections |
 |-------|----------|
-| **Main** | Overview, **Status** (all posts, chart, online/offline) |
+| **Main** | Overview, **Status** (all posts, chart, online/offline), **System** (server resources, CRM & stack versions) |
 | **Sites** | Car washes, Posts |
 | **Data** | MQTT |
 | **Cards** | Discount, Service, VIP, Collection |
@@ -137,6 +137,21 @@ All posts across all sites. **Status** column (online/offline), status filter.
 **Interactive chart** full width (Recharts): metric switching (mode time / balance / free pause), tooltip with details, brush for many posts, live mode time refresh.
 
 Table: address, post number, balance, pause, discount, live mode timer, mode name, last message date.
+
+### System (`/system`) — v1.1.16
+
+Platform status page in **Main** (not the admin **System** group with notifications and users).
+
+| Block | Description |
+|-------|-------------|
+| Summary cards | OS, CPU cores, hostname, server uptime |
+| Memory / Disk | Usage bars and totals |
+| Components | WASH PRO CRM, Dynamic API, PyOrchestrator versions (`update-bridge`) |
+| Application | CRM name, version, environment, Docker platform, API Node.js runtime |
+| CPU details | Model (with Docker `/proc/cpuinfo` fallback), cores, load average |
+| Network | Host interfaces table with search |
+
+Live refresh every **30 s** (`GET /api/dashboard/system` via Dynamic API).
 
 ### Cards (`/cards`)
 

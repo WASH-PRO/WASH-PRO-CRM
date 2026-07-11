@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+## [1.1.16] — 2026-07-11
+
+### Добавлено
+
+- **Страница «Система»** (`/system`) в группе **«Главное»** (после «Состояние») — ресурсы сервера и информация о стеке WASH PRO CRM
+- **Блок «Приложение»** — WASH PRO CRM: версия, окружение, платформа Docker, API runtime
+- **Блок «Компоненты»** — версии CRM, Dynamic API, PyOrchestrator (через `update-bridge`)
+- **Метрики** — ОС, CPU, hostname, uptime, память, диск, сетевые интерфейсы; live-обновление 30 с
+- **Модель CPU в Docker** — fallback на `/proc/cpuinfo`, если `os.cpus()` не возвращает название процессора
+- **Локализация** — полные подписи EN/RU для страницы «Система»
+
+### Изменено
+
+- **Меню «Главное»** — Обзор, Состояние, **Система** (статус платформы; группа «Система» с уведомлениями без изменений)
+
 ## [1.1.15] — 2026-07-09
 
 ### Добавлено
@@ -251,7 +266,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.15...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.16...HEAD
+[1.1.16]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.16
 [1.1.15]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.15
 [1.1.14]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.14
 [1.1.13]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.13

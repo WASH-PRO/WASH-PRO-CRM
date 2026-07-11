@@ -8,7 +8,7 @@ Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en
 
 | Group | Sections |
 |-------|----------|
-| **Main** | Overview, **Status** |
+| **Main** | Overview, **Status**, **System** |
 | **Sites** | Car Washes, Posts |
 | **Data** | MQTT |
 | **Cards** | Discount, Service, VIP, Collection |
@@ -76,7 +76,13 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 |----------|-------|
 | 3 s | Status, Posts, post detail |
 | 5 s | Overview |
+| 30 s | **System** (platform status) |
 | 10–15 s | Others |
+
+## Recent changes (v1.1.16)
+
+- **System** (`/system`) in **Main** — server resources, WASH PRO CRM version, Dynamic API / PyOrchestrator stack
+- **CPU model** — readable in Docker containers (via `/proc/cpuinfo`)
 
 ## Recent changes (v1.1.15)
 

@@ -11,7 +11,7 @@ All settings are defined in `.env` (template — `.env.example`).
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DASHBOARD_PORT` | `80` | CRM Dashboard port |
-| `APP_VERSION` | `1.1.0` | Application version |
+| `APP_VERSION` | `1.1.16` | Application version |
 
 ## Dynamic API
 

@@ -29,7 +29,7 @@ import { UpdateBanner } from './UpdateBanner';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { Loading } from './UI';
 import { LanguageToggle } from './LanguageToggle';
-import { HelpButton, HelpModal } from './HelpModal';
+import { HelpModal } from './HelpModal';
 import { useLocale } from '../i18n/LocaleContext';
 
 function LayoutInner() {
@@ -138,13 +138,10 @@ function LayoutInner() {
               setHelpOpen(true);
               setMobileOpen(false);
             }}
-            className={clsx(
-              'nav-item w-full border border-brand-500/30 bg-brand-500/10 font-semibold text-brand-800 hover:bg-brand-500/15 dark:border-brand-400/30 dark:bg-brand-400/10 dark:text-brand-200 dark:hover:bg-brand-400/15',
-              collapsed && 'justify-center px-2'
-            )}
+            className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
             title={collapsed ? t('layout.help') : undefined}
           >
-            <BookOpen size={18} strokeWidth={2} className="shrink-0" />
+            <BookOpen size={18} strokeWidth={1.75} className="shrink-0" />
             {!collapsed && <span className="truncate">{t('layout.help')}</span>}
           </button>
 
@@ -195,8 +192,6 @@ function LayoutInner() {
             >
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
-
-            <HelpButton onClick={() => setHelpOpen(true)} />
 
             <Link
               to="/profile"

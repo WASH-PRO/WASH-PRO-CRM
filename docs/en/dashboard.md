@@ -22,12 +22,11 @@ React application with **light**, **dark**, and **system** themes (follows OS se
 Sections marked admin are available only to **Administrator** (`manage_users` or `view_logs` in JWT).  
 **Profile** — link in the header (`/profile`). **Setup wizard** — `/setup` (on first login or `?restart=1`).
 
-## Built-in help (v1.1.22, button v1.1.27)
+## Built-in help (v1.1.22, placement v1.1.28)
 
 | Element | Description |
 |---------|-------------|
-| **Header** | **Help** button (book icon, teal background) — between notifications and language switcher |
-| **Sidebar** | **Help** item at the bottom of the sidebar (above Setup wizard) |
+| **Sidebar** | **Help** item at the bottom — between Setup wizard and Resources, above the Documentation link (same style as other items) |
 | **Window** | Fullscreen help: TOC by menu group, search, screen wireframes, examples |
 | **Close** | Close button or **Esc** |
 | **Languages** | EN / RU (same as CRM UI) |

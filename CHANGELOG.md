@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.28] — 2026-07-11
+
+### Изменено
+
+- **Справка** — только в sidebar: между «Мастер настроек» и «Ресурсы», над «Документация»; обычный стиль пункта меню (без выделения)
+- **Шапка** — кнопка «Справка» убрана из topbar
+
 ## [1.1.27] — 2026-07-11
 
 ### Исправлено
@@ -386,7 +393,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.27...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.28...HEAD
+[1.1.28]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.28
 [1.1.27]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.27
 [1.1.26]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.26
 [1.1.25]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.25

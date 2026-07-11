@@ -7,6 +7,7 @@ interface SoftwareUpdatesContextValue {
   status: UpdatesStatus | null;
   loading: boolean;
   refresh: () => Promise<UpdatesStatus>;
+  checkGithub: () => Promise<UpdatesStatus>;
 }
 
 const SoftwareUpdatesContext = createContext<SoftwareUpdatesContextValue | null>(null);
@@ -14,7 +15,7 @@ const SoftwareUpdatesContext = createContext<SoftwareUpdatesContextValue | null>
 export function SoftwareUpdatesProvider({ children }: { children: ReactNode }) {
   const { hasPermission } = useAuth();
   const canManageUpdates = hasPermission('manage_users', 'manage_api');
-  const { status, loading, refresh, fastPoll } = useSoftwareUpdates(canManageUpdates);
+  const { status, loading, refresh, checkGithub, fastPoll } = useSoftwareUpdates(canManageUpdates);
 
   useEffect(() => {
     if (!canManageUpdates || !fastPoll) return;
@@ -25,7 +26,7 @@ export function SoftwareUpdatesProvider({ children }: { children: ReactNode }) {
   }, [canManageUpdates, fastPoll, refresh]);
 
   return (
-    <SoftwareUpdatesContext.Provider value={{ status, loading, refresh }}>
+    <SoftwareUpdatesContext.Provider value={{ status, loading, refresh, checkGithub }}>
       {children}
     </SoftwareUpdatesContext.Provider>
   );

@@ -164,6 +164,21 @@ Section in **Settings** (before Software updates). Administrators only (`manage_
 
 API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 
+### Software updates (`/settings#updates`) — v1.1.18
+
+**Software updates** section in **Settings** and header banner. Administrators only.
+
+| Element | Description |
+|---------|-------------|
+| **Component cards** | WASH PRO CRM, Dynamic API, PyOrchestrator — current and latest version |
+| **Check now** | Force release check (GitHub API or `git ls-remote` without token) |
+| **Update** | Start job via `update-bridge` (pull → build → seed → health) |
+| **Hide notification** | Dismiss until next release |
+
+**v1.1.18+ behavior:** page load and job progress polling **do not** call GitHub — cache only. `GITHUB_TOKEN` in `.env` is **optional** (release notes, API quota).
+
+State: `DATA_DIR/update-bridge/state.json`. API: `GET /api/crm/updates/status`, `POST /api/crm/updates/check`, `POST /api/crm/updates/apply/{component}`.
+
 ### Cards (`/cards`)
 
 | Subsection | `cardType` |

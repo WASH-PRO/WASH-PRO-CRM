@@ -1,0 +1,12 @@
+# Локальные переопределения Docker Compose (не коммитьте в git).
+# Скопируйте: cp docker-compose.override.yml.example docker-compose.override.yml
+#
+# Подключается автоматически: scripts/start.sh и docker compose (без -f) в update-bridge.
+#
+# Пример: CPU без AVX (Intel Pentium G4600 и аналоги) — MongoDB 7+ не запускается.
+
+services:
+  mongodb:
+    image: mongo:4.4
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]

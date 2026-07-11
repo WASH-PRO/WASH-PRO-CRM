@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+## [1.1.18] — 2026-07-11
+
+### Исправлено
+
+- **Проверка обновлений без GitHub-токена** — `update-bridge`: fallback на `git ls-remote` при лимите GitHub REST API (60/ч без токена)
+- **Сброс уведомления об обновлении при загрузке страницы** — Dashboard не вызывает GitHub при F5 и при опросе прогресса job; только кнопка «Проверить сейчас»
+- **Потеря `latestVersion` при ошибке API** — сохранение последних известных версий в кэше `update-bridge`
+- **Документация** — паттерн `docker-compose.override.yml` + `local/apply-server-patches.sh` для серверных правок без блокировки `git pull`
+
+### Изменено
+
+- **`useSoftwareUpdates`** — разделены `refresh` (кэш) и `checkGithub` (принудительная проверка релизов)
+- **Примеры** — `docker-compose.override.yml.example`, `local/apply-server-patches.sh.example`
+
 ## [1.1.17] — 2026-07-11
 
 ### Добавлено
@@ -281,7 +295,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.17...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.18...HEAD
+[1.1.18]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.18
 [1.1.17]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.17
 [1.1.16]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.16
 [1.1.15]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.15

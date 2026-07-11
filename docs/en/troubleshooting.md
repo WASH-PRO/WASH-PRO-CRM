@@ -37,6 +37,46 @@ docker compose run --rm init-seed
 
 Ensure `.env` has correct `WASH_HOST_PROJECT_ROOT` (absolute host path to the project) and `DATA_DIR=./data`.
 
+## Updates not shown / reset on page load (v1.1.18+)
+
+**Symptoms:** update banner disappears after F5; empty “latest version” on component cards; “GitHub API rate limit exceeded”.
+
+**Cause (before v1.1.18):** without `GITHUB_TOKEN`, GitHub REST API allows 60 requests/hour per IP; Dashboard forced API checks on every load and every 3 s during updates.
+
+**Fix (v1.1.18+):**
+
+- `update-bridge` falls back to **`git ls-remote`** when API quota is exhausted — token **not required** for public repos
+- normal page load and job progress polling use **cache**; GitHub is queried only via **Check now**
+- on API errors, last known versions are kept in `DATA_DIR/update-bridge/state.json`
+
+Upgrade to **v1.1.18** and rebuild:
+
+```bash
+git pull
+docker compose up -d --build update-bridge dashboard
+```
+
+`GITHUB_TOKEN` in `.env` is **optional** (release notes and 5000 req/h). Not needed for public installs.
+
+## Local server edits block git pull
+
+Do not edit tracked repo files on the server (`docker-compose.yml`, vendored code) — the updater’s `git pull` fails with “local changes would be overwritten”.
+
+**Recommended pattern:**
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+mkdir -p local
+cp local/apply-server-patches.sh.example local/apply-server-patches.sh
+chmod +x local/apply-server-patches.sh
+git checkout -- docker-compose.yml
+```
+
+- `docker-compose.override.yml` — untracked, loaded by `scripts/start.sh`
+- `local/apply-server-patches.sh` — run by updater after `git pull`
+
+See [Deployment](deployment.md), [Configuration](configuration.md).
+
 ## init-seed: Exited status
 
 `Exited (0)` is normal (one-time container).

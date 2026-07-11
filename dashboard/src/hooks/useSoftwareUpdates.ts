@@ -11,7 +11,15 @@ export function useSoftwareUpdates(enabled = true) {
     live: false,
   });
 
-  const refreshStatus = useCallback(async (): Promise<UpdatesStatus> => {
+  /** Обновить статус из кэша (прогресс job, dismiss) — без запросов к GitHub */
+  const refreshCached = useCallback(async (): Promise<UpdatesStatus> => {
+    const status = await getUpdatesStatus(false);
+    await refresh();
+    return status;
+  }, [refresh]);
+
+  /** Принудительная проверка релизов на GitHub */
+  const refreshFromGithub = useCallback(async (): Promise<UpdatesStatus> => {
     const status = await getUpdatesStatus(true);
     await refresh();
     return status;
@@ -22,7 +30,8 @@ export function useSoftwareUpdates(enabled = true) {
   return {
     status: data,
     loading: loading && !data,
-    refresh: refreshStatus,
+    refresh: refreshCached,
+    checkGithub: refreshFromGithub,
     lastUpdatedAt,
     fastPoll,
   };

@@ -164,6 +164,21 @@ Live-обновление каждые **30 с** (`GET /api/dashboard/system` ч
 
 API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 
+### Обновления ПО (`/settings#updates`) — v1.1.18
+
+Секция **«Обновления ПО»** в **Настройках** и баннер в шапке. Только администраторы.
+
+| Элемент | Описание |
+|---------|----------|
+| **Карточки компонентов** | WASH PRO CRM, Dynamic API, PyOrchestrator — текущая и последняя версия |
+| **Проверить сейчас** | Принудительная проверка релизов (GitHub API или `git ls-remote` без токена) |
+| **Обновить** | Запуск job через `update-bridge` (pull → build → seed → health) |
+| **Скрыть уведомление** | Dismiss до следующего релиза |
+
+**Поведение v1.1.18+:** загрузка страницы и опрос прогресса job **не** обращаются к GitHub — только кэш `update-bridge`. `GITHUB_TOKEN` в `.env` **опционален** (release notes, лимит API).
+
+Состояние: `DATA_DIR/update-bridge/state.json`. API: `GET /api/crm/updates/status`, `POST /api/crm/updates/check`, `POST /api/crm/updates/apply/{component}`.
+
 ### Карты (`/cards`)
 
 | Подраздел | `cardType` |

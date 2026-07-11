@@ -11,7 +11,7 @@ All settings are defined in `.env` (template — `.env.example`).
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DASHBOARD_PORT` | `80` | CRM Dashboard port |
-| `APP_VERSION` | `1.1.17` | Application version |
+| `APP_VERSION` | `1.1.18` | Application version |
 
 ## Dynamic API
 
@@ -30,6 +30,7 @@ All settings are defined in `.env` (template — `.env.example`).
 | `CRM_GITHUB_REPO` | `WASH-PRO/WASH-PRO-CRM` | CRM repo for release checks |
 | `DYNAMIC_API_GITHUB_REPO` | `Dynamic-API-Platform/Dynamic-API-Platform` | Upstream Dynamic API |
 | `PYORCHESTRATOR_GITHUB_REPO` | `PyOrchestrator/PyOrchestrator` | Upstream PyOrchestrator |
+| `# GITHUB_TOKEN` | — | **Optional.** Release notes and 5000 req/h; without token versions use `git ls-remote` *(v1.1.18+)* |
 | `# DYNAMIC_API_VERSION` | from package.json | Force version (usually not needed) |
 
 Current vendored version: **v1.5.13** (`dynamic-api/backend/package.json`).
@@ -112,3 +113,23 @@ PYORCHESTRATOR_ENABLED=true
 PYORCH_JWT_SECRET=change-me-in-production
 PYORCH_SECRET_MASTER_KEY=change-me-in-production-32chars!!
 ```
+
+## Server-local overrides (v1.1.18+)
+
+For host-specific changes (CPU without AVX → MongoDB 4.4, vendored patches), **do not edit** tracked git files — auto-update `git pull` will fail.
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.override.yml` | Service overrides (see `docker-compose.override.yml.example`); loaded by `scripts/start.sh` |
+| `local/apply-server-patches.sh` | Post-`git pull` script (see `local/apply-server-patches.sh.example`); invoked by `update-bridge` |
+
+Both files are **not committed** — keep them on the server only.
+
+## Software updates (Dashboard)
+
+- **Settings → Software updates** — CRM, Dynamic API, PyOrchestrator via `update-bridge`
+- **Check now** — force GitHub check (or git fallback without token)
+- Page load and job progress polling — from cache in `DATA_DIR/update-bridge/state.json`
+- Update banner — Dashboard header (administrator)
+
+See [Troubleshooting](troubleshooting.md).

@@ -36,7 +36,9 @@ layout: default
 | **Аналитика** | Использование и финансы до/после инкассации |
 | **Система** | Уведомления (web + Telegram), пользователи (Telegram ID), группы RBAC, настройки, логи |
 | **Автоматизация** | **Публикации**, **Telegram-боты** (управление / сервис / **информационный v2.2**), **MCP сервер**, **Модули**, бэкапы |
-| **Модули** *(v1.1.30)* | Каталог расширений GitHub; install/start/stop; UI настроек в iframe; нужен PyOrchestrator |
+| **Модули** *(v1.1.30+)* | Каталог расширений GitHub; install/start/stop; UI настроек в iframe; исправление Safari и починка из браузера *(v1.1.33)*; нужен PyOrchestrator |
+| **Уведомления об обновлениях и модулях** *(v1.1.34)* | Задачи обновления CRM/Dynamic API/PyOrchestrator и события модулей в web + Telegram |
+| **Локализация по модулям** *(v1.1.37)* | Переводы: modules, updates, notifications; справка в `help/` |
 | **Resources** | Статус и ссылки на панели Dynamic API и PyOrchestrator |
 | **Live-данные** | Автообновление 3–15 с; таблицы с пагинацией 20–100 и «Загрузить ещё» |
 
@@ -129,4 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## История изменений
 
-См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) в репозитории.
+Последний релиз: **[v1.1.37](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37)** — локализация по модулям, синхронизация docs и wiki.
+
+См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) и [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

@@ -33,9 +33,9 @@ export const modulesPagesRu = {
   deps: 'Зависимости',
   actionFailed: 'Не удалось выполнить действие',
   searchPlaceholder: 'Поиск по названию, ID, автору, категории…',
-  filterInstall: 'Установка',
   filterStatus: 'Статус',
   filterCategory: 'Категория',
+  sectionCount: '({{count}})',
   resultsCount: '{{count}} модулей',
   noResults: 'По вашему запросу модули не найдены',
 } as const;

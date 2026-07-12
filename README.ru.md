@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
-  <img src="https://img.shields.io/badge/version-1.1.32-0d9488?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.1.37-0d9488?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
@@ -62,6 +62,9 @@
 - **Карты** — скидочные / сервисные / VIP; журнал применений NFC; типы скидок 1–5
 - **Аналитика** — использование и финансы до/после инкассации
 - **Автоматизация** — новости/акции для Telegram, боты (управление / сервис / информационный **v2.2**), **MCP сервер** (Dynamic API + PyOrchestrator), **Модули** (расширения GitHub), бэкапы
+- **Уведомления об обновлениях и модулях** — задачи обновления CRM и события модулей в web + Telegram (v1.1.34)
+- **Починка модулей из браузера** — исправление Safari; пересборка modules-bridge в Настройках без SSH (v1.1.33)
+- **Локализация по модулям** — переводы modules, updates, notifications (v1.1.37)
 - **Система** — уведомления (web + Telegram), пользователи (привязка Telegram ID), группы RBAC, настройки, логи, профиль
 - **Resources** — статус и ссылки на панели Dynamic API (`:8080`) и PyOrchestrator (`:8090`)
 - **Live-режим** — автообновление 3–15 с

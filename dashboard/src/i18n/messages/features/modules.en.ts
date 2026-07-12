@@ -33,9 +33,9 @@ export const modulesPagesEn = {
   deps: 'Dependencies',
   actionFailed: 'Action failed',
   searchPlaceholder: 'Search by name, ID, author, category…',
-  filterInstall: 'Installation',
   filterStatus: 'Status',
   filterCategory: 'Category',
+  sectionCount: '({{count}})',
   resultsCount: '{{count}} modules',
   noResults: 'No modules match your filters',
 } as const;

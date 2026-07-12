@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.32** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.37** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -27,7 +27,10 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - **Dashboard localization** — English / Russian; default English; switcher in header and Settings (v1.1.13+)
 - **Localized notifications** — list messages by event type follow UI language, including legacy DB records (v1.1.14)
 - **MCP server** in Dashboard — Dynamic API + PyOrchestrator for AI agents (v1.1.12)
-- **Modules** — GitHub extension catalog, install/start/stop, settings UI iframe *(Automation)* (v1.1.30)
+- **Modules** — GitHub extension catalog, install/start/stop, settings UI iframe *(Automation)* (v1.1.30); Safari fix & browser repair *(v1.1.33)*
+- **Update & module notifications** — CRM stack updates and module lifecycle in web + Telegram (v1.1.34)
+- **i18n feature catalogs** — split translations: modules, updates, notifications; help in `help/` (v1.1.37)
+- **Admin password visibility** — show password toggle on settings, users, profile (v1.1.33)
 - Stdio MCP `services/crm-mcp` for Cursor (v1.1.9+)
 - MQTT (Mosquitto): post isolation by serial
 - Live updates 3–15 s; global Live/Static toggle (v1.1.8)
@@ -65,11 +68,25 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
 
-## Changelog v1.1.32
+## Changelog v1.1.37
 
-- **Auto-update** — CRM build includes modules-bridge; Safari modules page fix
+- **i18n** — feature modules: `features/modules`, `features/updates`, `features/notifications-features`; help in `help/`
+- **Release policy** — GitHub Releases only for recent versions (`releases/README.md`)
 
-Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
+Release notes: [v1.1.37](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37) · Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
+
+## Changelog v1.1.36
+
+- **Auto-update** — no longer fails when `modules-bridge` is down; dashboard always rebuilds; `WASH_HOST_PROJECT_ROOT` auto-sync
+
+## Changelog v1.1.34
+
+- **Notifications** — software update jobs (CRM, Dynamic API, PyOrchestrator) and module lifecycle events
+
+## Changelog v1.1.33
+
+- **Modules** — Safari JWT fix; rebuild modules-bridge from **Settings → Integrity repair** without SSH
+- **PasswordInput** — show password for administrators
 
 ## Changelog v1.1.30
 

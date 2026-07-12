@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.32** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**WASH PRO version:** **v1.1.37** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -27,7 +27,10 @@
 - **Локализация Dashboard** — English / Русский; по умолчанию English; переключатель в шапке и Настройках (v1.1.13+)
 - **Локализованные уведомления** — сообщения в списке по типу события следуют языку интерфейса, в т.ч. старые записи (v1.1.14)
 - **MCP сервер** в Dashboard — Dynamic API + PyOrchestrator для AI-агентов (v1.1.12)
-- **Модули** — каталог расширений GitHub, install/start/stop, UI настроек в iframe *(Автоматизация)* (v1.1.30)
+- **Модули** — каталог расширений GitHub, install/start/stop, UI настроек в iframe *(Автоматизация)* (v1.1.30); исправление Safari и починка из браузера *(v1.1.33)*
+- **Уведомления об обновлениях и модулях** — задачи обновления CRM и события модулей в web + Telegram (v1.1.34)
+- **Локализация по модулям** — переводы modules, updates, notifications; справка в `help/` (v1.1.37)
+- **Показ пароля для администраторов** — кнопка в настройках, пользователях, профиле (v1.1.33)
 - Stdio MCP `services/crm-mcp` для Cursor (v1.1.9+)
 - MQTT (Mosquitto): изоляция постов по serial
 - Live-обновление 3–15 с; глобальный переключатель Live/Static (v1.1.8)
@@ -65,11 +68,25 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
 
-## Changelog v1.1.32
+## Changelog v1.1.37
 
-- **Автообновление** — сборка CRM включает modules-bridge; исправление страницы «Модули» в Safari
+- **Локализация** — feature-модули: `features/modules`, `features/updates`, `features/notifications-features`; справка в `help/`
+- **Политика релизов** — GitHub Releases только для актуальных версий (`releases/README.md`)
 
-Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
+Заметки релиза: [v1.1.37](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37) · Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
+
+## Changelog v1.1.36
+
+- **Автообновление** — больше не падает без `modules-bridge`; dashboard всегда пересобирается; авто-синхронизация `WASH_HOST_PROJECT_ROOT`
+
+## Changelog v1.1.34
+
+- **Уведомления** — задачи обновления ПО (CRM, Dynamic API, PyOrchestrator) и события модулей
+
+## Changelog v1.1.33
+
+- **Модули** — исправление Safari JWT; пересборка modules-bridge в **Настройки → Целостность и исправление** без SSH
+- **PasswordInput** — показ пароля для администраторов
 
 ## Changelog v1.1.30
 

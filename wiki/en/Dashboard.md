@@ -79,6 +79,19 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.37)
+
+- **i18n** — split into feature modules (`features/modules`, `updates`, `notifications-features`); help in `help/`
+
+## Recent changes (v1.1.34)
+
+- **Notifications** — software update progress and module install/start/stop/update events
+
+## Recent changes (v1.1.33)
+
+- **Modules** — Safari JWT decode fix; integrity repair rebuilds modules-bridge from Settings
+- **PasswordInput** — show password for administrators
+
 ## Recent changes (v1.1.32)
 
 - **Modules** — compact filter toolbar; refresh catalog button with label

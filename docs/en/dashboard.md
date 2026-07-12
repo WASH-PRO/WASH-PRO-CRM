@@ -82,6 +82,15 @@ See [`dashboard/src/i18n/README.md`](../../dashboard/src/i18n/README.md).
 
 The **Notifications** page and Overview widget display **localized message templates by event type** (`mqtt_credit`, `user_login`, `wash_created`, etc.), not the raw text stored when the record was created. Parameters (amount, login, entity name) are parsed from legacy messages. Severity labels and CSV export follow the active UI language.
 
+### Software updates & modules (v1.1.34)
+
+Additional event types (EN/RU templates in `notifications-features.{en,ru}.ts`):
+
+- **Software updates** — job started, completed, failed (CRM, Dynamic API, PyOrchestrator)
+- **Modules** — install, uninstall, start, stop, update, errors
+
+Configure web and Telegram channels on **Overview** or **Notifications**.
+
 ## Live mode
 
 Operational data refreshes automatically (`usePolling`). Header shows a live-mode indicator.

@@ -4,6 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WIKI_REPO="${WIKI_REPO:-https://github.com/WASH-PRO/WASH-PRO-CRM.wiki.git}"
+APP_VERSION="$("$ROOT/scripts/app-version.sh")"
 CLONE_DIR="$(mktemp -d)"
 trap 'rm -rf "$CLONE_DIR"' EXIT
 
@@ -16,7 +17,7 @@ cd "$CLONE_DIR"
 rm -rf en ru
 
 # Root landing — language hub (GitHub Wiki opens Home.md by default)
-cat > Home.md <<'EOF'
+cat > Home.md <<EOF
 # WASH PRO CRM Wiki
 
 **Language:** **[English](en-Home)** · [Русский](ru-Home)
@@ -24,7 +25,7 @@ cat > Home.md <<'EOF'
 Sources synced from the main repository. **Default language: English.**
 
 **Full documentation (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/en/  
-**Current version:** v1.1.32
+**Current version:** v${APP_VERSION}
 
 ## English
 
@@ -75,7 +76,7 @@ if git diff --staged --quiet; then
   exit 0
 fi
 
-git commit -m "docs: sync wiki from main (v1.1.30, Modules page)"
+git commit -m "docs: sync wiki from main (v${APP_VERSION})"
 git push origin HEAD
 
 echo "Published: https://github.com/WASH-PRO/WASH-PRO-CRM/wiki"

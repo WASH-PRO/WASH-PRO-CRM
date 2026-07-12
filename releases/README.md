@@ -14,6 +14,7 @@ gh release edit v1.1.37 --title "$(head -1 releases/v1.1.37.md)" --notes-file re
 - **Do not backfill** old tags (`v1.1.10`, `v1.1.20`, …) — they clutter the releases page and confuse auto-update.
 - **CHANGELOG.md** remains the full history; `releases/v*.md` files are templates for **new** tags only.
 - When cutting a new version, add **one** file `releases/vX.Y.Z.md`; older release note files in git are archival — no need to create matching GitHub Release retroactively.
+- After bumping `dashboard/package.json`, run `./scripts/sync-version-docs.sh` (badges, `.env.example`, `docs/_data/version.yml`) and update README/wiki feature lists.
 
 ## Bilingual format
 

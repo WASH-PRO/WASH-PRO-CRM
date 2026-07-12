@@ -38,4 +38,12 @@ git clone https://github.com/WASH-PRO/wash-module-starter my-module
 
 Добавьте запись в `modules/registry.json` CRM и выполните push.
 
+## Safari и починка *(v1.1.33)*
+
+Исправление JWT в v1.1.33+. Если страница всё ещё падает — **Настройки → Целостность и исправление**, пересборка `modules-bridge` без SSH.
+
+## Уведомления *(v1.1.34)*
+
+События install/start/stop/update модулей — в **Система → Уведомления**.
+
 См. [Embedded-Services](ru-Embedded-Services), [Telegram](ru-Telegram), [Dashboard](ru-Dashboard).

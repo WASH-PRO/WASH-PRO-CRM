@@ -38,4 +38,12 @@ Required files: `wash-module.json`, `src/main.py`, `ui/index.html`.
 
 Add an entry to CRM `modules/registry.json` and push.
 
+## Safari & repair *(v1.1.33)*
+
+Safari JWT fix in v1.1.33+. If the page still fails, use **Settings → Integrity repair** to rebuild `modules-bridge` without SSH.
+
+## Notifications *(v1.1.34)*
+
+Module install/start/stop/update events appear in **System → Notifications**.
+
 See [Embedded-Services](en-Embedded-Services), [Telegram](en-Telegram), [Dashboard](en-Dashboard).

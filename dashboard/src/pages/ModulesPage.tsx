@@ -31,7 +31,6 @@ import { useLocale } from '../i18n/LocaleContext';
 import { normalizeModulesError } from '../utils/modulesError';
 
 type PageState = 'loading' | 'ready' | 'unavailable';
-type InstallFilter = 'all' | 'installed' | 'available';
 type StatusFilter = 'all' | 'running' | 'stopped' | 'error' | 'updating' | 'catalog';
 
 const MODULE_PAGE_SIZE_OPTIONS = [4, 8, 12, 24];
@@ -244,11 +243,34 @@ function ModuleCard({
   );
 }
 
+function filterCatalogModules(
+  catalog: CatalogModule[],
+  {
+    search,
+    categoryFilter,
+    statusFilter,
+    locale,
+  }: {
+    search: string;
+    categoryFilter: string;
+    statusFilter: StatusFilter;
+    locale: string;
+  }
+): CatalogModule[] {
+  const query = search.trim().toLowerCase();
+  return catalog
+    .filter((module) => {
+      if (categoryFilter && module.category !== categoryFilter) return false;
+      if (statusFilter !== 'all' && moduleStatusFilterKey(module) !== statusFilter) return false;
+      if (query && !moduleSearchHaystack(module, locale).includes(query)) return false;
+      return true;
+    })
+    .sort((a, b) => localized(a.name, locale).localeCompare(localized(b.name, locale), locale));
+}
+
 function ModuleCatalogToolbar({
   search,
   onSearchChange,
-  installFilter,
-  onInstallFilterChange,
   categoryFilter,
   onCategoryFilterChange,
   statusFilter,
@@ -257,8 +279,6 @@ function ModuleCatalogToolbar({
 }: {
   search: string;
   onSearchChange: (value: string) => void;
-  installFilter: InstallFilter;
-  onInstallFilterChange: (value: InstallFilter) => void;
   categoryFilter: string;
   onCategoryFilterChange: (value: string) => void;
   statusFilter: StatusFilter;
@@ -283,18 +303,6 @@ function ModuleCatalogToolbar({
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-        <div className="min-w-0">
-          <label className="label !mb-1">{t('pages.modules.filterInstall')}</label>
-          <select
-            className="input input-sm"
-            value={installFilter}
-            onChange={(e) => onInstallFilterChange(e.target.value as InstallFilter)}
-          >
-            <option value="all">{t('common.all')}</option>
-            <option value="installed">{t('pages.modules.installedSection')}</option>
-            <option value="available">{t('pages.modules.availableSection')}</option>
-          </select>
-        </div>
         <div className="min-w-0">
           <label className="label !mb-1">{t('pages.modules.filterStatus')}</label>
           <select
@@ -398,6 +406,111 @@ function ModuleCatalogFooter({
   );
 }
 
+function ModuleSection({
+  title,
+  modules,
+  emptyMessage,
+  locale,
+  busy,
+  page,
+  pageSize,
+  loadedCount,
+  onPageChange,
+  onPageSizeChange,
+  onLoadedCountChange,
+  onInstall,
+  onStart,
+  onStop,
+  onUpdate,
+  onUninstall,
+}: {
+  title: string;
+  modules: CatalogModule[];
+  emptyMessage: string;
+  locale: string;
+  busy: string | null;
+  page: number;
+  pageSize: number;
+  loadedCount: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onLoadedCountChange: (count: number) => void;
+  onInstall: (id: string) => void;
+  onStart: (id: string) => void;
+  onStop: (id: string) => void;
+  onUpdate: (id: string) => void;
+  onUninstall: (id: string) => void;
+}) {
+  const { t } = useLocale();
+  const effectiveLoaded = Math.min(loadedCount, modules.length);
+  const totalPages = Math.max(1, Math.ceil(effectiveLoaded / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visibleModules = modules.slice(
+    (currentPage - 1) * pageSize,
+    Math.min(currentPage * pageSize, effectiveLoaded)
+  );
+  const canLoadMore = effectiveLoaded < modules.length;
+
+  const changePageSize = (nextSize: number) => {
+    onPageSizeChange(nextSize);
+    onLoadedCountChange(nextSize);
+    onPageChange(1);
+  };
+
+  const loadMore = () => {
+    const nextLoaded = Math.min(loadedCount + pageSize, modules.length);
+    onLoadedCountChange(nextLoaded);
+    onPageChange(Math.max(1, Math.ceil(nextLoaded / pageSize)));
+  };
+
+  return (
+    <section className="mb-10 last:mb-0">
+      <div className="mb-4 flex flex-wrap items-baseline gap-2 border-b border-panel-border pb-3 dark:border-panel-border-dark">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <span className="text-sm text-panel-muted dark:text-panel-muted-dark">
+          {t('pages.modules.sectionCount', { count: modules.length })}
+        </span>
+      </div>
+
+      {modules.length === 0 ? (
+        <Empty message={emptyMessage} />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visibleModules.map((module) => (
+              <ModuleCard
+                key={module.id}
+                module={module}
+                locale={locale}
+                busy={busy}
+                onInstall={onInstall}
+                onStart={onStart}
+                onStop={onStop}
+                onUpdate={onUpdate}
+                onUninstall={onUninstall}
+              />
+            ))}
+          </div>
+          {modules.length > pageSize ? (
+            <ModuleCatalogFooter
+              total={modules.length}
+              page={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              effectiveLoaded={effectiveLoaded}
+              canLoadMore={canLoadMore}
+              onPageSizeChange={changePageSize}
+              onPrev={() => onPageChange(Math.max(1, currentPage - 1))}
+              onNext={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              onLoadMore={loadMore}
+            />
+          ) : null}
+        </>
+      )}
+    </section>
+  );
+}
+
 export function ModulesPage() {
   const { t, locale } = useLocale();
   const [pageState, setPageState] = useState<PageState>('loading');
@@ -407,17 +520,20 @@ export function ModulesPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
-  const [installFilter, setInstallFilter] = useState<InstallFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_MODULE_PAGE_SIZE);
-  const [loadedCount, setLoadedCount] = useState(DEFAULT_MODULE_PAGE_SIZE);
+  const [installedPage, setInstalledPage] = useState(1);
+  const [availablePage, setAvailablePage] = useState(1);
+  const [installedLoadedCount, setInstalledLoadedCount] = useState(DEFAULT_MODULE_PAGE_SIZE);
+  const [availableLoadedCount, setAvailableLoadedCount] = useState(DEFAULT_MODULE_PAGE_SIZE);
 
   useEffect(() => {
-    setPage(1);
-    setLoadedCount(pageSize);
-  }, [search, installFilter, statusFilter, categoryFilter, pageSize]);
+    setInstalledPage(1);
+    setAvailablePage(1);
+    setInstalledLoadedCount(pageSize);
+    setAvailableLoadedCount(pageSize);
+  }, [search, statusFilter, categoryFilter, pageSize]);
 
   const load = useCallback(async (refresh = false) => {
     try {
@@ -456,52 +572,24 @@ export function ModulesPage() {
     [catalog]
   );
 
-  const filteredModules = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return catalog
-      .filter((module) => {
-        if (installFilter === 'installed' && !module.installed) return false;
-        if (installFilter === 'available' && module.installed) return false;
-        if (categoryFilter && module.category !== categoryFilter) return false;
-        if (statusFilter !== 'all' && moduleStatusFilterKey(module) !== statusFilter) return false;
-        if (query && !moduleSearchHaystack(module, locale).includes(query)) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        if (a.installed !== b.installed) return a.installed ? -1 : 1;
-        return localized(a.name, locale).localeCompare(localized(b.name, locale), locale);
-      });
-  }, [catalog, search, installFilter, categoryFilter, statusFilter, locale]);
-
-  const effectiveLoaded = Math.min(loadedCount, filteredModules.length);
-  const totalPages = Math.max(1, Math.ceil(effectiveLoaded / pageSize));
-  const currentPage = Math.min(page, totalPages);
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
-
-  const visibleModules = useMemo(
-    () =>
-      filteredModules.slice(
-        (currentPage - 1) * pageSize,
-        Math.min(currentPage * pageSize, effectiveLoaded)
-      ),
-    [filteredModules, currentPage, pageSize, effectiveLoaded]
+  const filteredModules = useMemo(
+    () => filterCatalogModules(catalog, { search, categoryFilter, statusFilter, locale }),
+    [catalog, search, categoryFilter, statusFilter, locale]
   );
-  const canLoadMore = effectiveLoaded < filteredModules.length;
 
-  const changePageSize = (nextSize: number) => {
-    setPageSize(nextSize);
-    setLoadedCount(nextSize);
-    setPage(1);
-  };
+  const installedModules = useMemo(
+    () => filteredModules.filter((module) => module.installed),
+    [filteredModules]
+  );
 
-  const loadMore = () => {
-    const nextLoaded = Math.min(loadedCount + pageSize, filteredModules.length);
-    setLoadedCount(nextLoaded);
-    setPage(Math.max(1, Math.ceil(nextLoaded / pageSize)));
-  };
+  const availableModules = useMemo(
+    () => filteredModules.filter((module) => !module.installed),
+    [filteredModules]
+  );
+
+  const showInstalledSection = statusFilter !== 'catalog';
+  const showAvailableSection = statusFilter === 'all' || statusFilter === 'catalog';
+  const hasAnyModules = filteredModules.length > 0;
 
   if (pageState === 'loading') return <Loading />;
   if (pageState === 'unavailable') {
@@ -560,8 +648,6 @@ export function ModulesPage() {
       <ModuleCatalogToolbar
         search={search}
         onSearchChange={setSearch}
-        installFilter={installFilter}
-        onInstallFilterChange={setInstallFilter}
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
         statusFilter={statusFilter}
@@ -569,41 +655,59 @@ export function ModulesPage() {
         categories={categories}
       />
 
-      {filteredModules.length === 0 ? (
+      {!hasAnyModules ? (
         <Empty message={t('pages.modules.noResults')} />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {visibleModules.map((module) => (
-              <ModuleCard
-                key={module.id}
-                module={module}
-                locale={locale}
-                busy={busy}
-                onInstall={(id) => runAction(id, () => installModule(id))}
-                onStart={(id) => runAction(id, () => startModule(id))}
-                onStop={(id) => runAction(id, () => stopModule(id))}
-                onUpdate={(id) => runAction(id, () => updateModule(id))}
-                onUninstall={(id) => {
-                  if (window.confirm(t('pages.modules.uninstallConfirm'))) {
-                    void runAction(id, () => uninstallModule(id));
-                  }
-                }}
-              />
-            ))}
-          </div>
-          <ModuleCatalogFooter
-            total={filteredModules.length}
-            page={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            effectiveLoaded={effectiveLoaded}
-            canLoadMore={canLoadMore}
-            onPageSizeChange={changePageSize}
-            onPrev={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-            onLoadMore={loadMore}
-          />
+          {showInstalledSection ? (
+            <ModuleSection
+              title={t('pages.modules.installedSection')}
+              modules={installedModules}
+              emptyMessage={t('pages.modules.noInstalled')}
+              locale={locale}
+              busy={busy}
+              page={installedPage}
+              pageSize={pageSize}
+              loadedCount={installedLoadedCount}
+              onPageChange={setInstalledPage}
+              onPageSizeChange={setPageSize}
+              onLoadedCountChange={setInstalledLoadedCount}
+              onInstall={(id) => runAction(id, () => installModule(id))}
+              onStart={(id) => runAction(id, () => startModule(id))}
+              onStop={(id) => runAction(id, () => stopModule(id))}
+              onUpdate={(id) => runAction(id, () => updateModule(id))}
+              onUninstall={(id) => {
+                if (window.confirm(t('pages.modules.uninstallConfirm'))) {
+                  void runAction(id, () => uninstallModule(id));
+                }
+              }}
+            />
+          ) : null}
+
+          {showAvailableSection ? (
+            <ModuleSection
+              title={t('pages.modules.availableSection')}
+              modules={availableModules}
+              emptyMessage={t('pages.modules.noAvailable')}
+              locale={locale}
+              busy={busy}
+              page={availablePage}
+              pageSize={pageSize}
+              loadedCount={availableLoadedCount}
+              onPageChange={setAvailablePage}
+              onPageSizeChange={setPageSize}
+              onLoadedCountChange={setAvailableLoadedCount}
+              onInstall={(id) => runAction(id, () => installModule(id))}
+              onStart={(id) => runAction(id, () => startModule(id))}
+              onStop={(id) => runAction(id, () => stopModule(id))}
+              onUpdate={(id) => runAction(id, () => updateModule(id))}
+              onUninstall={(id) => {
+                if (window.confirm(t('pages.modules.uninstallConfirm'))) {
+                  void runAction(id, () => uninstallModule(id));
+                }
+              }}
+            />
+          ) : null}
         </>
       )}
     </div>

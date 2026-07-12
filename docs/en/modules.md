@@ -65,6 +65,14 @@ Running modules requires PyOrchestrator: `PYORCHESTRATOR_ENABLED=true ./scripts/
 - Card title and icon link to module settings; action buttons are icon-only with tooltips
 - **Refresh catalog** reloads `registry.json` from GitHub without a CRM release
 
+## Safari & browser repair *(v1.1.33)*
+
+If **Automation → Modules** fails in Safari with *"The string did not match the expected pattern"*, update to **v1.1.33+** or use **Settings → Integrity repair** to rebuild `modules-bridge` and the dashboard without SSH.
+
+## Module notifications *(v1.1.34)*
+
+Install, uninstall, start, stop, update, and error events appear in **System → Notifications** (web + Telegram when configured). See [Dashboard](dashboard.md).
+
 ## Creating a module
 
 ```bash

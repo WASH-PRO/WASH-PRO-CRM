@@ -22,7 +22,11 @@ if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
 fi
 export COMPOSE_FILES
 
-SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+if [ -n "${DEPLOY_ROOT:-}" ] && [ -d "${DEPLOY_ROOT}/scripts" ]; then
+  SCRIPT_DIR="${DEPLOY_ROOT}/scripts"
+else
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 chmod +x "$SCRIPT_DIR/crm-update-build.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/crm-update-ensure-modules-bridge.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/crm-update-health.sh" 2>/dev/null || true

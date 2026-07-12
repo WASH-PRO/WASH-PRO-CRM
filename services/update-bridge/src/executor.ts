@@ -135,7 +135,7 @@ export async function runShell(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const lines: string[] = [];
-    const child = spawn('sh', ['-c', command], {
+    const child = spawn('bash', ['-c', command], {
       cwd: DEPLOY_ROOT,
       env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...extraEnv },
     });

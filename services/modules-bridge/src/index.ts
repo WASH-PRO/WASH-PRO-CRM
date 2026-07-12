@@ -251,7 +251,10 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         : null;
       const limit = Math.min(1000, Math.max(50, parseInt(limitParam || '300', 10) || 300));
       try {
-        const data = await getModuleRunLogs(state.pyorchScriptId, limit);
+        const data = await getModuleRunLogs(moduleId, state.pyorchScriptId, limit);
+        if (!data.logs.length && state.status === 'stopped' && !data.unavailable) {
+          data.unavailable = 'Модуль остановлен. Запустите его на странице «Модули».';
+        }
         json(res, 200, { success: true, data });
       } catch (err) {
         json(res, 500, {

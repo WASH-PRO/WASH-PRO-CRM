@@ -1,5 +1,8 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { pino } from 'pino';
 import type { ModuleLogsPayload, PyorchRunLog, PyorchRunSummary, PyorchScript } from './types.js';
+import { moduleDataDir } from './paths.js';
 
 const logger = pino({ level: 'info' });
 
@@ -82,6 +85,22 @@ function isWashModule(script: PyorchScript): boolean {
   return meta.wash_module === true || (meta.source === 'wash-pro-crm' && Boolean(meta.module_id));
 }
 
+export function readModuleActivityLogs(moduleId: string, limit = 300): PyorchRunLog[] {
+  const path = join(moduleDataDir(moduleId), 'activity.log');
+  if (!existsSync(path)) return [];
+  const content = readFileSync(path, 'utf8');
+  const lines = content.split('\n').map((line) => line.trim()).filter(Boolean);
+  return lines.slice(-Math.max(1, limit)).map((line, idx) => {
+    const match = /^(\S+)\s+(\S+)\s+(.*)$/.exec(line);
+    return {
+      id: idx + 1,
+      ts: match?.[1] ?? new Date().toISOString(),
+      level: match?.[2] ?? 'info',
+      message: match?.[3] ?? line,
+    };
+  });
+}
+
 /** PyOrchestrator injects secrets as SECRET_{KEY}; wash modules read unprefixed env vars. */
 const WASH_MODULE_ENV_BOOTSTRAP = `# --- WASH module env bootstrap (modules-bridge) ---
 import os as _wash_os
@@ -108,18 +127,56 @@ export async function listWashModules(): Promise<PyorchScript[]> {
   return scripts.filter(isWashModule);
 }
 
+export async function resolveModuleScriptId(
+  moduleId: string,
+  storedScriptId?: string
+): Promise<string | null> {
+  if (storedScriptId) {
+    try {
+      const script = await getWashModuleScript(storedScriptId);
+      if (script) return storedScriptId;
+    } catch {
+      /* try metadata lookup */
+    }
+  }
+  try {
+    const washModules = await listWashModules();
+    const match = washModules.find((s) => String(s.metadata.module_id) === moduleId);
+    if (match?.id) return match.id;
+  } catch {
+    /* ignore */
+  }
+  return storedScriptId ?? null;
+}
+
 export async function getModuleRunLogs(
-  scriptId: string,
+  moduleId: string,
+  scriptId: string | undefined,
   limit = 300
 ): Promise<ModuleLogsPayload> {
+  const fileLogs = readModuleActivityLogs(moduleId, limit);
+
   try {
-    const script = await getWashModuleScript(scriptId);
+    const resolvedScriptId = await resolveModuleScriptId(moduleId, scriptId);
+    if (!resolvedScriptId) {
+      if (fileLogs.length) {
+        return { runId: null, runStatus: null, logs: fileLogs };
+      }
+      return {
+        runId: null,
+        runStatus: null,
+        logs: [],
+        unavailable: 'Скрипт PyOrchestrator не найден. Запустите модуль на странице «Модули».',
+      };
+    }
+
+    const script = await getWashModuleScript(resolvedScriptId);
     let runId = script?.active_run?.id ?? null;
     let runStatus = script?.active_run?.status ?? null;
 
     if (!runId) {
       const runs = await pyorchFetch<PyorchRunSummary[]>(
-        `/runs/scripts/${scriptId}/runs?limit=1`
+        `/runs/scripts/${resolvedScriptId}/runs?limit=1`
       );
       if (runs.length > 0) {
         runId = runs[0]!.id;
@@ -128,17 +185,31 @@ export async function getModuleRunLogs(
     }
 
     if (!runId) {
-      return { runId: null, runStatus: null, logs: [] };
+      if (fileLogs.length) {
+        return { runId: null, runStatus: null, logs: fileLogs };
+      }
+      return {
+        runId: null,
+        runStatus: null,
+        logs: [],
+        unavailable: 'Нет запусков. Нажмите «Запустить» на карточке модуля.',
+      };
     }
 
     const logs = await pyorchFetch<PyorchRunLog[]>(`/runs/${runId}/logs`);
-    return {
-      runId,
-      runStatus,
-      logs: logs.slice(-Math.max(1, limit)),
-    };
+    const pyorchLogs = logs.slice(-Math.max(1, limit));
+    if (pyorchLogs.length) {
+      return { runId, runStatus, logs: pyorchLogs };
+    }
+    if (fileLogs.length) {
+      return { runId, runStatus, logs: fileLogs };
+    }
+    return { runId, runStatus, logs: [] };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    if (fileLogs.length) {
+      return { runId: null, runStatus: null, logs: fileLogs, unavailable: message };
+    }
     return { runId: null, runStatus: null, logs: [], unavailable: message };
   }
 }

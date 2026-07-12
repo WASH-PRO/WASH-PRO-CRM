@@ -65,6 +65,10 @@ Running modules requires PyOrchestrator: `PYORCHESTRATOR_ENABLED=true ./scripts/
 - Card title and icon link to module settings; action buttons are icon-only with tooltips
 - **Refresh catalog** reloads `registry.json` from GitHub without a CRM release
 
+### Installed / Available sections *(v1.1.38)*
+
+The catalog is split into two blocks: **Installed** (running modules with lifecycle actions) and **Available** (not yet installed). Each section has its own pagination. Status and category filters apply to both blocks.
+
 ## Safari & browser repair *(v1.1.33)*
 
 If **Automation → Modules** fails in Safari with *"The string did not match the expected pattern"*, update to **v1.1.33+** or use **Settings → Integrity repair** to rebuild `modules-bridge` and the dashboard without SSH.

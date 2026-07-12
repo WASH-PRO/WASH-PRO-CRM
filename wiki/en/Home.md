@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.37** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.38** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -29,7 +29,7 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - **MCP server** in Dashboard — Dynamic API + PyOrchestrator for AI agents (v1.1.12)
 - **Modules** — GitHub extension catalog, install/start/stop, settings UI iframe *(Automation)* (v1.1.30); Safari fix & browser repair *(v1.1.33)*
 - **Update & module notifications** — CRM stack updates and module lifecycle in web + Telegram (v1.1.34)
-- **i18n feature catalogs** — split translations: modules, updates, notifications; help in `help/` (v1.1.37)
+- **Modules page sections** — Installed and Available blocks *(Automation → Modules)* (v1.1.38)
 - **Admin password visibility** — show password toggle on settings, users, profile (v1.1.33)
 - Stdio MCP `services/crm-mcp` for Cursor (v1.1.9+)
 - MQTT (Mosquitto): post isolation by serial
@@ -67,6 +67,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.38
+
+- **Modules page** — separate Installed and Available sections; per-section pagination
+- **Docs/wiki** — version v1.1.38; version sync scripts and GitHub Pages badge from CI
+
+Release notes: [v1.1.38](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.38) · Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.37
 

@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+## [1.1.38] — 2026-07-12
+
+### Изменено
+
+- **Страница «Модули»** — разделы «Установленные» и «Доступные»; отдельная пагинация; убран фильтр «Установка»
+- **Версия в документации** — единый источник `dashboard/package.json`; скрипты `app-version.sh`, `sync-version-docs.sh`; бейдж GitHub Pages обновляется в CI
+- **Wiki/docs** — версия v1.1.38, описания v1.1.33–v1.1.37 синхронизированы (EN/RU)
+
 ## [1.1.37] — 2026-07-12
 
 ### Изменено
@@ -484,7 +492,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.37...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.38...HEAD
+[1.1.38]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.38
 [1.1.37]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37
 [1.1.36]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.36
 [1.1.35]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.35

@@ -79,6 +79,10 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
+## Recent changes (v1.1.38)
+
+- **Modules** — Installed and Available sections; per-section pagination; removed Installation filter
+
 ## Recent changes (v1.1.37)
 
 - **i18n** — split into feature modules (`features/modules`, `updates`, `notifications-features`); help in `help/`

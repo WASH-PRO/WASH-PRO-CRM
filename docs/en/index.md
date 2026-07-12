@@ -36,7 +36,7 @@ layout: default
 | **Analytics** | Usage and finances before/after collection |
 | **System** | Notifications (web + Telegram), users (Telegram ID), RBAC groups, settings, logs |
 | **Automation** | **Publications**, **Telegram bots** (management / service / **information v2.2**), **MCP server**, **Modules**, backups |
-| **Modules** *(v1.1.30+)* | GitHub extension catalog; install/start/stop; settings UI iframe; Safari fix & browser repair *(v1.1.33)*; requires PyOrchestrator |
+| **Modules** *(v1.1.30+)* | GitHub extension catalog; install/start/stop; **Installed / Available sections** *(v1.1.38)*; Safari fix & browser repair *(v1.1.33)*; requires PyOrchestrator |
 | **Update & module notifications** *(v1.1.34)* | CRM/Dynamic API/PyOrchestrator update jobs and module lifecycle in web + Telegram |
 | **i18n feature catalogs** *(v1.1.37)* | Split translations: modules, updates, notifications; help in `help/` |
 | **Resources** | Status and links to Dynamic API and PyOrchestrator panels |
@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## Changelog
 
-Latest release: **[v1.1.37](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37)** — i18n feature modules, docs and wiki sync.
+Latest release: **[v1.1.38](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.38)** — Modules page sections, docs version sync.
 
 See [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.41] — 2026-07-12
+
+### Изменено
+
+- **Косметический релиз** — проверка цепочки автообновления CRM (Settings → Software updates) после исправлений v1.1.39–v1.1.40
+- **Docs** — версия v1.1.41
+
 ## [1.1.40] — 2026-07-12
 
 ### Исправлено
@@ -509,7 +516,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.40...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.41...HEAD
+[1.1.41]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.41
 [1.1.40]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.40
 [1.1.39]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.39
 [1.1.38]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.38

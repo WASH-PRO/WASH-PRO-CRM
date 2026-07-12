@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+## [1.1.37] — 2026-07-12
+
+### Изменено
+
+- **Локализация dashboard** — feature-модули: `features/modules`, `features/updates`, `features/notifications-features`; справка в `help/`; документ `dashboard/src/i18n/README.md`
+- **releases/README.md** — политика: создавать GitHub Releases только для актуальных версий, не backfill старых тегов
+- **Wiki/docs** — версия v1.1.37, раздел о структуре i18n
+
 ## [1.1.36] — 2026-07-12
 
 ### Исправлено
@@ -476,7 +484,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.36...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.37...HEAD
+[1.1.37]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37
 [1.1.36]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.36
 [1.1.35]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.35
 [1.1.34]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.34

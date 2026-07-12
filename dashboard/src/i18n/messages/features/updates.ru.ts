@@ -1,0 +1,92 @@
+/** Обновления ПО, баннер, диагностика и исправления (feature-модуль локализации). */
+export const settingsSoftwareUpdatesLabelRu = 'Обновления ПО';
+
+export const settingsRepairRu = {
+  title: 'Целостность и исправление',
+  description:
+    'Проверяет пути проекта, .env, ключевые файлы и готовность автообновления. Помогает, если обновление не проходит или сбились адреса/пути.',
+  adminOnly: 'Диагностика и исправления доступны администраторам (manage_users / manage_api).',
+  check: 'Проверить целостность',
+  checking: 'Проверка...',
+  apply: 'Применить исправления',
+  applying: 'Исправление...',
+  recheck: 'Проверить снова',
+  confirmApply: 'Применить выбранные исправления? Сервисы могут перезапуститься.',
+  error: 'Ошибка мастера исправления',
+  pathsTitle: 'Пути и монтирование',
+  deployRoot: 'Каталог в контейнере (/deploy)',
+  hostRoot: 'Корень проекта на хосте',
+  detectedRoot: 'Определён по bind-mount',
+  dataDir: 'Каталог данных на хосте',
+  checkedAt: 'Проверено',
+  healthy: 'Проблем не обнаружено',
+  issuesTitle: 'Обнаруженные проблемы',
+  fixesTitle: 'Возможные исправления',
+  issues: {
+    all_ok: 'Файлы и пути в порядке',
+    deploy_root_missing: 'Каталог /deploy недоступен: {{detail}}',
+    host_root_undetected: 'Не удалось определить путь проекта на хосте (bind-mount)',
+    env_missing: 'Файл .env отсутствует: {{detail}}',
+    host_root_env_missing: 'В .env не задан WASH_HOST_PROJECT_ROOT',
+    host_root_env_mismatch: 'WASH_HOST_PROJECT_ROOT в .env не совпадает с монтированием: {{detail}}',
+    data_dir_suspicious:
+      'DATA_DIR в .env указывает внутрь mount контейнера /deploy — укажите путь на хосте (например ./data или /mnt/hdd/data): {{detail}}',
+    file_missing: 'Отсутствует файл: {{detail}}',
+    dir_missing: 'Отсутствует каталог: {{detail}}',
+    docker_sock_missing: 'Docker socket недоступен — автообновление невозможно',
+    git_not_repo:
+      'Git в /deploy недоступен (нет .git или dubious ownership — примените исправление safe.directory)',
+    compose_config_invalid: 'docker compose config завершился с ошибкой: {{detail}}',
+    executor_disabled: 'Автообновление отключено: {{detail}}',
+    stuck_update_job: 'Зависшее обновление: {{detail}}',
+    modules_bridge_unavailable: 'Сервис modules-bridge недоступен: {{detail}}',
+  },
+  fixes: {
+    syncHostRoot: 'Записать WASH_HOST_PROJECT_ROOT в .env по bind-mount',
+    normalizeDataDir: 'Установить DATA_DIR=./data в .env',
+    gitSafeDirectory: 'Добавить safe.directory для git в /deploy',
+    clearStuckJob: 'Сбросить зависшее обновление',
+    mosquittoRepair: 'Пересоздать конфиг Mosquitto и перезапустить брокер',
+    modulesBridgeRepair: 'Пересобрать и перезапустить modules-bridge + dashboard',
+    initSeed: 'Запустить init-seed (синхронизация CRM endpoints)',
+  },
+} as const;
+
+export const updatesMessagesRu = {
+  available: 'Доступно',
+  autoUnavailable: 'Автообновление недоступно',
+  confirmUpdate: 'Обновить {{component}} до v{{version}}?',
+  error: 'Ошибка',
+  jobTitle: 'Обновление v{{from}} -> v{{to}}',
+  jobFailed: 'Ошибка обновления v{{from}} -> v{{to}}',
+  jobFailedHint:
+    'Смотрите лог шага ниже. Частые причины: таймаут Docker Hub на Mac (docker pull node:20-alpine), локальные правки git или нехватка места на диске.',
+  retry: 'Повторить',
+  hideError: 'Скрыть ошибку',
+  starting: 'Запуск...',
+  update: 'Обновить',
+  hideNotification: 'Скрыть уведомление',
+  loadingStatus: 'Загрузка статуса обновлений...',
+  checkFailed: 'Не удалось проверить обновления',
+  checkingGithub: 'Проверка версий на GitHub...',
+  description:
+    'Обновления загружаются из GitHub Releases. Dynamic API и PyOrchestrator синхронизируются через WASH-скрипты с патчами.',
+  lastChecked: 'Последняя проверка',
+  checking: 'Проверка...',
+  checkNow: 'Проверить сейчас',
+  autoUnavailableViewOnly: 'Автообновление недоступно — только просмотр версий.',
+  historyTitle: 'История обновлений',
+} as const;
+
+export const updateBannerRu = {
+  jobTitle: 'Обновление {{component}}: v{{from}} -> v{{to}}',
+  preparing: 'Подготовка...',
+  details: 'Подробнее',
+  confirmUpdate: 'Обновить {{component}} до v{{version}}? Сервисы перезапустятся.',
+  updateError: 'Ошибка обновления',
+  available: 'Доступно обновление: {{component}} v{{version}}',
+  components: 'компонентов',
+  installed: 'Установлено v{{version}}. Обновления загружаются с GitHub.',
+  allUpdates: 'Все обновления',
+  hide: 'Скрыть',
+} as const;

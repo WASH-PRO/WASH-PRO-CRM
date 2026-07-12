@@ -1,0 +1,91 @@
+/** Software updates, banner, integrity repair (i18n feature module). */
+export const settingsSoftwareUpdatesLabelEn = 'Software updates';
+
+export const settingsRepairEn = {
+  title: 'Integrity and repair',
+  description:
+    'Checks project paths, .env, key files, and auto-update readiness. Use when updates fail or host paths drift.',
+  adminOnly: 'Diagnostics and repairs require administrator rights (manage_users / manage_api).',
+  check: 'Check integrity',
+  checking: 'Checking...',
+  apply: 'Apply fixes',
+  applying: 'Repairing...',
+  recheck: 'Check again',
+  confirmApply: 'Apply selected fixes? Services may restart.',
+  error: 'Repair wizard error',
+  pathsTitle: 'Paths and mounts',
+  deployRoot: 'Container directory (/deploy)',
+  hostRoot: 'Host project root',
+  detectedRoot: 'Detected from bind mount',
+  dataDir: 'Host data directory',
+  checkedAt: 'Checked at',
+  healthy: 'No issues found',
+  issuesTitle: 'Detected issues',
+  fixesTitle: 'Available fixes',
+  issues: {
+    all_ok: 'Files and paths look good',
+    deploy_root_missing: '/deploy is not accessible: {{detail}}',
+    host_root_undetected: 'Could not detect host project path (bind mount)',
+    env_missing: '.env file is missing: {{detail}}',
+    host_root_env_missing: 'WASH_HOST_PROJECT_ROOT is not set in .env',
+    host_root_env_mismatch: 'WASH_HOST_PROJECT_ROOT in .env does not match mount: {{detail}}',
+    data_dir_suspicious:
+      'DATA_DIR in .env points inside container /deploy — use a host path (e.g. ./data or /mnt/hdd/data): {{detail}}',
+    file_missing: 'Missing file: {{detail}}',
+    dir_missing: 'Missing directory: {{detail}}',
+    docker_sock_missing: 'Docker socket unavailable — auto-update disabled',
+    git_not_repo: 'Git in /deploy unavailable (no .git or dubious ownership — apply safe.directory fix)',
+    compose_config_invalid: 'docker compose config failed: {{detail}}',
+    executor_disabled: 'Auto-update disabled: {{detail}}',
+    stuck_update_job: 'Stuck update job: {{detail}}',
+    modules_bridge_unavailable: 'Modules bridge is unavailable: {{detail}}',
+  },
+  fixes: {
+    syncHostRoot: 'Write WASH_HOST_PROJECT_ROOT to .env from bind mount',
+    normalizeDataDir: 'Set DATA_DIR=./data in .env',
+    gitSafeDirectory: 'Add git safe.directory for /deploy',
+    clearStuckJob: 'Clear stuck update job',
+    mosquittoRepair: 'Recreate Mosquitto config and restart broker',
+    modulesBridgeRepair: 'Rebuild and restart modules-bridge + dashboard',
+    initSeed: 'Run init-seed (sync CRM endpoints)',
+  },
+} as const;
+
+export const updatesMessagesEn = {
+  available: 'Available',
+  autoUnavailable: 'Auto-update is unavailable',
+  confirmUpdate: 'Update {{component}} to v{{version}}?',
+  error: 'Error',
+  jobTitle: 'Update v{{from}} -> v{{to}}',
+  jobFailed: 'Update failed v{{from}} -> v{{to}}',
+  jobFailedHint:
+    'See step log below. Common causes: Docker Hub timeout on Mac (try docker pull node:20-alpine), local git edits, or insufficient disk space.',
+  retry: 'Retry',
+  hideError: 'Hide error',
+  starting: 'Starting...',
+  update: 'Update',
+  hideNotification: 'Hide notification',
+  loadingStatus: 'Loading updates status...',
+  checkFailed: 'Failed to check updates',
+  checkingGithub: 'Checking versions on GitHub...',
+  description:
+    'Updates are loaded from GitHub Releases. Dynamic API and PyOrchestrator are synced via WASH scripts with patches.',
+  lastChecked: 'Last checked',
+  checking: 'Checking...',
+  checkNow: 'Check now',
+  autoUnavailableViewOnly: 'Auto-update is unavailable, versions are read-only.',
+  historyTitle: 'Update history',
+} as const;
+
+export const updateBannerEn = {
+  jobTitle: 'Update {{component}}: v{{from}} -> v{{to}}',
+  preparing: 'Preparing...',
+  details: 'Details',
+  confirmUpdate: 'Update {{component}} to v{{version}}? Services will restart.',
+  updateError: 'Update error',
+  available: 'Update available: {{component}} v{{version}}',
+  components: 'components',
+  installed: 'Installed v{{version}}. Updates are fetched from GitHub.',
+  allUpdates: 'All updates',
+  hide: 'Hide',
+} as const;

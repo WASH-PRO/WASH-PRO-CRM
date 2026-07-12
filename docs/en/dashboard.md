@@ -65,6 +65,19 @@ More about embedded platforms: [Embedded services](embedded-services.md).
 | **Scope** | Menu, statuses, messages, table labels, logs UI; user data is not translated |
 | **Storage** | `localStorage` (`wash_locale`) |
 
+### i18n file layout (v1.1.37+)
+
+Core strings live in `dashboard/src/i18n/messages/{en,ru}.ts`. Feature-specific catalogs are split out:
+
+| Module | Files |
+|--------|--------|
+| Help | `messages/help/{en,ru}.ts` |
+| Modules page | `messages/features/modules.{en,ru}.ts` |
+| Updates & repair | `messages/features/updates.{en,ru}.ts` |
+| Module/update notifications | `messages/features/notifications-features.{en,ru}.ts` |
+
+See [`dashboard/src/i18n/README.md`](../../dashboard/src/i18n/README.md).
+
 ## Notifications (v1.1.14)
 
 The **Notifications** page and Overview widget display **localized message templates by event type** (`mqtt_credit`, `user_login`, `wash_created`, etc.), not the raw text stored when the record was created. Parameters (amount, login, entity name) are parsed from legacy messages. Severity labels and CSV export follow the active UI language.

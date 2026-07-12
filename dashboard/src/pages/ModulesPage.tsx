@@ -33,8 +33,8 @@ type PageState = 'loading' | 'ready' | 'unavailable';
 type InstallFilter = 'all' | 'installed' | 'available';
 type StatusFilter = 'all' | 'running' | 'stopped' | 'error' | 'updating' | 'catalog';
 
-const MODULE_PAGE_SIZE_OPTIONS = [6, 12, 24, 48];
-const DEFAULT_MODULE_PAGE_SIZE = 6;
+const MODULE_PAGE_SIZE_OPTIONS = [4, 8, 12, 24];
+const DEFAULT_MODULE_PAGE_SIZE = 4;
 
 function localized(text: { ru: string; en: string }, locale: string): string {
   return locale === 'en' ? text.en : text.ru;
@@ -159,8 +159,9 @@ function ModuleCard({
             onClick={() => onInstall(module.id)}
             className="btn-icon bg-brand-600 text-white hover:bg-brand-500 dark:bg-brand-500 dark:hover:bg-brand-400"
             title={t('pages.modules.install')}
+            aria-label={t('pages.modules.install')}
           >
-            <Download size={16} />
+            <Download size={16} aria-hidden />
           </button>
         ) : (
           <>
@@ -171,8 +172,9 @@ function ModuleCard({
                 onClick={() => onStop(module.id)}
                 className="btn-icon text-amber-600 dark:text-amber-400"
                 title={t('pages.modules.stop')}
+                aria-label={t('pages.modules.stop')}
               >
-                <Square size={16} />
+                <Square size={16} aria-hidden />
               </button>
             ) : (
               <button
@@ -181,16 +183,18 @@ function ModuleCard({
                 onClick={() => onStart(module.id)}
                 className="btn-icon bg-brand-600 text-white hover:bg-brand-500 dark:bg-brand-500 dark:hover:bg-brand-400"
                 title={t('pages.modules.start')}
+                aria-label={t('pages.modules.start')}
               >
-                <Play size={16} />
+                <Play size={16} aria-hidden />
               </button>
             )}
             <Link
               to={`/modules/${module.id}`}
               className="btn-icon"
               title={t('pages.modules.settings')}
+              aria-label={t('pages.modules.settings')}
             >
-              <Settings size={16} />
+              <Settings size={16} aria-hidden />
             </Link>
             <button
               type="button"
@@ -198,8 +202,9 @@ function ModuleCard({
               onClick={() => onUpdate(module.id)}
               className="btn-icon"
               title={t('pages.modules.update')}
+              aria-label={t('pages.modules.update')}
             >
-              <RefreshCw size={16} className={isBusy ? 'animate-spin' : ''} />
+              <RefreshCw size={16} className={isBusy ? 'animate-spin' : ''} aria-hidden />
             </button>
             <button
               type="button"
@@ -207,8 +212,9 @@ function ModuleCard({
               onClick={() => onUninstall(module.id)}
               className="btn-icon text-red-500 hover:border-red-500/30 hover:text-red-600 dark:hover:text-red-400"
               title={t('pages.modules.uninstall')}
+              aria-label={t('pages.modules.uninstall')}
             >
-              <Trash2 size={16} />
+              <Trash2 size={16} aria-hidden />
             </button>
           </>
         )}
@@ -219,16 +225,18 @@ function ModuleCard({
             rel="noreferrer"
             className="btn-icon"
             title="GitHub"
+            aria-label="GitHub"
           >
-            <ExternalLink size={16} />
+            <ExternalLink size={16} aria-hidden />
           </a>
         ) : null}
         <Link
           to={`/modules/${module.id}?tab=help`}
           className="btn-icon"
           title={t('pages.modules.help')}
+          aria-label={t('pages.modules.help')}
         >
-          <BookOpen size={16} />
+          <BookOpen size={16} aria-hidden />
         </Link>
       </div>
     </article>
@@ -261,17 +269,19 @@ function ModuleCatalogToolbar({
   return (
     <div className="data-toolbar mb-6">
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-stretch md:gap-4">
-        <div className="search-field md:max-w-md md:flex-1">
-          <Search size={16} className="search-field-icon" />
-          <input
-            className="input-search"
-            placeholder={t('pages.modules.searchPlaceholder')}
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center md:w-auto md:flex-1">
+          <div className="search-field md:max-w-md">
+            <Search size={16} className="search-field-icon" />
+            <input
+              className="input-search"
+              placeholder={t('pages.modules.searchPlaceholder')}
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
         <div className="min-w-0">
           <label className="label !mb-1">{t('pages.modules.filterInstall')}</label>
           <select
@@ -349,11 +359,11 @@ function ModuleCatalogFooter({
   return (
     <div className="table-footer mt-4">
       <div className="flex flex-col gap-1">
-        <span>{t('pages.modules.resultsCount', { count: total })}</span>
-        {totalPages > 1 ? (
-          <span>{t('dataTable.pageOf', { page, total: totalPages })}</span>
-        ) : null}
-        {canLoadMore ? <span>{t('dataTable.loadedCount', { count: effectiveLoaded })}</span> : null}
+        <span>
+          {t('pages.modules.resultsCount', { count: total })}
+          {totalPages > 1 ? ` · ${t('dataTable.pageOf', { page, total: totalPages })}` : null}
+          {canLoadMore ? ` · ${t('dataTable.loadedCount', { count: effectiveLoaded })}` : null}
+        </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-sm text-panel-muted dark:text-panel-muted-dark">
@@ -465,9 +475,18 @@ export function ModulesPage() {
   const effectiveLoaded = Math.min(loadedCount, filteredModules.length);
   const totalPages = Math.max(1, Math.ceil(effectiveLoaded / pageSize));
   const currentPage = Math.min(page, totalPages);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
   const visibleModules = useMemo(
-    () => filteredModules.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-    [filteredModules, currentPage, pageSize]
+    () =>
+      filteredModules.slice(
+        (currentPage - 1) * pageSize,
+        Math.min(currentPage * pageSize, effectiveLoaded)
+      ),
+    [filteredModules, currentPage, pageSize, effectiveLoaded]
   );
   const canLoadMore = effectiveLoaded < filteredModules.length;
 

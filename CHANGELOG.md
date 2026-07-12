@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+## [1.1.31] — 2026-07-12
+
+### Изменено
+
+- **Страница «Модули»** — компактная панель фильтров (как DataTable); поле поиска без растягивания на всю ширину
+- **Карточки модулей** — icon-only кнопки с подсказками; кликабельные заголовок и иконка
+- **Пагинация** — по умолчанию 4 на странице; исправлена логика «загрузить ещё»
+- **Обновить каталог** — текстовая кнопка в шапке (иконка + подпись)
+
 ## [1.1.30] — 2026-07-12
 
 ### Добавлено
@@ -416,7 +425,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.30...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.31...HEAD
+[1.1.31]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.31
 [1.1.30]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.30
 [1.1.29]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.29
 [1.1.28]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.28

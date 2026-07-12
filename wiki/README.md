@@ -5,7 +5,7 @@
 Sources for [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
 **Full documentation (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/en/  
-**Current version:** v1.1.30
+**Current version:** v1.1.31
 
 Default language: **English**
 

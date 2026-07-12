@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { PageHeader, Loading, Modal, Badge, ErrorMessage } from '../components/UI';
+import { PasswordInput } from '../components/PasswordInput';
 import { DataTable, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import type { DapUser } from '../types';
 import { entityId, getUserStatusLabels } from '../utils/rbac';
@@ -355,9 +356,7 @@ export function UsersPage() {
             <label className="label">
               {t('pages.login.password')} {editId ? t('pages.users.passwordEditHint') : ''}
             </label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required={!editId}

@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [1.1.33] — 2026-07-12
+
+### Исправлено
+
+- **Страница «Модули»** — Safari/WebKit: декодирование JWT без `atob`, нормализация ошибки «The string did not match the expected pattern» в понятное сообщение
+- **modules-bridge** — починка из браузера: **Настройки → Диагностика и исправления → пересборка modules-bridge + dashboard** (без SSH)
+- **Автообновление** — повторная проверка health `modules-bridge` (5 попыток); dashboard больше не блокируется при падении modules-bridge
+
+### Изменено
+
+- **PasswordInput** — кнопка показа пароля для администраторов (настройки, пользователи, профиль)
+
 ## [1.1.32] — 2026-07-12
 
 ### Исправлено
@@ -438,7 +450,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.32...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.33...HEAD
+[1.1.33]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.33
 [1.1.32]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.32
 [1.1.31]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.31
 [1.1.30]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.30

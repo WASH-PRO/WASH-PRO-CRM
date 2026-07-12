@@ -262,7 +262,7 @@ services:
       UPDATE_HTTP_PORT: 3023
       DEPLOY_ROOT: /deploy
       STATE_DIR: /data
-      APP_VERSION: ${APP_VERSION:-1.1.32}
+      APP_VERSION: ${APP_VERSION:-1.1.33}
       UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
       HOST_PROJECT_ROOT: ${WASH_HOST_PROJECT_ROOT:-${PWD}}
       DATA_DIR: ${DATA_DIR:-./data}
@@ -320,12 +320,12 @@ services:
       context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/dashboard
       dockerfile: Dockerfile
       args:
-        VITE_APP_VERSION: ${APP_VERSION:-1.1.32}
+        VITE_APP_VERSION: ${APP_VERSION:-1.1.33}
     container_name: wash-dashboard
     restart: unless-stopped
     environment:
       PYORCHESTRATOR_ENABLED: ${PYORCHESTRATOR_ENABLED:-false}
-      APP_VERSION: ${APP_VERSION:-1.1.32}
+      APP_VERSION: ${APP_VERSION:-1.1.33}
     ports:
       - "${DASHBOARD_PORT:-80}:80"
     depends_on:
@@ -333,8 +333,6 @@ services:
         condition: service_healthy
       init-seed:
         condition: service_completed_successfully
-      modules-bridge:
-        condition: service_started
     networks:
       - wash-internal
       - wash-external

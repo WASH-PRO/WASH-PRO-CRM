@@ -66,6 +66,7 @@ export const REPAIR_ACTIONS = [
   'git_safe_directory',
   'clear_stuck_job',
   'mosquitto_repair',
+  'modules_bridge_repair',
   'init_seed',
 ] as const;
 
@@ -209,6 +210,21 @@ export async function diagnoseRepair(): Promise<RepairDiagnoseResult> {
     issues.push({ code: 'compose_config_invalid', severity: 'error', detail: message });
   }
 
+  try {
+    await runShell(
+      'wget -qO- http://modules-bridge:3024/health >/dev/null',
+      () => {},
+      composeCommandEnv()
+    );
+  } catch {
+    issues.push({
+      code: 'modules_bridge_unavailable',
+      severity: 'warning',
+      detail: 'modules-bridge:3024/health',
+      fixId: 'modules_bridge_repair',
+    });
+  }
+
   const executor = isExecutorAvailable();
   if (!executor.ok) {
     issues.push({
@@ -281,6 +297,14 @@ async function applyAction(action: RepairActionId, onLog: (line: string) => void
         `cd ${DEPLOY_ROOT} && docker compose run --rm mosquitto-init && docker compose restart mosquitto message-processor`,
         onLog,
         composeCommandEnv()
+      );
+      return;
+
+    case 'modules_bridge_repair':
+      await runShell(
+        `cd ${DEPLOY_ROOT} && . ${DEPLOY_ROOT}/scripts/compose-files.sh && docker compose $COMPOSE_FILES build modules-bridge dashboard && docker compose $COMPOSE_FILES up -d modules-bridge dashboard`,
+        onLog,
+        { ...composeCommandEnv(), WASH_CRM_UPDATE_V2: '1' }
       );
       return;
 

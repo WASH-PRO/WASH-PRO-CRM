@@ -29,6 +29,8 @@ export const en = {
     yes: 'Yes',
     no: 'No',
     notAvailable: '—',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
   },
   language: {
     label: 'Interface language',
@@ -872,7 +874,9 @@ export const en = {
       noAvailable: 'All catalog modules are already installed',
       unavailable: 'Modules service is unavailable',
       bridgeRebuildHint:
-        'Modules service is unavailable. Update CRM from Settings (v1.1.32+) or run: docker compose up -d --build modules-bridge dashboard',
+        'Modules service is unavailable (modules-bridge is not running or dashboard is outdated). Update CRM to v1.1.33+ in Settings, or open Settings → Integrity and repair → rebuild modules-bridge.',
+      repairHint: 'Without server access, try:',
+      repairLink: 'Settings → Integrity and repair',
       pyorchHint: 'PyOrchestrator is not running — you can install modules, but starting them requires the orchestrator (PYORCHESTRATOR_ENABLED=true).',
       statusAvailable: 'Available',
       statusUpdating: 'Updating…',
@@ -985,6 +989,7 @@ export const en = {
           compose_config_invalid: 'docker compose config failed: {{detail}}',
           executor_disabled: 'Auto-update is disabled: {{detail}}',
           stuck_update_job: 'Stuck update job: {{detail}}',
+          modules_bridge_unavailable: 'Modules bridge is unavailable: {{detail}}',
         },
         fixes: {
           syncHostRoot: 'Write WASH_HOST_PROJECT_ROOT to .env from bind-mount',
@@ -992,6 +997,7 @@ export const en = {
           gitSafeDirectory: 'Add git safe.directory for /deploy',
           clearStuckJob: 'Clear stuck update job',
           mosquittoRepair: 'Recreate Mosquitto config and restart broker',
+          modulesBridgeRepair: 'Rebuild and restart modules-bridge + dashboard',
           initSeed: 'Run init-seed (sync CRM endpoints)',
         },
       },

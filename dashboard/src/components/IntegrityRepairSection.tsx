@@ -15,6 +15,7 @@ const FIX_LABEL_KEYS: Record<string, string> = {
   git_safe_directory: 'pages.settings.repair.fixes.gitSafeDirectory',
   clear_stuck_job: 'pages.settings.repair.fixes.clearStuckJob',
   mosquitto_repair: 'pages.settings.repair.fixes.mosquittoRepair',
+  modules_bridge_repair: 'pages.settings.repair.fixes.modulesBridgeRepair',
   init_seed: 'pages.settings.repair.fixes.initSeed',
 };
 

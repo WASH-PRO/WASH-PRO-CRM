@@ -1,5 +1,5 @@
 import { fetchWithAuth } from './client';
-import { tGlobal } from '../i18n/runtime';
+import { modulesBridgeUnavailableHint, normalizeModulesError } from '../utils/modulesError';
 
 export interface LocalizedText {
   ru: string;
@@ -51,11 +51,7 @@ const BASE = '/api/crm/modules';
 
 type BridgePayload<T> = { success?: boolean; data?: T; error?: string };
 
-function modulesBridgeUnavailableHint(): string {
-  return tGlobal('pages.modules.bridgeRebuildHint');
-}
-
-function parseBridgeJson<T>(text: string, status: number): T {
+function parseBridgeJson<T>(text: string): T {
   const trimmed = text.trim();
   if (!trimmed) {
     throw new Error(modulesBridgeUnavailableHint());
@@ -72,11 +68,11 @@ function parseBridgeJson<T>(text: string, status: number): T {
     if (preview === 'Unauthorized' || preview === 'Forbidden') {
       throw new Error(preview);
     }
-    throw new Error(preview || tGlobal('errors.invalidServerResponse'));
+    throw new Error(preview || modulesBridgeUnavailableHint());
   }
 
   if (json.success !== true) {
-    throw new Error(json.error || tGlobal('errors.requestFailed', { status }));
+    throw new Error(json.error || modulesBridgeUnavailableHint());
   }
 
   return json.data as T;
@@ -87,23 +83,26 @@ async function readBridgeResponse<T>(res: Response): Promise<T> {
   if (!res.ok && !text.trim()) {
     throw new Error(modulesBridgeUnavailableHint());
   }
-  return parseBridgeJson<T>(text, res.status);
+  return parseBridgeJson<T>(text);
 }
 
 async function bridgeFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetchWithAuth(`${BASE}${path}`, options);
-  return readBridgeResponse<T>(res);
+  try {
+    const res = await fetchWithAuth(`${BASE}${path}`, options);
+    return readBridgeResponse<T>(res);
+  } catch (err) {
+    throw new Error(normalizeModulesError(err));
+  }
 }
 
 export async function checkModulesBridgeHealth(): Promise<{ pyorchAvailable: boolean }> {
-  let res: Response;
   try {
-    res = await fetch(`${BASE}/health`);
-  } catch {
-    throw new Error(modulesBridgeUnavailableHint());
+    const res = await fetch(`${BASE}/health`);
+    const data = await readBridgeResponse<{ pyorchAvailable: boolean }>(res);
+    return data ?? { pyorchAvailable: false };
+  } catch (err) {
+    throw new Error(normalizeModulesError(err));
   }
-  const data = await readBridgeResponse<{ pyorchAvailable: boolean }>(res);
-  return data ?? { pyorchAvailable: false };
 }
 
 export async function listModuleCatalog(refresh = false): Promise<CatalogModule[]> {

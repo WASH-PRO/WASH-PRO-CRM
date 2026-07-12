@@ -28,6 +28,7 @@ import { useBreadcrumbLastLabel } from '../context/BreadcrumbContext';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { useLocale } from '../i18n/LocaleContext';
+import { normalizeModulesError } from '../utils/modulesError';
 
 type PageState = 'loading' | 'ready' | 'unavailable';
 type InstallFilter = 'all' | 'installed' | 'available';
@@ -427,7 +428,7 @@ export function ModulesPage() {
       setServiceError(null);
       setPageState('ready');
     } catch (err) {
-      setServiceError(err instanceof Error ? err.message : t('pages.modules.unavailable'));
+      setServiceError(normalizeModulesError(err));
       setPageState('unavailable');
     }
   }, [t]);
@@ -444,7 +445,7 @@ export function ModulesPage() {
       await action();
       await load(false);
     } catch (err) {
-      setServiceError(err instanceof Error ? err.message : t('pages.modules.actionFailed'));
+      setServiceError(normalizeModulesError(err));
     } finally {
       setBusy(null);
     }
@@ -508,6 +509,13 @@ export function ModulesPage() {
       <div>
         <PageHeader title={t('pages.modules.title')} subtitle={t('pages.modules.description')} />
         <ErrorMessage message={serviceError ?? t('pages.modules.unavailable')} />
+        <p className="mt-4 text-sm text-panel-muted dark:text-panel-muted-dark">
+          {t('pages.modules.repairHint')}{' '}
+          <Link to="/settings#integrity-repair" className="text-brand-600 hover:underline dark:text-brand-400">
+            {t('pages.modules.repairLink')}
+          </Link>
+          .
+        </p>
       </div>
     );
   }

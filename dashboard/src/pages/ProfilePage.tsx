@@ -5,6 +5,7 @@ import { getProfile, setStoredUser, updateProfile } from '../api/client';
 import { listDapGroups } from '../api/admin';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, Badge, ErrorMessage } from '../components/UI';
+import { PasswordInput } from '../components/PasswordInput';
 import { useLocale } from '../i18n/LocaleContext';
 import { entityId, resolveGroupLabel } from '../utils/rbac';
 import { formatDateTime } from '../utils/format';
@@ -204,9 +205,7 @@ export function ProfilePage() {
           </div>
           <div>
             <label className="label">{t('pages.profile.newPasswordOptional')}</label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               autoComplete="new-password"

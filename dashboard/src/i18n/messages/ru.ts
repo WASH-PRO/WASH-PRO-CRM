@@ -29,6 +29,8 @@ export const ru = {
     yes: 'Да',
     no: 'Нет',
     notAvailable: '—',
+    showPassword: 'Показать пароль',
+    hidePassword: 'Скрыть пароль',
   },
   language: {
     label: 'Язык интерфейса',
@@ -872,7 +874,9 @@ export const ru = {
       noAvailable: 'Все модули из каталога уже установлены',
       unavailable: 'Сервис модулей недоступен',
       bridgeRebuildHint:
-        'Сервис модулей недоступен. Обновите CRM в Настройках (v1.1.32+) или выполните: docker compose up -d --build modules-bridge dashboard',
+        'Сервис модулей недоступен (modules-bridge не запущен или dashboard устарел). Обновите CRM до v1.1.33+ в Настройках или откройте Настройки → Диагностика и исправления → пересборка modules-bridge.',
+      repairHint: 'Если нет доступа к серверу, попробуйте:',
+      repairLink: 'Настройки → Диагностика и исправления',
       pyorchHint: 'PyOrchestrator не запущен — модули можно установить, но запуск потребует оркестратор (PYORCHESTRATOR_ENABLED=true).',
       statusAvailable: 'Доступен',
       statusUpdating: 'Обновление…',
@@ -985,6 +989,7 @@ export const ru = {
           compose_config_invalid: 'docker compose config завершился с ошибкой: {{detail}}',
           executor_disabled: 'Автообновление отключено: {{detail}}',
           stuck_update_job: 'Зависшее обновление: {{detail}}',
+          modules_bridge_unavailable: 'Сервис modules-bridge недоступен: {{detail}}',
         },
         fixes: {
           syncHostRoot: 'Записать WASH_HOST_PROJECT_ROOT в .env по bind-mount',
@@ -992,6 +997,7 @@ export const ru = {
           gitSafeDirectory: 'Добавить safe.directory для git в /deploy',
           clearStuckJob: 'Сбросить зависшее обновление',
           mosquittoRepair: 'Пересоздать конфиг Mosquitto и перезапустить брокер',
+          modulesBridgeRepair: 'Пересобрать и перезапустить modules-bridge + dashboard',
           initSeed: 'Запустить init-seed (синхронизация CRM endpoints)',
         },
       },

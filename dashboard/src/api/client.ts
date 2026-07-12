@@ -1,4 +1,5 @@
 import { tGlobal } from '../i18n/runtime';
+import { decodeBase64Url } from '../utils/base64url';
 
 const TOKEN_KEY = 'wash_crm_token';
 const REFRESH_KEY = 'wash_crm_refresh';
@@ -19,13 +20,6 @@ export function clearAuth(): void {
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(PERMS_KEY);
-}
-
-function decodeBase64Url(part: string): string {
-  const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = base64.length % 4;
-  const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
-  return atob(padded);
 }
 
 function decodeJwtPermissions(token: string): import('../types').Permission[] {
@@ -301,7 +295,14 @@ async function refreshAccessToken(): Promise<string | null> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken: refresh }),
   });
-  const json = (await res.json()) as ApiResult<{ accessToken: string; refreshToken?: string }>;
+  const text = await res.text();
+  let json: ApiResult<{ accessToken: string; refreshToken?: string }>;
+  try {
+    json = JSON.parse(text) as ApiResult<{ accessToken: string; refreshToken?: string }>;
+  } catch {
+    notifyAuthExpired();
+    return null;
+  }
   if (json.success && json.data) {
     setTokens(json.data.accessToken, json.data.refreshToken ?? refresh);
     setStoredPermissions(decodeJwtPermissions(json.data.accessToken));

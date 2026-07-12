@@ -21,6 +21,7 @@ import { LanguageSelect } from '../components/LanguageToggle';
 import { useAuth } from '../context/AuthContext';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { PageHeader, Loading } from '../components/UI';
+import { PasswordInput } from '../components/PasswordInput';
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
   getNotificationEventGroups,
@@ -334,9 +335,8 @@ export function SettingsPage() {
             <input className="input font-mono" disabled={!canEdit} value={pyorch.email} onChange={(e) => setPyorch({ ...pyorch, email: e.target.value })} />
           </Field>
           <Field label={t('pages.settings.pyorch.adminPassword')}>
-            <input
-              className="input font-mono"
-              type="password"
+            <PasswordInput
+              className="font-mono"
               autoComplete="off"
               disabled={!canEdit}
               value={pyorch.password}
@@ -374,9 +374,8 @@ export function SettingsPage() {
             />
           </Field>
           <Field label="Service password">
-            <input
-              className="input font-mono"
-              type="password"
+            <PasswordInput
+              className="font-mono"
               autoComplete="off"
               disabled={!canEdit}
               value={dynamicApi.servicePassword}
@@ -405,9 +404,8 @@ export function SettingsPage() {
             label={t('pages.settings.mqtt.systemPassword')}
             hint={t('pages.settings.mqtt.systemPasswordHint')}
           >
-            <input
-              className="input font-mono"
-              type="password"
+            <PasswordInput
+              className="font-mono"
               autoComplete="new-password"
               disabled={!canEdit}
               value={mqttBroker.systemPassword}
@@ -534,9 +532,8 @@ export function SettingsPage() {
                   {t('pages.settings.notifications.botEnabled')}
                 </label>
                 <Field label={t('pages.settings.notifications.botToken')}>
-                  <input
-                    className="input font-mono text-xs"
-                    type="password"
+                  <PasswordInput
+                    className="font-mono text-xs"
                     disabled={!canEdit}
                     value={telegram.token}
                     onChange={(e) => setTelegram({ ...telegram, token: e.target.value })}

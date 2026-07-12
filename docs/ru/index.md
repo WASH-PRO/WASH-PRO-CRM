@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## История изменений
 
-Последний релиз: **[v1.1.38](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.38)** — разделы на странице «Модули», синхронизация версии в docs.
+Последний релиз: **[v1.1.40](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.40)** — кросс-платформенные обновления и repair compose.
 
 См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) и [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

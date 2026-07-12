@@ -134,7 +134,7 @@ docker pull nginx:alpine
 
 ```bash
 cd /path/to/WASH-PRO-CRM   # или каталог с docker-compose.yml
-git fetch origin && git checkout v1.1.39   # нужный тег
+git fetch origin && git checkout v1.1.40   # нужный тег
 docker compose up -d --build dashboard update-bridge
 ```
 

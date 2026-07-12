@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [1.1.40] — 2026-07-12
+
 ### Исправлено
 
 - **crm-update-compose-env.sh** — корректный `CRM_UPDATE_ROOT` при `source` (BASH_SOURCE / DEPLOY_ROOT); repair и diagnose используют полный `$COMPOSE_FILES`
@@ -507,7 +509,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.39...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.40...HEAD
+[1.1.40]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.40
 [1.1.39]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.39
 [1.1.38]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.38
 [1.1.37]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.37

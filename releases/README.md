@@ -5,7 +5,7 @@ Release titles and bodies for [GitHub Releases](https://github.com/WASH-PRO/WASH
 Each file: `vX.Y.Z.md` — used with `gh release create` / `gh release edit`.
 
 ```bash
-gh release edit v1.1.38 --title "$(head -1 releases/v1.1.38.md)" --notes-file releases/v1.1.38.md
+gh release edit v1.1.40 --title "$(head -1 releases/v1.1.40.md)" --notes-file releases/v1.1.40.md
 ```
 
 ## Policy — create only recent releases

@@ -31,7 +31,16 @@ export type NotificationEventKey =
   | 'cardDeleted'
   | 'autoTask'
   | 'mqttCredit'
-  | 'mqttCollection';
+  | 'mqttCollection'
+  | 'softwareUpdateStarted'
+  | 'softwareUpdateSuccess'
+  | 'softwareUpdateFailed'
+  | 'moduleInstalled'
+  | 'moduleUninstalled'
+  | 'moduleStarted'
+  | 'moduleStopped'
+  | 'moduleUpdated'
+  | 'moduleError';
 
 export interface NotificationSettingsValue {
   telegram: boolean;
@@ -76,6 +85,15 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettingsValue = {
     autoTask: true,
     mqttCredit: false,
     mqttCollection: false,
+    softwareUpdateStarted: false,
+    softwareUpdateSuccess: true,
+    softwareUpdateFailed: true,
+    moduleInstalled: true,
+    moduleUninstalled: true,
+    moduleStarted: true,
+    moduleStopped: true,
+    moduleUpdated: true,
+    moduleError: true,
   },
 };
 
@@ -114,6 +132,15 @@ export const NOTIFICATION_TYPE_TO_EVENT: Record<string, NotificationEventKey> = 
   auto_archive: 'autoTask',
   mqtt_credit: 'mqttCredit',
   mqtt_collection: 'mqttCollection',
+  software_update_started: 'softwareUpdateStarted',
+  software_update_success: 'softwareUpdateSuccess',
+  software_update_failed: 'softwareUpdateFailed',
+  module_installed: 'moduleInstalled',
+  module_uninstalled: 'moduleUninstalled',
+  module_started: 'moduleStarted',
+  module_stopped: 'moduleStopped',
+  module_updated: 'moduleUpdated',
+  module_error: 'moduleError',
 };
 
 export function normalizeNotificationSettings(raw: unknown): NotificationSettingsValue {

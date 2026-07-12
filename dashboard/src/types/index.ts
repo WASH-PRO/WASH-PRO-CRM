@@ -229,6 +229,15 @@ export interface NotificationSettings {
     autoTask?: boolean;
     mqttCredit?: boolean;
     mqttCollection?: boolean;
+    softwareUpdateStarted?: boolean;
+    softwareUpdateSuccess?: boolean;
+    softwareUpdateFailed?: boolean;
+    moduleInstalled?: boolean;
+    moduleUninstalled?: boolean;
+    moduleStarted?: boolean;
+    moduleStopped?: boolean;
+    moduleUpdated?: boolean;
+    moduleError?: boolean;
   };
 }
 

@@ -54,6 +54,15 @@ const TYPE_TO_EVENT: Record<string, string> = {
   auto_archive: 'autoTask',
   mqtt_credit: 'mqttCredit',
   mqtt_collection: 'mqttCollection',
+  software_update_started: 'softwareUpdateStarted',
+  software_update_success: 'softwareUpdateSuccess',
+  software_update_failed: 'softwareUpdateFailed',
+  module_installed: 'moduleInstalled',
+  module_uninstalled: 'moduleUninstalled',
+  module_started: 'moduleStarted',
+  module_stopped: 'moduleStopped',
+  module_updated: 'moduleUpdated',
+  module_error: 'moduleError',
 };
 
 const DEFAULT_EVENTS: Record<string, boolean> = {
@@ -90,6 +99,15 @@ const DEFAULT_EVENTS: Record<string, boolean> = {
   autoTask: true,
   mqttCredit: false,
   mqttCollection: false,
+  softwareUpdateStarted: false,
+  softwareUpdateSuccess: true,
+  softwareUpdateFailed: true,
+  moduleInstalled: true,
+  moduleUninstalled: true,
+  moduleStarted: true,
+  moduleStopped: true,
+  moduleUpdated: true,
+  moduleError: true,
 };
 
 const EXCLUDED_NOTIFY_PREFIXES = [

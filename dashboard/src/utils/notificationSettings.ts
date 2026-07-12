@@ -40,6 +40,15 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     autoTask: true,
     mqttCredit: false,
     mqttCollection: false,
+    softwareUpdateStarted: false,
+    softwareUpdateSuccess: true,
+    softwareUpdateFailed: true,
+    moduleInstalled: true,
+    moduleUninstalled: true,
+    moduleStarted: true,
+    moduleStopped: true,
+    moduleUpdated: true,
+    moduleError: true,
   },
 };
 
@@ -101,6 +110,25 @@ export function getNotificationEventGroups(t: TranslateFn = tGlobal): {
         { key: 'mqttCollection', label: t('notifications.events.mqttCollection') },
       ],
     },
+    {
+      title: t('notifications.groups.softwareUpdates'),
+      items: [
+        { key: 'softwareUpdateStarted', label: t('notifications.events.softwareUpdateStarted') },
+        { key: 'softwareUpdateSuccess', label: t('notifications.events.softwareUpdateSuccess') },
+        { key: 'softwareUpdateFailed', label: t('notifications.events.softwareUpdateFailed') },
+      ],
+    },
+    {
+      title: t('notifications.groups.modules'),
+      items: [
+        { key: 'moduleInstalled', label: t('notifications.events.moduleInstalled') },
+        { key: 'moduleUninstalled', label: t('notifications.events.moduleUninstalled') },
+        { key: 'moduleStarted', label: t('notifications.events.moduleStarted') },
+        { key: 'moduleStopped', label: t('notifications.events.moduleStopped') },
+        { key: 'moduleUpdated', label: t('notifications.events.moduleUpdated') },
+        { key: 'moduleError', label: t('notifications.events.moduleError') },
+      ],
+    },
   ];
 }
 
@@ -140,6 +168,15 @@ export function getNotificationTypeLabels(t: TranslateFn = tGlobal): Record<stri
     mqtt_collection: t('notifications.types.mqttCollection'),
     auto_backup: t('notifications.types.autoBackup'),
     auto_archive: t('notifications.types.autoArchive'),
+    software_update_started: t('notifications.types.softwareUpdateStarted'),
+    software_update_success: t('notifications.types.softwareUpdateSuccess'),
+    software_update_failed: t('notifications.types.softwareUpdateFailed'),
+    module_installed: t('notifications.types.moduleInstalled'),
+    module_uninstalled: t('notifications.types.moduleUninstalled'),
+    module_started: t('notifications.types.moduleStarted'),
+    module_stopped: t('notifications.types.moduleStopped'),
+    module_updated: t('notifications.types.moduleUpdated'),
+    module_error: t('notifications.types.moduleError'),
   };
 }
 

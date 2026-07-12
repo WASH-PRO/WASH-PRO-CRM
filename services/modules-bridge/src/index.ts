@@ -21,9 +21,26 @@ import {
   isPyorchAvailable,
 } from './pyorch.js';
 import { getInstalledState, listInstalledStates } from './state.js';
+import { notifyCrm } from './notify.js';
 
 const logger = pino({ level: 'info' });
 const PORT = parseInt(process.env.MODULES_HTTP_PORT || '3024', 10);
+
+function moduleLabel(moduleId: string): string {
+  const manifest = readLocalManifest(moduleId);
+  if (manifest?.name?.ru) return manifest.name.ru;
+  return moduleId;
+}
+
+async function notifyModule(
+  type: string,
+  moduleId: string,
+  detail: string,
+  severity: 'info' | 'warning' | 'error' = 'info'
+): Promise<void> {
+  const label = moduleLabel(moduleId);
+  await notifyCrm(type, `${label} (${moduleId}): ${detail}`, severity);
+}
 
 async function readBody(req: http.IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
@@ -155,9 +172,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     const moduleId = decodeURIComponent(installMatch[1]!);
     try {
       const data = await installModule(moduleId);
+      void notifyModule('module_installed', moduleId, `установлен v${data.version}`);
       json(res, 201, { success: true, data });
     } catch (err) {
-      json(res, 400, { success: false, error: err instanceof Error ? err.message : 'Install failed' });
+      const message = err instanceof Error ? err.message : 'Install failed';
+      void notifyModule('module_error', moduleId, `ошибка установки — ${message}`, 'error');
+      json(res, 400, { success: false, error: message });
     }
     return;
   }
@@ -259,9 +279,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     if (req.method === 'POST' && action === '/start') {
       try {
         const data = await startModule(moduleId);
+        void notifyModule('module_started', moduleId, 'запущен');
         json(res, 200, { success: true, data });
       } catch (err) {
-        json(res, 400, { success: false, error: err instanceof Error ? err.message : 'Start failed' });
+        const message = err instanceof Error ? err.message : 'Start failed';
+        void notifyModule('module_error', moduleId, `ошибка запуска — ${message}`, 'error');
+        json(res, 400, { success: false, error: message });
       }
       return;
     }
@@ -269,9 +292,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     if (req.method === 'POST' && action === '/stop') {
       try {
         const data = await stopModule(moduleId);
+        void notifyModule('module_stopped', moduleId, 'остановлен');
         json(res, 200, { success: true, data });
       } catch (err) {
-        json(res, 400, { success: false, error: err instanceof Error ? err.message : 'Stop failed' });
+        const message = err instanceof Error ? err.message : 'Stop failed';
+        void notifyModule('module_error', moduleId, `ошибка остановки — ${message}`, 'error');
+        json(res, 400, { success: false, error: message });
       }
       return;
     }
@@ -279,9 +305,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     if (req.method === 'POST' && action === '/update') {
       try {
         const data = await updateModule(moduleId);
+        void notifyModule('module_updated', moduleId, `обновлён до v${data.version}`);
         json(res, 200, { success: true, data });
       } catch (err) {
-        json(res, 400, { success: false, error: err instanceof Error ? err.message : 'Update failed' });
+        const message = err instanceof Error ? err.message : 'Update failed';
+        void notifyModule('module_error', moduleId, `ошибка обновления — ${message}`, 'error');
+        json(res, 400, { success: false, error: message });
       }
       return;
     }
@@ -289,9 +318,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     if (req.method === 'DELETE' && !action) {
       try {
         await uninstallModule(moduleId);
+        void notifyModule('module_uninstalled', moduleId, 'удалён');
         json(res, 200, { success: true });
       } catch (err) {
-        json(res, 400, { success: false, error: err instanceof Error ? err.message : 'Uninstall failed' });
+        const message = err instanceof Error ? err.message : 'Uninstall failed';
+        void notifyModule('module_error', moduleId, `ошибка удаления — ${message}`, 'error');
+        json(res, 400, { success: false, error: message });
       }
       return;
     }

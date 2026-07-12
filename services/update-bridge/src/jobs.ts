@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { fetchLatestRelease, parseTagVersion } from './github.js';
 import { isNewerVersion } from './semver.js';
 import { COMPONENTS, getComponent } from './components.js';
+import { notifyCrm } from './notify.js';
 import {
   addJob,
   clearDismissedFailedJob,
@@ -199,6 +200,13 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
   updateJob(job);
   await saveState();
 
+  const componentLabel = getComponent(job.component).label;
+  void notifyCrm(
+    'software_update_started',
+    `Запущено обновление ${componentLabel}: v${job.fromVersion} → v${job.targetVersion}`,
+    'info'
+  );
+
   const appendLog = (line: string) => {
     job.logs.push(line);
     if (job.logs.length > 500) job.logs.shift();
@@ -242,11 +250,21 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
     job.status = 'completed';
     job.finishedAt = new Date().toISOString();
     await checkAllComponents();
+    void notifyCrm(
+      'software_update_success',
+      `Обновление ${componentLabel} завершено: v${job.targetVersion}`,
+      'info'
+    );
   } catch (err) {
     job.status = 'failed';
     job.error = err instanceof Error ? err.message : 'Update failed';
     job.finishedAt = new Date().toISOString();
     appendLog(`ERROR: ${job.error}`);
+    void notifyCrm(
+      'software_update_failed',
+      `Ошибка обновления ${componentLabel} (v${job.targetVersion}): ${job.error}`,
+      'error'
+    );
     if (job.component === 'crm' && job.fromVersion !== job.targetVersion) {
       try {
         appendLog(`$ ${crmAppVersionSyncCommand(job.fromVersion)}`);

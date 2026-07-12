@@ -16,11 +16,14 @@ if [ -z "${COMPOSE_FILES:-}" ]; then
   source "$ROOT/scripts/compose-files.sh"
 fi
 
-echo "[crm-update-build] Building init-seed, modules-bridge…"
-docker compose $COMPOSE_FILES build init-seed modules-bridge
+echo "[crm-update-build] Building init-seed, modules-bridge, dashboard…"
+docker compose $COMPOSE_FILES build init-seed modules-bridge dashboard
 
 echo "[crm-update-build] Restarting CRM services (incl. modules-bridge)…"
-docker compose $COMPOSE_FILES up -d --build --no-deps \
+docker compose $COMPOSE_FILES up -d --build --force-recreate --no-deps \
   dynamic-api dynamic-api-panel dashboard modules-bridge message-processor backup
+
+echo "[crm-update-build] Ensuring modules-bridge is up…"
+bash "$ROOT/scripts/crm-update-ensure-modules-bridge.sh"
 
 echo "[crm-update-build] Done."

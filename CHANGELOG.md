@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [1.1.34] — 2026-07-12
+
+### Добавлено
+
+- **Уведомления — обновления ПО** — типы: запуск, успех, ошибка (CRM, Dynamic API, PyOrchestrator)
+- **Уведомления — модули** — установка, удаление, запуск, остановка, обновление, ошибки
+
+### Исправлено
+
+- **Автообновление CRM** — надёжный запуск `modules-bridge`: hook без проверки `-x`, `crm-update-ensure-modules-bridge.sh`, повтор на шаге seed/health, `--force-recreate`
+
 ## [1.1.33] — 2026-07-12
 
 ### Исправлено
@@ -450,7 +461,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.33...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.34...HEAD
+[1.1.34]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.34
 [1.1.33]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.33
 [1.1.32]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.32
 [1.1.31]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.31

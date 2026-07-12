@@ -302,7 +302,7 @@ async function applyAction(action: RepairActionId, onLog: (line: string) => void
 
     case 'modules_bridge_repair':
       await runShell(
-        `cd ${DEPLOY_ROOT} && . ${DEPLOY_ROOT}/scripts/compose-files.sh && docker compose $COMPOSE_FILES build modules-bridge dashboard && docker compose $COMPOSE_FILES up -d modules-bridge dashboard`,
+        `cd ${DEPLOY_ROOT} && bash ${DEPLOY_ROOT}/scripts/crm-update-ensure-modules-bridge.sh && docker compose $COMPOSE_FILES up -d --build --no-deps dashboard`,
         onLog,
         { ...composeCommandEnv(), WASH_CRM_UPDATE_V2: '1' }
       );

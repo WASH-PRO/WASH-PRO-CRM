@@ -54,7 +54,8 @@ curl -s http://localhost/api/telegram-bots/health   # через Dashboard, ес
 4. На странице поста настройте **цены режимов** и проверьте префикс MQTT (`washpro` по умолчанию).
 5. **Administrator:** настройте **Пользователи** и **Группы и права** (Dashboard → Система).
 6. При PyOrchestrator: создайте **Telegram-ботов** (Dashboard → Telegram).
-7. Справочники: **Валюты**, **Типы скидок**.
+7. При PyOrchestrator *(v1.1.30+)*: установите **Модули** в **Автоматизация → Модули** — см. [Модули](modules.md).
+8. Справочники: **Валюты**, **Типы скидок**.
 
 `init-seed` создаёт CRM endpoints, RBAC, RUB, типы скидок 1–5. `Exited (0)` — норма.
 

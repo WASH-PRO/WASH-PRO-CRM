@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml"><img src="https://github.com/WASH-PRO/WASH-PRO-CRM/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages"></a>
   <a href="https://wash-pro.github.io/WASH-PRO-CRM/en/"><img src="https://img.shields.io/badge/Docs-GitHub_Pages-14b8a6?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
-  <img src="https://img.shields.io/badge/version-1.1.29-0d9488?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.1.30-0d9488?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
@@ -61,7 +61,7 @@
 - **Sites & posts** — car washes, posts with serial number, **MQTT accounts**, device settings
 - **Cards** — discount / service / VIP; NFC application log; discount types 1–5
 - **Analytics** — usage and finances before/after collection
-- **Automation** — news/promotions for Telegram, bots, **MCP server**, backups
+- **Automation** — news/promotions for Telegram, bots, **MCP server**, **Modules** (GitHub extensions), backups
 - **System** — notifications (web + Telegram), users, RBAC groups, settings, logs
 - **Resources** — links to Dynamic API (`:8080`) and PyOrchestrator (`:8090`) panels
 - **Live mode** — auto-refresh every 3–15 s
@@ -88,6 +88,7 @@ Controllers ⇄ MQTT (Mosquitto) ⇄ Message Processor ⇄ Dynamic API ⇄ Mongo
 Dashboard (React) ──────────── nginx /api proxy ──────┘
                               post-device / backup / telegram-bots
                               pyorch-bridge → PyOrchestrator (opt.)
+                              modules-bridge → module catalog & lifecycle (v1.1.30)
 ```
 
 | Service | Purpose | Port |
@@ -98,6 +99,7 @@ Dashboard (React) ──────────── nginx /api proxy ──�
 | `pyorchestrator-panel` *(opt.)* | PyOrchestrator Control Plane | 8090 |
 | `pyorch-bridge` *(opt.)* | CRM Telegram bots | internal |
 | `crm-mcp` *(opt.)* | MCP server for AI agents (Cursor) | stdio |
+| `modules-bridge` | Module catalog, install/lifecycle, UI proxy | `127.0.0.1:3024` |
 | `mosquitto`, `mosquitto-init` | MQTT broker, ACL/passwd | — |
 
 More: [docs/en/architecture.md](https://wash-pro.github.io/WASH-PRO-CRM/en/architecture/)
@@ -151,6 +153,7 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 | [Setup wizard](https://wash-pro.github.io/WASH-PRO-CRM/en/setup-wizard/) | Initial CRM setup |
 | [Architecture](https://wash-pro.github.io/WASH-PRO-CRM/en/architecture/) | Services and data flow |
 | [Dashboard](https://wash-pro.github.io/WASH-PRO-CRM/en/dashboard/) | UI modules, live mode, RBAC |
+| [Modules](https://wash-pro.github.io/WASH-PRO-CRM/en/modules/) | GitHub extension catalog, PyOrchestrator |
 | [MCP](https://wash-pro.github.io/WASH-PRO-CRM/en/mcp/) | HTTP MCP for AI agents |
 | [MQTT](https://wash-pro.github.io/WASH-PRO-CRM/en/mqtt/) | Telemetry and post control |
 | [Changelog](CHANGELOG.md) | Release history |
@@ -164,7 +167,8 @@ WASH-PRO-CRM/
 ├── dashboard/                # React CRM Dashboard
 ├── dynamic-api/              # Dynamic API Platform
 ├── pyorchestrator/           # PyOrchestrator (opt.)
-├── services/                 # init-seed, message-processor, backup, …
+├── services/                 # init-seed, message-processor, modules-bridge, …
+├── modules/                  # registry.json, installed/, bundled icons
 ├── docs/en/                  # Documentation (English)
 ├── docs/ru/                  # Документация (Russian)
 ├── wiki/en/                  # Wiki (English)

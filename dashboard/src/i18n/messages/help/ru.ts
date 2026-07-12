@@ -10,6 +10,8 @@ export const helpRu = {
   onScreen: 'На экране',
   adminBadge: 'Администратор',
   docsLink: 'Полная документация на GitHub Pages',
+  docsModulesLink: 'Документация по модулям',
+  moduleHelpIntro: 'Справка поставляется автором модуля (файл ui/help.html в репозитории).',
   sections: {
     navigation: {
       title: 'Навигация и справка',
@@ -257,6 +259,18 @@ export const helpRu = {
         language: 'Статус сервисов',
         sections: 'URL и токены',
         updates: 'Инструкция подключения',
+      },
+    },
+    modules: {
+      title: 'Модули',
+      summary: 'Расширения из GitHub: каталог, установка, запуск через PyOrchestrator. **Автоматизация → Модули** (`/modules`).',
+      howItWorks:
+        'modules-bridge клонирует репозиторий в `modules/installed/`, регистрирует daemon в PyOrch. UI настроек и **справка** — iframe из `ui/index.html` и `ui/help.html`. В общей справке CRM — группа «Справка модулей».',
+      example: 'Устанавливаете «Монитор занятости» — модуль опрашивает post-states и показывает снимок на странице настроек.',
+      regions: {
+        installed: 'Установленные карточки',
+        available: 'Доступные из каталога',
+        settings: 'Страница модуля (iframe)',
       },
     },
     backups: {

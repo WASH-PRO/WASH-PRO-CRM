@@ -54,7 +54,8 @@ To restart: `/setup?restart=1` or **System → Setup wizard**.
 4. On the post page, configure **mode prices** and verify the MQTT prefix (`washpro` by default).
 5. **Administrator:** configure **Users** and **Groups & permissions** (Dashboard → System).
 6. With PyOrchestrator: create **Telegram bots** (Dashboard → Telegram).
-7. Reference data: **Currencies**, **Discount types**.
+7. With PyOrchestrator *(v1.1.30+)*: install **Modules** from **Automation → Modules** — see [Modules](modules.md).
+8. Reference data: **Currencies**, **Discount types**.
 
 `init-seed` creates CRM endpoints, RBAC, RUB, discount types 1–5. `Exited (0)` is normal.
 

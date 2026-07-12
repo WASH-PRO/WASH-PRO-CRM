@@ -145,6 +145,27 @@ Dashboard  →  /api/telegram-bots/*  →  pyorch-bridge  →  PyOrchestrator AP
 
 **Изоляция (v1.1.11+):** боты отвечают только в личных сообщениях — каждый пользователь не видит чужих диалогов.
 
+### Интеграция с Dashboard: Модули
+
+Расширения CRM из отдельных GitHub-репозиториев: **Dashboard → Автоматизация → Модули**. Документация: [Модули](modules.md).
+
+```
+Dashboard  →  /api/crm/modules/*  →  modules-bridge  →  git + PyOrchestrator
+                                              ↓
+                              Dynamic API  http://dynamic-api:3001
+```
+
+| Endpoint bridge | Действие |
+|-----------------|----------|
+| `GET /health` | Health (+ PyOrch) |
+| `GET /catalog` | Каталог модулей |
+| `POST /install/:id` | Установка из GitHub |
+| `POST /installed/:id/start\|stop\|update` | Жизненный цикл |
+| `DELETE /installed/:id` | Полное удаление |
+| `GET /ui/:id/` | UI настроек модуля |
+
+Шаблон для разработки: [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter).
+
 ### MCP в Dashboard (v1.1.12)
 
 **Dashboard → Автоматизация → MCP сервер** (`/mcp`):

@@ -16,5 +16,7 @@ export type HelpMessages = {
   onScreen: string;
   adminBadge: string;
   docsLink: string;
+  docsModulesLink: string;
+  moduleHelpIntro: string;
   sections: Record<string, HelpSectionContent>;
 };

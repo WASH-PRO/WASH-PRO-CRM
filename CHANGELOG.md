@@ -6,6 +6,23 @@
 
 ## [Unreleased]
 
+## [1.1.30] — 2026-07-12
+
+### Добавлено
+
+- **Система модулей** — сервис `modules-bridge` (Docker Compose, порт `3024` на localhost); каталог `modules/registry.json`
+- **Dashboard → Автоматизация → Модули** — поиск, фильтры, пагинация, «загрузить ещё»; карточки с кликабельным заголовком и icon-only кнопками
+- **Жизненный цикл модулей** — install/start/stop/update/uninstall из GitHub; UI настроек в iframe (auto-resize, синхронизация темы CRM)
+- **Модуль VK публикатор** — публикация **Публикаций** CRM во ВКонтакте с загрузкой фото
+- **Общий UI kit модулей** — `wash-module-ui.css`, `wash-module-sdk.js` (Обзор / Настройки / Логи)
+- **API modules-bridge** — иконки модулей, логи PyOrchestrator, обогащённый status
+- **Документация** — `docs/en|ru/modules.md`, wiki Modules, обновления architecture/dashboard/embedded-services/README
+
+### Изменено
+
+- **Хлебные крошки** — маршрут `/modules/:moduleId` с именем модуля
+- **nginx dashboard** — прокси `/api/crm/modules/` → `modules-bridge`
+
 ## [1.1.29] — 2026-07-11
 
 ### Исправлено
@@ -399,7 +416,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.29...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.30...HEAD
+[1.1.30]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.30
 [1.1.29]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.29
 [1.1.28]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.28
 [1.1.27]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.27

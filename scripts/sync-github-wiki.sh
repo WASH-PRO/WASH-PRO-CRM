@@ -24,7 +24,7 @@ cat > Home.md <<'EOF'
 Sources synced from the main repository. **Default language: English.**
 
 **Full documentation (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/en/  
-**Current version:** v1.1.23
+**Current version:** v1.1.30
 
 ## English
 
@@ -38,6 +38,7 @@ Sources synced from the main repository. **Default language: English.**
 | [Embedded-Services](en-Embedded-Services) | Embedded services |
 | [MQTT](en-MQTT) | MQTT |
 | [Telegram](en-Telegram) | Telegram bots |
+| [Modules](en-Modules) | CRM modules |
 | [MCP](en-MCP) | MCP for AI agents |
 | [Database-Schema](en-Database-Schema) | Database schema |
 
@@ -53,6 +54,7 @@ Sources synced from the main repository. **Default language: English.**
 | [Embedded-Services](ru-Embedded-Services) | Встроенные сервисы |
 | [MQTT](ru-MQTT) | MQTT |
 | [Telegram](ru-Telegram) | Telegram-боты |
+| [Modules](ru-Modules) | Модули CRM |
 | [MCP](ru-MCP) | MCP |
 | [Database-Schema](ru-Database-Schema) | Схема данных |
 EOF
@@ -73,7 +75,7 @@ if git diff --staged --quiet; then
   exit 0
 fi
 
-git commit -m "docs: flatten wiki pages to en-/ru- slugs (fix 404 links)"
+git commit -m "docs: sync wiki from main (v1.1.30, Modules page)"
 git push origin HEAD
 
 echo "Published: https://github.com/WASH-PRO/WASH-PRO-CRM/wiki"

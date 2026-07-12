@@ -16,7 +16,7 @@ React application with **light**, **dark**, and **system** themes (follows OS se
 | **Cards** | Discount, Service, VIP, Collection |
 | **Analytics** | Usage, Finance, Archive |
 | **Reference data** | Work modes, Currencies, Discount types *(Admin)* |
-| **Automation** | **Publications**, **Telegram**, **MCP server**, Backups *(Admin)* |
+| **Automation** | **Publications**, **Telegram**, **MCP server**, **Modules**, Backups *(Admin)* |
 | **System** | **Information** (server resources, CRM & stack versions), Notifications, **Users**, **Groups & permissions**, **Settings**, Logs *(Admin)* |
 
 Sections marked admin are available only to **Administrator** (`manage_users` or `view_logs` in JWT).  
@@ -245,6 +245,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 | **Publications** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
 | Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP server** | `/mcp` | Dynamic API and PyOrchestrator HTTP MCP; tools table; Cursor config *(Admin)* |
+| **Modules** | `/modules` | GitHub extension catalog; install/start/stop; settings UI iframe; `modules-bridge` *(Admin)* |
 | Backups | `/backups` | MongoDB backup, manual run, download *(Admin)* |
 | Work modes | `/work-modes` | Mode reference 0–9 *(Admin)* |
 | Currencies | `/currency` | Reference `/api/crm/currencies` *(Admin)* |
@@ -282,6 +283,7 @@ User management: **Dashboard → Users / Groups & permissions** or **Dynamic API
 |------|----------|
 | `/api/` | `dynamic-api:3001` |
 | `/api/telegram-bots/` | `pyorch-bridge:3021` |
+| `/api/crm/modules/` | `modules-bridge:3024` |
 | `/api/crm/backup-files/` | `backup:3020` |
 | `/api/crm/post-device/` | `message-processor:3022` (post prices and commands) |
 | `/api/mcp` | Dynamic API MCP (JWT) |

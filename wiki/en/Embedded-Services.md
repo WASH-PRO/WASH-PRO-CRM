@@ -17,6 +17,7 @@ Upstream: https://dynamic-api-platform.github.io/Dynamic-API-Platform/
 - Python scripts/bots, schedules, secrets, WebSocket logs
 - Panel `:8090`: full Control Plane
 - **WASH:** Telegram bots via `pyorch-bridge` + Dashboard → Telegram
+- **WASH:** Modules via `modules-bridge` + Dashboard → Modules ([Modules](en-Modules))
 - MCP `:8010`; observability — `pyorch-observability` profile
 
 Upstream: https://pyorchestrator.github.io/PyOrchestrator/

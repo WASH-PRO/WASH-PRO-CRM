@@ -11,6 +11,7 @@
 Dashboard ──► Dynamic API (nginx /api)
 Dashboard ──► /api/crm/post-device/ ──► message-processor:3022 (команды/цены/sync MQTT)
 Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, опц.)
+Dashboard ──► modules-bridge ──► PyOrchestrator (модули, опц.)
 ```
 
 ## Основной стек

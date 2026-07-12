@@ -65,6 +65,10 @@ const ROUTE_BREADCRUMBS: RouteBreadcrumbDef[] = [
   },
   { path: '/mcp', trail: [{ labelKey: 'nav.groups.automation' }, { labelKey: 'nav.items.mcp', path: '/mcp' }] },
   {
+    path: '/modules',
+    trail: [{ labelKey: 'nav.groups.automation' }, { labelKey: 'nav.items.modules', path: '/modules' }],
+  },
+  {
     path: '/backups',
     trail: [{ labelKey: 'nav.groups.automation' }, { labelKey: 'nav.items.backups', path: '/backups' }],
   },
@@ -86,6 +90,7 @@ const ROUTE_BREADCRUMBS: RouteBreadcrumbDef[] = [
 const ROUTE_BY_PATH = new Map(ROUTE_BREADCRUMBS.map((route) => [route.path, route]));
 
 const POST_DETAIL_RE = /^\/posts\/[^/]+$/;
+const MODULE_DETAIL_RE = /^\/modules\/[^/]+$/;
 
 function buildTrail(trail: BreadcrumbTrailEntry[], t: TranslateFn): BreadcrumbItem[] {
   return trail.map((entry, index) => ({
@@ -107,6 +112,17 @@ export function breadcrumbsFromPath(pathname: string, t: TranslateFn): Breadcrum
         { labelKey: 'nav.groups.objects' },
         { labelKey: 'nav.items.posts', path: '/posts' },
         { labelKey: 'breadcrumbs.post' },
+      ],
+      t
+    );
+  }
+
+  if (MODULE_DETAIL_RE.test(normalized)) {
+    return buildTrail(
+      [
+        { labelKey: 'nav.groups.automation' },
+        { labelKey: 'nav.items.modules', path: '/modules' },
+        { labelKey: 'breadcrumbs.module' },
       ],
       t
     );

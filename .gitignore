@@ -13,5 +13,11 @@ local/apply-server-patches.sh
 # Persistent runtime data (see data/README.md)
 data/**
 !data/README.md
+# Installed modules (see modules/README.md)
+modules/installed/**
+!modules/installed/.gitkeep
+!modules/registry.json
+!modules/README.md
+local/module-repos/
 dynamic-api/.git
 pyorchestrator/.git

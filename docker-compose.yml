@@ -262,7 +262,7 @@ services:
       UPDATE_HTTP_PORT: 3023
       DEPLOY_ROOT: /deploy
       STATE_DIR: /data
-      APP_VERSION: ${APP_VERSION:-1.1.29}
+      APP_VERSION: ${APP_VERSION:-1.1.30}
       UPDATE_EXECUTOR_ENABLED: ${UPDATE_EXECUTOR_ENABLED:-true}
       HOST_PROJECT_ROOT: ${WASH_HOST_PROJECT_ROOT:-${PWD}}
       DATA_DIR: ${DATA_DIR:-./data}
@@ -282,6 +282,37 @@ services:
       - wash-external
 
   # ===========================================================================
+  # Modules Bridge — каталог и жизненный цикл модулей WASH
+  # ===========================================================================
+  modules-bridge:
+    build:
+      context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/services/modules-bridge
+      dockerfile: Dockerfile
+    container_name: wash-modules-bridge
+    restart: unless-stopped
+    environment:
+      MODULES_HTTP_PORT: 3024
+      MODULES_DIR: /modules
+      DEPLOY_ROOT: /deploy
+      CRM_API_URL: http://dynamic-api:3001
+      CRM_API_BASE_URL: http://dynamic-api:3001
+      PYORCH_API_URL: http://pyorch-backend:8000
+      PYORCH_EMAIL: ${PYORCH_DASHBOARD_EMAIL:-admin@pyorchestrator.local}
+      PYORCH_PASSWORD: ${PYORCH_DASHBOARD_PASSWORD:-admin}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    volumes:
+      - ${WASH_HOST_PROJECT_ROOT:-.}/modules:/modules
+      - ${WASH_HOST_PROJECT_ROOT:-.}:/deploy:ro
+    depends_on:
+      dynamic-api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3024:3024"
+    networks:
+      - wash-internal
+      - wash-external
+
+  # ===========================================================================
   # Dashboard — единственный сервис, доступный снаружи
   # ===========================================================================
   dashboard:
@@ -289,12 +320,12 @@ services:
       context: ${WASH_BUILD_ROOT:-${WASH_HOST_PROJECT_ROOT:-.}}/dashboard
       dockerfile: Dockerfile
       args:
-        VITE_APP_VERSION: ${APP_VERSION:-1.1.29}
+        VITE_APP_VERSION: ${APP_VERSION:-1.1.30}
     container_name: wash-dashboard
     restart: unless-stopped
     environment:
       PYORCHESTRATOR_ENABLED: ${PYORCHESTRATOR_ENABLED:-false}
-      APP_VERSION: ${APP_VERSION:-1.1.29}
+      APP_VERSION: ${APP_VERSION:-1.1.30}
     ports:
       - "${DASHBOARD_PORT:-80}:80"
     depends_on:
@@ -302,6 +333,8 @@ services:
         condition: service_healthy
       init-seed:
         condition: service_completed_successfully
+      modules-bridge:
+        condition: service_started
     networks:
       - wash-internal
       - wash-external

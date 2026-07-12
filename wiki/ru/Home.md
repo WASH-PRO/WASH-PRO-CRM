@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.29** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**WASH PRO version:** **v1.1.30** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -27,6 +27,7 @@
 - **Локализация Dashboard** — English / Русский; по умолчанию English; переключатель в шапке и Настройках (v1.1.13+)
 - **Локализованные уведомления** — сообщения в списке по типу события следуют языку интерфейса, в т.ч. старые записи (v1.1.14)
 - **MCP сервер** в Dashboard — Dynamic API + PyOrchestrator для AI-агентов (v1.1.12)
+- **Модули** — каталог расширений GitHub, install/start/stop, UI настроек в iframe *(Автоматизация)* (v1.1.30)
 - Stdio MCP `services/crm-mcp` для Cursor (v1.1.9+)
 - MQTT (Mosquitto): изоляция постов по serial
 - Live-обновление 3–15 с; глобальный переключатель Live/Static (v1.1.8)
@@ -59,9 +60,17 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [Архитектура](ru-Architecture)
 - [MQTT и управление постами](ru-MQTT)
 - [Telegram-боты](ru-Telegram)
+- [Модули](ru-Modules)
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.30
+
+- **Модули** — `modules-bridge`, страница каталога с поиском/фильтрами/пагинацией, модуль VK публикатор
+- **UI модулей** — iframe auto-resize, синхронизация темы, общий UI kit, icon-only кнопки на карточках
+
+Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 
 ## Changelog v1.1.29
 

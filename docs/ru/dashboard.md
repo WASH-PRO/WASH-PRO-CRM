@@ -16,7 +16,7 @@ React-приложение со **светлой**, **тёмной** и **сис
 | **Карты** | Скидочные, Сервисные, VIP, Инкассация |
 | **Аналитика** | Использование, Финансы, Архив |
 | **Справочники** | Режимы работы, Валюты, Типы скидок *(Admin)* |
-| **Автоматизация** | **Публикации**, **Telegram**, **MCP сервер**, Резервные копии *(Admin)* |
+| **Автоматизация** | **Публикации**, **Telegram**, **MCP сервер**, **Модули**, Резервные копии *(Admin)* |
 | **Система** | **Информация** (ресурсы сервера, CRM и версии стека), Уведомления, **Пользователи**, **Группы и права**, **Настройки**, Логи *(Admin)* |
 
 Разделы с пометкой admin доступны только **Administrator** (`manage_users` или `view_logs` в JWT).  
@@ -245,6 +245,7 @@ API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 | **Публикации** | `/info-messages` | Новости и акции для информационного бота; статус «По расписанию» → **«Опубликовано»** после наступления времени *(Admin)* |
 | Telegram | `/telegram` | Боты PyOrchestrator: **Управление** / **Сервисный** / **Информационный**; QR-ссылка; массовые действия; шаблоны v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP сервер** | `/mcp` | HTTP MCP Dynamic API и PyOrchestrator; таблица tools; конфиг Cursor *(Admin)* |
+| **Модули** | `/modules` | Каталог расширений GitHub; install/start/stop; UI настроек в iframe; `modules-bridge` *(Admin)* |
 | Резервные копии | `/backups` | MongoDB backup, ручной запуск, скачивание *(Admin)* |
 | Режимы работы | `/work-modes` | Справочник режимов 0–9 *(Admin)* |
 | Валюты | `/currency` | Справочник `/api/crm/currencies` *(Admin)* |
@@ -282,6 +283,7 @@ API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 |------|----------|
 | `/api/` | `dynamic-api:3001` |
 | `/api/telegram-bots/` | `pyorch-bridge:3021` |
+| `/api/crm/modules/` | `modules-bridge:3024` |
 | `/api/crm/backup-files/` | `backup:3020` |
 | `/api/crm/post-device/` | `message-processor:3022` (цены и команды поста) |
 | `/api/mcp` | Dynamic API MCP (JWT) |

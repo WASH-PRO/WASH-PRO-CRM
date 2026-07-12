@@ -5,7 +5,7 @@
 Sources for [GitHub Wiki](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki).
 
 **Full documentation (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/en/  
-**Current version:** v1.1.29
+**Current version:** v1.1.30
 
 Default language: **English**
 
@@ -21,6 +21,7 @@ Default language: **English**
 | [Embedded-Services](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Embedded-Services) | Embedded services |
 | [MQTT](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-MQTT) | MQTT |
 | [Telegram](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Telegram) | Telegram bots |
+| [Modules](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Modules) | CRM modules |
 | [MCP](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-MCP) | MCP for AI agents |
 | [Database-Schema](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/en-Database-Schema) | Database schema |
 
@@ -36,6 +37,7 @@ Default language: **English**
 | [Embedded-Services](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Embedded-Services) | Встроенные сервисы |
 | [MQTT](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-MQTT) | MQTT |
 | [Telegram](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Telegram) | Telegram-боты |
+| [Modules](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Modules) | Модули CRM |
 | [MCP](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-MCP) | MCP |
 | [Database-Schema](https://github.com/WASH-PRO/WASH-PRO-CRM/wiki/ru-Database-Schema) | Схема данных |
 

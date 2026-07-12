@@ -40,6 +40,7 @@ export const HELP_SECTIONS: HelpSectionDef[] = [
   { id: 'infoMessages', groupKey: 'automation', mockup: 'table', adminOnly: true },
   { id: 'telegram', groupKey: 'automation', mockup: 'telegram', adminOnly: true },
   { id: 'mcp', groupKey: 'automation', mockup: 'settings', adminOnly: true },
+  { id: 'modules', groupKey: 'automation', mockup: 'settings', adminOnly: true },
   { id: 'backups', groupKey: 'automation', mockup: 'table', adminOnly: true },
   { id: 'system', groupKey: 'system', mockup: 'system' },
   { id: 'notifications', groupKey: 'system', mockup: 'notifications' },

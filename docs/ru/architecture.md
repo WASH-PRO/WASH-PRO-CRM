@@ -26,6 +26,8 @@ Dashboard (React) ──────────┤ nginx /api proxy
               │             │
        PyOrchestrator ──────┘ (опц.)
               │
+    modules-bridge ─────────┤ (каталог модулей, v1.1.30)
+              │
     backup / service account
 ```
 
@@ -43,6 +45,7 @@ Dashboard (React) ──────────┤ nginx /api proxy
 | `mosquitto` | wash-mosquitto | MQTT-брокер телеметрии | ✅ `:1883` (LAN) |
 | `mosquitto-init` | wash-mosquitto-init | `system` + шаблон ACL | ❌ |
 | `message-processor` | wash-message-processor | MQTT ↔ API, sync passwd/ACL, HTTP `:3022` | ❌ |
+| `modules-bridge` | wash-modules-bridge | Каталог модулей, lifecycle, прокси UI | ❌ *(localhost `:3024`)* |
 | `backup` | wash-backup | mongodump + HTTP файлов | ❌ |
 
 ### Опциональные сервисы

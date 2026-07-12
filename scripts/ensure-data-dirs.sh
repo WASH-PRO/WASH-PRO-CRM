@@ -31,6 +31,7 @@ DIRS=(
   "$DATA_DIR/pyorchestrator/prometheus"
   "$DATA_DIR/pyorchestrator/grafana"
   "$DATA_DIR/pyorchestrator/loki"
+  "$ROOT/modules/installed"
 )
 
 for dir in "${DIRS[@]}"; do

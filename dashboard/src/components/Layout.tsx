@@ -29,7 +29,7 @@ import { UpdateBanner } from './UpdateBanner';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { Loading } from './UI';
 import { LanguageToggle } from './LanguageToggle';
-import { HelpModal } from './HelpModal';
+import { HelpModal, resolveHelpSectionId } from './HelpModal';
 import { useLocale } from '../i18n/LocaleContext';
 
 function LayoutInner() {
@@ -58,6 +58,7 @@ function LayoutInner() {
   );
 
   const lastCrumbLabel = useBreadcrumbLastLabelOverride();
+  const helpSectionId = useMemo(() => resolveHelpSectionId(location.pathname), [location.pathname]);
   const crumbs = useMemo(() => {
     const items = breadcrumbsFromPath(location.pathname, t);
     if (!lastCrumbLabel || items.length === 0) return items;
@@ -258,7 +259,7 @@ function LayoutInner() {
             </div>
           </main>
       </div>
-      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} initialSectionId={helpSectionId} />
       </div>
   );
 }

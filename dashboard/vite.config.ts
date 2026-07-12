@@ -27,6 +27,31 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      '/api/crm/modules': {
+        target: 'http://127.0.0.1:3024',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/crm\/modules/, ''),
+      },
+      '/api/telegram-bots': {
+        target: 'http://127.0.0.1:3021',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/telegram-bots/, ''),
+      },
+      '/api/crm/backup-files': {
+        target: 'http://127.0.0.1:3020',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/crm\/backup-files/, ''),
+      },
+      '/api/crm/updates': {
+        target: 'http://127.0.0.1:3023',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/crm\/updates/, ''),
+      },
+      '/api/crm/post-device': {
+        target: 'http://127.0.0.1:3022',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/crm\/post-device/, ''),
+      },
       '/api': { target: 'http://localhost:3001', changeOrigin: true },
     },
   },

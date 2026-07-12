@@ -15,5 +15,6 @@
 | [Embedded-Services](ru-Embedded-Services) | Dynamic API + PyOrchestrator |
 | [MQTT](ru-MQTT) | Телеметрия и управление постами |
 | [Telegram](ru-Telegram) | Telegram-боты |
+| [Modules](ru-Modules) | Модули CRM |
 | [MCP](ru-MCP) | MCP для AI-агентов |
 | [Database-Schema](ru-Database-Schema) | API и модель данных |

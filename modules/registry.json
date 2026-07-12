@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-12",
+  "catalogUrl": "https://raw.githubusercontent.com/WASH-PRO/WASH-PRO-CRM/main/modules/registry.json",
+  "modules": [
+    {
+      "id": "post-occupancy-monitor",
+      "repository": "WASH-PRO/wash-module-post-occupancy",
+      "defaultBranch": "main",
+      "manifest": {
+        "id": "post-occupancy-monitor",
+        "name": { "ru": "Монитор занятости постов", "en": "Post Occupancy Monitor" },
+        "description": {
+          "ru": "Отслеживает занятость постов через API post-states и сохраняет снимки.",
+          "en": "Tracks post occupancy via post-states API and stores snapshots."
+        },
+        "version": "1.0.0",
+        "author": "WASH-PRO",
+        "license": "MIT",
+        "category": "monitoring",
+        "icon": "assets/icon.svg",
+        "repository": "https://github.com/WASH-PRO/wash-module-post-occupancy",
+        "dependencies": [],
+        "minCrmVersion": "1.1.30",
+        "entrypoint": "src/main.py",
+        "scriptType": "daemon",
+        "settingsSchema": [
+          {
+            "key": "poll_interval",
+            "type": "number",
+            "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+            "default": 60,
+            "min": 15,
+            "max": 3600
+          }
+        ]
+      }
+    },
+    {
+      "id": "usage-stats-collector",
+      "repository": "WASH-PRO/wash-module-usage-stats",
+      "defaultBranch": "main",
+      "manifest": {
+        "id": "usage-stats-collector",
+        "name": { "ru": "Сборщик загруженности", "en": "Usage Stats Collector" },
+        "description": {
+          "ru": "Собирает статистику загруженности постов через API usage-stats.",
+          "en": "Collects post workload statistics via usage-stats API."
+        },
+        "version": "1.0.0",
+        "author": "WASH-PRO",
+        "license": "MIT",
+        "category": "analytics",
+        "icon": "assets/icon.svg",
+        "repository": "https://github.com/WASH-PRO/wash-module-usage-stats",
+        "dependencies": [],
+        "minCrmVersion": "1.1.30",
+        "entrypoint": "src/main.py",
+        "scriptType": "daemon",
+        "settingsSchema": [
+          {
+            "key": "poll_interval",
+            "type": "number",
+            "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+            "default": 120,
+            "min": 30,
+            "max": 3600
+          },
+          {
+            "key": "lookback_hours",
+            "type": "number",
+            "label": { "ru": "Глубина выборки (часы)", "en": "Lookback (hours)" },
+            "default": 24,
+            "min": 1,
+            "max": 168
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-starter",
+      "repository": "WASH-PRO/wash-module-starter",
+      "defaultBranch": "main",
+      "manifest": {
+        "id": "module-starter",
+        "name": { "ru": "Стартер модуля", "en": "Module Starter" },
+        "description": {
+          "ru": "Шаблон для разработки модулей WASH PRO CRM. Записывает heartbeat в data/.",
+          "en": "Template for building WASH PRO CRM modules. Writes heartbeat to data/."
+        },
+        "version": "1.0.0",
+        "author": "WASH-PRO",
+        "license": "MIT",
+        "category": "template",
+        "icon": "assets/icon.svg",
+        "repository": "https://github.com/WASH-PRO/wash-module-starter",
+        "dependencies": [],
+        "minCrmVersion": "1.1.30",
+        "entrypoint": "src/main.py",
+        "scriptType": "daemon",
+        "settingsSchema": [
+          {
+            "key": "poll_interval",
+            "type": "number",
+            "label": { "ru": "Интервал heartbeat (сек)", "en": "Heartbeat interval (sec)" },
+            "default": 30,
+            "min": 10,
+            "max": 600
+          },
+          {
+            "key": "greeting",
+            "type": "string",
+            "label": { "ru": "Приветствие", "en": "Greeting" },
+            "default": "Hello from WASH module"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vk-publisher",
+      "repository": "WASH-PRO/wash-module-vk-publisher",
+      "defaultBranch": "main",
+      "manifest": {
+        "id": "vk-publisher",
+        "name": { "ru": "VK публикатор", "en": "VK Publisher" },
+        "description": {
+          "ru": "Публикует записи из раздела «Публикации» CRM в сообщество ВКонтакте в запланированное время.",
+          "en": "Publishes CRM Publications to a VK community at the scheduled time."
+        },
+        "version": "1.1.0",
+        "author": "WASH-PRO",
+        "license": "MIT",
+        "category": "publishing",
+        "icon": "assets/icon.svg",
+        "repository": "https://github.com/WASH-PRO/wash-module-vk-publisher",
+        "dependencies": [],
+        "minCrmVersion": "1.1.30",
+        "entrypoint": "src/main.py",
+        "helpPage": "ui/help.html",
+        "scriptType": "daemon",
+        "settingsSchema": [
+          {
+            "key": "vk_access_token",
+            "type": "string",
+            "label": { "ru": "Токен VK API", "en": "VK API access token" },
+            "default": ""
+          },
+          {
+            "key": "vk_group_id",
+            "type": "string",
+            "label": { "ru": "ID сообщества (без минуса)", "en": "Community ID (without minus)" },
+            "default": ""
+          },
+          {
+            "key": "poll_interval",
+            "type": "number",
+            "label": { "ru": "Интервал проверки (сек)", "en": "Check interval (sec)" },
+            "default": 60,
+            "min": 30,
+            "max": 3600
+          },
+          {
+            "key": "publish_categories",
+            "type": "string",
+            "label": { "ru": "Категории (news,promotion,general)", "en": "Categories (news,promotion,general)" },
+            "default": "news,promotion,general"
+          }
+        ]
+      }
+    }
+  ]
+}

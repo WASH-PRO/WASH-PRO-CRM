@@ -22,6 +22,8 @@ const ArchivePage = lazyPage(() => import('./pages/ArchivePage'), 'ArchivePage')
 const BackupsPage = lazyPage(() => import('./pages/BackupsPage'), 'BackupsPage');
 const TelegramPage = lazyPage(() => import('./pages/TelegramPage'), 'TelegramPage');
 const McpPage = lazyPage(() => import('./pages/McpPage'), 'McpPage');
+const ModulesPage = lazyPage(() => import('./pages/ModulesPage'), 'ModulesPage');
+const ModuleSettingsPage = lazyPage(() => import('./pages/ModulesPage'), 'ModuleSettingsPage');
 const InfoMessagesPage = lazyPage(() => import('./pages/InfoMessagesPage'), 'InfoMessagesPage');
 const NotificationsPage = lazyPage(() => import('./pages/NotificationsPage'), 'NotificationsPage');
 const CurrencyPage = lazyPage(() => import('./pages/CurrencyPage'), 'CurrencyPage');
@@ -108,6 +110,8 @@ function AppRoutes() {
         <Route path="backups" element={<AdminRoute><BackupsPage /></AdminRoute>} />
         <Route path="telegram" element={<AdminRoute><TelegramPage /></AdminRoute>} />
         <Route path="mcp" element={<AdminRoute><McpPage /></AdminRoute>} />
+        <Route path="modules" element={<AdminRoute><ModulesPage /></AdminRoute>} />
+        <Route path="modules/:moduleId" element={<AdminRoute><ModuleSettingsPage /></AdminRoute>} />
         <Route path="info-messages" element={<AdminRoute><InfoMessagesPage /></AdminRoute>} />
         <Route path="work-modes" element={<AdminRoute><WorkModesPage /></AdminRoute>} />
         <Route path="currency" element={<AdminRoute><CurrencyPage /></AdminRoute>} />

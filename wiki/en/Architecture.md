@@ -11,6 +11,7 @@ Controllers ⇄ MQTT (Mosquitto, ACL by serial) ⇄ Message Processor ⇄ Dynami
 Dashboard ──► Dynamic API (nginx /api)
 Dashboard ──► /api/crm/post-device/ ──► message-processor:3022 (commands/prices/sync MQTT)
 Dashboard ──► pyorch-bridge ──► PyOrchestrator (Telegram, optional)
+Dashboard ──► modules-bridge ──► PyOrchestrator (modules, optional)
 ```
 
 ## Core stack

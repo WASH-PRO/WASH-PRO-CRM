@@ -14,7 +14,7 @@ Full description: [docs/dashboard.md](https://wash-pro.github.io/WASH-PRO-CRM/en
 | **Cards** | Discount, Service, VIP, Collection |
 | **Analytics** | Usage, Finance, Archive |
 | **Reference** | Work Modes, Currencies, Discount Types *(Admin)* |
-| **Automation** | **Publications**, **Telegram**, **MCP Server**, Backups *(Admin)* |
+| **Automation** | **Publications**, **Telegram**, **MCP Server**, **Modules**, Backups *(Admin)* |
 | **System** | **Information**, Notifications, Users, Groups, Settings, Logs |
 
 Admin sections — **Administrator** only. Profile — in the header (`/profile`). Setup wizard — `/setup`.
@@ -78,6 +78,11 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 5 s | Overview |
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
+
+## Recent changes (v1.1.30)
+
+- **Modules** — `/modules` catalog: search, filters, pagination; clickable titles; icon-only actions
+- **Module settings** — iframe auto-height, CRM theme sync, breadcrumbs on `/modules/:id`
 
 ## Recent changes (v1.1.29)
 
@@ -162,7 +167,7 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 
 ## Earlier (v1.1.13)
 
-- **Automation** group: Information, Telegram, **MCP**, Backups
+- **Automation** group: Information, Telegram, **MCP**, **Modules**, Backups
 - **Status** under **Main**
 - MCP: HTTP for Cursor without build
 - Navigation stability (chunk retry, error boundary)

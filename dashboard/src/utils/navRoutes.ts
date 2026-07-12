@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   Newspaper,
   Cpu,
+  Blocks,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -91,6 +92,7 @@ export function getNavGroups(t: TranslateFn): NavGroup[] {
         { to: '/info-messages', label: t('nav.items.infoMessages'), icon: Newspaper, admin: true },
         { to: '/telegram', label: t('nav.items.telegram'), icon: Bot, admin: true },
         { to: '/mcp', label: t('nav.items.mcp'), shortLabel: t('nav.short.mcp'), icon: Cpu, admin: true },
+        { to: '/modules', label: t('nav.items.modules'), icon: Blocks, admin: true },
         { to: '/backups', label: t('nav.items.backups'), shortLabel: t('nav.short.backups'), icon: HardDrive, admin: true },
       ],
     },

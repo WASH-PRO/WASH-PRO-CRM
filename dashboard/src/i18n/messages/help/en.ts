@@ -10,6 +10,8 @@ export const helpEn = {
   onScreen: 'On screen',
   adminBadge: 'Administrator',
   docsLink: 'Full documentation on GitHub Pages',
+  docsModulesLink: 'Modules documentation',
+  moduleHelpIntro: 'Help is provided by the module author (ui/help.html in the module repository).',
   sections: {
     navigation: {
       title: 'Navigation and help',
@@ -255,6 +257,18 @@ export const helpEn = {
         language: 'Service status',
         sections: 'URLs and tokens',
         updates: 'Connection guide',
+      },
+    },
+    modules: {
+      title: 'Modules',
+      summary: 'GitHub extensions: catalog, install, run via PyOrchestrator. **Automation → Modules** (`/modules`).',
+      howItWorks:
+        'modules-bridge clones repo to `modules/installed/`, registers daemon in PyOrch. Settings UI and **help** — iframe from `ui/index.html` and `ui/help.html`. CRM help modal has a «Module help» group.',
+      example: 'Install Post Occupancy Monitor — module polls post-states and shows snapshot on settings page.',
+      regions: {
+        installed: 'Installed cards',
+        available: 'Available from catalog',
+        settings: 'Module page (iframe)',
       },
     },
     backups: {

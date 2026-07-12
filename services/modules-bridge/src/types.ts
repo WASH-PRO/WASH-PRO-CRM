@@ -10,6 +10,7 @@ export interface ModuleSettingsField {
   default?: string | number | boolean;
   min?: number;
   max?: number;
+  step?: number;
   options?: Array<{ value: string; label: LocalizedText }>;
 }
 

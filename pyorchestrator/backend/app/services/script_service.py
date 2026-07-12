@@ -271,6 +271,8 @@ async def queue_run(
         "wall_timeout_sec": max_runtime,
         "secrets": secrets_env,
     }
+    # Commit before enqueue so runtime can load the run row immediately.
+    await db.commit()
     await redis_service.enqueue_run(job)
     return run
 

@@ -13,6 +13,8 @@ import type { DapUser } from '../types';
 import { entityId, getUserStatusLabels } from '../utils/rbac';
 import { formatDateTime } from '../utils/format';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const emptyForm = {
   login: '',
@@ -26,6 +28,8 @@ const emptyForm = {
 
 export function UsersPage() {
   const { t } = useLocale();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const { hasPermission, user: currentUser } = useAuth();
   const canEdit = hasPermission('manage_users');
   const userStatusLabels = useMemo(() => getUserStatusLabels(t), [t]);
@@ -97,10 +101,10 @@ export function UsersPage() {
   const handleDelete = async (u: DapUser) => {
     const id = entityId(u);
     if (id === entityId(currentUser ?? {})) {
-      alert(t('pages.users.errors.cannotDeleteCurrent'));
+      showToast(t('pages.users.errors.cannotDeleteCurrent'), 'error');
       return;
     }
-    if (!confirm(t('pages.users.confirmDelete', { login: u.login }))) return;
+    if (!(await confirm({ message: t('pages.users.confirmDelete', { login: u.login }), variant: 'danger' }))) return;
     await api(`/users/${id}`, { method: 'DELETE' });
     refresh();
   };

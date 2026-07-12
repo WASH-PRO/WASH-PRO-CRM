@@ -236,8 +236,10 @@ services:
       BACKUP_HTTP_PORT: "3020"
       BACKUP_RETENTION_COUNT: ${BACKUP_RETENTION_COUNT:-7}
       BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      MODULES_DIR: /modules
     volumes:
       - ${DATA_DIR:-./data}/backups:/backups
+      - ${WASH_HOST_PROJECT_ROOT:-.}/modules:/modules:ro
     depends_on:
       mongodb:
         condition: service_healthy

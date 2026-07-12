@@ -10,9 +10,13 @@ import type { BackupRecord } from '../types';
 import { createExportBulkAction } from '../utils/export';
 import { deleteBackupFile, downloadBackupFile } from '../utils/download';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 export function BackupsPage() {
   const { t } = useLocale();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [creating, setCreating] = useState(false);
   const statusLabel = getStatusLabelMap();
 
@@ -42,7 +46,7 @@ export function BackupsPage() {
   };
 
   const deleteBackup = async (id: string, filename: string) => {
-    if (!confirm(t('pages.backups.confirmDelete', { filename }))) return;
+    if (!(await confirm({ message: t('pages.backups.confirmDelete', { filename }), variant: 'danger' }))) return;
     try {
       if (filename && !filename.startsWith('[deleted]') && !filename.endsWith('.pending')) {
         await deleteBackupFile(filename);
@@ -62,7 +66,7 @@ export function BackupsPage() {
     try {
       await downloadBackupFile(filename);
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('errors.requestFailed', { status: 500 }));
+      showToast(err instanceof Error ? err.message : t('errors.requestFailed', { status: 500 }), 'error');
     }
   };
 

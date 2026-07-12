@@ -90,6 +90,10 @@ PYORCHESTRATOR_ENABLED=true ./scripts/start.sh
 
 Или Dashboard → **Резервные копии**.
 
+### Полный пакет бэкапа (v1.1.44)
+
+При включении в **Настройки → Резервное копирование** (`fullBundle`) создаётся также `*-extras.tar.gz` с JSON настроек CRM и `modules/installed/*/data/`. Скачайте оба файла в **Резервные копии**, если нужны настройки и data модулей помимо MongoDB.
+
 ## GitHub Pages
 
 1. **Settings → Pages → GitHub Actions**

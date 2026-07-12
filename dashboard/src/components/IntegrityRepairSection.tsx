@@ -8,6 +8,8 @@ import {
   type RepairIssue,
 } from '../api/updates';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const FIX_LABEL_KEYS: Record<string, string> = {
   sync_host_root_env: 'pages.settings.repair.fixes.syncHostRoot',
@@ -35,6 +37,8 @@ function SeverityIcon({ severity }: { severity: RepairIssue['severity'] }) {
 
 export function IntegrityRepairSection({ canManage }: { canManage: boolean }) {
   const { t, locale } = useLocale();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
   const [result, setResult] = useState<RepairDiagnoseResult | null>(null);
@@ -66,7 +70,7 @@ export function IntegrityRepairSection({ canManage }: { canManage: boolean }) {
       }
       setSelectedFixes(defaults);
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('pages.settings.repair.error'));
+      showToast(err instanceof Error ? err.message : t('pages.settings.repair.error'), 'error');
     } finally {
       setBusy(false);
     }
@@ -83,16 +87,14 @@ export function IntegrityRepairSection({ canManage }: { canManage: boolean }) {
 
   const runApply = async () => {
     if (selectedFixes.size === 0) return;
-    if (!confirm(t('pages.settings.repair.confirmApply'))) return;
+    if (!(await confirm({ message: t('pages.settings.repair.confirmApply'), variant: 'danger' }))) return;
     setApplying(true);
     try {
       const data = await applyIntegrityRepair([...selectedFixes]);
       setResult(data.diagnose);
       setLogs(data.logs);
       if (data.failed.length > 0) {
-        alert(
-          data.failed.map((f) => `${f.action}: ${f.error}`).join('\n')
-        );
+        showToast(data.failed.map((f) => `${f.action}: ${f.error}`).join('\n'), 'error');
       }
       const defaults = new Set<string>();
       for (const issue of data.diagnose.issues) {
@@ -100,7 +102,7 @@ export function IntegrityRepairSection({ canManage }: { canManage: boolean }) {
       }
       setSelectedFixes(defaults);
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('pages.settings.repair.error'));
+      showToast(err instanceof Error ? err.message : t('pages.settings.repair.error'), 'error');
     } finally {
       setApplying(false);
     }

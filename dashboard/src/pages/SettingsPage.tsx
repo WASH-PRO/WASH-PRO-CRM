@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Radio,
   ShieldCheck,
+  Palette,
   type LucideIcon,
 } from 'lucide-react';
 import { listCrmSettings, saveCrmSetting } from '../api/crmSettings';
@@ -34,6 +35,7 @@ import {
 } from '../utils/mqttBrokerSettings';
 import type {
   BackupSettings,
+  BrandingSettings,
   CrmSetting,
   DynamicApiCrmSettings,
   MqttBrokerSettings,
@@ -42,12 +44,16 @@ import type {
   TelegramCrmSettings,
 } from '../types';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useBranding } from '../context/BrandingContext';
+import { DEFAULT_BRANDING, parseBranding } from '../utils/branding';
 
 const DEFAULT_BACKUP: BackupSettings = {
   enabled: true,
   cron: '0 2 * * *',
   retentionCount: 7,
   storagePath: '/backups',
+  fullBundle: true,
 };
 
 const DEFAULT_NOTIFICATIONS = DEFAULT_NOTIFICATION_SETTINGS;
@@ -148,6 +154,8 @@ function legacyDynamicApiFromPyOrch(raw: Record<string, unknown>): DynamicApiCrm
 
 export function SettingsPage() {
   const { t } = useLocale();
+  const { showToast } = useToast();
+  const { refreshBranding } = useBranding();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
   const canManageRepair = hasPermission('manage_users', 'manage_api');
@@ -159,6 +167,7 @@ export function SettingsPage() {
   const [pyorch, setPyorch] = useState<PyOrchestratorCrmSettings>(DEFAULT_PYORCH);
   const [dynamicApi, setDynamicApi] = useState<DynamicApiCrmSettings>(DEFAULT_DAP);
   const [mqttBroker, setMqttBroker] = useState<MqttBrokerSettings>(DEFAULT_MQTT);
+  const [branding, setBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const notificationEventGroups = useMemo(() => getNotificationEventGroups(t), [t]);
@@ -171,6 +180,7 @@ export function SettingsPage() {
       pyorchestrator: null,
       'dynamic-api': null,
       'mqtt-broker': null,
+      branding: null,
     };
 
     let legacyPyOrchRaw: Record<string, unknown> | null = null;
@@ -187,6 +197,7 @@ export function SettingsPage() {
       }
       if (row.key === 'dynamic-api') setDynamicApi(parseDynamicApi(v));
       if (row.key === 'mqtt-broker') setMqttBroker(parseMqttBrokerSettings(v));
+      if (row.key === 'branding') setBranding(parseBranding(v));
     }
 
     if (!idMap['dynamic-api'] && legacyPyOrchRaw) {
@@ -220,15 +231,17 @@ export function SettingsPage() {
         saveCrmSetting('pyorchestrator', pyorch as unknown as Record<string, unknown>, ids.pyorchestrator ?? null),
         saveCrmSetting('dynamic-api', dynamicApi as unknown as Record<string, unknown>, ids['dynamic-api'] ?? null),
         saveCrmSetting('mqtt-broker', mqttBroker as unknown as Record<string, unknown>, ids['mqtt-broker'] ?? null),
+        saveCrmSetting('branding', branding as unknown as Record<string, unknown>, ids.branding ?? null),
       ]);
       try {
         await syncMqttUsers();
       } catch (syncErr) {
         console.error(syncErr);
-        alert(
+        showToast(
           syncErr instanceof Error
             ? `${t('api.mqttSyncFailed')}: ${syncErr.message}`
-            : t('api.mqttSyncFailed')
+            : t('api.mqttSyncFailed'),
+          'error'
         );
         const rows = await listCrmSettings();
         applySettings(rows);
@@ -236,9 +249,10 @@ export function SettingsPage() {
       }
       const rows = await listCrmSettings();
       applySettings(rows);
-      alert(t('api.saved'));
+      await refreshBranding();
+      showToast(t('api.saved'), 'success');
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('errors.saveFailed'));
+      showToast(err instanceof Error ? err.message : t('errors.saveFailed'), 'error');
     } finally {
       setSaving(false);
     }
@@ -271,6 +285,53 @@ export function SettingsPage() {
         </div>
         <LanguageSelect />
         <p className="mt-2 text-xs text-panel-muted dark:text-panel-muted-dark">{t('settings.languageHint')}</p>
+      </div>
+
+      <div className="mb-4">
+        <SettingSection title={t('pages.settings.branding.title')} icon={Palette}>
+          <p className="text-xs text-panel-muted dark:text-panel-muted-dark">{t('pages.settings.branding.hint')}</p>
+          <Field label={t('pages.settings.branding.productName')}>
+            <input
+              className="input"
+              disabled={!canEdit}
+              value={branding.productName}
+              onChange={(e) => setBranding({ ...branding, productName: e.target.value })}
+            />
+          </Field>
+          <Field label={t('pages.settings.branding.tagline')}>
+            <input
+              className="input"
+              disabled={!canEdit}
+              value={branding.tagline}
+              onChange={(e) => setBranding({ ...branding, tagline: e.target.value })}
+            />
+          </Field>
+          <Field label={t('pages.settings.branding.logoUrl')} hint={t('pages.settings.branding.logoUrlHint')}>
+            <input
+              className="input font-mono text-xs"
+              disabled={!canEdit}
+              value={branding.logoUrl}
+              onChange={(e) => setBranding({ ...branding, logoUrl: e.target.value })}
+              placeholder="https://…"
+            />
+          </Field>
+          <Field label={t('pages.settings.branding.supportUrl')}>
+            <input
+              className="input font-mono text-xs"
+              disabled={!canEdit}
+              value={branding.supportUrl}
+              onChange={(e) => setBranding({ ...branding, supportUrl: e.target.value })}
+            />
+          </Field>
+          <Field label={t('pages.settings.branding.docsUrl')}>
+            <input
+              className="input font-mono text-xs"
+              disabled={!canEdit}
+              value={branding.docsUrl}
+              onChange={(e) => setBranding({ ...branding, docsUrl: e.target.value })}
+            />
+          </Field>
+        </SettingSection>
       </div>
 
       {!canEdit && (
@@ -320,9 +381,24 @@ export function SettingsPage() {
               onChange={(e) => setBackup({ ...backup, storagePath: e.target.value })}
             />
           </Field>
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={backup.fullBundle !== false}
+              disabled={!canEdit}
+              onChange={(e) => setBackup({ ...backup, fullBundle: e.target.checked })}
+            />
+            <span>
+              {t('pages.settings.backup.fullBundle')}
+              <span className="mt-0.5 block text-xs text-panel-muted dark:text-panel-muted-dark">
+                {t('pages.settings.backup.fullBundleHint')}
+              </span>
+            </span>
+          </label>
         </SettingSection>
 
-        <SettingSection title="PyOrchestrator" icon={Server}>
+        <SettingSection title={t('pages.settings.pyorch.title')} icon={Server}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             {t('pages.settings.pyorch.hint')}
           </p>
@@ -356,7 +432,7 @@ export function SettingsPage() {
           </Field>
         </SettingSection>
 
-        <SettingSection title="Dynamic API" icon={Workflow}>
+        <SettingSection title={t('pages.settings.dynamicApi.title')} icon={Workflow}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             {t('pages.settings.dynamicApi.hint')}
           </p>
@@ -373,7 +449,7 @@ export function SettingsPage() {
               onChange={(e) => setDynamicApi({ ...dynamicApi, serviceLogin: e.target.value })}
             />
           </Field>
-          <Field label="Service password">
+          <Field label={t('pages.settings.dynamicApi.servicePassword')}>
             <PasswordInput
               className="font-mono"
               autoComplete="off"
@@ -392,7 +468,7 @@ export function SettingsPage() {
           </Field>
         </SettingSection>
 
-        <SettingSection title="MQTT (CRM)" icon={Radio}>
+        <SettingSection title={t('pages.settings.mqtt.title')} icon={Radio}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             {t('pages.settings.mqtt.hintStart')} <span className="font-mono">system</span> {t('pages.settings.mqtt.hintMiddle')}{' '}
             <span className="font-mono">message-processor</span> {t('pages.settings.mqtt.hintEnd')}

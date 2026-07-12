@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.42** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**WASH PRO version:** **v1.1.44** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -15,7 +15,11 @@
 - **Обновления ПО** — стабильное автообновление из Dashboard, ошибка видна на карточке (v1.1.20)
 - **Информация** — ресурсы сервера, версия CRM, встроенные компоненты *(Система → Информация)* (v1.1.22)
 - **Публикации** — новости и акции для **информационного Telegram-бота** *(Автоматизация)* (v1.1.22)
-- **Встроенная справка** — полноэкранная справка; пункт **Справка** внизу sidebar (v1.1.22, v1.1.28)
+- **Встроенная справка** — полноэкранная справка; пункт **Справка** внизу sidebar (v1.1.22, v1.1.28); **Мастер / Приветствие / Профиль** *(v1.1.44)*
+- **White-label брендинг** — Настройки → название, слоган, логотип *(v1.1.44)*
+- **Toast и подтверждения** — модальные диалоги вместо `alert`/`confirm` *(v1.1.44)*
+- **Полный пакет бэкапа** — MongoDB + настройки + data модулей *(v1.1.44)*
+- **Диагностика** — JSON-отчёт на странице «Информация» *(v1.1.44)*
 - SCADA: MQTT, телеметрия, команды и цены постов
 - Автомойки, посты, **учётные записи MQTT**, настройки устройства
 - Карты (regular/service/VIP), журнал применений NFC
@@ -67,6 +71,25 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.44
+
+- **Брендинг** — white-label: название, слоган, URL логотипа (вход, сайдбар, приветствие)
+- **UX** — toast и модальное подтверждение вместо диалогов браузера
+- **Бэкапы** — опциональный полный пакет: настройки CRM + `modules/installed/*/data/`
+- **Диагностика** — JSON-отчёт для поддержки на странице «Информация»
+- **Справка** — разделы Мастер, Приветствие, Профиль; ссылка на docs в сайдбаре справки
+- **CI** — паритет i18n, ссылки docs, сборка dashboard
+
+Заметки релиза: [v1.1.44](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.44)
+
+## Changelog v1.1.43
+
+- **PyOrchestrator** — commit run до Redis; очистка runtime jobs при stop
+- **modules-bridge** — быстрее каталог/статусы; recover stop-before-start
+- **Страница «Модули»** — параллельная загрузка health + catalog
+
+Заметки релиза: [v1.1.43](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.43)
 
 ## Changelog v1.1.42
 

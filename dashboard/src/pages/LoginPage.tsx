@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { BrandLogo } from '../components/BrandLogo';
 import { useLocale } from '../i18n/LocaleContext';
+import { useBranding } from '../context/BrandingContext';
 
 function LoginField({
   id,
@@ -43,6 +44,7 @@ function LoginField({
 
 export function LoginPage() {
   const { t } = useLocale();
+  const { branding } = useBranding();
   const { user, login, loading } = useAuth();
   const [loginName, setLoginName] = useState('');
   const [password, setPassword] = useState('');
@@ -91,8 +93,8 @@ export function LoginPage() {
         <div className="relative z-10 flex flex-1 flex-col justify-between p-12 xl:p-16">
           <div>
             <div className="mb-16 flex items-center gap-3">
-              <BrandLogo size="lg" tone="onDark" />
-              <span className="text-lg font-bold text-white">WASH PRO CRM</span>
+              <BrandLogo size="lg" tone="onDark" imageUrl={branding.logoUrl || undefined} />
+              <span className="text-lg font-bold text-white">{branding.productName}</span>
             </div>
             <h2 className="max-w-md text-3xl font-bold leading-tight tracking-tight text-white xl:text-4xl">
               {t('pages.login.heroTitle')}
@@ -101,7 +103,7 @@ export function LoginPage() {
               {t('pages.login.heroSubtitle')}
             </p>
           </div>
-          <p className="text-xs text-zinc-400">WASH PRO CRM · Enterprise SCADA</p>
+          <p className="text-xs text-zinc-400">{branding.productName} · {branding.tagline}</p>
         </div>
       </div>
 
@@ -114,10 +116,10 @@ export function LoginPage() {
         <div className="mx-auto w-full max-w-md animate-slide-up">
           <div className="mb-8 lg:mb-10">
             <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <BrandLogo size="md" tone="onLight" />
+              <BrandLogo size="md" tone="onLight" imageUrl={branding.logoUrl || undefined} />
               <div>
-                <p className="text-base font-bold text-panel-ink dark:text-panel-ink-dark">WASH PRO CRM</p>
-                <p className="text-xs text-panel-muted dark:text-panel-muted-dark">Enterprise SCADA</p>
+                <p className="text-base font-bold text-panel-ink dark:text-panel-ink-dark">{branding.productName}</p>
+                <p className="text-xs text-panel-muted dark:text-panel-muted-dark">{branding.tagline}</p>
               </div>
             </div>
             <h1 className="text-2xl font-bold text-panel-ink dark:text-panel-ink-dark">{t('pages.login.title')}</h1>

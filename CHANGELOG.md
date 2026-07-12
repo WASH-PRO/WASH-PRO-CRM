@@ -6,6 +6,29 @@
 
 ## [Unreleased]
 
+## [1.1.44] — 2026-07-12
+
+### Добавлено
+
+- **White-label брендинг** — `branding` в CRM settings: название, слоган, logo URL, support/docs URL; login, welcome, sidebar, System
+- **Toast + Confirm modal** — `ToastProvider`, `ConfirmProvider`; замена `alert`/`confirm` на ключевых страницах
+- **Диагностика** — скачивание JSON-отчёта на странице **Информация** (`diagnosticReport.ts`)
+- **Полный бэкап** — `backup.fullBundle`: MongoDB archive + `*-extras.tar.gz` (settings + `modules/installed/*/data/`)
+- **Справка** — разделы setup, welcome, profile; ссылка на GitHub Pages docs в HelpModal
+- **CI** — `.github/workflows/ci.yml`; `scripts/validate-i18n-keys.sh`
+
+### Изменено
+
+- **Settings i18n** — заголовки PyOrchestrator, Dynamic API, MQTT; ключи branding, fullBundle, diagnostics
+- **init-seed** — дефолты `branding`, `backup.fullBundle: true`
+- **wash-backup** — volume `modules:/modules:ro`, `bundle.ts`, очистка extras-архивов
+- **Tailwind** — `panel-surface`, `panel-bg` токены
+- **docker-compose.override.yml.example** — комментарий про mongo:7 на современных CPU
+
+### Документация
+
+- **CHANGELOG, releases/v1.1.44.md, README, docs, wiki** — v1.1.44
+
 ## [1.1.43] — 2026-07-12
 
 ### Исправлено

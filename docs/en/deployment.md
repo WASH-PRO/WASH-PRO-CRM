@@ -90,6 +90,10 @@ One-time migration from old named volumes:
 
 Or Dashboard → **Backups**.
 
+### Full backup bundle (v1.1.44)
+
+When enabled in **Settings → Backups** (`fullBundle`), each run also creates `*-extras.tar.gz` with CRM settings JSON and `modules/installed/*/data/`. Download both files from **Backups** if you need settings and module state beyond MongoDB.
+
 ## GitHub Pages
 
 1. **Settings → Pages → GitHub Actions**

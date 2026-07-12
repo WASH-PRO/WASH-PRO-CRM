@@ -612,6 +612,17 @@ export const DEFAULT_SETTINGS = [
       cron: '0 2 * * *',
       retentionCount: 7,
       storagePath: '/backups',
+      fullBundle: true,
+    },
+  },
+  {
+    key: 'branding',
+    value: {
+      productName: 'WASH PRO CRM',
+      tagline: 'Enterprise SCADA',
+      logoUrl: '',
+      supportUrl: 'https://github.com/WASH-PRO/WASH-PRO-CRM/issues',
+      docsUrl: 'https://wash-pro.github.io/WASH-PRO-CRM/en/',
     },
   },
   {

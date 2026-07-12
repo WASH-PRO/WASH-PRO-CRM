@@ -153,6 +153,14 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 - **Integrity** — false “/deploy not a git repo” fixed (`git safe.directory`)
 - **Update card** — stale failed job hidden after successful update
 
+## Recent changes (v1.1.44)
+
+- **Branding** — Settings → product name, tagline, logo URL; login, welcome, sidebar
+- **Toast & confirm** — in-app feedback instead of browser `alert`/`confirm`
+- **Full backup** — optional bundle: settings + module `data/` (`*-extras.tar.gz`)
+- **Diagnostics** — JSON download on System → Information
+- **Help** — Setup, Welcome, Profile sections; docs link
+
 ## Recent changes (v1.1.20)
 
 - **CRM auto-update** — `git reset --hard origin/main`; no longer blocked by accidental tracked-file edits

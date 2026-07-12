@@ -36,6 +36,10 @@ export default {
           'muted-dark': '#94a3b8',
           ink: '#0f172a',
           'ink-dark': '#f1f5f9',
+          surface: '#ffffff',
+          'surface-dark': '#11161d',
+          bg: '#f8fafc',
+          'bg-dark': '#0b0f14',
         },
       },
       boxShadow: {

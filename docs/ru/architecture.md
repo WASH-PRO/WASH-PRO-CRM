@@ -46,7 +46,7 @@ Dashboard (React) ──────────┤ nginx /api proxy
 | `mosquitto-init` | wash-mosquitto-init | `system` + шаблон ACL | ❌ |
 | `message-processor` | wash-message-processor | MQTT ↔ API, sync passwd/ACL, HTTP `:3022` | ❌ |
 | `modules-bridge` | wash-modules-bridge | Каталог модулей, lifecycle, прокси UI | ❌ *(localhost `:3024`)* |
-| `backup` | wash-backup | mongodump + HTTP файлов | ❌ |
+| `backup` | wash-backup | mongodump + HTTP; опционально полный пакет (настройки + data модулей) *(v1.1.44)* | ❌ |
 
 ### Опциональные сервисы
 

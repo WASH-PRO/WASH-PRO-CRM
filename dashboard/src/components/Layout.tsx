@@ -31,10 +31,12 @@ import { Loading } from './UI';
 import { LanguageToggle } from './LanguageToggle';
 import { HelpModal, resolveHelpSectionId } from './HelpModal';
 import { useLocale } from '../i18n/LocaleContext';
+import { useBranding } from '../context/BrandingContext';
 
 function LayoutInner() {
   const { user, logout, isAdmin } = useAuth();
   const { t } = useLocale();
+  const { branding } = useBranding();
   const { unreadCount } = useUnreadNotifications();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -86,11 +88,11 @@ function LayoutInner() {
             collapsed ? 'justify-center px-2' : 'gap-3 px-4'
           )}
         >
-          <BrandLogo size="md" className={collapsed ? '' : undefined} />
+          <BrandLogo size="md" className={collapsed ? '' : undefined} imageUrl={branding.logoUrl || undefined} />
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-panel-ink dark:text-white">WASH PRO CRM</div>
-              <div className="truncate text-[11px] text-panel-muted dark:text-slate-500">{t('layout.sidebarSubtitle')}</div>
+              <div className="truncate text-sm font-semibold text-panel-ink dark:text-white">{branding.productName}</div>
+              <div className="truncate text-[11px] text-panel-muted dark:text-slate-500">{branding.tagline}</div>
             </div>
           )}
         </div>

@@ -6,11 +6,13 @@ import { BrandLogo } from '../components/BrandLogo';
 import { setWelcomeSeen, getWelcomeSeen } from '../utils/setupStorage';
 import { setupRoleHint } from '../utils/setupPermissions';
 import { useLocale } from '../i18n/LocaleContext';
+import { useBranding } from '../context/BrandingContext';
 
 export function WelcomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLocale();
+  const { branding } = useBranding();
 
   if (user && getWelcomeSeen(user.id)) {
     return <Navigate to="/" replace />;
@@ -30,9 +32,9 @@ export function WelcomePage() {
       <div className="flex flex-1 items-center justify-center px-4 pb-12">
         <div className="w-full max-w-lg rounded-2xl border border-panel-border bg-panel-surface p-8 shadow-panel dark:border-panel-border-dark dark:bg-panel-surface-dark">
           <div className="mb-6 flex items-center gap-3">
-            <BrandLogo size="md" />
+            <BrandLogo size="md" imageUrl={branding.logoUrl || undefined} />
             <div>
-              <div className="text-sm font-semibold text-panel-ink dark:text-white">WASH PRO CRM</div>
+              <div className="text-sm font-semibold text-panel-ink dark:text-white">{branding.productName}</div>
               <div className="text-xs text-panel-muted dark:text-slate-500">{t('pages.welcome.welcome')}</div>
             </div>
           </div>

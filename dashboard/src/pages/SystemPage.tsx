@@ -9,6 +9,7 @@ import {
   Clock,
   Monitor,
   RefreshCw,
+  Download,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -18,6 +19,9 @@ import { PageHeader, Loading, ErrorMessage, Badge, Table } from '../components/U
 import { LIVE_INTERVAL_SYSTEM_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { useLocale } from '../i18n/LocaleContext';
+import { useBranding } from '../context/BrandingContext';
+import { useToast } from '../context/ToastContext';
+import { buildDiagnosticReport, downloadDiagnosticReport } from '../utils/diagnosticReport';
 import { formatBytes, formatUptime } from '../utils/format';
 import type { SystemInfo } from '../types';
 import type { UpdatesStatus } from '../api/updates';
@@ -114,8 +118,24 @@ function formatCpuSpeed(speed: number, unknownLabel: string): string {
 }
 
 export function SystemPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { branding } = useBranding();
+  const { showToast } = useToast();
   const [networkSearch, setNetworkSearch] = useState('');
+  const [diagBusy, setDiagBusy] = useState(false);
+
+  const downloadDiagnostics = async () => {
+    setDiagBusy(true);
+    try {
+      const report = await buildDiagnosticReport(locale);
+      downloadDiagnosticReport(report);
+      showToast(t('pages.system.diagnostics.download'), 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('errors.requestFailed', { status: 500 }), 'error');
+    } finally {
+      setDiagBusy(false);
+    }
+  };
 
   const fetchData = useCallback(async (): Promise<SystemPageData> => {
     const info = await api<SystemInfo>('/dashboard/system');
@@ -326,7 +346,7 @@ export function SystemPage() {
             </h3>
           </div>
           <div className="space-y-3">
-            <DetailRow label={t('pages.system.application.name')} value={t('pages.system.application.productName')} />
+            <DetailRow label={t('pages.system.application.name')} value={branding.productName} />
             <DetailRow
               label={t('pages.system.application.version')}
               value={<Badge variant="default">v{crmVersion}</Badge>}
@@ -338,6 +358,28 @@ export function SystemPage() {
             <DetailRow label={t('pages.system.application.platform')} value={platformLabel(info)} />
             <DetailRow label={t('pages.system.application.apiRuntime')} value={info.nodeVersion} />
           </div>
+        </div>
+      </div>
+
+      <div className="card mb-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-panel-ink dark:text-panel-ink-dark">
+              {t('pages.system.diagnostics.title')}
+            </h3>
+            <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+              {t('pages.system.diagnostics.hint')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary shrink-0"
+            disabled={diagBusy}
+            onClick={() => void downloadDiagnostics()}
+          >
+            <Download className="h-4 w-4" />
+            {diagBusy ? t('pages.system.diagnostics.generating') : t('pages.system.diagnostics.download')}
+          </button>
         </div>
       </div>
 

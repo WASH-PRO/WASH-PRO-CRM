@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## Changelog
 
-Latest release: **[v1.1.42](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.42)** — VK Publisher text-only; modules-bridge secret bootstrap.
+Latest release: **[v1.1.44](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.44)** — white-label branding, toast/confirm UX, full backup bundle, support diagnostics.
 
 See [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

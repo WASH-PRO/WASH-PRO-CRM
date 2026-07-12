@@ -3,10 +3,19 @@
 #
 # Подключается автоматически: scripts/start.sh и docker compose (без -f) в update-bridge.
 #
-# Пример: CPU без AVX (Intel Pentium G4600 и аналоги) — MongoDB 7+ не запускается.
+# CPU без AVX (Intel Pentium G4600 и аналоги) — в compose уже mongo:4.4.
+# Современный CPU / Mac / данные с MongoDB 7 — раскомментируйте блок mongo:7 ниже.
 
 services:
   mongodb:
     image: mongo:4.4
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+
+# --- Раскомментируйте для MongoDB 7 (данные уже созданы на mongo:7) ---
+# services:
+#   mongodb:
+#     image: mongo:7
+#     healthcheck:
+#       test: ["CMD", "mongosh", "--eval", "db.adminCommand({ ping: 1 })"]
+#       start_period: 20s

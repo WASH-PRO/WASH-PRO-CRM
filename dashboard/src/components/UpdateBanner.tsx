@@ -6,6 +6,8 @@ import { applyUpdate, dismissUpdate } from '../api/updates';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 function stepBarClass(status: string): string {
   if (status === 'completed') return 'bg-brand-500';
@@ -16,6 +18,8 @@ function stepBarClass(status: string): string {
 
 export function UpdateBanner() {
   const { t } = useLocale();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const { hasPermission } = useAuth();
   const canManageUpdates = hasPermission('manage_users', 'manage_api');
   const ctx = useSoftwareUpdatesContext();
@@ -73,16 +77,16 @@ export function UpdateBanner() {
 
   const onApply = async () => {
     if (!status.executorAvailable) {
-      alert(status.executorReason || t('updates.autoUnavailable'));
+      showToast(status.executorReason || t('updates.autoUnavailable'), 'error');
       return;
     }
-    if (!confirm(t('updateBanner.confirmUpdate', { component: primary.label, version: primary.latestVersion ?? '' }))) return;
+    if (!(await confirm({ message: t('updateBanner.confirmUpdate', { component: primary.label, version: primary.latestVersion ?? '' }) }))) return;
     setApplying(true);
     try {
       await applyUpdate(primary.id, primary.latestTag || undefined);
       await refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('updateBanner.updateError'));
+      showToast(err instanceof Error ? err.message : t('updateBanner.updateError'), 'error');
     } finally {
       setApplying(false);
     }

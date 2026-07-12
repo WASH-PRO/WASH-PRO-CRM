@@ -10,6 +10,8 @@ import { DataTable, type DataTableColumn, type DataTableFilter } from '../compon
 import type { DapGroup, Permission } from '../types';
 import { ALL_PERMISSIONS, entityId, getPermissionLabels } from '../utils/rbac';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const emptyForm = {
   name: '',
@@ -19,6 +21,8 @@ const emptyForm = {
 
 export function GroupsPage() {
   const { t } = useLocale();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('manage_users');
   const permissionLabels = useMemo(() => getPermissionLabels(t), [t]);
@@ -60,10 +64,10 @@ export function GroupsPage() {
 
   const handleDelete = async (g: DapGroup) => {
     if (g.isSystem) {
-      alert(t('pages.groups.errors.cannotDeleteSystem'));
+      showToast(t('pages.groups.errors.cannotDeleteSystem'), 'error');
       return;
     }
-    if (!confirm(t('pages.groups.confirmDelete', { name: g.name }))) return;
+    if (!(await confirm({ message: t('pages.groups.confirmDelete', { name: g.name }), variant: 'danger' }))) return;
     await api(`/groups/${entityId(g)}`, { method: 'DELETE' });
     refresh();
   };

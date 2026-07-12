@@ -8,6 +8,7 @@ import { pino } from 'pino';
 
 import { startBackupHttpServer } from './http.js';
 import { runScheduledArchives } from './archive-runner.js';
+import { createFullBundleExtras, isFullBundleEnabled } from './bundle.js';
 import {
   channelsFromSettings,
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -117,9 +118,17 @@ async function cleanupOldBackups(): Promise<void> {
     .filter((f) => f.endsWith('.gz') || f.endsWith('.archive'))
     .sort();
 
-  while (files.length > RETENTION) {
-    const oldest = files.shift()!;
+  const mongoArchives = files.filter((f) => f.includes('.archive.gz') && !f.endsWith('-extras.tar.gz'));
+
+  while (mongoArchives.length > RETENTION) {
+    const oldest = mongoArchives.shift()!;
     await unlink(join(BACKUP_DIR, oldest));
+    const extras = oldest.replace(/\.archive\.gz$/, '-extras.tar.gz');
+    try {
+      await unlink(join(BACKUP_DIR, extras));
+    } catch {
+      // no extras file
+    }
     logger.info({ file: oldest }, 'Removed old backup');
   }
 }
@@ -162,10 +171,18 @@ export async function runBackup(type: 'manual' | 'auto' = 'auto', existingRecord
     }
 
     await cleanupOldBackups();
-    logger.info({ filename, size: fileStat.size }, 'Backup completed');
+
+    let extrasFilename: string | null = null;
+    if (await isFullBundleEnabled(token, API_URL)) {
+      const baseName = filename.replace(/\.archive\.gz$/, '');
+      extrasFilename = await createFullBundleExtras(token, API_URL, baseName);
+    }
+
+    logger.info({ filename, size: fileStat.size, extrasFilename }, 'Backup completed');
     const successType = type === 'auto' ? 'auto_backup' : 'backup_success';
+    const extrasNote = extrasFilename ? ` + ${extrasFilename}` : '';
     const successLabel = type === 'auto' ? 'Автоматическое резервное копирование выполнено' : 'Резервное копирование выполнено';
-    await notifyCrm(token, successType, `${successLabel}: ${filename} (${fileStat.size} байт)`);
+    await notifyCrm(token, successType, `${successLabel}: ${filename} (${fileStat.size} байт)${extrasNote}`);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown backup error';
     logger.error({ err }, 'Backup failed');

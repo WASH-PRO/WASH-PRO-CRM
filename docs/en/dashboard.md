@@ -256,19 +256,19 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 
 | Section | Route | Description |
 |---------|-------|-------------|
-| **Information** | `/system` | Server resources, CRM version, Dynamic API / PyOrchestrator *(System group)* |
+| **Information** | `/system` | Server resources, CRM version, Dynamic API / PyOrchestrator; **support diagnostics JSON download** *(v1.1.44)* *(System group)* |
 | Notifications | `/notifications` | CRM notifications, mark as read; web/Telegram channel settings on **Overview** |
 | **Profile** | `/profile` | Name, email, password change *(link in header)* |
 | **Setup wizard** | `/setup` | Initial CRM setup; restart `/setup?restart=1` *(Admin/Operator)* |
 | **Users** | `/users` | Dynamic API accounts, **Telegram user_id**, group assignment *(Admin)* |
 | **Groups & permissions** | `/groups` | RBAC groups and permission matrix *(Admin)* |
-| **Settings** | `/settings` | MQTT, Telegram notify, **integrity repair**, CRM update, default currency, **interface language** |
+| **Settings** | `/settings` | MQTT, Telegram notify, **integrity repair**, CRM update, default currency, **interface language**, **branding** *(v1.1.44)*, **full backup bundle** *(v1.1.44)* |
 | Logs | `/logs` | Dynamic API audit *(Admin)* |
 | **Publications** | `/info-messages` | News for information bot (images in Telegram); optional **VK Publisher** — **text only** to VK *(v1.1.42)* *(Admin)* |
 | Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP server** | `/mcp` | Dynamic API and PyOrchestrator HTTP MCP; tools table; Cursor config *(Admin)* |
 | **Modules** | `/modules` | GitHub extension catalog; install/start/stop; settings UI iframe; `modules-bridge` *(Admin)* |
-| Backups | `/backups` | MongoDB backup, manual run, download *(Admin)* |
+| Backups | `/backups` | MongoDB backup, manual run, download; optional **full bundle** (`*-extras.tar.gz`) *(v1.1.44)* *(Admin)* |
 | Work modes | `/work-modes` | Mode reference 0–9 *(Admin)* |
 | Currencies | `/currency` | Reference `/api/crm/currencies` *(Admin)* |
 | Discount types | `/discount-types` | Numbers 1–5 and names *(Admin)* |
@@ -284,9 +284,18 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 - language switcher — single icon with the current locale flag (all screen sizes);
 - Live/Static — single icon (radio / pause) on all screen sizes.
 
+### Dialogs and feedback (v1.1.44)
+
+- **Toast** — success/error/info messages (bottom-right), auto-dismiss
+- **Confirm modal** — destructive actions (delete user/group, backup, updates, integrity fixes) use in-app dialog instead of browser `confirm`
+
+### In-app help (v1.1.44)
+
+Help sidebar includes **Setup wizard**, **Welcome**, and **Profile** sections. Link to full documentation on GitHub Pages (locale-aware).
+
 ### Login page (`/login`)
 
-Two-column layout (like PyOrchestrator): branding with SVG background (waves/SCADA) on the left, form on the right. Theme switcher in the top-right corner. Auto JWT refresh; on session expiry — redirect to `/login`.
+Two-column layout (like PyOrchestrator): branding with SVG background (waves/SCADA) on the left, form on the right. **Product name and tagline** come from Settings → Branding *(v1.1.44)*. Theme switcher in the top-right corner. Auto JWT refresh; on session expiry — redirect to `/login`.
 
 ## User roles
 

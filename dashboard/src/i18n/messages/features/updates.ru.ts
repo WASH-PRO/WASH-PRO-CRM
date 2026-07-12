@@ -16,6 +16,7 @@ export const settingsRepairRu = {
   pathsTitle: 'Пути и монтирование',
   deployRoot: 'Каталог в контейнере (/deploy)',
   hostRoot: 'Корень проекта на хосте',
+  envWashHostRoot: 'WASH_HOST_PROJECT_ROOT (.env)',
   detectedRoot: 'Определён по bind-mount',
   dataDir: 'Каталог данных на хосте',
   checkedAt: 'Проверено',

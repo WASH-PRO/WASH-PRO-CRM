@@ -54,12 +54,24 @@ export function BrandLogo({
   size = 'md',
   tone = 'default',
   className,
+  imageUrl,
 }: {
   size?: BrandLogoSize;
   tone?: BrandLogoTone;
   className?: string;
+  imageUrl?: string;
 }) {
   const iconScale = size === 'sm' ? 'h-[58%] w-[58%]' : 'h-[56%] w-[56%]';
+
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        className={clsx('shrink-0 object-contain', sizeClass[size], className)}
+      />
+    );
+  }
 
   return (
     <div

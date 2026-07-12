@@ -183,6 +183,15 @@ export interface BackupSettings {
   cron: string;
   retentionCount: number;
   storagePath?: string;
+  fullBundle?: boolean;
+}
+
+export interface BrandingSettings {
+  productName: string;
+  tagline: string;
+  logoUrl: string;
+  supportUrl: string;
+  docsUrl: string;
 }
 
 export interface TelegramCrmSettings {

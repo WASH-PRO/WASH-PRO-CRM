@@ -16,6 +16,7 @@ export const settingsRepairEn = {
   pathsTitle: 'Paths and mounts',
   deployRoot: 'Container directory (/deploy)',
   hostRoot: 'Host project root',
+  envWashHostRoot: 'WASH_HOST_PROJECT_ROOT (.env)',
   detectedRoot: 'Detected from bind mount',
   dataDir: 'Host data directory',
   checkedAt: 'Checked at',

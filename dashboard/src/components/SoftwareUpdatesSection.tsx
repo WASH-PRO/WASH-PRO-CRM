@@ -10,6 +10,8 @@ import {
 } from '../api/updates';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { useLocale } from '../i18n/LocaleContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 import { isNewerVersion } from '../utils/semver';
 
 function VersionRow({
@@ -126,6 +128,8 @@ function ComponentCard({
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [busy, setBusy] = useState(false);
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const componentJob = latestComponentJob(
     activeJob,
     recentJobs,
@@ -138,19 +142,19 @@ function ComponentCard({
 
   const runUpdate = async () => {
     if (!executorAvailable) {
-      alert(executorReason || t('updates.autoUnavailable'));
+      showToast(executorReason || t('updates.autoUnavailable'), 'error');
       return;
     }
     const targetVersion = component.latestVersion || componentJob?.targetVersion;
     const targetTag = component.latestTag || (targetVersion ? `v${targetVersion}` : undefined);
     if (!targetVersion || !targetTag) return;
-    if (!confirm(t('updates.confirmUpdate', { component: component.label, version: targetVersion }))) return;
+    if (!(await confirm({ message: t('updates.confirmUpdate', { component: component.label, version: targetVersion }) }))) return;
     setBusy(true);
     try {
       await applyUpdate(component.id, targetTag);
       await onChanged();
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('updates.error'));
+      showToast(err instanceof Error ? err.message : t('updates.error'), 'error');
     } finally {
       setBusy(false);
     }
@@ -225,6 +229,7 @@ function ComponentCard({
 
 export function SoftwareUpdatesSection() {
   const { t, locale } = useLocale();
+  const { showToast } = useToast();
   const ctx = useSoftwareUpdatesContext();
   const [checking, setChecking] = useState(false);
 
@@ -241,7 +246,7 @@ export function SoftwareUpdatesSection() {
     try {
       await checkGithub();
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('updates.checkFailed'));
+      showToast(err instanceof Error ? err.message : t('updates.checkFailed'), 'error');
     } finally {
       setChecking(false);
     }

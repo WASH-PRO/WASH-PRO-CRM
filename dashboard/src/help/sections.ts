@@ -47,5 +47,8 @@ export const HELP_SECTIONS: HelpSectionDef[] = [
   { id: 'users', groupKey: 'system', mockup: 'users', adminOnly: true },
   { id: 'groups', groupKey: 'system', mockup: 'users', adminOnly: true },
   { id: 'settings', groupKey: 'system', mockup: 'settings' },
+  { id: 'setup', groupKey: 'system', mockup: 'settings', adminOnly: true },
+  { id: 'welcome', groupKey: 'main', mockup: 'dashboard' },
+  { id: 'profile', groupKey: 'system', mockup: 'users' },
   { id: 'logs', groupKey: 'system', mockup: 'table', adminOnly: true },
 ];

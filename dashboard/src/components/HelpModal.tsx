@@ -8,6 +8,7 @@ import { HELP_SECTIONS, type HelpMockupId } from '../help/sections';
 import { listModuleCatalog, type CatalogModule } from '../api/modules';
 import { useLocale } from '../i18n/LocaleContext';
 import { useAuth } from '../context/AuthContext';
+import { useBranding } from '../context/BrandingContext';
 
 const DOCS_BASE = 'https://wash-pro.github.io/WASH-PRO-CRM';
 
@@ -47,6 +48,9 @@ export function resolveHelpSectionId(pathname: string): string {
     '/users': 'users',
     '/groups': 'groups',
     '/logs': 'logs',
+    '/setup': 'setup',
+    '/welcome': 'welcome',
+    '/profile': 'profile',
   };
 
   if (staticMap[path]) return staticMap[path];
@@ -71,6 +75,7 @@ export function HelpModal({
 }) {
   const { t, locale } = useLocale();
   const { isAdmin } = useAuth();
+  const { branding } = useBranding();
   const [query, setQuery] = useState('');
   const [activeId, setActiveId] = useState('dashboard');
   const [catalog, setCatalog] = useState<CatalogModule[]>([]);
@@ -199,12 +204,20 @@ export function HelpModal({
               </div>
             ))}
           </nav>
-          <div className="shrink-0 border-t border-panel-border p-3 dark:border-panel-border-dark">
+          <div className="shrink-0 space-y-2 border-t border-panel-border p-3 dark:border-panel-border-dark">
+            <a
+              href={branding.docsUrl || `${DOCS_BASE}/${locale}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm w-full justify-center"
+            >
+              <ExternalLink size={14} /> {t('help.docsLink')}
+            </a>
             <a
               href={`${DOCS_BASE}/${locale}/modules/`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary btn-sm w-full justify-center"
+              className="btn-ghost btn-sm w-full justify-center text-panel-muted"
             >
               <ExternalLink size={14} /> {t('help.docsModulesLink')}
             </a>

@@ -324,6 +324,43 @@ export const helpEn = {
         updates: 'Integrity and software updates',
       },
     },
+    setup: {
+      title: 'Setup wizard',
+      summary: 'First-run and re-run wizard: admin account, MQTT, integrations, demo data.',
+      howItWorks:
+        'Opens automatically on first login for administrators. Steps persist progress in browser storage; finishing marks setup complete. Can be reopened from the sidebar footer.',
+      example: 'After reinstall, admin runs Setup again to verify MQTT credentials and PyOrch connectivity.',
+      regions: {
+        language: 'Wizard steps',
+        sections: 'Account, MQTT, integrations',
+        updates: 'Finish and enter CRM',
+      },
+    },
+    welcome: {
+      title: 'Welcome screen',
+      summary: 'One-time greeting after first login with role hints and quick tips.',
+      howItWorks:
+        'Shown once per user (stored locally). Explains sidebar navigation and suggests Overview, Posts, and Settings.',
+      example: 'New operator sees welcome, reads access level, clicks Enter system.',
+      regions: {
+        kpi: 'Greeting and role',
+        revenue: 'Quick tips list',
+        workload: 'Enter system button',
+        charts: 'Branding header',
+        feed: '—',
+      },
+    },
+    profile: {
+      title: 'Profile',
+      summary: 'Your account: name, email, password, interface language.',
+      howItWorks:
+        'Updates Dynamic API user record. Password change requires current password. Language preference syncs with dashboard locale.',
+      example: 'Operator changes display name and switches interface to English.',
+      regions: {
+        users: 'Profile form',
+        groups: 'Language selector',
+      },
+    },
     logs: {
       title: 'Logs',
       summary: 'User and system audit log.',

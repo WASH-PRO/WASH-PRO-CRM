@@ -2,6 +2,9 @@ import { Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
+import { ConfirmProvider } from './context/ConfirmContext';
+import { BrandingProvider } from './context/BrandingContext';
 import { Layout } from './components/Layout';
 import { SetupGuard } from './components/SetupGuard';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
@@ -130,13 +133,19 @@ export default function App() {
     <LocaleProvider>
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter>
-            <RouteErrorBoundary>
-              <Suspense fallback={<Loading fullScreen />}>
-                <AppRoutes />
-              </Suspense>
-            </RouteErrorBoundary>
-          </BrowserRouter>
+          <BrandingProvider>
+            <ToastProvider>
+              <ConfirmProvider>
+                <BrowserRouter>
+                  <RouteErrorBoundary>
+                    <Suspense fallback={<Loading fullScreen />}>
+                      <AppRoutes />
+                    </Suspense>
+                  </RouteErrorBoundary>
+                </BrowserRouter>
+              </ConfirmProvider>
+            </ToastProvider>
+          </BrandingProvider>
         </AuthProvider>
       </ThemeProvider>
     </LocaleProvider>

@@ -49,7 +49,7 @@ Total **52** CRM endpoint definitions (CRUD + lists). `init-seed` creates and up
 | Finances | `/api/crm/finance-stats` | washId, postId, period, cash, cashless, discountOps, totalRevenue, avgCheck, recordedAt |
 | Currencies | `/api/crm/currencies` | code, name, symbol, isDefault |
 | Discount types | `/api/crm/discount-types` | number (1–5), name |
-| Settings | `/api/crm/settings` | key (backup/archive/telegram/notifications), value (JSON) |
+| Settings | `/api/crm/settings` | key (`backup`/`archive`/`telegram`/`notifications`/`branding`/…), value (JSON) |
 | Notifications | `/api/crm/notifications` | type, severity, message, read, channels, washId, postId, createdAt |
 | Backups | `/api/crm/backups` | filename, size, type (`manual`\|`auto`), status (`completed`\|`failed`\|`in_progress`), createdAt, error |
 | Archive | `/api/crm/archive-logs` | action, recordsAffected, policyDays, groupKey |
@@ -112,7 +112,25 @@ Internal service account used by message-processor, backup, and pyorch-bridge (J
 ## Backup
 
 Files: bind mount `DATA_DIR/backups` → `/backups` in `wash-backup` container.  
-Format: `mongodump --archive --gzip`
+Format: `mongodump --archive --gzip` → `wash-pro-crm-{timestamp}.archive.gz`
+
+When **full bundle** is enabled in CRM settings (`backup.fullBundle`, default `true` since v1.1.44):
+
+- Additional file: `wash-pro-crm-{timestamp}-extras.tar.gz`
+- Contents: `settings/crm-settings.json` (all `/api/crm/settings` rows) and `modules-data/{moduleId}/` (from `modules/installed/*/data/`)
+- `wash-backup` mounts host `modules/` read-only at `/modules`
+
+Restore today: MongoDB archive via `./scripts/restore.sh` or Dashboard → Backups. Extras archive is for manual recovery of settings and module data.
+
+### `branding` setting (v1.1.44)
+
+| Field | Description |
+|-------|-------------|
+| `productName` | Display name (sidebar, login, welcome) |
+| `tagline` | Subtitle under product name |
+| `logoUrl` | Optional image URL (empty = default icon) |
+| `supportUrl` | Support/issues link |
+| `docsUrl` | Documentation base URL |
 
 ## Migrations and seed
 

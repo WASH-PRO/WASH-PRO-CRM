@@ -49,7 +49,7 @@ description: CRM endpoints и коллекции MongoDB
 | Финансы | `/api/crm/finance-stats` | washId, postId, period, cash, cashless, discountOps, totalRevenue, avgCheck, recordedAt |
 | Валюты | `/api/crm/currencies` | code, name, symbol, isDefault |
 | Типы скидок | `/api/crm/discount-types` | number (1–5), name |
-| Настройки | `/api/crm/settings` | key (backup/archive/telegram/notifications), value (JSON) |
+| Настройки | `/api/crm/settings` | key (`backup`/`archive`/`telegram`/`notifications`/`branding`/…), value (JSON) |
 | Уведомления | `/api/crm/notifications` | type, severity, message, read, channels, washId, postId, createdAt |
 | Резервные копии | `/api/crm/backups` | filename, size, type (`manual`\|`auto`), status (`completed`\|`failed`\|`in_progress`), createdAt, error |
 | Архив | `/api/crm/archive-logs` | action, recordsAffected, policyDays, groupKey |
@@ -112,7 +112,25 @@ description: CRM endpoints и коллекции MongoDB
 ## Резервное копирование
 
 Файлы: bind mount `DATA_DIR/backups` → `/backups` в контейнере `wash-backup`.  
-Формат: `mongodump --archive --gzip`
+Формат: `mongodump --archive --gzip` → `wash-pro-crm-{timestamp}.archive.gz`
+
+При включённом **полном пакете** в настройках CRM (`backup.fullBundle`, по умолчанию `true` с v1.1.44):
+
+- Дополнительный файл: `wash-pro-crm-{timestamp}-extras.tar.gz`
+- Содержимое: `settings/crm-settings.json` (все строки `/api/crm/settings`) и `modules-data/{moduleId}/` (из `modules/installed/*/data/`)
+- `wash-backup` монтирует `modules/` хоста read-only в `/modules`
+
+Восстановление сейчас: архив MongoDB через `./scripts/restore.sh` или Dashboard → Резервные копии. Extras — для ручного восстановления настроек и data модулей.
+
+### Настройка `branding` (v1.1.44)
+
+| Поле | Описание |
+|------|----------|
+| `productName` | Отображаемое имя (сайдбар, вход, приветствие) |
+| `tagline` | Подзаголовок |
+| `logoUrl` | URL изображения (пусто = иконка по умолчанию) |
+| `supportUrl` | Ссылка поддержки |
+| `docsUrl` | Базовый URL документации |
 
 ## Миграции и seed
 

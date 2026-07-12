@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### Исправлено
+
+- **crm-update-compose-env.sh** — корректный `CRM_UPDATE_ROOT` при `source` (BASH_SOURCE / DEPLOY_ROOT); repair и diagnose используют полный `$COMPOSE_FILES`
+- **Integrity repair** — mosquitto/modules-bridge/init-seed через `withComposeEnv` (override, Redis, PyOrch)
+- **PyOrchestrator auto-update** — build через `$COMPOSE_FILES`, не hardcoded `-f`
+- **crm-update-sync-host-env.sh** — `sed -i` на macOS
+- **run-init-seed.sh** — единый `compose-files.sh`
+- **sync-version-docs.sh** — синхронизация README badge и configuration.md
+
 ## [1.1.39] — 2026-07-12
 
 ### Исправлено

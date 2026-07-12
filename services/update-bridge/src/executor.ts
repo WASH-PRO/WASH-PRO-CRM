@@ -54,6 +54,12 @@ function composeSetup(): string {
   return `set -a && [ -f ${DEPLOY_ROOT}/.env ] && . ${DEPLOY_ROOT}/.env; set +a && . ${DEPLOY_ROOT}/scripts/compose-files.sh`;
 }
 
+/** Run shell body after sourcing crm-update-compose-env.sh (COMPOSE_FILES + host paths). */
+export function withComposeEnv(shellBody: string): string {
+  const escaped = shellBody.replace(/'/g, `'\"'\"'`);
+  return `cd ${DEPLOY_ROOT} && bash -c '. ${DEPLOY_ROOT}/scripts/crm-update-compose-env.sh && ${escaped}'`;
+}
+
 function gitSyncMain(root: string): string {
   // Reset tracked files to origin/main; untracked/gitignored (.env, override, local/) are kept.
   return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin main && if ! git diff --quiet || ! git diff --cached --quiet; then echo 'WARN: discarding local changes to tracked files before update'; fi && git reset --hard origin/main && chmod +x ${root}/scripts/crm-update-build.sh ${root}/scripts/crm-update-ensure-modules-bridge.sh ${root}/scripts/crm-update-health.sh ${root}/scripts/crm-update-compose-env.sh ${root}/scripts/crm-update-sync-host-env.sh 2>/dev/null || true && bash ${root}/scripts/crm-update-sync-host-env.sh`;
@@ -101,7 +107,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && PYORCHESTRATOR_REF=${tag} ./scripts/update-pyorchestrator.sh`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && docker compose -f docker-compose.yml -f docker-compose.pyorchestrator.yml up -d --build pyorch-backend pyorchestrator-panel pyorch-bridge`;
+      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES up -d --build pyorch-backend pyorchestrator-panel pyorch-bridge`;
     }
     if (stepId === 'health') {
       return `wget -qO- http://pyorch-backend:8000/health >/dev/null || wget -qO- http://pyorch-backend:8000/api/v1/health >/dev/null`;

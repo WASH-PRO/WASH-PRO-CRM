@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { composeCommandEnv, detectHostProjectRoot, resolveHostDataDir, resolveHostProjectRoot } from './host-path.js';
-import { isExecutorAvailable, runShell } from './executor.js';
+import { isExecutorAvailable, runShell, withComposeEnv } from './executor.js';
 import { getActiveJob, recoverInterruptedJobs, saveState } from './state.js';
 
 const DEPLOY_ROOT = (process.env.DEPLOY_ROOT || '/deploy').replace(/\/+$/, '') || '/deploy';
@@ -204,7 +204,7 @@ export async function diagnoseRepair(): Promise<RepairDiagnoseResult> {
   }
 
   try {
-    await runShell('docker compose config --quiet', () => {}, composeCommandEnv());
+    await runShell(withComposeEnv('docker compose $COMPOSE_FILES config --quiet'), () => {});
   } catch (err) {
     const message = err instanceof Error ? err.message : 'compose config failed';
     issues.push({ code: 'compose_config_invalid', severity: 'error', detail: message });
@@ -294,22 +294,24 @@ async function applyAction(action: RepairActionId, onLog: (line: string) => void
 
     case 'mosquitto_repair':
       await runShell(
-        `cd ${DEPLOY_ROOT} && docker compose run --rm mosquitto-init && docker compose restart mosquitto message-processor`,
-        onLog,
-        composeCommandEnv()
+        withComposeEnv(
+          'docker compose $COMPOSE_FILES run --rm mosquitto-init && docker compose $COMPOSE_FILES restart mosquitto message-processor'
+        ),
+        onLog
       );
       return;
 
     case 'modules_bridge_repair':
       await runShell(
-        `cd ${DEPLOY_ROOT} && bash ${DEPLOY_ROOT}/scripts/crm-update-ensure-modules-bridge.sh && docker compose $COMPOSE_FILES up -d --build --no-deps dashboard`,
-        onLog,
-        { ...composeCommandEnv(), WASH_CRM_UPDATE_V2: '1' }
+        withComposeEnv(
+          `bash ${DEPLOY_ROOT}/scripts/crm-update-ensure-modules-bridge.sh && docker compose $COMPOSE_FILES up -d --build --no-deps dashboard`
+        ),
+        onLog
       );
       return;
 
     case 'init_seed':
-      await runShell(`cd ${DEPLOY_ROOT} && docker compose run --rm init-seed`, onLog, composeCommandEnv());
+      await runShell(withComposeEnv('docker compose $COMPOSE_FILES run --rm init-seed'), onLog);
       return;
 
     default:

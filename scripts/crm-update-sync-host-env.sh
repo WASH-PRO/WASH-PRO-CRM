@@ -41,7 +41,11 @@ upsert_env_key() {
   local key="$1" value="$2"
   touch "$ENV_FILE"
   if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-    sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+    if [[ "$(uname)" == "Darwin" ]]; then
+      sed -i '' "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+    else
+      sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+    fi
   else
     printf '%s=%s\n' "$key" "$value" >> "$ENV_FILE"
   fi

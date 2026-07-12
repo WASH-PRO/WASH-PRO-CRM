@@ -5,7 +5,13 @@ set -euo pipefail
 
 export WASH_CRM_UPDATE_V2=1
 
-CRM_UPDATE_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+  CRM_UPDATE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+elif [ -n "${DEPLOY_ROOT:-}" ] && [ -d "${DEPLOY_ROOT}/scripts" ]; then
+  CRM_UPDATE_ROOT="${DEPLOY_ROOT}"
+else
+  CRM_UPDATE_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+fi
 cd "$CRM_UPDATE_ROOT"
 
 _preserve_host="${WASH_HOST_PROJECT_ROOT:-}"

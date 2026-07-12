@@ -12,13 +12,8 @@ if [ -f .env ]; then
   set +a
 fi
 
-COMPOSE_FILES="-f docker-compose.yml"
-if [ "${REDIS_ENABLED:-false}" = "true" ]; then
-  COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.redis.yml"
-fi
-if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
-  COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.pyorchestrator.yml"
-fi
+# shellcheck disable=SC1091
+source "$ROOT/scripts/compose-files.sh"
 
 echo "Пересборка и запуск init-seed..."
 docker compose $COMPOSE_FILES build init-seed

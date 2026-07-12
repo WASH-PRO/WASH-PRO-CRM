@@ -7,7 +7,7 @@ services:
   # База данных Dynamic API (MongoDB) — только внутренняя сеть
   # ===========================================================================
   mongodb:
-    image: mongo:7
+    image: mongo:4.4
     container_name: wash-mongodb
     restart: unless-stopped
     environment:
@@ -17,7 +17,7 @@ services:
     networks:
       - wash-internal
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -17,6 +17,7 @@
 ### Изменено
 
 - **crm-update-build** — при `PYORCHESTRATOR_ENABLED=true` пересборка `pyorch-backend` при автообновлении CRM
+- **MongoDB** — `mongo:4.4` + healthcheck `mongo` для CPU без AVX (Intel G4650 и аналоги)
 - **Каталог dynamic-pricing v1.1.6** — интервал опроса от 5 сек, шаг 5 сек
 
 ## [1.1.42] — 2026-07-12

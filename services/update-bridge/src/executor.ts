@@ -70,13 +70,14 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
     if (stepId === 'build') {
       // NB: update-bridge и mosquitto исключены — пересборка бриджа убивает процесс
       // обновления; mosquitto не требует пересборки при обновлении CRM.
-      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES build init-seed && docker compose $COMPOSE_FILES up -d --build --no-deps dynamic-api dynamic-api-panel dashboard message-processor backup`;
+      // Build list lives in scripts/crm-update-build.sh (git-pulled, incl. modules-bridge).
+      return `cd ${root} && export WASH_CRM_UPDATE_V2=1 && ${composeSetup()} && bash ${root}/scripts/crm-update-build.sh`;
     }
     if (stepId === 'seed') {
       return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES run --rm init-seed`;
     }
     if (stepId === 'health') {
-      return `wget -qO- http://dynamic-api:3001/api/health >/dev/null && wget -qO- http://message-processor:3022/health >/dev/null`;
+      return `bash ${root}/scripts/crm-update-health.sh`;
     }
   }
 

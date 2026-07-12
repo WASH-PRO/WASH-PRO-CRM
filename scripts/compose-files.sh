@@ -21,3 +21,12 @@ if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
   fi
 fi
 export COMPOSE_FILES
+
+# CRM auto-update (update-bridge container): older executor images call composeSetup()
+# then run a hardcoded docker compose line without modules-bridge. When this script exists,
+# run the full build once from compose-files (skipped when executor sets WASH_CRM_UPDATE_V2=1).
+if [ -n "${UPDATE_HTTP_PORT:-}" ] && [ "${WASH_CRM_UPDATE_V2:-}" != "1" ] && [ "${WASH_CRM_UPDATE_BUILD_RUNNING:-}" != "1" ]; then
+  if [ -x "${BASH_SOURCE[0]%/*}/crm-update-build.sh" ]; then
+    "${BASH_SOURCE[0]%/*}/crm-update-build.sh"
+  fi
+fi

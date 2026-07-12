@@ -21,9 +21,18 @@ export function clearAuth(): void {
   localStorage.removeItem(PERMS_KEY);
 }
 
+function decodeBase64Url(part: string): string {
+  const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = base64.length % 4;
+  const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+  return atob(padded);
+}
+
 function decodeJwtPermissions(token: string): import('../types').Permission[] {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]!)) as { permissions?: import('../types').Permission[] };
+    const part = token.split('.')[1];
+    if (!part) return [];
+    const payload = JSON.parse(decodeBase64Url(part)) as { permissions?: import('../types').Permission[] };
     return payload.permissions || [];
   } catch {
     return [];
@@ -32,7 +41,9 @@ function decodeJwtPermissions(token: string): import('../types').Permission[] {
 
 function decodeJwtExp(token: string): number | null {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]!)) as { exp?: number };
+    const part = token.split('.')[1];
+    if (!part) return null;
+    const payload = JSON.parse(decodeBase64Url(part)) as { exp?: number };
     return typeof payload.exp === 'number' ? payload.exp : null;
   } catch {
     return null;

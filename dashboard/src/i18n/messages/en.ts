@@ -871,6 +871,8 @@ export const en = {
       noInstalled: 'No installed modules',
       noAvailable: 'All catalog modules are already installed',
       unavailable: 'Modules service is unavailable',
+      bridgeRebuildHint:
+        'Modules service is unavailable. Update CRM from Settings (v1.1.32+) or run: docker compose up -d --build modules-bridge dashboard',
       pyorchHint: 'PyOrchestrator is not running — you can install modules, but starting them requires the orchestrator (PYORCHESTRATOR_ENABLED=true).',
       statusAvailable: 'Available',
       statusUpdating: 'Updating…',

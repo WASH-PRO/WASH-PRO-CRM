@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+## [1.1.32] — 2026-07-12
+
+### Исправлено
+
+- **Страница «Модули»** — ошибка Safari `The string did not match the expected pattern` (base64url JWT, разбор JSON от modules-bridge)
+- **Автообновление CRM** — шаг «Сборка» теперь включает `modules-bridge` (`scripts/crm-update-build.sh`); работает и на старых образах update-bridge через hook в `compose-files.sh`
+
+### Изменено
+
+- **`scripts/crm-update-health.sh`** — проверка `modules-bridge:3024` после обновления
+- **Страница «Модули»** — компактные фильтры, icon-only кнопки на карточках, «Обновить каталог» с текстом
+- **modules-bridge** — auth-ошибки в JSON вместо plain text
+
 ## [1.1.31] — 2026-07-12
 
 ### Изменено
@@ -425,7 +438,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.31...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.32...HEAD
+[1.1.32]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.32
 [1.1.31]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.31
 [1.1.30]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.30
 [1.1.29]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.29

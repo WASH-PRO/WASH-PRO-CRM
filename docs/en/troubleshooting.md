@@ -134,7 +134,7 @@ If these hang or fail with `DeadlineExceeded`, the issue is Docker Hub access, n
 
 ```bash
 cd /path/to/WASH-PRO-CRM
-git fetch origin && git checkout v1.1.31
+git fetch origin && git checkout v1.1.32
 docker compose up -d --build dashboard update-bridge
 ```
 

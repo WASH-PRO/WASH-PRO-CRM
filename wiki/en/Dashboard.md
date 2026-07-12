@@ -79,7 +79,7 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
 
-## Recent changes (v1.1.31)
+## Recent changes (v1.1.32)
 
 - **Modules** — compact filter toolbar; refresh catalog button with label
 

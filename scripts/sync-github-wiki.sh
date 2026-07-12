@@ -24,7 +24,7 @@ cat > Home.md <<'EOF'
 Sources synced from the main repository. **Default language: English.**
 
 **Full documentation (GitHub Pages):** https://wash-pro.github.io/WASH-PRO-CRM/en/  
-**Current version:** v1.1.31
+**Current version:** v1.1.32
 
 ## English
 

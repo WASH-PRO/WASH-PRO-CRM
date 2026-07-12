@@ -871,6 +871,8 @@ export const ru = {
       noInstalled: 'Нет установленных модулей',
       noAvailable: 'Все модули из каталога уже установлены',
       unavailable: 'Сервис модулей недоступен',
+      bridgeRebuildHint:
+        'Сервис модулей недоступен. Обновите CRM в Настройках (v1.1.32+) или выполните: docker compose up -d --build modules-bridge dashboard',
       pyorchHint: 'PyOrchestrator не запущен — модули можно установить, но запуск потребует оркестратор (PYORCHESTRATOR_ENABLED=true).',
       statusAvailable: 'Доступен',
       statusUpdating: 'Обновление…',

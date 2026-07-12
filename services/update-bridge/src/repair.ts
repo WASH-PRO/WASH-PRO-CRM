@@ -25,7 +25,7 @@ const CRITICAL_FILES = [
   'scripts/start.sh',
 ];
 
-const CRITICAL_DIRS = ['dashboard', 'dynamic-api', 'config/mosquitto', 'services/update-bridge'];
+const CRITICAL_DIRS = ['dashboard', 'dynamic-api', 'config/mosquitto', 'modules', 'services/update-bridge', 'services/modules-bridge'];
 
 export type RepairIssueSeverity = 'ok' | 'warning' | 'error';
 

@@ -126,8 +126,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   const auth = await verifyAdmin(req.headers.authorization);
   if (!auth.ok) {
     const message = auth.status === 403 ? 'Forbidden' : 'Unauthorized';
-    res.writeHead(auth.status, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end(message);
+    json(res, auth.status, { success: false, error: message });
     return;
   }
 
@@ -211,8 +210,11 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         });
         return;
       }
-      const query = req.url?.includes('?') ? new URL(req.url, 'http://modules-bridge').searchParams : null;
-      const limit = Math.min(1000, Math.max(50, parseInt(query?.get('limit') || '300', 10) || 300));
+      const query = req.url?.includes('?') ? req.url.split('?')[1] : '';
+      const limitParam = query
+        ? new URLSearchParams(query).get('limit')
+        : null;
+      const limit = Math.min(1000, Math.max(50, parseInt(limitParam || '300', 10) || 300));
       try {
         const data = await getModuleRunLogs(state.pyorchScriptId, limit);
         json(res, 200, { success: true, data });

@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## Changelog
 
-Latest release: **[v1.1.45](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.45)** — module help removed from CRM Help; stays in each module page.
+Latest release: **[v1.1.46](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.46)** — Settings: MQTT (CRM) section full-width layout.
 
 See [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

@@ -467,67 +467,72 @@ export function SettingsPage() {
             />
           </Field>
         </SettingSection>
+        </div>
 
         <SettingSection title={t('pages.settings.mqtt.title')} icon={Radio}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             {t('pages.settings.mqtt.hintStart')} <span className="font-mono">system</span> {t('pages.settings.mqtt.hintMiddle')}{' '}
             <span className="font-mono">message-processor</span> {t('pages.settings.mqtt.hintEnd')}
           </p>
-          <Field label={t('pages.settings.mqtt.crmLogin')}>
-            <input className="input font-mono" value={MQTT_SYSTEM_LOGIN} readOnly disabled />
-          </Field>
-          <Field
-            label={t('pages.settings.mqtt.systemPassword')}
-            hint={t('pages.settings.mqtt.systemPasswordHint')}
-          >
-            <PasswordInput
-              className="font-mono"
-              autoComplete="new-password"
-              disabled={!canEdit}
-              value={mqttBroker.systemPassword}
-              onChange={(e) => setMqttBroker({ ...mqttBroker, systemPassword: e.target.value })}
-            />
-          </Field>
-          <Field
-            label={t('pages.settings.mqtt.retentionHours')}
-            hint={t('pages.settings.mqtt.retentionHoursHint')}
-          >
-            <input
-              className="input font-mono"
-              type="number"
-              min={1}
-              disabled={!canEdit}
-              value={mqttBroker.outboundRetentionHours}
-              onChange={(e) =>
-                setMqttBroker({ ...mqttBroker, outboundRetentionHours: Math.max(1, Number(e.target.value) || 168) })
-              }
-            />
-          </Field>
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              disabled={!canEdit}
-              checked={mqttBroker.requireDeliveryConfirmation}
-              onChange={(e) =>
-                setMqttBroker({
-                  ...mqttBroker,
-                  requireDeliveryConfirmation: e.target.checked,
-                  redeliverOnNoAck: e.target.checked ? mqttBroker.redeliverOnNoAck : false,
-                })
-              }
-            />
-            {t('pages.settings.mqtt.requireAck')} (<span className="font-mono">set/ack</span>)
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              disabled={!canEdit || !mqttBroker.requireDeliveryConfirmation}
-              checked={mqttBroker.redeliverOnNoAck}
-              onChange={(e) => setMqttBroker({ ...mqttBroker, redeliverOnNoAck: e.target.checked })}
-            />
-            {t('pages.settings.mqtt.redeliver')}
-          </label>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Field label={t('pages.settings.mqtt.crmLogin')}>
+              <input className="input font-mono" value={MQTT_SYSTEM_LOGIN} readOnly disabled />
+            </Field>
+            <Field
+              label={t('pages.settings.mqtt.systemPassword')}
+              hint={t('pages.settings.mqtt.systemPasswordHint')}
+            >
+              <PasswordInput
+                className="font-mono"
+                autoComplete="new-password"
+                disabled={!canEdit}
+                value={mqttBroker.systemPassword}
+                onChange={(e) => setMqttBroker({ ...mqttBroker, systemPassword: e.target.value })}
+              />
+            </Field>
+            <Field
+              label={t('pages.settings.mqtt.retentionHours')}
+              hint={t('pages.settings.mqtt.retentionHoursHint')}
+            >
+              <input
+                className="input font-mono"
+                type="number"
+                min={1}
+                disabled={!canEdit}
+                value={mqttBroker.outboundRetentionHours}
+                onChange={(e) =>
+                  setMqttBroker({ ...mqttBroker, outboundRetentionHours: Math.max(1, Number(e.target.value) || 168) })
+                }
+              />
+            </Field>
+          </div>
+          <div className="mt-4 space-y-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                disabled={!canEdit}
+                checked={mqttBroker.requireDeliveryConfirmation}
+                onChange={(e) =>
+                  setMqttBroker({
+                    ...mqttBroker,
+                    requireDeliveryConfirmation: e.target.checked,
+                    redeliverOnNoAck: e.target.checked ? mqttBroker.redeliverOnNoAck : false,
+                  })
+                }
+              />
+              {t('pages.settings.mqtt.requireAck')} (<span className="font-mono">set/ack</span>)
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                disabled={!canEdit || !mqttBroker.requireDeliveryConfirmation}
+                checked={mqttBroker.redeliverOnNoAck}
+                onChange={(e) => setMqttBroker({ ...mqttBroker, redeliverOnNoAck: e.target.checked })}
+              />
+              {t('pages.settings.mqtt.redeliver')}
+            </label>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label={t('pages.settings.mqtt.redeliverInterval')} hint={t('pages.settings.mqtt.redeliverIntervalHint')}>
               <input
                 className="input font-mono"
@@ -560,7 +565,6 @@ export function SettingsPage() {
             </Field>
           </div>
         </SettingSection>
-        </div>
 
         <SettingSection title={t('nav.items.notifications')} icon={Bell}>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">

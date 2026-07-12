@@ -153,6 +153,10 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 - **Integrity** — false “/deploy not a git repo” fixed (`git safe.directory`)
 - **Update card** — stale failed job hidden after successful update
 
+## Recent changes (v1.1.46)
+
+- **Settings → MQTT (CRM)** — full-width section; 3-column field grid
+
 ## Recent changes (v1.1.45)
 
 - **Help** — per-module entries removed from CRM Help sidebar; use module page for `ui/help.html`

@@ -274,7 +274,16 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
     if (job.component === 'crm' && job.fromVersion !== job.targetVersion) {
       const pullDone = job.steps.find((s) => s.id === 'pull')?.status === 'completed';
       const buildDone = job.steps.find((s) => s.id === 'build')?.status === 'completed';
-      if (pullDone) {
+      if (buildDone) {
+        // Сборка прошла — оставляем новую версию; seed/health могут упасть без отката.
+        try {
+          appendLog(`$ ${crmAppVersionSyncCommand(job.targetVersion)}`);
+          await runShell(crmAppVersionSyncCommand(job.targetVersion), appendLog);
+        } catch (revertErr) {
+          const msg = revertErr instanceof Error ? revertErr.message : 'APP_VERSION sync failed';
+          appendLog(`WARN: ${msg}`);
+        }
+      } else if (pullDone) {
         try {
           const checkoutCmd = crmGitCheckoutVersionCommand(job.fromVersion);
           appendLog(`$ ${checkoutCmd}`);
@@ -283,26 +292,11 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
           const msg = revertErr instanceof Error ? revertErr.message : 'Git checkout failed';
           appendLog(`WARN: ${msg}`);
         }
-      }
-      try {
-        appendLog(`$ ${crmAppVersionSyncCommand(job.fromVersion)}`);
-        await runShell(crmAppVersionSyncCommand(job.fromVersion), appendLog);
-      } catch (revertErr) {
-        const msg = revertErr instanceof Error ? revertErr.message : 'Revert APP_VERSION failed';
-        appendLog(`WARN: ${msg}`);
-      }
-      if (buildDone) {
         try {
-          const rebuildCmd = getStepCommand('crm', 'build', `v${job.fromVersion}`);
-          appendLog(`$ ${rebuildCmd}`);
-          appendLog(`Rebuilding dashboard with v${job.fromVersion} after failed update`);
-          await runShell(rebuildCmd, appendLog, {
-            ...composeCommandEnv(),
-            APP_VERSION: job.fromVersion,
-            VITE_APP_VERSION: job.fromVersion,
-          });
+          appendLog(`$ ${crmAppVersionSyncCommand(job.fromVersion)}`);
+          await runShell(crmAppVersionSyncCommand(job.fromVersion), appendLog);
         } catch (revertErr) {
-          const msg = revertErr instanceof Error ? revertErr.message : 'Dashboard rebuild failed';
+          const msg = revertErr instanceof Error ? revertErr.message : 'Revert APP_VERSION failed';
           appendLog(`WARN: ${msg}`);
         }
       }

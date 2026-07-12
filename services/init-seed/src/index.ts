@@ -30,7 +30,24 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Ждём не только /health, но и готовность admin-логина (после seed БД). */
+async function tryLogin(loginName: string, password: string): Promise<string | null> {
+  try {
+    const loginRes = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: loginName, password: password }),
+    });
+    const loginJson = (await loginRes.json()) as ApiResponse<{ accessToken: string }>;
+    if (loginJson.success && loginJson.data?.accessToken) {
+      return loginJson.data.accessToken;
+    }
+  } catch {
+    // retry outer loop
+  }
+  return null;
+}
+
+/** Ждём /health и любой рабочий логин (admin или service). */
 async function waitForApiReady(maxAttempts = 60): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
@@ -40,14 +57,14 @@ async function waitForApiReady(maxAttempts = 60): Promise<void> {
         continue;
       }
 
-      const loginRes = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login: ADMIN_LOGIN, password: ADMIN_PASSWORD }),
-      });
-      const loginJson = (await loginRes.json()) as ApiResponse<{ accessToken: string }>;
-      if (loginJson.success && loginJson.data?.accessToken) {
-        console.log(`  API ready (attempt ${i + 1})`);
+      const adminToken = await tryLogin(ADMIN_LOGIN, ADMIN_PASSWORD);
+      if (adminToken) {
+        console.log(`  API ready (admin, attempt ${i + 1})`);
+        return;
+      }
+      const serviceToken = await tryLogin(SERVICE_LOGIN, SERVICE_PASSWORD);
+      if (serviceToken) {
+        console.log(`  API ready (service, attempt ${i + 1})`);
         return;
       }
     } catch {
@@ -58,7 +75,7 @@ async function waitForApiReady(maxAttempts = 60): Promise<void> {
     }
     await sleep(2000);
   }
-  throw new Error('Dynamic API not ready: admin login unavailable');
+  throw new Error('Dynamic API not ready: login unavailable');
 }
 
 async function login(loginName: string, password: string, retries = 5): Promise<string> {
@@ -738,8 +755,17 @@ async function main(): Promise<void> {
   console.log('WASH PRO CRM Init Seed — starting...');
   await waitForApiReady();
 
-  const token = await login(ADMIN_LOGIN, ADMIN_PASSWORD);
-  console.log(`  Admin login OK: ${ADMIN_LOGIN}`);
+  let token: string;
+  try {
+    token = await login(ADMIN_LOGIN, ADMIN_PASSWORD);
+    console.log(`  Admin login OK: ${ADMIN_LOGIN}`);
+  } catch (adminErr) {
+    console.warn(
+      `  Admin login failed (${adminErr instanceof Error ? adminErr.message : adminErr}); using service account`
+    );
+    token = await login(SERVICE_LOGIN, SERVICE_PASSWORD);
+    console.log(`  Service login OK: ${SERVICE_LOGIN}`);
+  }
 
   const rbacGroups = await ensureCrmGroups(token);
   const allGroups = await api<GroupInfo[]>(token, 'GET', '/api/groups');

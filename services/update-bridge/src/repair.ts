@@ -69,6 +69,7 @@ export const REPAIR_ACTIONS = [
   'modules_bridge_repair',
   'pyorch_runtime_repair',
   'wash_modules_recover',
+  'reconcile_orphan_modules',
   'init_seed',
 ] as const;
 
@@ -324,6 +325,13 @@ async function applyAction(action: RepairActionId, onLog: (line: string) => void
     case 'wash_modules_recover':
       await runShell(
         withComposeEnv(`bash ${DEPLOY_ROOT}/scripts/crm-update-recover-wash-modules.sh`),
+        onLog
+      );
+      return;
+
+    case 'reconcile_orphan_modules':
+      await runShell(
+        withComposeEnv(`bash ${DEPLOY_ROOT}/scripts/crm-update-reconcile-orphan-modules.sh`),
         onLog
       );
       return;

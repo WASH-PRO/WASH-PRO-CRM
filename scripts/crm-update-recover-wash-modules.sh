@@ -19,6 +19,9 @@ bash "$ROOT/scripts/fix-pyorch.sh"
 echo "[crm-update-recover-wash-modules] Ensuring modules-bridge…"
 bash "$ROOT/scripts/crm-update-ensure-modules-bridge.sh"
 
+echo "[crm-update-recover-wash-modules] Reconciling orphan module directories…"
+bash "$ROOT/scripts/crm-update-reconcile-orphan-modules.sh" || true
+
 LOGIN="${SERVICE_LOGIN:-service}"
 PASSWORD="${SERVICE_PASSWORD:-ServiceInternal123!}"
 AUTH_URL="${CRM_AUTH_URL:-http://dynamic-api:3001/api/auth/login}"

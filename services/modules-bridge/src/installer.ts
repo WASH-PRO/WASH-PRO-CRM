@@ -113,7 +113,13 @@ function checkDependencies(manifest: WashModuleManifest): void {
 
 export async function installModule(moduleId: string): Promise<InstalledModuleState> {
   if (isModuleInstalled(moduleId)) {
-    throw new Error('Модуль уже установлен');
+    const state = getInstalledState(moduleId);
+    if (state) {
+      throw new Error('Модуль уже установлен');
+    }
+    // Interrupted install: files on disk but missing _state.json entry.
+    logger.warn({ moduleId }, 'Removing orphaned module directory before install');
+    rmSync(moduleDir(moduleId), { recursive: true, force: true });
   }
 
   const registry = await loadRegistry();

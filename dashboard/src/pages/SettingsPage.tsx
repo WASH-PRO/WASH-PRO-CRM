@@ -267,11 +267,11 @@ export function SettingsPage() {
         subtitle={t('settings.subtitle')}
         actions={
           <>
-            <button type="button" className="btn-secondary" onClick={load}>
+            <button type="button" className="btn-secondary btn-sm" onClick={load}>
               <RefreshCw className="h-4 w-4" /> {t('common.refresh')}
             </button>
             {canEdit && (
-              <button type="button" className="btn-primary" onClick={save} disabled={saving}>
+              <button type="button" className="btn-primary btn-sm" onClick={save} disabled={saving}>
                 <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.save')}
               </button>
             )}

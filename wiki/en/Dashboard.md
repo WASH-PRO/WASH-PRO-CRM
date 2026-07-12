@@ -153,6 +153,10 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 - **Integrity** — false “/deploy not a git repo” fixed (`git safe.directory`)
 - **Update card** — stale failed job hidden after successful update
 
+## Recent changes (v1.1.47)
+
+- **Mobile responsiveness** — drawer labels, scroll lock, safe-area; collapsible help nav; adaptive grids
+
 ## Recent changes (v1.1.46)
 
 - **Settings → MQTT (CRM)** — full-width section; 3-column field grid

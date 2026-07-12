@@ -31,12 +31,12 @@ export function FullscreenModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-panel-canvas dark:bg-panel-canvas-dark"
+      className="fixed inset-0 z-[100] flex h-[100dvh] min-h-[100dvh] flex-col bg-panel-canvas dark:bg-panel-canvas-dark"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <header className="flex shrink-0 items-center justify-between border-b border-panel-border bg-panel-surface px-4 py-3 dark:border-panel-border-dark dark:bg-panel-bg-dark sm:px-6">
+      <header className="flex shrink-0 items-center justify-between border-b border-panel-border bg-panel-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] dark:border-panel-border-dark dark:bg-panel-bg-dark sm:px-6">
         <h1 className="text-lg font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark sm:text-xl">
           {title}
         </h1>

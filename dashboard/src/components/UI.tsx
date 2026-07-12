@@ -45,7 +45,9 @@ export function PageHeader({
         </div>
       </div>
       {actions && (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 md:pt-0.5">{actions}</div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:[&_.btn]:!px-3 max-sm:[&_.btn]:!py-1.5 max-sm:[&_.btn]:text-xs md:pt-0.5">
+          {actions}
+        </div>
       )}
     </header>
   );

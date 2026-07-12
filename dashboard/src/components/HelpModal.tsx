@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { ExternalLink, Search } from 'lucide-react';
+import { ExternalLink, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { FullscreenModal } from './FullscreenModal';
 import { HelpScreenMockup, HELP_MOCKUPS } from './HelpScreenMockup';
 import { HELP_SECTIONS, type HelpMockupId } from '../help/sections';
@@ -67,6 +67,11 @@ export function HelpModal({
   const { branding } = useBranding();
   const [query, setQuery] = useState('');
   const [activeId, setActiveId] = useState('dashboard');
+  const [mobileNavOpen, setMobileNavOpen] = useState(true);
+
+  useEffect(() => {
+    if (open) setMobileNavOpen(true);
+  }, [open]);
 
   const sections = useMemo(
     () => HELP_SECTIONS.filter((s) => !s.adminOnly || isAdmin),
@@ -115,7 +120,27 @@ export function HelpModal({
   return (
     <FullscreenModal open={open} onClose={onClose} title={t('help.title')} ariaLabelClose={t('help.close')}>
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
-        <aside className="flex shrink-0 flex-col border-b border-panel-border dark:border-panel-border-dark lg:w-72 lg:border-b-0 lg:border-r">
+        <aside className="flex shrink-0 flex-col border-b border-panel-border dark:border-panel-border-dark lg:w-72 lg:max-h-full lg:border-b-0 lg:border-r">
+          <div className="flex items-center justify-between gap-2 border-b border-panel-border px-3 py-2.5 dark:border-panel-border-dark lg:hidden">
+            <span className="min-w-0 truncate text-sm font-medium text-panel-ink dark:text-panel-ink-dark">
+              {t(`help.sections.${sectionId}.title`)}
+            </span>
+            <button
+              type="button"
+              className="btn-icon !h-8 !w-8 shrink-0"
+              onClick={() => setMobileNavOpen((v) => !v)}
+              aria-expanded={mobileNavOpen}
+              aria-label={mobileNavOpen ? t('layout.collapseMenu') : t('layout.expandMenu')}
+            >
+              {mobileNavOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
+          <div
+            className={clsx(
+              'flex min-h-0 flex-col overflow-hidden',
+              mobileNavOpen ? 'max-h-[min(45vh,360px)] lg:max-h-none' : 'hidden lg:flex lg:max-h-none'
+            )}
+          >
           <div className="p-3">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-panel-muted" />
@@ -124,11 +149,11 @@ export function HelpModal({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('help.searchPlaceholder')}
-                className="field-input w-full pl-9 text-sm"
+                className="input-search"
               />
             </div>
           </div>
-          <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-3 lg:max-h-none">
+          <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
             {grouped.map(([groupTitle, items]) => (
               <div key={groupTitle} className="mb-3">
                 <div className="nav-group-title px-2">{groupTitle}</div>
@@ -137,7 +162,12 @@ export function HelpModal({
                     <li key={item.id}>
                       <button
                         type="button"
-                        onClick={() => setActiveId(item.id)}
+                        onClick={() => {
+                          setActiveId(item.id);
+                          if (window.matchMedia('(max-width: 1023px)').matches) {
+                            setMobileNavOpen(false);
+                          }
+                        }}
                         className={clsx(
                           'w-full rounded-lg px-3 py-2 text-left text-sm transition-colors',
                           item.id === sectionId
@@ -173,6 +203,7 @@ export function HelpModal({
             >
               <ExternalLink size={14} /> {t('help.docsModulesLink')}
             </a>
+          </div>
           </div>
         </aside>
 

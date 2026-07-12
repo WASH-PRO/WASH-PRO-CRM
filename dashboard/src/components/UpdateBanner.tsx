@@ -36,7 +36,7 @@ export function UpdateBanner() {
       job.steps.find((s) => s.status === 'pending');
     return (
       <div className="border-b border-brand-500/20 bg-brand-500/5 px-3 py-3 dark:border-brand-400/20 dark:bg-brand-400/10 sm:px-4 lg:px-6">
-        <div className="mx-auto flex max-w-[1600px] items-start gap-3">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-3 sm:flex-row sm:items-start">
           <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-brand-600 dark:text-brand-400" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium text-brand-900 dark:text-brand-100">
@@ -94,7 +94,7 @@ export function UpdateBanner() {
 
   return (
     <div className="border-b border-amber-200 bg-amber-50 px-3 py-3 dark:border-amber-800/60 dark:bg-amber-950/30 sm:px-4 lg:px-6">
-      <div className="mx-auto flex max-w-[1600px] items-start gap-3">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-3 sm:flex-row sm:items-start">
         <ArrowUpCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium text-amber-950 dark:text-amber-100">
@@ -105,7 +105,7 @@ export function UpdateBanner() {
             {t('updateBanner.installed', { version: primary.currentVersion })}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
           {status.executorAvailable && (
             <button type="button" className="btn-primary btn-sm" disabled={applying} onClick={() => void onApply()}>
               {applying ? t('updates.starting') : t('updates.update')}

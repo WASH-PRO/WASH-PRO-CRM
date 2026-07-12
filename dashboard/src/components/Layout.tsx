@@ -10,7 +10,7 @@ import {
   PanelLeftOpen,
   Wand2,
 } from 'lucide-react';
-import { Suspense, useMemo, useState, type CSSProperties } from 'react';
+import { Suspense, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 import { useSidebarSize } from '../hooks/useSidebarSize';
@@ -44,6 +44,25 @@ function LayoutInner() {
   const sidebarUserKey = user?.id || user?.login;
   const { collapsed, setCollapsed, effectiveWidth, resizing, startResize, canResize } =
     useSidebarSize(sidebarUserKey);
+  const navExpanded = !collapsed || mobileOpen;
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [mobileOpen]);
 
   const canReopenSetup = canManageSystemSetup(user?.permissions);
   const setupHref = canReopenSetup ? '/setup?restart=1' : '/setup';
@@ -71,13 +90,13 @@ function LayoutInner() {
 
   return (
       <div
-        className="flex h-screen overflow-hidden bg-panel-canvas dark:bg-panel-canvas-dark"
+        className="flex h-[100dvh] min-h-[100dvh] overflow-hidden bg-panel-canvas dark:bg-panel-canvas-dark"
         style={{ '--sidebar-width': `${effectiveWidth}px` } as CSSProperties}
       >
         <aside
         style={{ '--drawer-width': `${effectiveWidth}px` } as CSSProperties}
         className={clsx(
-          'app-sidebar flex w-[min(calc(100vw-1rem),var(--drawer-width))] flex-col lg:w-[var(--drawer-width)]',
+          'app-sidebar flex w-[min(calc(100vw-1rem),20rem)] flex-col lg:w-[var(--drawer-width)]',
           !resizing && 'transition-[width,transform] duration-300 ease-out',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -85,11 +104,11 @@ function LayoutInner() {
         <div
           className={clsx(
             'flex h-16 shrink-0 items-center border-b border-panel-border dark:border-panel-sidebar-border',
-            collapsed ? 'justify-center px-2' : 'gap-3 px-4'
+            navExpanded ? 'gap-3 px-4' : 'justify-center px-2'
           )}
         >
-          <BrandLogo size="md" className={collapsed ? '' : undefined} imageUrl={branding.logoUrl || undefined} />
-          {!collapsed && (
+          <BrandLogo size="md" className={navExpanded ? '' : undefined} imageUrl={branding.logoUrl || undefined} />
+          {navExpanded && (
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-panel-ink dark:text-white">{branding.productName}</div>
               <div className="truncate text-[11px] text-panel-muted dark:text-slate-500">{branding.tagline}</div>
@@ -100,7 +119,7 @@ function LayoutInner() {
         <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-4">
           {filteredGroups.map((group) => (
             <div key={group.title} className="mb-5 last:mb-0">
-              {!collapsed && (
+              {navExpanded && (
                 <div className="nav-group-title">{group.title}</div>
               )}
               <div className="space-y-0.5">
@@ -109,14 +128,14 @@ function LayoutInner() {
                     key={to}
                     to={to}
                     end={to === '/'}
-                    title={collapsed ? label : undefined}
+                    title={navExpanded ? undefined : label}
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
-                      clsx('nav-item', isActive && 'nav-item-active', collapsed && 'justify-center px-2')
+                      clsx('nav-item', isActive && 'nav-item-active', !navExpanded && 'justify-center px-2')
                     }
                   >
                     <Icon size={18} strokeWidth={1.75} className="shrink-0" />
-                    {!collapsed && <span className="truncate">{shortLabel ?? label}</span>}
+                    {navExpanded && <span className="truncate">{shortLabel ?? label}</span>}
                   </NavLink>
                 ))}
               </div>
@@ -128,11 +147,11 @@ function LayoutInner() {
           <Link
             to={setupHref}
             onClick={() => setMobileOpen(false)}
-            className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
-            title={collapsed ? t('layout.setupWizard') : undefined}
+            className={clsx('nav-item w-full', !navExpanded && 'justify-center px-2')}
+            title={navExpanded ? undefined : t('layout.setupWizard')}
           >
             <Wand2 size={18} strokeWidth={1.75} className="shrink-0" />
-            {!collapsed && <span className="truncate">{t('layout.setupWizard')}</span>}
+            {navExpanded && <span className="truncate">{t('layout.setupWizard')}</span>}
           </Link>
 
           <button
@@ -141,14 +160,14 @@ function LayoutInner() {
               setHelpOpen(true);
               setMobileOpen(false);
             }}
-            className={clsx('nav-item w-full', collapsed && 'justify-center px-2')}
-            title={collapsed ? t('layout.help') : undefined}
+            className={clsx('nav-item w-full', !navExpanded && 'justify-center px-2')}
+            title={navExpanded ? undefined : t('layout.help')}
           >
             <BookOpen size={18} strokeWidth={1.75} className="shrink-0" />
-            {!collapsed && <span className="truncate">{t('layout.help')}</span>}
+            {navExpanded && <span className="truncate">{t('layout.help')}</span>}
           </button>
 
-          <EmbeddedServicesSidebar collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
+          <EmbeddedServicesSidebar collapsed={!navExpanded} onNavigate={() => setMobileOpen(false)} />
 
           <button
             type="button"

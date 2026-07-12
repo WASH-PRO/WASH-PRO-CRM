@@ -236,7 +236,7 @@ export function SystemPage() {
             <span className="ml-auto text-sm font-medium tabular-nums">{info.memoryUsagePercent}%</span>
           </div>
           <ProgressBar percent={info.memoryUsagePercent} color="#3b82f6" />
-          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div className="mt-4 grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 min-[380px]:gap-4 min-[380px]:text-center">
             <div>
               <p className="text-xs text-panel-muted dark:text-panel-muted-dark">{t('pages.system.labels.total')}</p>
               <p className="text-sm font-medium tabular-nums">{formatBytes(info.totalMemory)}</p>
@@ -265,7 +265,7 @@ export function SystemPage() {
             <span className="ml-auto text-sm font-medium tabular-nums">{info.disk.usagePercent}%</span>
           </div>
           <ProgressBar percent={info.disk.usagePercent} color="#8b5cf6" />
-          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div className="mt-4 grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 min-[380px]:gap-4 min-[380px]:text-center">
             <div>
               <p className="text-xs text-panel-muted dark:text-panel-muted-dark">{t('pages.system.labels.total')}</p>
               <p className="text-sm font-medium tabular-nums">{formatBytes(info.disk.total)}</p>

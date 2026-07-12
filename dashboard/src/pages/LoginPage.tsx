@@ -67,7 +67,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
+    <div className="grid min-h-[100dvh] lg:grid-cols-2">
       {/* Левая половина — брендинг (макет как PyOrchestrator, свой фон) */}
       <div className="relative hidden min-h-[280px] overflow-hidden lg:flex lg:min-h-screen lg:flex-col lg:justify-between">
         <div className="login-bg-animated absolute inset-0" aria-hidden>
@@ -108,8 +108,8 @@ export function LoginPage() {
       </div>
 
       {/* Правая половина — форма входа */}
-      <div className="relative flex min-h-screen flex-col justify-center bg-panel-canvas px-6 py-12 dark:bg-panel-canvas-dark sm:px-12 lg:px-16 xl:px-24">
-        <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+      <div className="relative flex min-h-[100dvh] flex-col justify-center bg-panel-canvas px-6 py-12 dark:bg-panel-canvas-dark sm:px-12 lg:min-h-screen lg:px-16 xl:px-24">
+        <div className="absolute right-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))]">
           <ThemeToggle />
         </div>
 

@@ -49,11 +49,11 @@
   }
 
   .page-main {
-    @apply min-h-0 flex-1 overflow-auto;
+    @apply min-h-0 flex-1 overflow-auto overscroll-y-contain;
   }
 
   .page-body {
-    @apply page-shell p-3 sm:p-5 lg:p-8;
+    @apply page-shell p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-5 lg:p-8;
   }
 
   .breadcrumb-nav {
@@ -133,6 +133,10 @@
 
   .input-search {
     @apply input !h-9 w-full !py-2 !pl-10 !pr-3 text-sm;
+  }
+
+  .field-input {
+    @apply input;
   }
 
   .input-inline {
@@ -260,11 +264,11 @@
 
   /* —— App chrome —— */
   .app-header {
-    @apply sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-panel-border bg-panel-card/90 px-3 backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 sm:h-16 sm:gap-4 sm:px-4 lg:px-6;
+    @apply sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-panel-border bg-panel-card/90 px-3 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-panel-border-dark dark:bg-panel-card-dark/90 sm:h-16 sm:gap-4 sm:px-4 lg:px-6;
   }
 
   .app-sidebar {
-    @apply fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-panel-border bg-panel-card text-panel-ink dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300;
+    @apply fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-panel-border bg-panel-card pl-[env(safe-area-inset-left,0px)] text-panel-ink dark:border-panel-sidebar-border dark:bg-panel-sidebar dark:text-slate-300;
   }
 
   /* —— Login —— */

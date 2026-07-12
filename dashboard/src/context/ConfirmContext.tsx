@@ -52,7 +52,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {open && options && (
         <div className="fixed inset-0 z-[110] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
           <div
-            className="w-full max-w-md rounded-t-panel border border-panel-border bg-panel-card p-5 shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark sm:rounded-panel"
+            className="w-full max-w-md rounded-t-panel border border-panel-border bg-panel-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-panel-lg dark:border-panel-border-dark dark:bg-panel-card-dark sm:rounded-panel sm:pb-5"
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="confirm-title"

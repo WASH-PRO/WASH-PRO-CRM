@@ -358,3 +358,41 @@ export function readModuleDataFile(moduleId: string, filename: string): unknown 
     return readFileSync(path, 'utf8');
   }
 }
+
+/** Snapshot for UI; synthesizes from settings/state when last_snapshot.json is missing. */
+export function readModuleSnapshot(moduleId: string): unknown {
+  const raw = readModuleDataFile(moduleId, 'last_snapshot.json');
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw;
+  }
+
+  if (moduleId !== 'dynamic-pricing') {
+    return null;
+  }
+
+  const settings = readModuleSettings(moduleId) as Record<string, unknown>;
+  const stateRaw = readModuleDataFile(moduleId, 'surge_state.json');
+  const state =
+    stateRaw && typeof stateRaw === 'object' && !Array.isArray(stateRaw)
+      ? (stateRaw as Record<string, unknown>)
+      : {};
+  const washId = String(settings.wash_id ?? '').trim();
+  const configError = washId
+    ? undefined
+    : 'wash_id is not configured — select a car wash in module settings';
+
+  return {
+    recordedAt: null,
+    washId,
+    totalPosts: 0,
+    busyPosts: 0,
+    busyThreshold: Number(settings.busy_threshold) || 1,
+    surgeActive: Boolean(state.surgeActive),
+    surgeCoefficient: 1.0,
+    priceIncreasePercent: Number(settings.price_increase_percent) || 10,
+    postsUpdatedLastCycle: 0,
+    lastEvent: washId ? 'awaiting_run' : 'config_missing',
+    recentEvents: Array.isArray(state.recentEvents) ? state.recentEvents : [],
+    ...(configError ? { configError } : {}),
+  };
+}

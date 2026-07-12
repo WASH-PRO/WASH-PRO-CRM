@@ -6,6 +6,7 @@ import {
   installModule,
   readModuleDataFile,
   readModuleSettings,
+  readModuleSnapshot,
   recoverRunningModules,
   reregisterModule,
   saveModuleSettings,
@@ -228,7 +229,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         data: {
           state,
           settings: readModuleSettings(moduleId),
-          snapshot: readModuleDataFile(moduleId, 'last_snapshot.json'),
+          snapshot: readModuleSnapshot(moduleId),
           activeRunStatus,
           manifest: readLocalManifest(moduleId),
         },

@@ -33,5 +33,6 @@ publish_repo wash-module-post-occupancy
 publish_repo wash-module-usage-stats
 publish_repo wash-module-starter
 publish_repo wash-module-vk-publisher
+publish_repo wash-module-dynamic-pricing
 
 echo "Done."

@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Исправлено
+
+- **Версия CRM после failed update** — `APP_VERSION` в `.env` только после **успешного** job; при сборке версия передаётся через env без записи в `.env`; при ошибке — откат git на `v{fromVersion}`, `.env` и пересборка dashboard при необходимости
+- **Определение текущей версии** — приоритет: `version.json` работающего dashboard → `APP_VERSION` в `.env` → `package.json` (последний после failed pull)
+
 ## [1.1.41] — 2026-07-12
 
 ### Изменено

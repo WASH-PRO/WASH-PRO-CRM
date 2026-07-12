@@ -124,7 +124,7 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 
 ## Recent changes (v1.1.26)
 
-- **CRM version** — `APP_VERSION` before build; `version.json` synced on container start
+- **CRM version** — `APP_VERSION` in `.env` only after **successful** update; build uses target version via env without persisting; revert on failure
 
 ## Recent changes (v1.1.25)
 

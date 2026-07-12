@@ -18,7 +18,7 @@ import {
   setLastCheck,
   updateJob,
 } from './state.js';
-import { createSteps, crmAppVersionSyncCommand, getStepCommand, isExecutorAvailable, runShell, usesCompose } from './executor.js';
+import { createSteps, crmAppVersionSyncCommand, crmGitCheckoutVersionCommand, getStepCommand, isExecutorAvailable, runShell, usesCompose } from './executor.js';
 import { composeCommandEnv } from './host-path.js';
 import type { ComponentCheck, UpdateComponentId, UpdateJob, UpdatesStatus } from './types.js';
 
@@ -222,16 +222,17 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
       const cmd = getStepCommand(job.component, step.id, targetTag);
       appendLog(`$ ${cmd}`);
       try {
-        // CRM build reads APP_VERSION from .env for VITE_APP_VERSION / version.json — set before compose build.
-        if (job.component === 'crm' && step.id === 'build') {
-          const versionCmd = crmAppVersionSyncCommand(job.targetVersion);
-          appendLog(`$ ${versionCmd}`);
-          await runShell(versionCmd, appendLog);
-        }
-        const env = usesCompose(step.id) ? composeCommandEnv() : undefined;
+        const composeEnv = usesCompose(step.id) ? composeCommandEnv() : undefined;
+        const env =
+          composeEnv && job.component === 'crm' && step.id === 'build'
+            ? { ...composeEnv, APP_VERSION: job.targetVersion, VITE_APP_VERSION: job.targetVersion }
+            : composeEnv;
         if (env) {
           appendLog(`DATA_DIR=${env.DATA_DIR}`);
           appendLog(`WASH_HOST_PROJECT_ROOT=${env.WASH_HOST_PROJECT_ROOT}`);
+          if ('APP_VERSION' in env && env.APP_VERSION) {
+            appendLog(`APP_VERSION=${env.APP_VERSION} (build only, .env unchanged until success)`);
+          }
         }
         await runShell(cmd, appendLog, env);
         step.status = 'completed';
@@ -249,6 +250,11 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
 
     job.status = 'completed';
     job.finishedAt = new Date().toISOString();
+    if (job.component === 'crm') {
+      const versionCmd = crmAppVersionSyncCommand(job.targetVersion);
+      appendLog(`$ ${versionCmd}`);
+      await runShell(versionCmd, appendLog);
+    }
     await checkAllComponents();
     void notifyCrm(
       'software_update_success',
@@ -266,12 +272,39 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
       'error'
     );
     if (job.component === 'crm' && job.fromVersion !== job.targetVersion) {
+      const pullDone = job.steps.find((s) => s.id === 'pull')?.status === 'completed';
+      const buildDone = job.steps.find((s) => s.id === 'build')?.status === 'completed';
+      if (pullDone) {
+        try {
+          const checkoutCmd = crmGitCheckoutVersionCommand(job.fromVersion);
+          appendLog(`$ ${checkoutCmd}`);
+          await runShell(checkoutCmd, appendLog);
+        } catch (revertErr) {
+          const msg = revertErr instanceof Error ? revertErr.message : 'Git checkout failed';
+          appendLog(`WARN: ${msg}`);
+        }
+      }
       try {
         appendLog(`$ ${crmAppVersionSyncCommand(job.fromVersion)}`);
         await runShell(crmAppVersionSyncCommand(job.fromVersion), appendLog);
       } catch (revertErr) {
         const msg = revertErr instanceof Error ? revertErr.message : 'Revert APP_VERSION failed';
         appendLog(`WARN: ${msg}`);
+      }
+      if (buildDone) {
+        try {
+          const rebuildCmd = getStepCommand('crm', 'build', `v${job.fromVersion}`);
+          appendLog(`$ ${rebuildCmd}`);
+          appendLog(`Rebuilding dashboard with v${job.fromVersion} after failed update`);
+          await runShell(rebuildCmd, appendLog, {
+            ...composeCommandEnv(),
+            APP_VERSION: job.fromVersion,
+            VITE_APP_VERSION: job.fromVersion,
+          });
+        } catch (revertErr) {
+          const msg = revertErr instanceof Error ? revertErr.message : 'Dashboard rebuild failed';
+          appendLog(`WARN: ${msg}`);
+        }
       }
     }
   }

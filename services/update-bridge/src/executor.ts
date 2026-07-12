@@ -50,6 +50,12 @@ export function crmAppVersionSyncCommand(version: string): string {
   return envVersionSyncCommand(`${DEPLOY_ROOT}/.env`, 'APP_VERSION', version);
 }
 
+/** Restore tracked CRM tree to a release tag after a failed update (pull succeeded, build/seed/health failed). */
+export function crmGitCheckoutVersionCommand(version: string): string {
+  const tag = shellQuote(`v${version}`);
+  return `cd ${DEPLOY_ROOT} && git config --global --add safe.directory ${DEPLOY_ROOT} && git fetch origin --tags && git checkout -f ${tag}`;
+}
+
 function composeSetup(): string {
   return `set -a && [ -f ${DEPLOY_ROOT}/.env ] && . ${DEPLOY_ROOT}/.env; set +a && . ${DEPLOY_ROOT}/scripts/compose-files.sh`;
 }

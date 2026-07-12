@@ -45,8 +45,8 @@ export const COMPONENTS: ComponentDef[] = [
     githubRepo: process.env.CRM_GITHUB_REPO || 'WASH-PRO/WASH-PRO-CRM',
     readCurrentVersion: () =>
       readRunningDashboardVersion() ||
-      readJsonVersion(join(DEPLOY_ROOT, 'dashboard/package.json')) ||
       readDeployEnvVersion('APP_VERSION') ||
+      readJsonVersion(join(DEPLOY_ROOT, 'dashboard/package.json')) ||
       '0.0.0',
   },
   {

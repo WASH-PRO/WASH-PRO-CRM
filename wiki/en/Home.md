@@ -135,7 +135,7 @@ Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHA
 
 ## Changelog v1.1.26
 
-- **Version after update** — `APP_VERSION` before Build step; `version.json` synced from env on dashboard start
+- **Version after update** — `APP_VERSION` in `.env` only after **successful** job; failed updates revert git, `.env`, and dashboard build
 
 Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 

@@ -135,7 +135,7 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 
 ## Changelog v1.1.26
 
-- **Версия после обновления** — `APP_VERSION` до шага «Сборка»; `version.json` при старте dashboard из env
+- **Версия после обновления** — `APP_VERSION` в `.env` только после **успешного** job; при ошибке — откат git, `.env` и dashboard
 
 Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)
 

@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.41** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.42** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -27,7 +27,7 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - **Dashboard localization** — English / Russian; default English; switcher in header and Settings (v1.1.13+)
 - **Localized notifications** — list messages by event type follow UI language, including legacy DB records (v1.1.14)
 - **MCP server** in Dashboard — Dynamic API + PyOrchestrator for AI agents (v1.1.12)
-- **Modules** — GitHub extension catalog, install/start/stop, settings UI iframe *(Automation)* (v1.1.30); Safari fix & browser repair *(v1.1.33)*
+- **Modules** — GitHub extension catalog, install/start/stop, settings UI iframe *(Automation)* (v1.1.30); **VK Publisher — text only to VK** *(v1.1.42)*; Safari fix & browser repair *(v1.1.33)*
 - **Update & module notifications** — CRM stack updates and module lifecycle in web + Telegram (v1.1.34)
 - **Modules page sections** — Installed and Available blocks *(Automation → Modules)* (v1.1.38)
 - **Admin password visibility** — show password toggle on settings, users, profile (v1.1.33)
@@ -67,6 +67,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.42
+
+- **VK Publisher (v1.2.0)** — text-only posts to VK; images and `imageUrl` stay in CRM/Telegram
+- **modules-bridge** — PyOrch secret bootstrap for wash modules; reregister endpoint
+
+Release notes: [v1.1.42](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.42)
 
 ## Changelog v1.1.41
 
@@ -109,7 +116,7 @@ Release notes: [v1.1.37](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v
 
 ## Changelog v1.1.30
 
-- **Modules** — `modules-bridge`, catalog page with search/filters/pagination, VK Publisher module
+- **Modules** — `modules-bridge`, catalog page with search/filters/pagination, VK Publisher module (text-only to VK since v1.1.42)
 - **Module UI** — iframe auto-resize, theme sync, shared UI kit, icon-only card actions
 
 Full list: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)

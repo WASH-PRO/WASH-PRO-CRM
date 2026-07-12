@@ -264,7 +264,7 @@ API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 | **Группы и права** | `/groups` | RBAC-группы и матрица permissions *(Admin)* |
 | **Настройки** | `/settings` | MQTT, Telegram notify, **целостность и исправление**, обновление CRM, валюта по умолчанию, **язык интерфейса** |
 | Логи | `/logs` | Аудит Dynamic API *(Admin)* |
-| **Публикации** | `/info-messages` | Новости и акции для информационного бота; статус «По расписанию» → **«Опубликовано»** после наступления времени *(Admin)* |
+| **Публикации** | `/info-messages` | Новости и акции для информационного бота (картинки — в Telegram); опционально **VK публикатор** — **только текст** во VK *(v1.1.42)* *(Admin)* |
 | Telegram | `/telegram` | Боты PyOrchestrator: **Управление** / **Сервисный** / **Информационный**; QR-ссылка; массовые действия; шаблоны v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP сервер** | `/mcp` | HTTP MCP Dynamic API и PyOrchestrator; таблица tools; конфиг Cursor *(Admin)* |
 | **Модули** | `/modules` | Каталог расширений GitHub; install/start/stop; UI настроек в iframe; `modules-bridge` *(Admin)* |

@@ -56,7 +56,21 @@ Running modules requires PyOrchestrator: `PYORCHESTRATOR_ENABLED=true ./scripts/
 | Post Occupancy Monitor | `GET /api/crm/post-states` | [wash-module-post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy) |
 | Usage Stats Collector | `GET /api/crm/usage-stats` | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
 | Starter (template) | heartbeat | [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter) |
-| VK Publisher | CRM Publications → VK wall | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+| VK Publisher | CRM Publications → **text** on VK wall (no images) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+
+## VK Publisher *(v1.1.42, module v1.2.0)*
+
+The **VK Publisher** module syncs **Publications** with a VK community feed:
+
+| Content | CRM / Telegram | VK |
+|---------|----------------|-----|
+| Title and body | ✅ | ✅ (HTML stripped) |
+| `imageUrl`, HTML markup | ✅ | ❌ not sent |
+| Access token | — | **Community** key (`wall`, `groups`) — **photos not required** |
+
+After upgrading CRM: **Automation → Modules → VK Publisher → Update → Restart**.
+
+Demo publications: `node scripts/reset-info-messages-vk-demo.mjs`
 
 ## Modules page *(v1.1.30)*
 

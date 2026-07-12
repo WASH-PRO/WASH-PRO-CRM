@@ -26,7 +26,14 @@ Full documentation: [GitHub Pages — Modules](https://wash-pro.github.io/WASH-P
 |--------|--------|
 | Post occupancy | [wash-module-post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy) |
 | Usage stats | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
-| VK Publisher | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+| VK Publisher | Text from **Publications** → VK wall (no images) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+
+## VK Publisher *(v1.1.42)*
+
+- VK posts are **text only** (title + body, HTML stripped)
+- `imageUrl` is for CRM and the information Telegram bot — **not sent to VK**
+- **Community** access key (`wall`, `groups`); `photos` scope not required
+- Module help: **Help** tab on the module settings page
 
 ## Custom module
 

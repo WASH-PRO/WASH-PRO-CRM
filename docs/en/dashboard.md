@@ -264,7 +264,7 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 | **Groups & permissions** | `/groups` | RBAC groups and permission matrix *(Admin)* |
 | **Settings** | `/settings` | MQTT, Telegram notify, **integrity repair**, CRM update, default currency, **interface language** |
 | Logs | `/logs` | Dynamic API audit *(Admin)* |
-| **Publications** | `/info-messages` | News and promotions for information bot; "Scheduled" status → **"Published"** after scheduled time *(Admin)* |
+| **Publications** | `/info-messages` | News for information bot (images in Telegram); optional **VK Publisher** — **text only** to VK *(v1.1.42)* *(Admin)* |
 | Telegram | `/telegram` | PyOrchestrator bots: **Management** / **Service** / **Information**; QR link; bulk actions; templates v3.2 / **v2.2**; `stop-all` *(Admin, PyOrch)* |
 | **MCP server** | `/mcp` | Dynamic API and PyOrchestrator HTTP MCP; tools table; Cursor config *(Admin)* |
 | **Modules** | `/modules` | GitHub extension catalog; install/start/stop; settings UI iframe; `modules-bridge` *(Admin)* |

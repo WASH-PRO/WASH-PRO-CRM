@@ -6,10 +6,21 @@
 
 ## [Unreleased]
 
-### Исправлено
+## [1.1.42] — 2026-07-12
 
-- **Версия CRM после failed update** — `APP_VERSION` в `.env` только после **успешного** job; при сборке версия передаётся через env без записи в `.env`; при ошибке — откат git на `v{fromVersion}`, `.env` и пересборка dashboard при необходимости
-- **Определение текущей версии** — приоритет: `version.json` работающего dashboard → `APP_VERSION` в `.env` → `package.json` (последний после failed pull)
+### Изменено
+
+- **VK публикатор (каталог v1.2.0)** — во VK публикуется **только текст**; `imageUrl` и картинки игнорируются (остаются для CRM и Telegram-бота); обновлены UI, справка и описание модуля
+- **modules-bridge** — bootstrap `SECRET_*` → env для wash-модулей; исправление сборки TS; endpoint `POST /installed/:id/reregister`
+
+### Добавлено
+
+- **`scripts/reset-info-messages-vk-demo.mjs`** — сброс публикаций и 10 демо-записей (HTML, эмодзи, картинки)
+- **`scripts/fix-info-message-images.mjs`** — замена недоступных URL изображений в публикациях
+
+### Документация
+
+- **docs / wiki / dashboard help** — VK публикатор text-only; версия v1.1.42
 
 ## [1.1.41] — 2026-07-12
 

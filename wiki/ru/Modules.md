@@ -26,7 +26,14 @@
 |--------|--------|
 | Монитор занятости | [wash-module-post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy) |
 | Загруженность | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
-| VK публикатор | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+| VK публикатор | Текст из **Публикаций** → стена VK (без картинок) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+
+## VK публикатор *(v1.1.42)*
+
+- Во VK — **только текст** (заголовок + текст, HTML очищается)
+- `imageUrl` — для CRM и Telegram-бота; во VK **не передаётся**
+- Ключ доступа **сообщества** (`wall`, `groups`); право `photos` не нужно
+- Справка модуля: iframe **Справка** на странице настроек
 
 ## Свой модуль
 

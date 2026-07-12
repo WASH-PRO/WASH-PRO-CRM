@@ -98,7 +98,7 @@ export function wrapWashModulePythonCode(code: string): string {
   }
   const marker = 'from __future__ import annotations\n';
   if (code.includes(marker)) {
-    return code.replace(marker, `${marker}${WASH_MODULE_ENV_BOOTSTRAP}\n`, 1);
+    return code.replace(marker, `${marker}${WASH_MODULE_ENV_BOOTSTRAP}\n`);
   }
   return WASH_MODULE_ENV_BOOTSTRAP + code;
 }

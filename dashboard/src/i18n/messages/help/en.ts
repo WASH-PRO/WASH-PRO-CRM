@@ -229,7 +229,7 @@ export const helpEn = {
       title: 'Publications',
       summary: 'News and promotions for the information Telegram bot. **Automation → Publications** (`/info-messages`).',
       howItWorks:
-        'Published messages shown by bot v2.2; scheduled → “Published” after publishAt. Breadcrumbs: Automation → Publications.',
+        'Published messages shown by bot v2.2; scheduled → “Published” after publishAt. Optional **VK Publisher** sends **text only** to VK — images stay for Telegram. Breadcrumbs: Automation → Publications.',
       example: 'Create “-20% Sunday” promo — bot sends after publishAt.',
       regions: {
         toolbar: 'Create news',
@@ -263,7 +263,7 @@ export const helpEn = {
       title: 'Modules',
       summary: 'GitHub extensions: catalog, install, run via PyOrchestrator. **Automation → Modules** (`/modules`).',
       howItWorks:
-        'modules-bridge clones repo to `modules/installed/`, registers daemon in PyOrch. Settings UI and **help** — iframe from `ui/index.html` and `ui/help.html`. CRM help modal has a «Module help» group.',
+        'modules-bridge clones repo to `modules/installed/`, registers daemon in PyOrch. **VK Publisher** — text-only to VK (images for CRM/Telegram). Settings UI and **help** — iframe from `ui/index.html` and `ui/help.html`.',
       example: 'Install Post Occupancy Monitor — module polls post-states and shows snapshot on settings page.',
       regions: {
         installed: 'Installed cards',

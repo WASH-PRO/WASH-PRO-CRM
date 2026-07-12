@@ -124,17 +124,17 @@
         "id": "vk-publisher",
         "name": { "ru": "VK публикатор", "en": "VK Publisher" },
         "description": {
-          "ru": "Публикует записи из раздела «Публикации» CRM в сообщество ВКонтакте в запланированное время.",
-          "en": "Publishes CRM Publications to a VK community at the scheduled time."
+          "ru": "Публикует текст из раздела «Публикации» CRM в сообщество ВКонтакте. Картинки во VK не передаются.",
+          "en": "Publishes text from CRM Publications to a VK community. Images are not sent to VK."
         },
-        "version": "1.1.0",
+        "version": "1.2.0",
         "author": "WASH-PRO",
         "license": "MIT",
         "category": "publishing",
         "icon": "assets/icon.svg",
         "repository": "https://github.com/WASH-PRO/wash-module-vk-publisher",
         "dependencies": [],
-        "minCrmVersion": "1.1.30",
+        "minCrmVersion": "1.1.42",
         "entrypoint": "src/main.py",
         "helpPage": "ui/help.html",
         "scriptType": "daemon",
@@ -142,7 +142,10 @@
           {
             "key": "vk_access_token",
             "type": "string",
-            "label": { "ru": "Токен VK API", "en": "VK API access token" },
+            "label": {
+              "ru": "Токен VK API (ключ сообщества)",
+              "en": "VK API token (community key)"
+            },
             "default": ""
           },
           {

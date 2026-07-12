@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.41** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**WASH PRO version:** **v1.1.42** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -27,7 +27,7 @@
 - **Локализация Dashboard** — English / Русский; по умолчанию English; переключатель в шапке и Настройках (v1.1.13+)
 - **Локализованные уведомления** — сообщения в списке по типу события следуют языку интерфейса, в т.ч. старые записи (v1.1.14)
 - **MCP сервер** в Dashboard — Dynamic API + PyOrchestrator для AI-агентов (v1.1.12)
-- **Модули** — каталог расширений GitHub, install/start/stop, UI настроек в iframe *(Автоматизация)* (v1.1.30); исправление Safari и починка из браузера *(v1.1.33)*
+- **Модули** — каталог расширений GitHub, install/start/stop, UI настроек в iframe *(Автоматизация)* (v1.1.30); **VK публикатор — только текст во VK** *(v1.1.42)*
 - **Уведомления об обновлениях и модулях** — задачи обновления CRM и события модулей в web + Telegram (v1.1.34)
 - **Разделы на странице «Модули»** — блоки «Установленные» и «Доступные» *(Автоматизация → Модули)* (v1.1.38)
 - **Показ пароля для администраторов** — кнопка в настройках, пользователях, профиле (v1.1.33)
@@ -67,6 +67,13 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.42
+
+- **VK публикатор (v1.2.0)** — только текст во VK; картинки и `imageUrl` для Telegram/CRM
+- **modules-bridge** — bootstrap секретов PyOrch для wash-модулей; endpoint reregister
+
+Заметки релиза: [v1.1.42](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.42)
 
 ## Changelog v1.1.41
 
@@ -109,7 +116,7 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 
 ## Changelog v1.1.30
 
-- **Модули** — `modules-bridge`, страница каталога с поиском/фильтрами/пагинацией, модуль VK публикатор
+- **Модули** — `modules-bridge`, страница каталога с поиском/фильтрами/пагинацией, модуль VK публикатор (только текст во VK с v1.1.42)
 - **UI модулей** — iframe auto-resize, синхронизация темы, общий UI kit, icon-only кнопки на карточках
 
 Полный список: [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md)

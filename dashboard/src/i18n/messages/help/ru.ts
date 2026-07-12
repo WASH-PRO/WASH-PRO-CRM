@@ -231,7 +231,7 @@ export const helpRu = {
       title: 'Публикации',
       summary: 'Новости и акции для информационного Telegram-бота. Раздел **Автоматизация → Публикации** (`/info-messages`).',
       howItWorks:
-        'Опубликованные сообщения bot v2.2 показывает клиентам; расписание «по времени» → «Опубликовано». Крошки: Автоматизация → Публикации.',
+        'Published messages are shown by bot v2.2; scheduled → Published when time passes. **VK Publisher** module (optional) sends **text only** to VK — images stay for Telegram. Breadcrumbs: Automation → Publications.',
       example: 'Создаёте акцию «-20% в воскресенье» — бот рассылает после publishAt.',
       regions: {
         toolbar: 'Создать новость',
@@ -265,7 +265,7 @@ export const helpRu = {
       title: 'Модули',
       summary: 'Расширения из GitHub: каталог, установка, запуск через PyOrchestrator. **Автоматизация → Модули** (`/modules`).',
       howItWorks:
-        'modules-bridge клонирует репозиторий в `modules/installed/`, регистрирует daemon в PyOrch. UI настроек и **справка** — iframe из `ui/index.html` и `ui/help.html`. В общей справке CRM — группа «Справка модулей».',
+        'modules-bridge клонирует репозиторий в `modules/installed/`, регистрирует daemon в PyOrch. **VK публикатор** — во VK только текст (картинки для CRM/Telegram). UI настроек и **справка** — iframe из `ui/index.html` и `ui/help.html`.',
       example: 'Устанавливаете «Монитор занятости» — модуль опрашивает post-states и показывает снимок на странице настроек.',
       regions: {
         installed: 'Установленные карточки',

@@ -56,7 +56,21 @@ Dashboard  →  /api/crm/modules/*  →  modules-bridge  →  git clone / lifecy
 | Монитор занятости постов | `GET /api/crm/post-states` | [wash-module-post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy) |
 | Сборщик загруженности | `GET /api/crm/usage-stats` | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
 | Стартер (шаблон) | heartbeat | [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter) |
-| VK публикатор | Публикации CRM → стена VK | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+| VK публикатор | Публикации CRM → **текст** на стене VK (без картинок) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+
+## VK публикатор *(v1.1.42, модуль v1.2.0)*
+
+Модуль **VK публикатор** синхронизирует раздел **Публикации** с лентой сообщества ВКонтакте:
+
+| Что | CRM / Telegram | VK |
+|-----|----------------|-----|
+| Заголовок и текст | ✅ | ✅ (HTML очищается) |
+| `imageUrl`, HTML-разметка, эмодзи в разметке | ✅ | ❌ не передаётся |
+| Ключ доступа | — | Ключ **сообщества** (`wall`, `groups`) — **photos не нужен** |
+
+После обновления CRM: **Автоматизация → Модули → VK публикатор → Обновить → Перезапустить**.
+
+Демо-публикации: `node scripts/reset-info-messages-vk-demo.mjs`
 
 ## Страница «Модули» *(v1.1.30)*
 

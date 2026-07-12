@@ -65,7 +65,7 @@ All bots work **only in private messages**:
 | **Status** | "Published" — otherwise bot won't show the entry. "Scheduled" with past date displays as **Published** in table (v1.1.12) |
 | **Publication date** | Optional — set automatically on publish |
 | **Hide after** | Leave **empty** if news should not disappear. Do not set date ≤ publication date |
-| **Image URL** | Direct jpg/png/webp link up to 10 MB; bot downloads file and sends to Telegram |
+| **Image URL** | Direct jpg/png/webp link up to 10 MB; bot downloads file and sends to Telegram. **VK Publisher** module does **not** send images to VK — text only *(v1.1.42)* |
 
 ### Auto-broadcast
 

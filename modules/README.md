@@ -1,16 +1,31 @@
-# Модули WASH PRO CRM
+**Language:** **English** · [Русский](README.ru.md)
 
-Расширения системы: отдельные репозитории, устанавливаются в `modules/installed/`.
+# WASH PRO CRM Modules
 
-| Путь | Назначение |
-|------|------------|
-| `registry.json` | Каталог доступных модулей (обновляется из основного репозитория) |
-| `installed/` | Установленные модули (не коммитятся в git) |
+System extensions from separate GitHub repositories, installed into `modules/installed/`.
 
-Каждый модуль содержит `wash-module.json`, исходники, UI (`ui/`) и при установке получает каталог `data/`.
+| Path | Purpose |
+|------|---------|
+| `registry.json` | Available modules catalog (updated from the main CRM repo) |
+| `installed/` | Installed modules (not committed to git) |
 
-Документация: [GitHub Pages — Модули](https://wash-pro.github.io/WASH-PRO-CRM/ru/modules/).
+Each module includes `wash-module.json`, source code, UI (`ui/`), and gets a `data/` directory on install.
 
-Каталог: `registry.json`. Иконки модулей без GitHub-репозитория — в `modules/icons/{id}.svg`, отдаются через `/api/crm/modules/icon/{id}`.
+Documentation: [GitHub Pages — Modules](https://wash-pro.github.io/WASH-PRO-CRM/en/modules/).
 
-Репозитории: [post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy), [usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats), [starter](https://github.com/WASH-PRO/wash-module-starter), [vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) (v1.2.0 — **только текст** во VK; картинки для CRM/Telegram).
+Catalog: `registry.json`. Module icons without a GitHub repo live in `modules/icons/{id}.svg`, served via `/api/crm/modules/icon/{id}`.
+
+Repositories: [post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy), [usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats), [starter](https://github.com/WASH-PRO/wash-module-starter), [vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) (v1.2.0 — **text only** to VK; images for CRM/Telegram).
+
+## Localization
+
+Same convention as the main CRM repo:
+
+| File | Language |
+|------|----------|
+| `README.md` | English (default) |
+| `README.ru.md` | Russian |
+| `ui/help.html` | Help, English |
+| `ui/help.ru.html` | Help, Russian |
+
+The dashboard loads `help.html` or `help.ru.html` based on the selected UI language.

@@ -11,7 +11,7 @@ export const helpRu = {
   adminBadge: 'Администратор',
   docsLink: 'Полная документация на GitHub Pages',
   docsModulesLink: 'Документация по модулям',
-  moduleHelpIntro: 'Справка поставляется автором модуля (файл ui/help.html в репозитории).',
+  moduleHelpIntro: 'Справка поставляется автором модуля (`ui/help.html` / `ui/help.ru.html` в репозитории).',
   sections: {
     navigation: {
       title: 'Навигация и справка',

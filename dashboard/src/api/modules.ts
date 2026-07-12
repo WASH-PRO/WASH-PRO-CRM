@@ -133,8 +133,9 @@ export function moduleUiUrl(moduleId: string): string {
   return `${BASE}/ui/${encodeURIComponent(moduleId)}/`;
 }
 
-export function moduleHelpUrl(moduleId: string): string {
-  return `${BASE}/ui/${encodeURIComponent(moduleId)}/help.html`;
+export function moduleHelpUrl(moduleId: string, locale: 'en' | 'ru' = 'en'): string {
+  const helpFile = locale === 'ru' ? 'help.ru.html' : 'help.html';
+  return `${BASE}/ui/${encodeURIComponent(moduleId)}/${helpFile}`;
 }
 
 export async function getModuleStatus(moduleId: string): Promise<{

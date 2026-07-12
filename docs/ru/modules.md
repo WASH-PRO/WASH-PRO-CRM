@@ -108,7 +108,10 @@ my-module/
 ├── ui/index.html
 ├── ui/wash-module-sdk.js
 ├── assets/icon.svg
-└── README.md
+├── README.md          # English (по умолчанию)
+├── README.ru.md       # Русский
+├── ui/help.html       # Справка (English)
+└── ui/help.ru.html    # Справка (русский)
 ```
 
 Секреты окружения в runtime: `API_BASE_URL`, `MODULE_DATA_DIR`, настройки из schema (напр. `POLL_INTERVAL`).

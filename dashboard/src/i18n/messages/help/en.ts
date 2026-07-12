@@ -11,7 +11,7 @@ export const helpEn = {
   adminBadge: 'Administrator',
   docsLink: 'Full documentation on GitHub Pages',
   docsModulesLink: 'Modules documentation',
-  moduleHelpIntro: 'Help is provided by the module author (ui/help.html in the module repository).',
+  moduleHelpIntro: 'Help is provided by the module author (`ui/help.html` / `ui/help.ru.html` in the module repository).',
   sections: {
     navigation: {
       title: 'Navigation and help',

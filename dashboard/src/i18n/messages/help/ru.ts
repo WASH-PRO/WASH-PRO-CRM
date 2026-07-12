@@ -265,7 +265,7 @@ export const helpRu = {
       title: 'Модули',
       summary: 'Расширения из GitHub: каталог, установка, запуск через PyOrchestrator. **Автоматизация → Модули** (`/modules`).',
       howItWorks:
-        'modules-bridge клонирует репозиторий в `modules/installed/`, регистрирует daemon в PyOrch. **VK публикатор** — во VK только текст (картинки для CRM/Telegram). UI настроек и **справка** — iframe из `ui/index.html` и `ui/help.html`.',
+        'modules-bridge клонирует репозиторий в `modules/installed/`, регистрирует daemon в PyOrch. **VK публикатор** — во VK только текст (картинки для CRM/Telegram). UI настроек и **справка модуля** — на странице модуля (`ui/index.html`, `ui/help.html` / `ui/help.ru.html`), не в справке CRM.',
       example: 'Устанавливаете «Монитор занятости» — модуль опрашивает post-states и показывает снимок на странице настроек.',
       regions: {
         installed: 'Установленные карточки',

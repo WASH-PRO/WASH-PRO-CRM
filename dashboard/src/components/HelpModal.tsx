@@ -3,27 +3,16 @@ import clsx from 'clsx';
 import { ExternalLink, Search } from 'lucide-react';
 import { FullscreenModal } from './FullscreenModal';
 import { HelpScreenMockup, HELP_MOCKUPS } from './HelpScreenMockup';
-import { ModuleHelpFrame } from './ModuleHelpFrame';
 import { HELP_SECTIONS, type HelpMockupId } from '../help/sections';
-import { listModuleCatalog, type CatalogModule } from '../api/modules';
 import { useLocale } from '../i18n/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../context/BrandingContext';
 
 const DOCS_BASE = 'https://wash-pro.github.io/WASH-PRO-CRM';
 
-interface DynamicHelpSection {
-  id: string;
-  groupKey: string;
-  mockup: HelpMockupId;
-  adminOnly?: boolean;
-  moduleName?: string;
-}
-
 export function resolveHelpSectionId(pathname: string): string {
   const path = pathname.replace(/\/+$/, '') || '/';
-  const moduleId = path.match(/^\/modules\/([^/]+)/)?.[1];
-  if (moduleId) return `module:${moduleId}`;
+  if (path.match(/^\/modules\/([^/]+)/)) return 'modules';
 
   const staticMap: Record<string, string> = {
     '/': 'dashboard',
@@ -78,49 +67,24 @@ export function HelpModal({
   const { branding } = useBranding();
   const [query, setQuery] = useState('');
   const [activeId, setActiveId] = useState('dashboard');
-  const [catalog, setCatalog] = useState<CatalogModule[]>([]);
 
-  useEffect(() => {
-    if (open && initialSectionId) {
-      setActiveId(initialSectionId);
-    }
-  }, [open, initialSectionId]);
-
-  useEffect(() => {
-    if (!open || !isAdmin) {
-      setCatalog([]);
-      return;
-    }
-    void listModuleCatalog()
-      .then(setCatalog)
-      .catch(() => setCatalog([]));
-  }, [open, isAdmin]);
-
-  const moduleSections: DynamicHelpSection[] = useMemo(
-    () =>
-      catalog.map((m) => ({
-        id: `module:${m.id}`,
-        groupKey: 'moduleHelp',
-        mockup: 'settings',
-        adminOnly: true,
-        moduleName: locale === 'en' ? m.name.en : m.name.ru,
-      })),
-    [catalog, locale]
+  const sections = useMemo(
+    () => HELP_SECTIONS.filter((s) => !s.adminOnly || isAdmin),
+    [isAdmin]
   );
 
-  const sections = useMemo(() => {
-    const base = HELP_SECTIONS.filter((s) => !s.adminOnly || isAdmin);
-    return [...base, ...moduleSections.filter((s) => !s.adminOnly || isAdmin)];
-  }, [isAdmin, moduleSections]);
+  useEffect(() => {
+    if (!open || !initialSectionId) return;
+    const sectionId = initialSectionId.startsWith('module:') ? 'modules' : initialSectionId;
+    if (sections.some((s) => s.id === sectionId)) {
+      setActiveId(sectionId);
+    }
+  }, [open, initialSectionId, sections]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return sections;
     return sections.filter((s) => {
-      if (s.id.startsWith('module:')) {
-        const name = (s as DynamicHelpSection).moduleName?.toLowerCase() ?? '';
-        return name.includes(q) || s.id.toLowerCase().includes(q);
-      }
       const title = t(`help.sections.${s.id}.title`).toLowerCase();
       const summary = t(`help.sections.${s.id}.summary`).toLowerCase();
       return title.includes(q) || summary.includes(q);
@@ -130,10 +94,7 @@ export function HelpModal({
   const grouped = useMemo(() => {
     const map = new Map<string, typeof sections>();
     for (const s of filtered) {
-      const g =
-        s.groupKey === 'moduleHelp'
-          ? t('nav.groups.moduleHelp')
-          : t(`nav.groups.${s.groupKey}`);
+      const g = t(`nav.groups.${s.groupKey}`);
       if (!map.has(g)) map.set(g, []);
       map.get(g)!.push(s);
     }
@@ -142,21 +103,14 @@ export function HelpModal({
 
   const active = sections.find((s) => s.id === activeId) ?? sections[0];
   const sectionId = active?.id ?? 'dashboard';
-  const isModuleHelp = sectionId.startsWith('module:');
-  const moduleId = isModuleHelp ? sectionId.slice('module:'.length) : '';
   const mockup: HelpMockupId = active?.mockup ?? 'dashboard';
 
   const regionLabels = useMemo(() => {
-    if (isModuleHelp) return {};
     const ids = HELP_MOCKUPS[mockup].map((r) => r.id);
     return Object.fromEntries(
       ids.map((id) => [id, t(`help.sections.${sectionId}.regions.${id}`)])
     );
-  }, [isModuleHelp, mockup, sectionId, t]);
-
-  const sectionTitle = isModuleHelp
-    ? ((active as DynamicHelpSection).moduleName ?? moduleId)
-    : t(`help.sections.${sectionId}.title`);
+  }, [mockup, sectionId, t]);
 
   return (
     <FullscreenModal open={open} onClose={onClose} title={t('help.title')} ariaLabelClose={t('help.close')}>
@@ -191,9 +145,7 @@ export function HelpModal({
                             : 'text-panel-ink hover:bg-panel-canvas dark:text-panel-ink-dark dark:hover:bg-white/5'
                         )}
                       >
-                        {item.id.startsWith('module:')
-                          ? (item as DynamicHelpSection).moduleName
-                          : t(`help.sections.${item.id}.title`)}
+                        {t(`help.sections.${item.id}.title`)}
                         {item.adminOnly && (
                           <span className="ml-1 text-[10px] uppercase text-panel-muted">({t('help.adminBadge')})</span>
                         )}
@@ -226,50 +178,37 @@ export function HelpModal({
 
         <article className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <h2 className="text-2xl font-semibold tracking-tight text-panel-ink dark:text-panel-ink-dark">
-            {sectionTitle}
+            {t(`help.sections.${sectionId}.title`)}
           </h2>
 
-          {isModuleHelp ? (
-            <>
-              <p className="mt-3 text-base leading-relaxed text-panel-muted dark:text-panel-muted-dark">
-                {t('help.moduleHelpIntro')}
-              </p>
-              <section className="mt-6">
-                <ModuleHelpFrame moduleId={moduleId} className="panel-card min-h-[min(70vh,640px)] w-full" />
-              </section>
-            </>
-          ) : (
-            <>
-              <p className="mt-3 text-base leading-relaxed text-panel-muted dark:text-panel-muted-dark">
-                {t(`help.sections.${sectionId}.summary`)}
-              </p>
+          <p className="mt-3 text-base leading-relaxed text-panel-muted dark:text-panel-muted-dark">
+            {t(`help.sections.${sectionId}.summary`)}
+          </p>
 
-              <section className="mt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
-                  {t('help.onScreen')}
-                </h3>
-                <div className="mt-3 max-w-2xl">
-                  <HelpScreenMockup mockup={mockup} regionLabels={regionLabels} />
-                </div>
-              </section>
+          <section className="mt-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
+              {t('help.onScreen')}
+            </h3>
+            <div className="mt-3 max-w-2xl">
+              <HelpScreenMockup mockup={mockup} regionLabels={regionLabels} />
+            </div>
+          </section>
 
-              <section className="mt-8">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
-                  {t('help.howItWorks')}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-panel-ink dark:text-panel-ink-dark">
-                  {t(`help.sections.${sectionId}.howItWorks`)}
-                </p>
-              </section>
+          <section className="mt-8">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
+              {t('help.howItWorks')}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-panel-ink dark:text-panel-ink-dark">
+              {t(`help.sections.${sectionId}.howItWorks`)}
+            </p>
+          </section>
 
-              <section className="mt-6 rounded-lg border border-brand-500/20 bg-brand-500/5 p-4 dark:border-brand-400/20 dark:bg-brand-400/10">
-                <h3 className="text-sm font-semibold text-brand-900 dark:text-brand-100">{t('help.example')}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-panel-ink dark:text-panel-ink-dark">
-                  {t(`help.sections.${sectionId}.example`)}
-                </p>
-              </section>
-            </>
-          )}
+          <section className="mt-6 rounded-lg border border-brand-500/20 bg-brand-500/5 p-4 dark:border-brand-400/20 dark:bg-brand-400/10">
+            <h3 className="text-sm font-semibold text-brand-900 dark:text-brand-100">{t('help.example')}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-panel-ink dark:text-panel-ink-dark">
+              {t(`help.sections.${sectionId}.example`)}
+            </p>
+          </section>
         </article>
       </div>
     </FullscreenModal>

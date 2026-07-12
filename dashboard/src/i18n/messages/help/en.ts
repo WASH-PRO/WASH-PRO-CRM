@@ -263,7 +263,7 @@ export const helpEn = {
       title: 'Modules',
       summary: 'GitHub extensions: catalog, install, run via PyOrchestrator. **Automation → Modules** (`/modules`).',
       howItWorks:
-        'modules-bridge clones repo to `modules/installed/`, registers daemon in PyOrch. **VK Publisher** — text-only to VK (images for CRM/Telegram). Settings UI and **help** — iframe from `ui/index.html` and `ui/help.html`.',
+        'modules-bridge clones repo to `modules/installed/`, registers daemon in PyOrch. **VK Publisher** — text-only to VK (images for CRM/Telegram). Settings UI and **module help** open inside each module page (`ui/index.html`, `ui/help.html` / `ui/help.ru.html`) — not in CRM Help.',
       example: 'Install Post Occupancy Monitor — module polls post-states and shows snapshot on settings page.',
       regions: {
         installed: 'Installed cards',

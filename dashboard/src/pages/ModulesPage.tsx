@@ -537,9 +537,11 @@ export function ModulesPage() {
 
   const load = useCallback(async (refresh = false) => {
     try {
-      const health = await checkModulesBridgeHealth();
+      const [health, data] = await Promise.all([
+        checkModulesBridgeHealth(),
+        listModuleCatalog(refresh),
+      ]);
       setPyorchAvailable(health.pyorchAvailable);
-      const data = await listModuleCatalog(refresh);
       setCatalog(data);
       setServiceError(null);
       setPageState('ready');

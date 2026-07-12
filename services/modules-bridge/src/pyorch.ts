@@ -11,9 +11,13 @@ const PYORCH_EMAIL = process.env.PYORCH_EMAIL || 'admin@pyorchestrator.local';
 const PYORCH_PASSWORD = process.env.PYORCH_PASSWORD || 'admin';
 const CRM_API_BASE = process.env.CRM_API_BASE_URL || 'http://dynamic-api:3001';
 
+const PYORCH_FETCH_TIMEOUT_MS = 8000;
+const RUN_STATUS_TTL_MS = 10_000;
+
 let pyorchToken: string | null = null;
 let pyorchAvailable: boolean | null = null;
 let pyorchCheckedAt = 0;
+const runStatusCache = new Map<string, { status: string | null; at: number }>();
 
 async function pyorchLogin(): Promise<string> {
   const res = await fetch(`${PYORCH_API_URL}/api/v1/auth/login`, {
@@ -50,9 +54,11 @@ async function pyorchFetch<T>(path: string, options: RequestInit = {}): Promise<
     throw new Error('PyOrchestrator недоступен. Включите PYORCHESTRATOR_ENABLED=true.');
   }
   if (!pyorchToken) await pyorchLogin();
+  const signal = options.signal ?? AbortSignal.timeout(PYORCH_FETCH_TIMEOUT_MS);
   const doRequest = async (token: string) =>
     fetch(`${PYORCH_API_URL}/api/v1${path}`, {
       ...options,
+      signal,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -298,12 +304,22 @@ async function applyModuleSecrets(
 }
 
 export async function startModuleScript(scriptId: string): Promise<PyorchScript> {
-  await pyorchFetch(`/runs/scripts/${scriptId}/run`, { method: 'POST' });
+  const runOnce = () => pyorchFetch(`/runs/scripts/${scriptId}/run`, { method: 'POST' });
+  try {
+    await runOnce();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes('Max concurrent runs reached')) throw err;
+    await stopModuleScript(scriptId);
+    await runOnce();
+  }
+  runStatusCache.delete(scriptId);
   return (await getWashModuleScript(scriptId))!;
 }
 
 export async function stopModuleScript(scriptId: string): Promise<void> {
   await pyorchFetch(`/runs/scripts/${scriptId}/stop`, { method: 'POST' }).catch(() => undefined);
+  runStatusCache.delete(scriptId);
 }
 
 export async function deleteModuleScript(scriptId: string): Promise<void> {
@@ -317,9 +333,16 @@ export async function deleteModuleScript(scriptId: string): Promise<void> {
 }
 
 export async function getModuleRunStatus(scriptId: string): Promise<string | null> {
+  const now = Date.now();
+  const cached = runStatusCache.get(scriptId);
+  if (cached && now - cached.at < RUN_STATUS_TTL_MS) {
+    return cached.status;
+  }
   try {
     const script = await getWashModuleScript(scriptId);
-    return script?.active_run?.status ?? null;
+    const status = script?.active_run?.status ?? null;
+    runStatusCache.set(scriptId, { status, at: now });
+    return status;
   } catch {
     return null;
   }

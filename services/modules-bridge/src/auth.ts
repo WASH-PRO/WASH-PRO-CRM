@@ -3,6 +3,7 @@ import { pino } from 'pino';
 
 const logger = pino({ level: 'info' });
 const API_URL = process.env.CRM_API_URL || 'http://dynamic-api:3001';
+const PROFILE_TIMEOUT_MS = 8000;
 
 function decodeJwtPermissions(token: string): string[] {
   try {
@@ -33,6 +34,7 @@ export async function verifyAdmin(
   try {
     const res = await fetch(`${API_URL}/api/profile`, {
       headers: { Authorization: authHeader },
+      signal: AbortSignal.timeout(PROFILE_TIMEOUT_MS),
     });
     const json = (await res.json()) as { success?: boolean };
     if (!res.ok || json.success !== true) {

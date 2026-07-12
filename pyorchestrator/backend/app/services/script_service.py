@@ -35,6 +35,30 @@ class RedisService:
       c = await self.client()
       await c.rpush(settings.runtime_queue_key, json.dumps(payload))
 
+  async def purge_script_jobs(self, script_id: str) -> int:
+      """Remove pending queue jobs for a script (e.g. after stop)."""
+      c = await self.client()
+      key = settings.runtime_queue_key
+      jobs = await c.lrange(key, 0, -1)
+      if not jobs:
+          return 0
+      kept: list[str] = []
+      removed = 0
+      for raw in jobs:
+          try:
+              payload = json.loads(raw)
+              if str(payload.get("script_id")) == script_id:
+                  removed += 1
+                  continue
+          except (json.JSONDecodeError, TypeError):
+              pass
+          kept.append(raw)
+      if removed:
+          await c.delete(key)
+          if kept:
+              await c.rpush(key, *kept)
+      return removed
+
   async def publish(self, channel: str, message: str) -> None:
       c = await self.client()
       await c.publish(channel, message)

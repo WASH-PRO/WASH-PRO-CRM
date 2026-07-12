@@ -68,6 +68,7 @@ async def stop_script(
         run.finished_at = datetime.now(timezone.utc)
         await dispatch_run_event_notifications(db, run, "cancelled")
     await _kill_runtime_script_orphans(script_id)
+    await redis_service.purge_script_jobs(str(script_id))
     await db.flush()
     return {"stopped": len(runs)}
 

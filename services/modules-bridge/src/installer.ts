@@ -305,6 +305,9 @@ export async function recoverRunningModules(): Promise<Array<{ moduleId: string;
     try {
       await reregisterModule(state.id);
       if (wasRunning) {
+        if (state.pyorchScriptId) {
+          await stopModuleScript(state.pyorchScriptId).catch(() => undefined);
+        }
         await startModule(state.id);
       }
       results.push({ moduleId: state.id, ok: true });

@@ -80,6 +80,16 @@ export async function buildCatalog(refresh = false): Promise<CatalogModule[]> {
   const installed = listInstalledStates();
   const installedById = new Map(installed.map((m) => [m.id, m]));
 
+  const statusByScriptId = new Map<string, string | null>();
+  await Promise.all(
+    installed
+      .filter((state) => state.pyorchScriptId)
+      .map(async (state) => {
+        const status = await getModuleRunStatus(state.pyorchScriptId!);
+        statusByScriptId.set(state.pyorchScriptId!, status);
+      })
+  );
+
   const results: CatalogModule[] = [];
 
   for (const entry of registry.modules) {
@@ -97,10 +107,9 @@ export async function buildCatalog(refresh = false): Promise<CatalogModule[]> {
     if (!manifest) continue;
 
     const state = installedById.get(entry.id);
-    let activeRunStatus: string | null = null;
-    if (state?.pyorchScriptId) {
-      activeRunStatus = await getModuleRunStatus(state.pyorchScriptId);
-    }
+    const activeRunStatus = state?.pyorchScriptId
+      ? (statusByScriptId.get(state.pyorchScriptId) ?? null)
+      : null;
 
     results.push({
       ...manifest,

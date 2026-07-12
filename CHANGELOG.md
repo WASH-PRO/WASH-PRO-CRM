@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+## [1.1.43] — 2026-07-12
+
+### Исправлено
+
+- **PyOrchestrator** — commit в БД перед постановкой job в Redis (гонка `/internal/runs/start` → 500); очистка очереди `runtime:jobs` при stop скрипта
+- **modules-bridge** — таймауты PyOrch/CRM (8 с); параллельный опрос статусов в каталоге; кэш статуса 10 с; recover: stop перед start; retry при `Max concurrent runs reached`
+- **dashboard /modules** — параллельная загрузка health + catalog
+
+### Изменено
+
+- **crm-update-build** — при `PYORCHESTRATOR_ENABLED=true` пересборка `pyorch-backend` при автообновлении CRM
+- **Каталог dynamic-pricing v1.1.6** — интервал опроса от 5 сек, шаг 5 сек
+
 ## [1.1.42] — 2026-07-12
 
 ### Изменено

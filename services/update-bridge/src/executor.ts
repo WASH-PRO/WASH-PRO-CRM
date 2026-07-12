@@ -56,7 +56,7 @@ function composeSetup(): string {
 
 function gitSyncMain(root: string): string {
   // Reset tracked files to origin/main; untracked/gitignored (.env, override, local/) are kept.
-  return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin main && if ! git diff --quiet || ! git diff --cached --quiet; then echo 'WARN: discarding local changes to tracked files before update'; fi && git reset --hard origin/main && chmod +x ${root}/scripts/crm-update-build.sh ${root}/scripts/crm-update-ensure-modules-bridge.sh ${root}/scripts/crm-update-health.sh 2>/dev/null || true`;
+  return `cd ${root} && git config --global --add safe.directory ${root} && git fetch origin main && if ! git diff --quiet || ! git diff --cached --quiet; then echo 'WARN: discarding local changes to tracked files before update'; fi && git reset --hard origin/main && chmod +x ${root}/scripts/crm-update-build.sh ${root}/scripts/crm-update-ensure-modules-bridge.sh ${root}/scripts/crm-update-health.sh ${root}/scripts/crm-update-compose-env.sh 2>/dev/null || true`;
 }
 
 function stepCommand(component: UpdateComponentId, stepId: string, targetTag: string): string {
@@ -77,7 +77,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && export WASH_CRM_UPDATE_V2=1 && ${composeSetup()} && bash ${root}/scripts/crm-update-ensure-modules-bridge.sh && docker compose $COMPOSE_FILES run --rm init-seed`;
     }
     if (stepId === 'health') {
-      return `bash ${root}/scripts/crm-update-health.sh`;
+      return `cd ${root} && export WASH_CRM_UPDATE_V2=1 && bash ${root}/scripts/crm-update-health.sh`;
     }
   }
 
@@ -168,5 +168,5 @@ export function getStepCommand(component: UpdateComponentId, stepId: string, tar
 }
 
 export function usesCompose(stepId: string): boolean {
-  return stepId === 'build' || stepId === 'seed';
+  return stepId === 'build' || stepId === 'seed' || stepId === 'health';
 }

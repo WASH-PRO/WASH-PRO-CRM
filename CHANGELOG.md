@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.1.35] — 2026-07-12
+
+### Исправлено
+
+- **Автообновление CRM (failed на health)** — шаг health получает `composeCommandEnv()`; новый `crm-update-compose-env.sh` сохраняет пути Docker при `source .env` (`.env` больше не затирает `WASH_HOST_PROJECT_ROOT`)
+- **compose-files hook** — health/ensure не запускают повторную полную сборку из update-bridge
+
 ## [1.1.34] — 2026-07-12
 
 ### Добавлено
@@ -461,7 +468,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.34...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.35...HEAD
+[1.1.35]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.35
 [1.1.34]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.34
 [1.1.33]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.33
 [1.1.32]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.32

@@ -894,7 +894,7 @@ export const en = {
       noAvailable: 'All catalog modules are already installed',
       unavailable: 'Modules service is unavailable',
       bridgeRebuildHint:
-        'Modules service is unavailable (modules-bridge is not running or dashboard is outdated). Update CRM to v1.1.34+ in Settings, or open Settings → Integrity and repair → rebuild modules-bridge.',
+        'Modules service is unavailable (modules-bridge is not running or dashboard is outdated). Update CRM to v1.1.35+ in Settings, or open Settings → Integrity and repair → rebuild modules-bridge.',
       repairHint: 'Without server access, try:',
       repairLink: 'Settings → Integrity and repair',
       pyorchHint: 'PyOrchestrator is not running — you can install modules, but starting them requires the orchestrator (PYORCHESTRATOR_ENABLED=true).',

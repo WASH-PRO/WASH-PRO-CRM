@@ -7,15 +7,10 @@ export WASH_CRM_UPDATE_BUILD_RUNNING=1
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [ -z "${COMPOSE_FILES:-}" ]; then
-  set -a
-  # shellcheck disable=SC1091
-  [ -f .env ] && source .env
-  set +a
-  # shellcheck disable=SC1091
-  source "$ROOT/scripts/compose-files.sh"
-fi
+# shellcheck disable=SC1091
+source "$ROOT/scripts/crm-update-compose-env.sh"
 
+echo "[crm-update-build] WASH_HOST_PROJECT_ROOT=${WASH_HOST_PROJECT_ROOT:-?} WASH_BUILD_ROOT=${WASH_BUILD_ROOT:-?}" >&2
 echo "[crm-update-build] Building init-seed, modules-bridge, dashboard…"
 docker compose $COMPOSE_FILES build init-seed modules-bridge dashboard
 

@@ -362,40 +362,104 @@ export function readModuleDataFile(moduleId: string, filename: string): unknown 
   }
 }
 
-/** Snapshot for UI; synthesizes from settings/state when last_snapshot.json is missing. */
+/** Snapshot for UI; live file when running, synthetic placeholder when stopped. */
+function buildSyntheticSnapshot(moduleId: string): Record<string, unknown> | null {
+  const settings = readModuleSettings(moduleId) as Record<string, unknown>;
+
+  if (moduleId === 'dynamic-pricing') {
+    const stateRaw = readModuleDataFile(moduleId, 'surge_state.json');
+    const state =
+      stateRaw && typeof stateRaw === 'object' && !Array.isArray(stateRaw)
+        ? (stateRaw as Record<string, unknown>)
+        : {};
+    const washId = String(settings.wash_id ?? '').trim();
+    const configError = washId
+      ? undefined
+      : 'wash_id is not configured — select a car wash in module settings';
+    return {
+      recordedAt: null,
+      washId,
+      totalPosts: 0,
+      busyPosts: 0,
+      busyThreshold: Number(settings.busy_threshold) || 1,
+      surgeActive: Boolean(state.surgeActive),
+      surgeCoefficient: 1.0,
+      priceIncreasePercent: Number(settings.price_increase_percent) || 10,
+      postsUpdatedLastCycle: 0,
+      lastEvent: washId ? 'awaiting_run' : 'config_missing',
+      recentEvents: Array.isArray(state.recentEvents) ? state.recentEvents : [],
+      ...(configError ? { configError } : {}),
+    };
+  }
+
+  if (moduleId === 'post-occupancy-monitor') {
+    return {
+      recordedAt: null,
+      total: 0,
+      busy: 0,
+      free: 0,
+      offline: 0,
+      posts: [],
+      lastEvent: 'awaiting_run',
+      pollInterval: Number(settings.poll_interval) || 60,
+    };
+  }
+
+  if (moduleId === 'usage-stats-collector') {
+    return {
+      recordedAt: null,
+      washCount: 0,
+      totalLaunchCount: 0,
+      totalUsageTimeSec: 0,
+      rowsConsidered: 0,
+      lookbackHours: Number(settings.lookback_hours) || 24,
+      byWash: {},
+      lastEvent: 'awaiting_run',
+      pollInterval: Number(settings.poll_interval) || 120,
+    };
+  }
+
+  if (moduleId === 'vk-publisher') {
+    return {
+      recordedAt: null,
+      publishedTotal: 0,
+      pendingCount: 0,
+      publishedThisCycle: 0,
+      configured: Boolean(String(settings.vk_group_id ?? '').trim()),
+      lastEvent: 'awaiting_run',
+      pollInterval: Number(settings.poll_interval) || 60,
+    };
+  }
+
+  if (moduleId === 'module-starter') {
+    return {
+      recordedAt: null,
+      tick: null,
+      greeting: String(settings.greeting ?? ''),
+      lastEvent: 'awaiting_run',
+      pollInterval: Number(settings.poll_interval) || 30,
+    };
+  }
+
+  return null;
+}
+
 export function readModuleSnapshot(moduleId: string): unknown {
+  const state = getInstalledState(moduleId);
+  const running = state?.status === 'running';
   const raw = readModuleDataFile(moduleId, 'last_snapshot.json');
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+
+  if (running && raw && typeof raw === 'object' && !Array.isArray(raw)) {
     return raw;
   }
 
-  if (moduleId !== 'dynamic-pricing') {
-    return null;
+  const synthetic = buildSyntheticSnapshot(moduleId);
+  if (synthetic) {
+    return synthetic;
   }
 
-  const settings = readModuleSettings(moduleId) as Record<string, unknown>;
-  const stateRaw = readModuleDataFile(moduleId, 'surge_state.json');
-  const state =
-    stateRaw && typeof stateRaw === 'object' && !Array.isArray(stateRaw)
-      ? (stateRaw as Record<string, unknown>)
-      : {};
-  const washId = String(settings.wash_id ?? '').trim();
-  const configError = washId
-    ? undefined
-    : 'wash_id is not configured — select a car wash in module settings';
-
-  return {
-    recordedAt: null,
-    washId,
-    totalPosts: 0,
-    busyPosts: 0,
-    busyThreshold: Number(settings.busy_threshold) || 1,
-    surgeActive: Boolean(state.surgeActive),
-    surgeCoefficient: 1.0,
-    priceIncreasePercent: Number(settings.price_increase_percent) || 10,
-    postsUpdatedLastCycle: 0,
-    lastEvent: washId ? 'awaiting_run' : 'config_missing',
-    recentEvents: Array.isArray(state.recentEvents) ? state.recentEvents : [],
-    ...(configError ? { configError } : {}),
-  };
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw;
+  }
+  return null;
 }

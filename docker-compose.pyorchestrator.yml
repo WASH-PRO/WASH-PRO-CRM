@@ -125,6 +125,7 @@ services:
     volumes:
       - ${DATA_DIR:-./data}/pyorchestrator/runtime-workspaces:/workspaces
       - ${WASH_HOST_PROJECT_ROOT:-.}/pyorchestrator/runtime/engine:/app/engine:ro
+      - ${WASH_HOST_PROJECT_ROOT:-.}/modules:/modules
     depends_on:
       pyorch-backend:
         condition: service_healthy

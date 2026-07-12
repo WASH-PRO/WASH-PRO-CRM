@@ -48,6 +48,8 @@ export const settingsRepairRu = {
     clearStuckJob: 'Сбросить зависшее обновление',
     mosquittoRepair: 'Пересоздать конфиг Mosquitto и перезапустить брокер',
     modulesBridgeRepair: 'Пересобрать и перезапустить modules-bridge + dashboard',
+    pyorchRuntimeRepair: 'Перезапустить PyOrchestrator (runtime, scheduler, backend)',
+    washModulesRecover: 'Восстановить wash-модули после обновления (PyOrch + перерегистрация)',
     initSeed: 'Запустить init-seed (синхронизация CRM endpoints)',
   },
 } as const;

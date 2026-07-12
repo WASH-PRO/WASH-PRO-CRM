@@ -42,6 +42,11 @@ else
 fi
 
 if [ "$modules_ok" -eq 1 ]; then
+  if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
+    echo "[crm-update-health] Recovering PyOrch + wash modules (best effort)…" >&2
+    bash "$ROOT/scripts/crm-update-recover-wash-modules.sh" || \
+      echo "[crm-update-health] WARN: wash modules recover failed — run repair wash_modules_recover" >&2
+  fi
   echo "[crm-update-health] All checks passed" >&2
   exit 0
 fi

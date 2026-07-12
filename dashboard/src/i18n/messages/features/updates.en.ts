@@ -47,6 +47,8 @@ export const settingsRepairEn = {
     clearStuckJob: 'Clear stuck update job',
     mosquittoRepair: 'Recreate Mosquitto config and restart broker',
     modulesBridgeRepair: 'Rebuild and restart modules-bridge + dashboard',
+    pyorchRuntimeRepair: 'Restart PyOrchestrator (runtime, scheduler, backend)',
+    washModulesRecover: 'Recover wash modules after update (PyOrch + re-register)',
     initSeed: 'Run init-seed (sync CRM endpoints)',
   },
 } as const;

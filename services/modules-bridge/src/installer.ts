@@ -24,6 +24,7 @@ import {
 } from './paths.js';
 import {
   getInstalledState,
+  listInstalledStates,
   removeInstalledState,
   upsertInstalledState,
 } from './state.js';
@@ -33,6 +34,26 @@ import { readLocalManifest, isModuleInstalled } from './manifest.js';
 
 const logger = pino({ level: 'info' });
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+
+/** Settings keys that must be preserved when the client sends an empty value (token not re-sent). */
+const SENSITIVE_SETTING_KEY = /(_token|_secret|_password|_api_key)$/i;
+
+function mergeModuleSettings(
+  existing: Record<string, unknown>,
+  incoming: Record<string, unknown>
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...existing, ...incoming };
+  for (const [key, value] of Object.entries(merged)) {
+    if (value === undefined || value === null || value === '') {
+      if (SENSITIVE_SETTING_KEY.test(key) && existing[key] !== undefined && existing[key] !== '') {
+        merged[key] = existing[key];
+      } else {
+        delete merged[key];
+      }
+    }
+  }
+  return merged;
+}
 
 function defaultSettings(manifest: WashModuleManifest): Record<string, unknown> {
   const settings: Record<string, unknown> = {};
@@ -253,13 +274,73 @@ export async function saveModuleSettings(
   const state = getInstalledState(moduleId);
   if (!state) throw new Error('Модуль не установлен');
 
-  writeModuleSettings(moduleId, settings);
+  const existing = readModuleSettings(moduleId);
+  const merged = mergeModuleSettings(existing, settings);
+
+  writeModuleSettings(moduleId, merged);
 
   if (state.pyorchScriptId && (await isPyorchAvailable())) {
-    await syncModuleSecrets(state.pyorchScriptId, settings, moduleDataDir(moduleId));
+    await syncModuleSecrets(state.pyorchScriptId, merged, moduleDataDir(moduleId));
   }
 
   return state;
+}
+
+/** Re-register PyOrch scripts for all installed modules; restart those that were running. */
+export async function recoverRunningModules(): Promise<Array<{ moduleId: string; ok: boolean; error?: string }>> {
+  if (!(await isPyorchAvailable())) {
+    throw new Error('PyOrchestrator недоступен');
+  }
+
+  const results: Array<{ moduleId: string; ok: boolean; error?: string }> = [];
+  for (const state of listInstalledStates()) {
+    if (!state.pyorchScriptId) continue;
+    const wasRunning = state.status === 'running';
+    try {
+      await reregisterModule(state.id);
+      if (wasRunning) {
+        await startModule(state.id);
+      }
+      results.push({ moduleId: state.id, ok: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.warn({ moduleId: state.id, err: message }, 'Module recover failed');
+      results.push({ moduleId: state.id, ok: false, error: message });
+    }
+  }
+  return results;
+}
+
+export async function reregisterModule(moduleId: string): Promise<InstalledModuleState> {
+  const state = getInstalledState(moduleId);
+  if (!state) throw new Error('Модуль не установлен');
+  if (!state.pyorchScriptId) {
+    throw new Error('PyOrchestrator недоступен — перезапустите модуль после включения оркестратора');
+  }
+
+  const manifest = readLocalManifest(moduleId);
+  if (!manifest) throw new Error('wash-module.json не найден');
+
+  const settings = readModuleSettings(moduleId);
+  const code = readEntrypointCode(moduleDir(moduleId), manifest.entrypoint);
+
+  if (await isPyorchAvailable()) {
+    await registerModuleScript({
+      moduleId,
+      name: manifest.name.ru,
+      description: manifest.description.ru,
+      code,
+      entrypoint: manifest.entrypoint.split('/').pop() || 'main.py',
+      version: manifest.version,
+      settings,
+      dataDir: moduleDataDir(moduleId),
+    });
+  }
+
+  return upsertInstalledState({
+    ...state,
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 export function readModuleDataFile(moduleId: string, filename: string): unknown {

@@ -67,6 +67,8 @@ export const REPAIR_ACTIONS = [
   'clear_stuck_job',
   'mosquitto_repair',
   'modules_bridge_repair',
+  'pyorch_runtime_repair',
+  'wash_modules_recover',
   'init_seed',
 ] as const;
 
@@ -306,6 +308,22 @@ async function applyAction(action: RepairActionId, onLog: (line: string) => void
         withComposeEnv(
           `bash ${DEPLOY_ROOT}/scripts/crm-update-ensure-modules-bridge.sh && docker compose $COMPOSE_FILES up -d --build --no-deps dashboard`
         ),
+        onLog
+      );
+      return;
+
+    case 'pyorch_runtime_repair':
+      await runShell(
+        withComposeEnv(
+          `bash ${DEPLOY_ROOT}/scripts/fix-pyorch.sh`
+        ),
+        onLog
+      );
+      return;
+
+    case 'wash_modules_recover':
+      await runShell(
+        withComposeEnv(`bash ${DEPLOY_ROOT}/scripts/crm-update-recover-wash-modules.sh`),
         onLog
       );
       return;

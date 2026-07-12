@@ -6,6 +6,8 @@ import {
   installModule,
   readModuleDataFile,
   readModuleSettings,
+  recoverRunningModules,
+  reregisterModule,
   saveModuleSettings,
   startModule,
   stopModule,
@@ -167,6 +169,17 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  if (req.method === 'POST' && url === '/recover-all') {
+    try {
+      const data = await recoverRunningModules();
+      json(res, 200, { success: true, data });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Recover failed';
+      json(res, 400, { success: false, error: message });
+    }
+    return;
+  }
+
   const installMatch = url.match(/^\/install\/([^/]+)$/);
   if (req.method === 'POST' && installMatch) {
     const moduleId = decodeURIComponent(installMatch[1]!);
@@ -182,7 +195,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
-  const moduleMatch = url.match(/^\/installed\/([^/]+)(\/start|\/stop|\/update|\/settings|\/status|\/logs|\/data\/([^/]+))?$/);
+  const moduleMatch = url.match(
+    /^\/installed\/([^/]+)(\/start|\/stop|\/update|\/reregister|\/settings|\/status|\/logs|\/data\/([^/]+))?$/
+  );
   if (moduleMatch) {
     const moduleId = decodeURIComponent(moduleMatch[1]!);
     const action = moduleMatch[2];
@@ -315,6 +330,19 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
+    if (req.method === 'POST' && action === '/reregister') {
+      try {
+        const data = await reregisterModule(moduleId);
+        void notifyModule('module_updated', moduleId, 'перерегистрирован в PyOrchestrator');
+        json(res, 200, { success: true, data });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Reregister failed';
+        void notifyModule('module_error', moduleId, `ошибка перерегистрации — ${message}`, 'error');
+        json(res, 400, { success: false, error: message });
+      }
+      return;
+    }
+
     if (req.method === 'DELETE' && !action) {
       try {
         await uninstallModule(moduleId);
@@ -341,4 +369,16 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   logger.info({ port: PORT }, 'Modules bridge started');
+  void (async () => {
+    await new Promise((r) => setTimeout(r, 15000));
+    if (!(await isPyorchAvailable())) return;
+    const running = listInstalledStates().filter((m) => m.status === 'running' && m.pyorchScriptId);
+    if (running.length === 0) return;
+    logger.info({ count: running.length }, 'Recovering running wash modules after bridge start');
+    try {
+      await recoverRunningModules();
+    } catch (err) {
+      logger.warn({ err }, 'Startup module recover failed');
+    }
+  })();
 });

@@ -16,6 +16,8 @@ const FIX_LABEL_KEYS: Record<string, string> = {
   clear_stuck_job: 'pages.settings.repair.fixes.clearStuckJob',
   mosquitto_repair: 'pages.settings.repair.fixes.mosquittoRepair',
   modules_bridge_repair: 'pages.settings.repair.fixes.modulesBridgeRepair',
+  pyorch_runtime_repair: 'pages.settings.repair.fixes.pyorchRuntimeRepair',
+  wash_modules_recover: 'pages.settings.repair.fixes.washModulesRecover',
   init_seed: 'pages.settings.repair.fixes.initSeed',
 };
 

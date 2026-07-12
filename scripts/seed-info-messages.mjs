@@ -9,8 +9,8 @@
  */
 
 const API_URL = process.env.API_URL || 'http://localhost:3001';
-const ADMIN_LOGIN = process.env.ADMIN_LOGIN || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+const ADMIN_LOGIN = process.env.ADMIN_LOGIN || process.env.SERVICE_LOGIN || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.SERVICE_PASSWORD || 'Admin123!';
 
 const COUNT = Number(process.env.COUNT || 50);
 const START_DELAY_MIN = Number(process.env.START_DELAY_MIN || 5);
@@ -159,11 +159,11 @@ const TITLES = [
 ];
 
 const IMAGES = [
-  'https://picsum.photos/seed/washpro1/800/450',
-  'https://picsum.photos/seed/washpro2/800/450',
-  'https://picsum.photos/seed/washpro3/800/450',
-  'https://picsum.photos/seed/washpro4/800/450',
-  'https://picsum.photos/seed/washpro5/800/450',
+  'https://placehold.co/800x450/0077ff/ffffff/png?text=Wash+Pro+1',
+  'https://placehold.co/800x450/0066cc/ffffff/png?text=Wash+Pro+2',
+  'https://placehold.co/800x450/0055aa/ffffff/png?text=Wash+Pro+3',
+  'https://placehold.co/800x450/004488/ffffff/png?text=Wash+Pro+4',
+  'https://placehold.co/800x450/003366/ffffff/png?text=Wash+Pro+5',
 ];
 
 function pick(arr, index) {

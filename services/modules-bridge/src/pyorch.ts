@@ -82,6 +82,27 @@ function isWashModule(script: PyorchScript): boolean {
   return meta.wash_module === true || (meta.source === 'wash-pro-crm' && Boolean(meta.module_id));
 }
 
+/** PyOrchestrator injects secrets as SECRET_{KEY}; wash modules read unprefixed env vars. */
+const WASH_MODULE_ENV_BOOTSTRAP = `# --- WASH module env bootstrap (modules-bridge) ---
+import os as _wash_os
+for _wash_k, _wash_v in list(_wash_os.environ.items()):
+    if _wash_k.startswith("SECRET_") and _wash_k[7:] not in _wash_os.environ:
+        _wash_os.environ[_wash_k[7:]] = _wash_v
+# --- end bootstrap ---
+
+`;
+
+export function wrapWashModulePythonCode(code: string): string {
+  if (code.includes('WASH module env bootstrap')) {
+    return code;
+  }
+  const marker = 'from __future__ import annotations\n';
+  if (code.includes(marker)) {
+    return code.replace(marker, `${marker}${WASH_MODULE_ENV_BOOTSTRAP}\n`, 1);
+  }
+  return WASH_MODULE_ENV_BOOTSTRAP + code;
+}
+
 export async function listWashModules(): Promise<PyorchScript[]> {
   const scripts = await pyorchFetch<PyorchScript[]>('/scripts');
   return scripts.filter(isWashModule);
@@ -161,13 +182,15 @@ export async function registerModuleScript(input: {
     (s) => String(s.metadata.module_id) === input.moduleId
   );
 
+  const code = wrapWashModulePythonCode(input.code);
+
   if (existing) {
     await pyorchFetch(`/scripts/${existing.id}`, {
       method: 'PUT',
       body: JSON.stringify({
         name: input.name,
         description: input.description,
-        code: input.code,
+        code,
         metadata,
       }),
     });
@@ -182,7 +205,7 @@ export async function registerModuleScript(input: {
       description: input.description,
       script_type: 'daemon',
       entrypoint: input.entrypoint,
-      code: input.code,
+      code,
       metadata,
     }),
   });

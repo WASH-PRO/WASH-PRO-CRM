@@ -192,6 +192,7 @@ CRM sends commands and prices to topics:
 ```
 {dt_pref}/{serial_number}/set/prices
 {dt_pref}/{serial_number}/set/command
+{dt_pref}/{serial_number}/set/surge
 ```
 
 Prefix `dt_pref` matches panel NVS (default `washpro`). Serial number — as in CRM (`posts.serialNumber`).
@@ -242,6 +243,7 @@ Error:
 |--------|--------------|
 | `prices` | `set/prices` |
 | `command` | `set/command` |
+| `surge` | `set/surge` |
 
 Inbound MQTT log (`/api/crm/telemetry`) still stores all messages; log cleanup period is set in **archive** settings (`archive.retentionDays`), separate from outbox.
 
@@ -281,6 +283,36 @@ Credit example:
 { "cmd": 3, "summ": 100 }
 ```
 
+### set/surge *(Dynamic Pricing module, v1.1.0+)*
+
+Debit coefficient **without changing the price list**. Published by CRM as user `system`. Device must apply it **until the current session balance reaches zero** (see `CLIENT.md` in the module repo).
+
+Enable (+10%):
+
+```json
+{
+  "coefficient": 1.10,
+  "active": 1,
+  "until_balance_zero": 1
+}
+```
+
+Disable:
+
+```json
+{
+  "coefficient": 1.0,
+  "active": 0,
+  "until_balance_zero": 0
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `coefficient` | Debit multiplier (≥ 1.0) |
+| `active` | `1` — apply, `0` — clear for new sessions |
+| `until_balance_zero` | `1` — active until `balance == 0`, then auto-reset on device |
+
 ### From CRM web UI
 
 On the post page (**Posts → ⚙ → Device settings** or `/posts/{id}#device-settings`):
@@ -299,6 +331,8 @@ Internal HTTP server `message-processor` (port `3022`) proxied by nginx:
 |--------|----------------------|---------|
 | `POST` | `/api/crm/post-device/posts/{serial}/prices` | Save prices and/or send to post |
 | `POST` | `/api/crm/post-device/posts/{serial}/command` | Send command to post |
+| `POST` | `/api/crm/post-device/posts/{serial}/surge` | Dynamic debit coefficient (`set/surge`) |
+| `POST` | `/api/crm/post-device/mqtt/sync-users` | Apply post accounts in Mosquitto |
 | `POST` | `/api/crm/post-device/mqtt/sync-users` | Apply post accounts in Mosquitto |
 
 Authorization: `Authorization: Bearer <JWT>` header (same token as Dashboard).

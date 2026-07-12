@@ -14,6 +14,7 @@ import {
   pricesPayload,
   resolveMqttPrefix,
   sanitizeSerial,
+  surgePayload,
 } from './post-device.js';
 import { mergePostSettings } from './post-settings.js';
 import { syncMqttUsersFromPosts } from './mqtt-users.js';
@@ -95,6 +96,7 @@ export function startProcessorHttpServer(): void {
 
     const pricesMatch = url.match(/^\/posts\/([^/]+)\/prices$/);
     const commandMatch = url.match(/^\/posts\/([^/]+)\/command$/);
+    const surgeMatch = url.match(/^\/posts\/([^/]+)\/surge$/);
     const syncUsersPath = url === '/mqtt/sync-users';
     const internalSyncPath = url === '/internal/mqtt/sync-users';
 
@@ -252,6 +254,77 @@ export function startProcessorHttpServer(): void {
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Command publish failed';
         logger.error({ err, serial }, 'Command request failed');
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, error: message }));
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && surgeMatch) {
+      const serial = sanitizeSerial(decodeURIComponent(surgeMatch[1]!));
+      if (!serial) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, error: 'Invalid serial' }));
+        return;
+      }
+
+      try {
+        const raw = await readBody(req);
+        const body = JSON.parse(raw) as {
+          coefficient?: number;
+          active?: boolean;
+          untilBalanceZero?: boolean;
+          mqttPrefix?: string;
+        };
+        const mqttPrefix = resolveMqttPrefix(body.mqttPrefix);
+        const basePayload = surgePayload({
+          coefficient: body.coefficient ?? 1,
+          active: body.active,
+          untilBalanceZero: body.untilBalanceZero,
+        });
+        const topic = buildSetTopic(mqttPrefix, serial, 'surge');
+        const brokerSettings = await loadMqttBrokerSettings();
+        const messageId = brokerSettings.requireDeliveryConfirmation ? newMessageId() : undefined;
+        const mqttPayload: Record<string, number | string> = { ...basePayload };
+        if (messageId) {
+          mqttPayload.message_id = messageId;
+        }
+        await publishMqtt(topic, mqttPayload);
+        if (messageId) {
+          await createOutboxEntry({
+            messageId,
+            postSerial: serial,
+            mqttTopic: topic,
+            kind: 'surge',
+            payload: mqttPayload,
+          });
+        }
+        await logOutbound(topic, serial, 'surge', {
+          ...mqttPayload,
+          direction: 'outbound',
+        });
+        await mergePostSettings(serial, {
+          lastSurgeCoefficient: basePayload.coefficient,
+          lastSurgeActive: basePayload.active === 1,
+          lastSurgeAt: new Date().toISOString(),
+          mqttPrefix,
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+          JSON.stringify({
+            success: true,
+            data: {
+              topic,
+              payload: mqttPayload,
+              mqttPrefix,
+              deliveryStatus: brokerSettings.requireDeliveryConfirmation ? 'pending_ack' : 'published',
+            },
+          })
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Surge publish failed';
+        logger.error({ err, serial }, 'Surge request failed');
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ success: false, error: message }));
       }

@@ -4,7 +4,7 @@ import { publishMqtt } from './mqtt-client.js';
 import { loadMqttBrokerSettings, type MqttDeliverySettings } from './mqtt-broker-settings.js';
 import { syncPricesFromDevice } from './post-settings.js';
 
-export type OutboxKind = 'prices' | 'command';
+export type OutboxKind = 'prices' | 'command' | 'surge';
 export type OutboxStatus = 'pending' | 'delivered' | 'failed' | 'expired';
 
 export interface MqttOutboxRow {

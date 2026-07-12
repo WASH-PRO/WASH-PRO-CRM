@@ -192,6 +192,7 @@ CRM отправляет команды и цены в топики:
 ```
 {dt_pref}/{serial_number}/set/prices
 {dt_pref}/{serial_number}/set/command
+{dt_pref}/{serial_number}/set/surge
 ```
 
 Префикс `dt_pref` совпадает с NVS панели (по умолчанию `washpro`). Серийный номер — как в CRM (`posts.serialNumber`).
@@ -242,6 +243,7 @@ CRM отправляет команды и цены в топики:
 |--------|----------------|
 | `prices` | `set/prices` |
 | `command` | `set/command` |
+| `surge` | `set/surge` |
 
 Журнал входящих MQTT (`/api/crm/telemetry`) по-прежнему хранит все сообщения; срок очистки журнала задаётся в настройках **архива** (`archive.retentionDays`), отдельно от outbox.
 
@@ -281,6 +283,36 @@ CRM отправляет команды и цены в топики:
 { "cmd": 3, "summ": 100 }
 ```
 
+### set/surge *(модуль «Динамические цены», v1.1.0+)*
+
+Коэффициент списания баланса **без изменения прайс-листа**. Публикуется CRM от учётной записи `system`. На устройстве должен применяться **до обнуления баланса** текущей сессии (см. `CLIENT.md` в репозитории модуля).
+
+Включить (+10%):
+
+```json
+{
+  "coefficient": 1.10,
+  "active": 1,
+  "until_balance_zero": 1
+}
+```
+
+Отключить:
+
+```json
+{
+  "coefficient": 1.0,
+  "active": 0,
+  "until_balance_zero": 0
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `coefficient` | Множитель списания (≥ 1.0) |
+| `active` | `1` — принять, `0` — сброс для новых сессий |
+| `until_balance_zero` | `1` — действует до `balance == 0`, затем автосброс на устройстве |
+
 ### Из веб-интерфейса CRM
 
 На странице поста (**Посты → ⚙ → Настройки устройства** или `/posts/{id}#device-settings`):
@@ -299,6 +331,7 @@ CRM отправляет команды и цены в топики:
 |-------|------------------------|------------|
 | `POST` | `/api/crm/post-device/posts/{serial}/prices` | Сохранить цены и/или отправить на пост |
 | `POST` | `/api/crm/post-device/posts/{serial}/command` | Отправить команду на пост |
+| `POST` | `/api/crm/post-device/posts/{serial}/surge` | Коэффициент динамического списания (`set/surge`) |
 | `POST` | `/api/crm/post-device/mqtt/sync-users` | Применить учётные записи постов в Mosquitto |
 
 Авторизация: заголовок `Authorization: Bearer <JWT>` (тот же токен, что у Dashboard).

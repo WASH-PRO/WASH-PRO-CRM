@@ -26,7 +26,11 @@ export function resolveMqttPrefix(prefix?: string): string {
   return value;
 }
 
-export function buildSetTopic(prefix: string, serial: string, suffix: 'prices' | 'command'): string {
+export function buildSetTopic(
+  prefix: string,
+  serial: string,
+  suffix: 'prices' | 'command' | 'surge'
+): string {
   return `${prefix}/${serial}/set/${suffix}`;
 }
 
@@ -97,4 +101,23 @@ export function parseInboundPrices(payload: Record<string, unknown>): Record<str
     return normalizeModePrices(payload.prices);
   }
   return normalizeModePrices(payload);
+}
+
+/** Динамическое ценообразование: коэффициент списания до обнуления баланса. */
+export function surgePayload(input: {
+  coefficient: number;
+  active?: boolean;
+  untilBalanceZero?: boolean;
+}): Record<string, number> {
+  const coefficient = Number(input.coefficient);
+  if (!Number.isFinite(coefficient) || coefficient < 1) {
+    throw new Error('coefficient must be >= 1');
+  }
+  const active = input.active !== false && coefficient > 1.0001;
+  const untilBalanceZero = input.untilBalanceZero !== false;
+  return {
+    coefficient: active ? Math.round(coefficient * 10000) / 10000 : 1,
+    active: active ? 1 : 0,
+    until_balance_zero: active && untilBalanceZero ? 1 : 0,
+  };
 }

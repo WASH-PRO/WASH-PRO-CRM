@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+## [1.1.36] — 2026-07-12
+
+### Исправлено
+
+- **Автообновление CRM (failed)** — health больше не валит обновление из‑за modules-bridge; dashboard собирается даже если modules-bridge упал
+- **WASH_HOST_PROJECT_ROOT** — автоопределение и запись в `.env` на шаге pull (`crm-update-sync-host-env.sh`); улучшен detect через `wash-update-bridge` / `wash-dashboard`
+- **Сборка** — modules-bridge best-effort; seed не блокируется при сбое ensure
+
 ## [1.1.35] — 2026-07-12
 
 ### Исправлено
@@ -468,7 +476,8 @@
 - Опциональный PyOrchestrator v0.1.10 (Telegram-боты)
 - Резервное копирование MongoDB, архивирование
 
-[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.35...HEAD
+[Unreleased]: https://github.com/WASH-PRO/WASH-PRO-CRM/compare/v1.1.36...HEAD
+[1.1.36]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.36
 [1.1.35]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.35
 [1.1.34]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.34
 [1.1.33]: https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.33

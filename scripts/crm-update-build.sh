@@ -11,14 +11,27 @@ cd "$ROOT"
 source "$ROOT/scripts/crm-update-compose-env.sh"
 
 echo "[crm-update-build] WASH_HOST_PROJECT_ROOT=${WASH_HOST_PROJECT_ROOT:-?} WASH_BUILD_ROOT=${WASH_BUILD_ROOT:-?}" >&2
-echo "[crm-update-build] Building init-seed, modules-bridge, dashboard…"
-docker compose $COMPOSE_FILES build init-seed modules-bridge dashboard
 
-echo "[crm-update-build] Restarting CRM services (incl. modules-bridge)…"
+echo "[crm-update-build] Building init-seed and dashboard…"
+docker compose $COMPOSE_FILES build init-seed dashboard
+
+echo "[crm-update-build] Building modules-bridge (best effort)…"
+if ! docker compose $COMPOSE_FILES build modules-bridge; then
+  echo "[crm-update-build] WARN: modules-bridge build failed — continuing with dashboard" >&2
+fi
+
+echo "[crm-update-build] Restarting core CRM services…"
 docker compose $COMPOSE_FILES up -d --build --force-recreate --no-deps \
-  dynamic-api dynamic-api-panel dashboard modules-bridge message-processor backup
+  dynamic-api dynamic-api-panel dashboard message-processor backup
 
-echo "[crm-update-build] Ensuring modules-bridge is up…"
-bash "$ROOT/scripts/crm-update-ensure-modules-bridge.sh"
+echo "[crm-update-build] Starting modules-bridge (best effort)…"
+if ! docker compose $COMPOSE_FILES up -d --build --force-recreate --no-deps modules-bridge; then
+  echo "[crm-update-build] WARN: modules-bridge up failed — running ensure" >&2
+  bash "$ROOT/scripts/crm-update-ensure-modules-bridge.sh" || \
+    echo "[crm-update-build] WARN: modules-bridge ensure failed — repair from Settings after update" >&2
+else
+  bash "$ROOT/scripts/crm-update-ensure-modules-bridge.sh" || \
+    echo "[crm-update-build] WARN: modules-bridge ensure check failed" >&2
+fi
 
 echo "[crm-update-build] Done."

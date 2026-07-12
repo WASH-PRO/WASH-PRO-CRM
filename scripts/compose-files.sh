@@ -27,6 +27,7 @@ chmod +x "$SCRIPT_DIR/crm-update-build.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/crm-update-ensure-modules-bridge.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/crm-update-health.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/crm-update-compose-env.sh" 2>/dev/null || true
+chmod +x "$SCRIPT_DIR/crm-update-sync-host-env.sh" 2>/dev/null || true
 
 # CRM auto-update (update-bridge container): older baked executor images run composeSetup()
 # then a hardcoded docker compose line without modules-bridge. When this script is sourced

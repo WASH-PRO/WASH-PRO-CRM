@@ -19,14 +19,26 @@ if [ -f .env ]; then
   set +a
 fi
 
+detect_host_project_root() {
+  local detected="" target
+  if command -v docker >/dev/null 2>&1; then
+    for target in "${HOSTNAME:-}" wash-update-bridge wash-dashboard; do
+      [ -z "$target" ] && continue
+      detected="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/deploy"}}{{.Source}}{{end}}{{end}}' "$target" 2>/dev/null || true)"
+      if [ -n "$detected" ] && [ "$detected" != "/deploy" ]; then
+        echo "$detected"
+        return 0
+      fi
+    done
+  fi
+  return 1
+}
+
 if [ -n "$_preserve_host" ] && [ "$_preserve_host" != "." ] && [ "$_preserve_host" != "/deploy" ]; then
   export WASH_HOST_PROJECT_ROOT="$_preserve_host"
 elif [ -z "${WASH_HOST_PROJECT_ROOT:-}" ] || [ "$WASH_HOST_PROJECT_ROOT" = "." ] || [ "$WASH_HOST_PROJECT_ROOT" = "/deploy" ]; then
-  detected=""
-  if [ -n "${HOSTNAME:-}" ] && command -v docker >/dev/null 2>&1; then
-    detected="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/deploy"}}{{.Source}}{{end}}{{end}}' "${HOSTNAME}" 2>/dev/null || true)"
-  fi
-  if [ -n "$detected" ] && [ "$detected" != "/deploy" ]; then
+  detected="$(detect_host_project_root || true)"
+  if [ -n "$detected" ]; then
     export WASH_HOST_PROJECT_ROOT="$detected"
   fi
 fi
@@ -46,4 +58,10 @@ fi
 if [ -z "${COMPOSE_FILES:-}" ]; then
   # shellcheck disable=SC1091
   source "$CRM_UPDATE_ROOT/scripts/compose-files.sh"
+fi
+
+if [ -n "${UPDATE_HTTP_PORT:-}" ]; then
+  if [ -z "${WASH_HOST_PROJECT_ROOT:-}" ] || [ "$WASH_HOST_PROJECT_ROOT" = "." ] || [ "$WASH_HOST_PROJECT_ROOT" = "/deploy" ]; then
+    echo "[crm-update-compose-env] WARN: WASH_HOST_PROJECT_ROOT not detected — modules volumes may fail; run crm-update-sync-host-env.sh" >&2
+  fi
 fi

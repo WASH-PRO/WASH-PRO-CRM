@@ -1168,6 +1168,7 @@ export const en = {
       columns: {
         action: 'Action',
         group: 'Group',
+        status: 'Result',
         records: 'Records',
         retention: 'Retention',
         filename: 'Filename',
@@ -1204,8 +1205,18 @@ export const en = {
         archiveFile: ', archive {{filename}}',
         groupProcessed: '{{label}}: processed {{affected}} records{{deleted}}{{filename}}',
         noRecordsOlderThan: '{{label}}: no records older than {{days}} days',
+        noExpiredRecords: '{{label}}: checked {{scanned}} records, none older than {{days}} days',
         entryDeleted: 'Entry deleted',
         deletedCount: 'Deleted entries: {{count}}',
+      },
+      status: {
+        processed: 'Completed',
+        empty: 'Nothing to archive',
+        failed: 'Failed',
+      },
+      records: {
+        none: '0 (none expired)',
+        checkedNone: '0 of {{scanned}}',
       },
       errors: {
         groupDisabled: 'Archiving is disabled for this group',

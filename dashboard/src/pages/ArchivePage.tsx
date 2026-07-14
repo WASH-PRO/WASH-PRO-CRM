@@ -9,8 +9,8 @@ import { usePolling } from '../hooks/usePolling';
 import type { ArchiveLog, CrmSetting, ArchiveGroupSettings, ArchiveSettings } from '../types';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
-import { executeArchiveGroup, type ArchiveGroupKey } from '../utils/archive';
-import { archiveFilenameLabel, resolveArchiveFilename } from '../utils/archiveLog';
+import { executeArchiveGroup, executeTelemetryArchive, type ArchiveGroupKey } from '../utils/archive';
+import { archiveFilenameLabel, formatArchiveRecordsCell, resolveArchiveFilename, resolveArchiveLogStatus } from '../utils/archiveLog';
 import {
   ARCHIVE_GROUPS,
   DEFAULT_ARCHIVE_CRON,
@@ -129,6 +129,87 @@ export function ArchivePage() {
     refresh();
   };
 
+  const writeArchiveLog = async (
+    result: { affected: number; scanned: number; filename?: string },
+    meta: {
+      groupKey: string;
+      policyDays: number;
+      manual?: boolean;
+      deleteAfter?: boolean;
+      saveArchive?: boolean;
+      entity?: string;
+    }
+  ) => {
+    await api('/crm/archive-logs', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'archive',
+        recordsAffected: result.affected,
+        policyDays: meta.policyDays,
+        createdAt: new Date().toISOString(),
+        ...(result.filename ? { filename: result.filename } : {}),
+        details: {
+          manual: meta.manual ?? true,
+          group: meta.groupKey,
+          groupKey: meta.groupKey,
+          scanned: result.scanned,
+          result: result.affected > 0 ? 'processed' : 'empty',
+          deleteAfter: meta.deleteAfter,
+          saveArchive: meta.saveArchive,
+          ...(meta.entity ? { entity: meta.entity } : {}),
+          ...(result.filename ? { filename: result.filename } : {}),
+        },
+      }),
+    });
+  };
+
+  const showArchiveResult = (
+    label: string,
+    result: { affected: number; scanned: number; filename?: string },
+    policyDays: number,
+    extras?: { deleteAfter?: boolean }
+  ) => {
+    if (result.affected > 0) {
+      setMessage(
+        t('pages.archive.messages.groupProcessed', {
+          label,
+          affected: result.affected,
+          deleted: extras?.deleteAfter ? t('pages.archive.messages.sourceDeleted') : '',
+          filename: result.filename ? t('pages.archive.messages.archiveFile', { filename: result.filename }) : '',
+        })
+      );
+      return;
+    }
+    if (result.scanned > 0) {
+      setMessage(t('pages.archive.messages.noExpiredRecords', { label, scanned: result.scanned, days: policyDays }));
+      return;
+    }
+    setMessage(t('pages.archive.messages.noRecordsOlderThan', { label, days: policyDays }));
+  };
+
+  const runTelemetryArchive = async () => {
+    const retentionDays = setting.retentionDays ?? 90;
+    setRunningGroup('telemetry');
+    setError('');
+    setMessage('');
+    try {
+      const result = await executeTelemetryArchive(retentionDays);
+      await writeArchiveLog(result, {
+        groupKey: 'telemetry',
+        entity: 'telemetry',
+        policyDays: retentionDays,
+        manual: true,
+      });
+      showArchiveResult(t('pages.archive.groups.telemetry'), result, retentionDays);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('pages.archive.errors.archiveFailed'));
+      setMessage('');
+    } finally {
+      setRunningGroup(null);
+    }
+  };
+
   const runArchive = async (groupKey: ArchiveGroupKey) => {
     const group = setting[groupKey] as ArchiveGroupSettings;
     if (!group.enabled) {
@@ -141,35 +222,15 @@ export function ArchivePage() {
     setMessage('');
     try {
       const result = await executeArchiveGroup(groupKey, group);
-      await api('/crm/archive-logs', {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'archive',
-          recordsAffected: result.affected,
-          policyDays: group.retentionDays,
-          createdAt: new Date().toISOString(),
-          ...(result.filename ? { filename: result.filename } : {}),
-          details: {
-            manual: true,
-            group: groupKey,
-            groupKey,
-            deleteAfter: group.deleteAfter,
-            saveArchive: group.saveArchive,
-            ...(result.filename ? { filename: result.filename } : {}),
-          },
-        }),
+      await writeArchiveLog(result, {
+        groupKey,
+        policyDays: group.retentionDays,
+        manual: true,
+        deleteAfter: group.deleteAfter,
+        saveArchive: group.saveArchive,
       });
       const label = t(`pages.archive.groups.${groupKey}`);
-      setMessage(
-        result.affected > 0
-          ? t('pages.archive.messages.groupProcessed', {
-              label,
-              affected: result.affected,
-              deleted: group.deleteAfter ? t('pages.archive.messages.sourceDeleted') : '',
-              filename: result.filename ? t('pages.archive.messages.archiveFile', { filename: result.filename }) : '',
-            })
-          : t('pages.archive.messages.noRecordsOlderThan', { label, days: group.retentionDays })
-      );
+      showArchiveResult(label, result, group.retentionDays, { deleteAfter: group.deleteAfter });
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('pages.archive.errors.archiveFailed'));
@@ -285,11 +346,26 @@ export function ArchivePage() {
       render: (l) => resolveArchiveGroupLabel(l.details, t),
     },
     {
+      key: 'status',
+      header: t('pages.archive.columns.status'),
+      sortable: true,
+      sortValue: (l) => resolveArchiveLogStatus(l, t),
+      render: (l) => {
+        const status = resolveArchiveLogStatus(l, t);
+        const processed = (l.recordsAffected ?? 0) > 0;
+        return (
+          <span className={processed ? 'text-emerald-600' : 'text-panel-muted dark:text-panel-muted-dark'}>
+            {status}
+          </span>
+        );
+      },
+    },
+    {
       key: 'records',
       header: t('pages.archive.columns.records'),
       sortable: true,
       sortValue: (l) => l.recordsAffected,
-      render: (l) => l.recordsAffected,
+      render: (l) => formatArchiveRecordsCell(l, t),
     },
     {
       key: 'policy',
@@ -394,9 +470,21 @@ export function ArchivePage() {
         <h2 className="font-semibold">{t('pages.archive.settingsTitle')}</h2>
 
         <div className="space-y-3 border-t border-panel-border pt-5 first:border-t-0 first:pt-0 dark:border-panel-border-dark">
-          <h3 className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">
-            {t('pages.archive.groups.telemetry')}
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">
+              {t('pages.archive.groups.telemetry')}
+            </h3>
+            {canRun && (
+              <button
+                type="button"
+                className="btn-secondary btn-sm text-xs"
+                disabled={runningGroup === 'telemetry'}
+                onClick={() => runTelemetryArchive()}
+              >
+                {runningGroup === 'telemetry' ? t('pages.archive.actions.starting') : t('pages.archive.actions.start')}
+              </button>
+            )}
+          </div>
           <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
             {t('pages.archive.settings.telemetryHint')}
           </p>

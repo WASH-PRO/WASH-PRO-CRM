@@ -7,6 +7,7 @@ export type ArchiveGroupKey = 'cards' | 'postStates' | 'usageStats' | 'financeSt
 
 export interface ArchiveRunResult {
   affected: number;
+  scanned: number;
   filename?: string;
 }
 
@@ -73,5 +74,19 @@ export async function executeArchiveGroup(
     }
   }
 
-  return { affected: expired.length, filename };
+  return { affected: expired.length, scanned: items.length, filename };
+}
+
+/** Удаляет телеметрию старше retentionDays (bulk purge на сервере). */
+export async function executeTelemetryArchive(retentionDays: number): Promise<ArchiveRunResult> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - retentionDays);
+
+  const result = await api<{ deleted?: number }>('/crm/telemetry/purge-expired', {
+    method: 'POST',
+    body: JSON.stringify({ receivedBefore: cutoff.toISOString() }),
+  });
+
+  const affected = Number(result?.deleted ?? 0);
+  return { affected, scanned: affected };
 }

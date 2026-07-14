@@ -1169,6 +1169,7 @@ export const ru = {
       columns: {
         action: 'Действие',
         group: 'Группа',
+        status: 'Результат',
         records: 'Записей',
         retention: 'Срок хранения',
         filename: 'Имя файла',
@@ -1205,8 +1206,18 @@ export const ru = {
         archiveFile: ', архив {{filename}}',
         groupProcessed: '{{label}}: обработано {{affected}} записей{{deleted}}{{filename}}',
         noRecordsOlderThan: '{{label}}: нет записей старше {{days}} дней',
+        noExpiredRecords: '{{label}}: проверено {{scanned}} записей, нет данных старше {{days}} дней',
         entryDeleted: 'Запись удалена',
         deletedCount: 'Удалено записей: {{count}}',
+      },
+      status: {
+        processed: 'Выполнено',
+        empty: 'Нечего архивировать',
+        failed: 'Ошибка',
+      },
+      records: {
+        none: '0 (нет просроченных)',
+        checkedNone: '0 из {{scanned}}',
       },
       errors: {
         groupDisabled: 'Архивирование для этой группы отключено',

@@ -202,7 +202,7 @@ export async function runArchiveGroup(
     }
   }
 
-  return { affected: expired.length, filename };
+  return { affected: expired.length, scanned: items.length, filename };
 }
 
 export async function runTelemetryArchive(
@@ -248,7 +248,7 @@ export async function runTelemetryArchiveJob(token: string, settings: ArchiveSet
       recordsAffected: affected,
       policyDays: retentionDays,
       createdAt: new Date().toISOString(),
-      details: { entity: 'telemetry', groupKey: 'telemetry' },
+      details: { entity: 'telemetry', groupKey: 'telemetry', scanned: affected, result: affected > 0 ? 'processed' : 'empty' },
     }),
   });
   logger.info({ affected, retentionDays }, 'Telemetry archive completed');
@@ -289,6 +289,8 @@ export async function runGroupArchiveJob(
         saveArchive: group.saveArchive,
         deleteAfter: group.deleteAfter,
         autoRun: true,
+        scanned: result.scanned,
+        result: result.affected > 0 ? 'processed' : 'empty',
       },
     }),
   });

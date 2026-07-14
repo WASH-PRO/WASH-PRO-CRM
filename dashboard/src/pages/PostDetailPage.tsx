@@ -19,7 +19,7 @@ import { useBreadcrumbLastLabel } from '../context/BreadcrumbContext';
 import type { Post, PostSettings, PostState, Wash } from '../types';
 import { parseModePrices } from '../utils/postDevice';
 
-import { fetchPostStateHistoryPage, type PostStateHistoryRow } from '../utils/postTelemetry';
+import { fetchPostStateHistoryPage, POST_HISTORY_PAGE_SIZE, type PostStateHistoryRow } from '../utils/postTelemetry';
 
 interface PostLiveData {
   post: Post;
@@ -447,6 +447,8 @@ export function PostDetailPage() {
         columns={stateColumns}
         data={stateHistory}
         rowKey={(r) => r.id}
+        pageSize={POST_HISTORY_PAGE_SIZE}
+        disableLoadMore
         emptyMessage={
           historyDateFrom || historyDateTo
             ? t('pages.postDetail.history.emptyFiltered')

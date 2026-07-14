@@ -53,6 +53,8 @@ interface DataTableProps<T> {
   isRowActive?: (row: T) => boolean;
   defaultSortKey?: string | null;
   defaultSortDir?: 'asc' | 'desc';
+  /** Отключает кнопку «Загрузить ещё» внутри таблицы (если догрузка с сервера снаружи). */
+  disableLoadMore?: boolean;
 }
 
 const PAGE_SIZE_OPTIONS = [20, 40, 60, 80, 100] as const;
@@ -98,6 +100,7 @@ export function DataTable<T>({
   isRowActive,
   defaultSortKey = null,
   defaultSortDir = 'asc',
+  disableLoadMore = false,
 }: DataTableProps<T>) {
   const { t } = useLocale();
   const searchPlaceholderText = searchPlaceholder ?? t('dataTable.searchPlaceholder');
@@ -535,7 +538,7 @@ export function DataTable<T>({
           >
             {t('dataTable.next')}
           </button>
-          {canLoadMore && (
+          {canLoadMore && !disableLoadMore && (
             <button type="button" className="btn-secondary btn-sm" onClick={loadMore}>
               {t('dataTable.loadMore', {
                 count: Math.min(pageSize, sorted.length - effectiveLoaded),

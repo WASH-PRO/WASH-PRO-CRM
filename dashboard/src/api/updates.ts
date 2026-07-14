@@ -100,6 +100,21 @@ export function componentById(status: UpdatesStatus | null, id: UpdateComponentI
   return status?.components.find((c) => c.id === id);
 }
 
+/** Активная задача, блокирующая баннер и быстрый опрос (игнорирует зависшие queued после успешного обновления). */
+export function isBlockingActiveJob(status: UpdatesStatus | null | undefined): boolean {
+  const job = status?.activeJob;
+  if (!job) return false;
+
+  const comp = status.components.find((c) => c.id === job.component);
+  const targetAlreadyInstalled = comp?.currentVersion === job.targetVersion;
+  const neverStarted =
+    job.status === 'queued' && job.steps.every((step) => step.status === 'pending');
+
+  if (targetAlreadyInstalled && neverStarted) return false;
+
+  return job.status === 'queued' || job.status === 'running';
+}
+
 export type RepairIssueSeverity = 'ok' | 'warning' | 'error';
 
 export interface RepairIssue {

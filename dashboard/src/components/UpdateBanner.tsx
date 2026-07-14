@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpCircle, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
 import clsx from 'clsx';
-import { applyUpdate, dismissUpdate } from '../api/updates';
+import { applyUpdate, dismissUpdate, isBlockingActiveJob } from '../api/updates';
 import { useSoftwareUpdatesContext } from '../context/SoftwareUpdatesContext';
 import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../i18n/LocaleContext';
@@ -29,8 +29,8 @@ export function UpdateBanner() {
 
   const { status, refresh } = ctx;
 
-  if (status.activeJob) {
-    const job = status.activeJob;
+  if (isBlockingActiveJob(status)) {
+    const job = status.activeJob!;
     const runningStep =
       job.steps.find((s) => s.status === 'running') ??
       job.steps.find((s) => s.status === 'pending');

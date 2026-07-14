@@ -17,6 +17,7 @@ export interface UpdateJob {
   id: string;
   component: UpdateComponentId;
   targetVersion: string;
+  targetTag?: string;
   fromVersion: string;
   status: JobStatus;
   steps: UpdateStep[];

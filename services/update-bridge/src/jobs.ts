@@ -23,6 +23,61 @@ import { composeCommandEnv } from './host-path.js';
 import type { ComponentCheck, UpdateComponentId, UpdateJob, UpdatesStatus } from './types.js';
 
 let running = false;
+let pendingRun: { jobId: string; targetTag: string } | null = null;
+
+function targetTagForJob(job: UpdateJob): string {
+  return job.targetTag || `v${job.targetVersion}`;
+}
+
+/** Закрывает зависшие задачи: целевая версия уже установлена или очередь не стартовала. */
+function reconcileActiveJob(components: ComponentCheck[]): boolean {
+  const job = getActiveJob();
+  if (!job) return false;
+
+  const current =
+    components.find((c) => c.id === job.component)?.currentVersion ??
+    getComponent(job.component).readCurrentVersion();
+
+  if (
+    (job.status === 'queued' || job.status === 'running') &&
+    !isNewerVersion(job.targetVersion, current)
+  ) {
+    job.status = 'completed';
+    job.finishedAt = new Date().toISOString();
+    job.logs.push(`INFO: v${current} already installed — closing stale job`);
+    for (const step of job.steps) {
+      if (step.status === 'pending' || step.status === 'running') {
+        step.status = 'skipped';
+        step.finishedAt = step.finishedAt ?? new Date().toISOString();
+      }
+    }
+    updateJob(job);
+    return true;
+  }
+
+  if (job.status === 'queued') {
+    const ageMs = Date.now() - new Date(job.createdAt).getTime();
+    const allPending = job.steps.every((s) => s.status === 'pending');
+    if (allPending && ageMs > 60_000 && !running) {
+      void runJob(job.id, targetTagForJob(job));
+    } else if (allPending && ageMs > 10 * 60 * 1000) {
+      job.status = 'failed';
+      job.error = 'Обновление не запустилось (очередь зависла). Запустите снова из Настроек.';
+      job.finishedAt = new Date().toISOString();
+      for (const step of job.steps) {
+        if (step.status === 'pending') {
+          step.status = 'failed';
+          step.message = 'Не запущено';
+          step.finishedAt = new Date().toISOString();
+        }
+      }
+      updateJob(job);
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /** Failed job is stale when CRM already reached its target (e.g. manual pull or later successful update). */
 function syncStaleFailedJobDismissals(components: ComponentCheck[]): boolean {
@@ -112,6 +167,9 @@ export function buildStatus(components: ComponentCheck[]): UpdatesStatus {
   if (syncStaleFailedJobDismissals(components)) {
     void saveState();
   }
+  if (reconcileActiveJob(components)) {
+    void saveState();
+  }
   const executor = isExecutorAvailable();
   const activeJob = getActiveJob();
   const showNotification = components.some((c) => {
@@ -172,6 +230,7 @@ export async function startUpdate(componentId: UpdateComponentId, targetTag?: st
     id: randomUUID(),
     component: componentId,
     targetVersion: parseTagVersion(tag),
+    targetTag: tag,
     fromVersion: check.currentVersion,
     status: 'queued',
     steps: createSteps(componentId),
@@ -187,7 +246,10 @@ export async function startUpdate(componentId: UpdateComponentId, targetTag?: st
 }
 
 async function runJob(jobId: string, targetTag: string): Promise<void> {
-  if (running) return;
+  if (running) {
+    pendingRun = { jobId, targetTag };
+    return;
+  }
   running = true;
   await loadState();
   const job = getActiveJob();
@@ -306,6 +368,11 @@ async function runJob(jobId: string, targetTag: string): Promise<void> {
   updateJob(job);
   await saveState();
   running = false;
+  if (pendingRun) {
+    const next = pendingRun;
+    pendingRun = null;
+    void runJob(next.jobId, next.targetTag);
+  }
 }
 
 export function scheduleBackgroundChecks(intervalMs = 6 * 60 * 60 * 1000): void {

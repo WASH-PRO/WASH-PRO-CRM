@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { getUpdatesStatus, type UpdatesStatus } from '../api/updates';
+import { getUpdatesStatus, isBlockingActiveJob, type UpdatesStatus } from '../api/updates';
 import { usePolling } from './usePolling';
 
 export function useSoftwareUpdates(enabled = true) {
@@ -25,7 +25,7 @@ export function useSoftwareUpdates(enabled = true) {
     return status;
   }, [refresh]);
 
-  const fastPoll = Boolean(data?.activeJob);
+  const fastPoll = isBlockingActiveJob(data);
 
   return {
     status: data,

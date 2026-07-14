@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import {
   applyUpdate,
   dismissUpdate,
+  isBlockingActiveJob,
   type ComponentCheck,
   type UpdateComponentId,
   type UpdateJob,
@@ -258,6 +259,8 @@ export function SoftwareUpdatesSection() {
 
   if (!status) return null;
 
+  const activeJob = isBlockingActiveJob(status) ? status.activeJob : null;
+
   return (
     <div id="updates" className="space-y-4 scroll-mt-24">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -288,7 +291,7 @@ export function SoftwareUpdatesSection() {
           <ComponentCard
             key={component.id}
             component={component}
-            activeJob={status.activeJob}
+            activeJob={activeJob}
             recentJobs={status.recentJobs}
             dismissedFailedJobIds={status.dismissedFailedJobIds ?? {}}
             executorAvailable={status.executorAvailable}

@@ -29,6 +29,10 @@ check_pattern 'wiki source path in markdown link' \
   '\]\(wiki/(en|ru)/' \
   "$ROOT/README.md" "$ROOT/README.ru.md" "$ROOT/docs"
 
+check_pattern 'repo-relative dashboard path (breaks on GitHub Pages)' \
+  '\]\(\.\./\.\./dashboard/' \
+  "$ROOT/docs"
+
 if [[ "${CHECK_HTTP:-0}" == "1" ]]; then
   BASE="https://wash-pro.github.io/WASH-PRO-CRM"
   for path in /en/ /ru/ /en/architecture/ /en/troubleshooting/; do

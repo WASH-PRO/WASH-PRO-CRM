@@ -147,7 +147,21 @@ Vendored-копия [Dynamic API Platform](https://github.com/Dynamic-API-Platfo
 
 In-app updater **отключён**: `UPDATE_EXECUTOR_ENABLED=false`.
 
-## PyOrchestrator (vendored v0.1.10)
+## Индексы MongoDB (v1.1.48+)
+
+Dynamic API синхронизирует индексы Mongoose **в фоне** после старта (`scheduleDatabaseIndexSync`) — не блокирует healthcheck при автообновлении CRM.
+
+Составные индексы телеметрии (`endpoint_data`) для быстрых списков:
+
+| Поля индекса | Назначение |
+|--------------|------------|
+| `resourcePath`, `data.postSerial`, `data.receivedAt` | История телеметрии поста |
+| `resourcePath`, `data.postSerial`, `data.messageType`, `data.receivedAt` | Фильтр по типу сообщения |
+| `resourcePath`, `data.postId`, `data.lastMessageAt` | Состояния постов |
+
+История на карточке поста и крупные журналы используют **`count=false`** в list API (без медленного `countDocuments`); «Загрузить ещё» определяется по размеру страницы.
+
+## PyOrchestrator (vendored v0.1.13)
 
 Vendored-копия [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator).
 

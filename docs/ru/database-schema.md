@@ -55,6 +55,8 @@ description: CRM endpoints и коллекции MongoDB
 | Архив | `/api/crm/archive-logs` | action, recordsAffected, policyDays, groupKey |
 | Телеметрия | `/api/crm/telemetry` | washSerial, postSerial, messageType, payload, receivedAt |
 
+**Индексы телеметрии (v1.1.48+):** составные индексы по `resourcePath` + `postSerial` + `receivedAt` (+ опционально `messageType`) — см. [Архитектура — индексы MongoDB](architecture.md#индексы-mongodb-v148).
+
 ### Справочник типов скидок (по умолчанию)
 
 | № | Название |
@@ -71,8 +73,8 @@ description: CRM endpoints и коллекции MongoDB
 
 | Ключ | Описание |
 |------|----------|
-| `firmwareVersion` | Версия прошивки (с устройства / вручную) |
-| `warrantyUntil` | Дата окончания гарантии |
+| `firmwareVersion` | Legacy JSON; **в UI Dashboard не редактируется** (только из устройства/настроек, если есть) |
+| `warrantyUntil` | Legacy JSON; **в UI Dashboard не редактируется** |
 | `maintenance` | Заметки по ТО |
 | `features` | Описание возможностей поста |
 | `mqttPrefix` | Префикс MQTT (`dt_pref`), по умолчанию `washpro` |

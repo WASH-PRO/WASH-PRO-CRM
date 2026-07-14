@@ -55,6 +55,8 @@ Total **52** CRM endpoint definitions (CRUD + lists). `init-seed` creates and up
 | Archive | `/api/crm/archive-logs` | action, recordsAffected, policyDays, groupKey |
 | Telemetry | `/api/crm/telemetry` | washSerial, postSerial, messageType, payload, receivedAt |
 
+**Telemetry indexes (v1.1.48+):** compound indexes on `resourcePath` + `postSerial` + `receivedAt` (+ optional `messageType`) — see [Architecture — MongoDB indexes](architecture.md#mongodb-indexes-v148).
+
 ### Default discount type reference
 
 | # | Name |
@@ -71,8 +73,8 @@ In cards, `discountType` stores the number (`"1"` … `"5"`); Dashboard shows th
 
 | Key | Description |
 |-----|-------------|
-| `firmwareVersion` | Firmware version (from device / manual) |
-| `warrantyUntil` | Warranty end date |
+| `firmwareVersion` | Legacy JSON field; **not editable in Dashboard UI** (device/settings only if present) |
+| `warrantyUntil` | Legacy JSON field; **not editable in Dashboard UI** |
 | `maintenance` | Maintenance notes |
 | `features` | Post capabilities description |
 | `mqttPrefix` | MQTT prefix (`dt_pref`), default `washpro` |

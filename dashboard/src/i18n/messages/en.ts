@@ -1252,6 +1252,7 @@ export const en = {
     notifications: {
       title: 'Notifications',
       subtitleBase: 'Telegram and Web notifications',
+      subtitleShown: ' · shown {{shown}}',
       readonlySuffix: ' · view-only',
       searchPlaceholder: 'Search notifications...',
       confirmDeleteOne: 'Delete notification?',

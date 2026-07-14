@@ -76,11 +76,24 @@ Core strings live in `dashboard/src/i18n/messages/{en,ru}.ts`. Feature-specific 
 | Updates & repair | `messages/features/updates.{en,ru}.ts` |
 | Module/update notifications | `messages/features/notifications-features.{en,ru}.ts` |
 
-See [`dashboard/src/i18n/README.md`](../../dashboard/src/i18n/README.md).
+See [i18n README](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/dashboard/src/i18n/README.md) in the repository.
 
-## Notifications (v1.1.14)
+## Notifications (v1.1.14, pagination v1.1.52)
 
 The **Notifications** page and Overview widget display **localized message templates by event type** (`mqtt_credit`, `user_login`, `wash_created`, etc.), not the raw text stored when the record was created. Parameters (amount, login, entity name) are parsed from legacy messages. Severity labels and CSV export follow the active UI language.
+
+### Full notifications page (`/notifications`) — v1.1.52
+
+Same **server-side pagination** pattern as the MQTT log:
+
+| Element | Behavior |
+|---------|----------|
+| **Page size** | **100** rows per API request |
+| **Load more** | Single button **above the table** — «Load more (100 rows)» |
+| **Subtitle** | Shown count, total, last refresh time |
+| **Polling** | Live refresh every **3 s** (`usePolling`) |
+
+Overview widget remains a compact preview (**10** rows, separate from the full page).
 
 ### Software updates & modules (v1.1.34)
 
@@ -97,9 +110,9 @@ Operational data refreshes automatically (`usePolling`). Header shows a live-mod
 
 | Interval | Pages |
 |----------|-------|
-| 3 s | Current post status, **Posts**, **post card** |
+| 3 s | Current post status, **Posts**, **post card**, **MQTT**, **Notifications** |
 | 5 s | Overview |
-| 10 s | Cards, finances, usage, notifications |
+| 10 s | Cards, finances, usage |
 | 15 s | Car washes, archive, backups, currencies, discount types, logs, users, groups, setup wizard |
 
 On the **Current status** page, mode time ticks in real time (`LiveModeTimer`).
@@ -131,17 +144,18 @@ Footer label: `N rows · page X of Y · loaded M` — when more rows exist in th
 
 Changing page size, search, or filters resets to page 1.
 
-### Large logs (two-level loading)
+### Large logs (server-side Load more)
 
-Pages with very large data volumes use **two levels** of loading:
+Pages with very large data volumes use **server-side pagination** (button above the table). **DataTable** footer pagination (20–100 rows) applies only to already loaded rows — no second «Load more» in the footer on these pages.
 
-| Section | API loading | Table pagination |
-|---------|-------------|------------------|
-| **MQTT** (`/mqtt`) | **Load more (100 rows)** button above table — next telemetry page from server | DataTable: 20–100 rows per page, Back/Next, Load more |
-| **Cards** | Same, batches of **100** from API | DataTable in footer |
-| **Post state history** (`/posts/:id`) | Telemetry `state/process` loaded in batches when filtering by date | DataTable: does not render thousands of rows at once |
+| Section | Server loading | Notes |
+|---------|----------------|-------|
+| **MQTT** (`/mqtt`) | **Load more (100 rows)** above table | Full count in subtitle |
+| **Cards** | Same, batches of **100** from API | |
+| **Notifications** (`/notifications`) | **Load more (100 rows)** above table *(v1.1.52)* | Web notifications only (`isWebNotification`) |
+| **Post state history** (`/posts/:id`) | **Load more (100 rows)** above table *(v1.1.51)* | Telemetry `state/process`; API uses `count=false` for speed; `hasMore` from page size |
 
-**Recent notifications** widget on Overview — compact preview (10 rows by default, value **10** available in "Per page" list).
+**Recent notifications** widget on Overview — compact preview (10 rows by default).
 
 ## Sections in detail
 
@@ -170,9 +184,9 @@ Actions column — **⚙** icon (device settings) → post page. On create/edit 
 | Block | Description |
 |-------|-------------|
 | Header | **Online/offline status**, name, serial number |
-| Post description | Name, site address, serial number, maintenance, features |
+| Post description | Name, site address, serial number, maintenance, features *(firmware/warranty fields are legacy JSON only — not shown in UI)* |
 | **Device settings** | Mode prices, MQTT commands, `dt_pref` prefix — see [MQTT](mqtt.md) |
-| State history | Telemetry table `state/process` with date filter; pagination **20–100** rows, **Load more** |
+| State history | Telemetry `state/process` with date filter; **Load more (100 rows)** above table; server-side pages via `usePolling` *(v1.1.51)* |
 
 Anchor `#device-settings` scrolls to the device settings block.
 
@@ -232,6 +246,10 @@ API: `GET/POST /api/crm/updates/repair` (`update-bridge`).
 
 **v1.1.18+ behavior:** page load and job progress polling **do not** call GitHub — cache only. `GITHUB_TOKEN` in `.env` is **optional** (release notes, API quota).
 
+**v1.1.50+:** banner no longer spins on a stale `queued` job when the target version is already installed; `update-bridge` auto-closes such jobs and runs the next queued update.
+
+**v1.1.51+:** before starting a new update, `update-bridge` reconciles a stale active job (same repair logic as integrity check).
+
 State: `DATA_DIR/update-bridge/state.json`. API: `GET /api/crm/updates/status`, `POST /api/crm/updates/check`, `POST /api/crm/updates/apply/{component}`.
 
 ### Cards (`/cards`)
@@ -250,14 +268,14 @@ Discount type — number `1`–`5` from reference. Statuses: `success`, `rejecte
 
 - **Usage** — before/after collection, categories regular/service/unlimited.
 - **Finances** — cash, cashless, discount, revenue.
-- **Archiving** — policies by data group, operation log.
+- **Archiving** — policies by data group (including **MQTT telemetry** retention), operation log with **Result** column, scanned count, clear zero-record display, **manual telemetry purge** *(v1.1.49)*.
 
 ### System and automation
 
 | Section | Route | Description |
 |---------|-------|-------------|
 | **Information** | `/system` | Server resources, CRM version, Dynamic API / PyOrchestrator; **support diagnostics JSON download** *(v1.1.44)* *(System group)* |
-| Notifications | `/notifications` | CRM notifications, mark as read; web/Telegram channel settings on **Overview** |
+| Notifications | `/notifications` | CRM notifications (web), mark as read; **Load more (100)** server pagination *(v1.1.52)*; channel settings on **Overview** |
 | **Profile** | `/profile` | Name, email, password change *(link in header)* |
 | **Setup wizard** | `/setup` | Initial CRM setup; restart `/setup?restart=1` *(Admin/Operator)* |
 | **Users** | `/users` | Dynamic API accounts, **Telegram user_id**, group assignment *(Admin)* |

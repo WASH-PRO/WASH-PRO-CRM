@@ -26,7 +26,7 @@ Reference `/api/crm/discount-types`: numbers **1–5** and names. In cards, fiel
 
 ## `posts.settings`
 
-JSON with post metadata: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance`, and more. See [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/en/database-schema/).
+JSON with post metadata: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `maintenance`, `features`, and more. Legacy fields `firmwareVersion` / `warrantyUntil` may exist in JSON but are **not editable in Dashboard UI**. See [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/en/database-schema/).
 
 ## Deleting posts and car washes
 

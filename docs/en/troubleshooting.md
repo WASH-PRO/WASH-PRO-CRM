@@ -134,11 +134,39 @@ If these hang or fail with `DeadlineExceeded`, the issue is Docker Hub access, n
 
 ```bash
 cd /path/to/WASH-PRO-CRM
-git fetch origin && git checkout v1.1.51
+git fetch origin && git checkout v1.1.52
 docker compose up -d --build dashboard update-bridge
 ```
 
 **v1.1.25:** `update-bridge` shows a clear message instead of raw log tail on Hub timeout.
+
+## Stuck update spinner (v1.1.50+)
+
+**Symptoms:** header or **Settings → Software updates** shows a spinning indicator forever; job status stays `queued` though the target version is already installed.
+
+**Cause:** stale `queued` job in `DATA_DIR/update-bridge/state.json` from an interrupted update.
+
+**Fix:**
+
+1. Upgrade to **v1.1.50+** (auto-reconciles stale jobs when target version matches).
+2. **Settings → Integrity and repair → Apply fixes** — includes `clear_stuck_job`, or API:
+
+```bash
+curl -X POST http://localhost/api/crm/updates/repair \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"actions":["clear_stuck_job"]}'
+```
+
+3. If needed: `docker compose restart update-bridge`
+
+**v1.1.51+:** starting a new update reconciles stale active jobs automatically.
+
+## Post page slow or hanging (v1.1.48+)
+
+Large telemetry volume (hundreds of thousands of rows per post) can slow the post detail page if an old Dashboard version loads all CRM telemetry client-side.
+
+**Fix:** upgrade to **v1.1.48+** (MongoDB indexes) and **v1.1.51+** (post history: server filter, 100 rows, Load more above table, `count=false`). Use **Archive** to purge old telemetry if retention policy allows.
 
 ## “/deploy is not a git repository” in integrity (v1.1.21+)
 

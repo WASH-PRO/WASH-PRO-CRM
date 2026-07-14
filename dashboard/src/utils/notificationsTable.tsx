@@ -10,8 +10,31 @@ import { getNotificationTypeLabels, isWebNotification } from './notificationSett
 import type { Notification } from '../types';
 import { tGlobal } from '../i18n/runtime';
 
-export const NOTIFICATIONS_PAGE_LIMIT = 150;
+export const NOTIFICATIONS_PAGE_LIMIT = 100;
 export const NOTIFICATIONS_DASHBOARD_LIMIT = 30;
+
+export async function fetchNotificationsPages(
+  pages: number,
+  pageSize: number,
+  signal?: AbortSignal
+): Promise<{ items: Notification[]; total: number; hasMore: boolean }> {
+  const all: Notification[] = [];
+  let totalPages = 1;
+  let total = 0;
+
+  for (let page = 1; page <= pages; page++) {
+    const { data, pagination } = await apiListPage<Notification>('/crm/notifications', page, pageSize, signal);
+    all.push(...data.filter(isWebNotification));
+    totalPages = pagination.totalPages;
+    total = pagination.total;
+  }
+
+  const items = all.sort(
+    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  );
+
+  return { items, total, hasMore: pages < totalPages };
+}
 
 export async function fetchRecentNotifications(
   limit: number,

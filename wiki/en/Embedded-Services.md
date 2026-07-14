@@ -12,7 +12,7 @@ Full version: [docs/embedded-services.md](https://wash-pro.github.io/WASH-PRO-CR
 
 Upstream: https://dynamic-api-platform.github.io/Dynamic-API-Platform/
 
-## PyOrchestrator v0.1.10 (optional)
+## PyOrchestrator v0.1.13 (optional)
 
 - Python scripts/bots, schedules, secrets, WebSocket logs
 - Panel `:8090`: full Control Plane

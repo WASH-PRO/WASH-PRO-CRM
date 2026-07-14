@@ -147,7 +147,21 @@ Vendored copy of [Dynamic API Platform](https://github.com/Dynamic-API-Platform/
 
 In-app updater is **disabled**: `UPDATE_EXECUTOR_ENABLED=false`.
 
-## PyOrchestrator (vendored v0.1.10)
+## MongoDB indexes (v1.1.48+)
+
+Dynamic API syncs Mongoose indexes in the **background** after startup (`scheduleDatabaseIndexSync`) — does not block healthcheck during CRM auto-update.
+
+Telemetry (`endpoint_data`) compound indexes for fast filtered lists:
+
+| Index fields | Use |
+|--------------|-----|
+| `resourcePath`, `data.postSerial`, `data.receivedAt` | Post telemetry history |
+| `resourcePath`, `data.postSerial`, `data.messageType`, `data.receivedAt` | Filtered by message type |
+| `resourcePath`, `data.postId`, `data.lastMessageAt` | Post states lookup |
+
+Post detail history and large MQTT logs use **`count=false`** on list API where total count is skipped for speed; «Load more» uses page size instead.
+
+## PyOrchestrator (vendored v0.1.13)
 
 Vendored copy of [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator).
 

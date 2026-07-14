@@ -29,6 +29,8 @@ Admin sections — **Administrator** only. Profile — in the header (`/profile`
 
 The **Notifications** list and Overview widget show **localized message templates by event type** (`mqtt_credit`, `user_login`, `wash_created`, etc.), not the raw text stored when the record was created. Parameters (amount, login, entity name) are parsed from legacy messages. Severity labels and CSV export follow the active language.
 
+**Full page (`/notifications`, v1.1.52):** server pagination like MQTT — **100 rows**, single **Load more** button above the table, subtitle with shown/total/updated, **3 s** polling. Overview widget stays a 10-row preview.
+
 ## Post online/offline status
 
 On **Posts**, **Status**, and **post detail** pages.
@@ -74,10 +76,30 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 
 | Interval | Pages |
 |----------|-------|
-| 3 s | Status, Posts, post detail |
+| 3 s | Status, Posts, post detail, **MQTT**, **Notifications** |
 | 5 s | Overview |
 | 30 s | **Information** (`/system`, platform status) |
 | 10–15 s | Others |
+
+## Recent changes (v1.1.52)
+
+- **Notifications page** — server pagination like MQTT: 100 rows, Load more above table, 3 s polling, subtitle with shown/total/updated
+
+## Recent changes (v1.1.51)
+
+- **Post detail** — state history matches MQTT (100 rows, Load more above table, no duplicate DataTable button)
+
+## Recent changes (v1.1.50)
+
+- **Software updates** — stuck spinner fix for stale `queued` jobs; update-bridge reconcile before new update
+
+## Recent changes (v1.1.49)
+
+- **Archive** — result column, manual telemetry purge, scanned count; post history single Load more
+
+## Recent changes (v1.1.48)
+
+- **MongoDB indexes** — background sync on Dynamic API startup; faster post telemetry filters
 
 ## Recent changes (v1.1.40)
 

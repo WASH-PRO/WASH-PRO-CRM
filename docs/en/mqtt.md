@@ -84,7 +84,7 @@ The **MQTT** log in CRM stores **every** inbound message with original JSON (one
 | **API** | **Load more (100 rows)** above table | Next telemetry page from server (100 rows each) |
 | **Table** | DataTable footer | **Per page:** 20 / 40 / 60 / 80 / 100 · **Back / Next** · **Load more** among loaded rows |
 
-See also [Dashboard — table pagination](dashboard.md#pagination-v115).
+See also [Dashboard — server-side Load more](dashboard.md#large-logs-server-side-load-more).
 
 ## WASH-PRO native protocol (ETH / panel)
 
@@ -332,7 +332,6 @@ Internal HTTP server `message-processor` (port `3022`) proxied by nginx:
 | `POST` | `/api/crm/post-device/posts/{serial}/prices` | Save prices and/or send to post |
 | `POST` | `/api/crm/post-device/posts/{serial}/command` | Send command to post |
 | `POST` | `/api/crm/post-device/posts/{serial}/surge` | Dynamic debit coefficient (`set/surge`) |
-| `POST` | `/api/crm/post-device/mqtt/sync-users` | Apply post accounts in Mosquitto |
 | `POST` | `/api/crm/post-device/mqtt/sync-users` | Apply post accounts in Mosquitto |
 
 Authorization: `Authorization: Bearer <JWT>` header (same token as Dashboard).

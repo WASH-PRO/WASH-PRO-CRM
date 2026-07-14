@@ -26,7 +26,7 @@
 
 ## `posts.settings`
 
-JSON с метаданными поста: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `firmwareVersion`, `maintenance` и др. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/database-schema/).
+JSON с метаданными поста: `mqttLogin`, `mqttPassword`, `modePrices`, `mqttPrefix`, `lastCommand`, `maintenance`, `features` и др. Legacy-поля `firmwareVersion` / `warrantyUntil` могут быть в JSON, но **в UI Dashboard не редактируются**. См. [docs/database-schema.md](https://wash-pro.github.io/WASH-PRO-CRM/ru/database-schema/).
 
 ## Удаление поста и автомойки
 

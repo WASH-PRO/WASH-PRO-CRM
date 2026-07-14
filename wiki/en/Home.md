@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **v1.1.47** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **1.1.52** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -38,6 +38,9 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - Stdio MCP `services/crm-mcp` for Cursor (v1.1.9+)
 - MQTT (Mosquitto): post isolation by serial
 - Live updates 3–15 s; global Live/Static toggle (v1.1.8)
+- **Server-side Load more (100 rows)** — MQTT log, cards, post history *(v1.1.51)*, notifications page *(v1.1.52)*
+- **Archive UX** — result column, manual telemetry purge, scanned count *(v1.1.49)*
+- **MongoDB index sync** on Dynamic API startup *(v1.1.48)*
 
 ## Quick start
 
@@ -71,6 +74,38 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.52
+
+- **Notifications page** — MQTT-style server pagination: 100 rows, single Load more above table, 3 s polling
+- **Documentation** — GitHub Pages, wiki, release notes updated (v1.1.48–52 features, troubleshooting, PyOrchestrator v0.1.13)
+
+Release notes: [v1.1.52](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.52)
+
+## Changelog v1.1.51
+
+- **Post detail** — state history matches MQTT section (100 rows, Load more above table, `count=false`)
+
+Release notes: [v1.1.51](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.51)
+
+## Changelog v1.1.50
+
+- **Software updates** — fix stuck update spinner on stale `queued` jobs; update-bridge job queue chaining
+
+Release notes: [v1.1.50](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.50)
+
+## Changelog v1.1.49
+
+- **Archive page** — result column, zero-record display, manual telemetry purge, scanned count in log
+- **Post history** — single server-side Load more (no DataTable duplicate)
+
+Release notes: [v1.1.49](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.49)
+
+## Changelog v1.1.48
+
+- **MongoDB** — background index sync on Dynamic API startup; telemetry compound indexes for post filters
+
+Release notes: [v1.1.48](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.48)
 
 ## Changelog v1.1.47
 

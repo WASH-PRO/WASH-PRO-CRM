@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [1.1.52] — 2026-07-14
+
+### Исправлено
+
+- **Страница уведомлений** — серверная пагинация как в MQTT: 100 записей, «Загрузить ещё» над таблицей, опрос 3 с
+
+### Документация
+
+- **GitHub Pages, wiki, release notes** — v1.1.48–v1.1.52: история поста, архив, update-bridge, индексы MongoDB, troubleshooting; PyOrchestrator v0.1.13; исправлены ссылки
+- **releases/v1.1.52.md** — v1.1.52
+- **scripts/sync-version-docs.sh** — синхронизация версии в wiki Home и README
+
 ## [1.1.51] — 2026-07-14
 
 ### Исправлено

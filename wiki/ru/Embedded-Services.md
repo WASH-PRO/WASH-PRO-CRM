@@ -12,7 +12,7 @@
 
 Upstream: https://dynamic-api-platform.github.io/Dynamic-API-Platform/
 
-## PyOrchestrator v0.1.10 (опц.)
+## PyOrchestrator v0.1.13 (опц.)
 
 - Python scripts/bots, schedules, secrets, WebSocket logs
 - Панель `:8090`: полный Control Plane

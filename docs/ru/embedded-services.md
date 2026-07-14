@@ -9,7 +9,7 @@ WASH PRO CRM включает две платформы как **vendored-коп
 | Сервис | Vendored-версия | Панель | API |
 |--------|-----------------|--------|-----|
 | **Dynamic API Platform** | v1.5.13 (`dynamic-api/backend/package.json`) | http://localhost:8080 | http://localhost:3001 |
-| **PyOrchestrator** *(опц.)* | v0.1.10 (`pyorchestrator/CHANGELOG.md`) | http://localhost:8090 | http://localhost:8000 |
+| **PyOrchestrator** *(опц.)* | v0.1.13 (`pyorchestrator/CHANGELOG.md`) | http://localhost:8090 | http://localhost:8000 |
 
 > Полная upstream-документация: [Dynamic API Platform](https://dynamic-api-platform.github.io/Dynamic-API-Platform/) · [PyOrchestrator](https://pyorchestrator.github.io/PyOrchestrator/)
 
@@ -94,7 +94,7 @@ PYORCHESTRATOR_ENABLED=true
 | `pyorch-mcp` | MCP для AI-агентов (`:8010`, опционально) |
 | `pyorch-prometheus`, `pyorch-grafana`, `pyorch-loki`, `pyorch-promtail` | Observability (профиль `pyorch-observability`, выкл. по умолчанию) |
 
-### Подтверждённые возможности PyOrchestrator (v0.1.10)
+### Подтверждённые возможности PyOrchestrator (v0.1.13)
 
 Доступны в панели **PyOrchestrator** (`:8090`):
 

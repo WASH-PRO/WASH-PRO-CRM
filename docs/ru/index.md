@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## История изменений
 
-Последний релиз: **[v1.1.47](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.47)** — Адаптивность Dashboard под мобильные устройства.
+Последний релиз: **[v1.1.52](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.52)** — страница уведомлений с серверной пагинацией как в MQTT (100 записей); обновлены docs и wiki.
 
 См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) и [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

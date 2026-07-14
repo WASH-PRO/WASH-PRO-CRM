@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading } from '../components/UI';
 import { DataTable } from '../components/DataTable';
-import { DEFAULT_LIVE_INTERVAL_MS } from '../constants/live';
+import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { usePolling } from '../hooks/usePolling';
 import { bulkDelete } from '../utils/bulk';
 import {
@@ -12,25 +12,33 @@ import {
   createNotificationBulkActions,
   createNotificationColumns,
   deleteAllNotifications,
-  fetchRecentNotifications,
+  fetchNotificationsPages,
   notificationFilters,
 } from '../utils/notificationsTable';
 import { useLocale } from '../i18n/LocaleContext';
 
 export function NotificationsPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { hasPermission } = useAuth();
   const canEdit = hasPermission('update');
-  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [pages, setPages] = useState(1);
+  const [totalRows, setTotalRows] = useState<number | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
 
-  const fetchItems = useCallback(async (signal: AbortSignal) => {
-    const { items, total } = await fetchRecentNotifications(NOTIFICATIONS_PAGE_LIMIT, signal);
-    setTotalCount(total);
-    return items;
-  }, []);
+  const fetchData = useCallback(
+    async (signal: AbortSignal) => {
+      const { items, total, hasMore } = await fetchNotificationsPages(pages, NOTIFICATIONS_PAGE_LIMIT, signal);
+      setTotalRows(total);
+      return { rows: items, hasMore };
+    },
+    [pages]
+  );
 
-  const { data: items, loading, refresh } = usePolling(fetchItems, [], { intervalMs: DEFAULT_LIVE_INTERVAL_MS });
+  const { data, loading, refresh, lastUpdatedAt } = usePolling(fetchData, [pages], {
+    intervalMs: LIVE_INTERVAL_FAST_MS,
+  });
+  const rows = data?.rows;
+  const hasMore = data?.hasMore ?? false;
 
   const markRead = async (id: string) => {
     if (!canEdit) return;
@@ -50,13 +58,14 @@ export function NotificationsPage() {
 
   const deleteAll = async () => {
     if (!canEdit || deletingAll) return;
-    const total = totalCount ?? items?.length ?? 0;
+    const total = totalRows ?? rows?.length ?? 0;
     if (total === 0) return;
     if (!confirm(t('pages.notifications.confirmDeleteAll', { count: total }))) return;
     setDeletingAll(true);
     try {
       await deleteAllNotifications();
-      setTotalCount(0);
+      setTotalRows(0);
+      setPages(1);
       await refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : t('pages.notifications.deleteAllFailed'));
@@ -72,22 +81,23 @@ export function NotificationsPage() {
 
   const bulkActions = useMemo(() => createNotificationBulkActions(refresh, canEdit, t), [refresh, canEdit, t]);
 
-  const limitHint =
-    totalCount != null && totalCount > NOTIFICATIONS_PAGE_LIMIT
-      ? t('pages.notifications.limitHint.shownLatest', { limit: NOTIFICATIONS_PAGE_LIMIT, total: totalCount })
-      : totalCount != null
-        ? t('pages.notifications.limitHint.total', { total: totalCount })
-        : '';
+  if (loading && !rows) return <Loading />;
 
-  if (loading && !items) return <Loading />;
+  const subtitle = `${t('pages.notifications.subtitleBase')}${t('pages.notifications.subtitleShown', { shown: rows?.length ?? 0 })}${
+    totalRows != null ? t('pages.mqtt.subtitleOfTotal', { total: totalRows }) : ''
+  }${t('pages.mqtt.subtitleUpdated', {
+    updatedAt: lastUpdatedAt
+      ? new Date(lastUpdatedAt).toLocaleTimeString(locale === 'ru' ? 'ru-RU' : 'en-US')
+      : t('common.notAvailable'),
+  })}${!canEdit ? t('pages.notifications.readonlySuffix') : ''}`;
 
   return (
     <div>
       <PageHeader
         title={t('pages.notifications.title')}
-        subtitle={`${t('pages.notifications.subtitleBase')}${limitHint}${!canEdit ? t('pages.notifications.readonlySuffix') : ''}`}
+        subtitle={subtitle}
         actions={
-          canEdit && (totalCount ?? items?.length ?? 0) > 0 ? (
+          canEdit && (totalRows ?? rows?.length ?? 0) > 0 ? (
             <button
               type="button"
               className="btn-secondary inline-flex items-center gap-2 text-red-600 dark:text-red-400"
@@ -100,10 +110,17 @@ export function NotificationsPage() {
           ) : undefined
         }
       />
+      {hasMore && (
+        <div className="mb-4">
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setPages((p) => p + 1)}>
+            {t('pages.mqtt.loadMore', { count: NOTIFICATIONS_PAGE_LIMIT })}
+          </button>
+        </div>
+      )}
       <DataTable
         tableId="notifications"
         columns={columns}
-        data={items || []}
+        data={rows || []}
         rowKey={(n) => n.id}
         filters={notificationFilters(t, true)}
         searchPlaceholder={t('pages.notifications.searchPlaceholder')}

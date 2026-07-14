@@ -1253,6 +1253,7 @@ export const ru = {
     notifications: {
       title: 'Уведомления',
       subtitleBase: 'Telegram и Web Notifications',
+      subtitleShown: ' · показано {{shown}}',
       readonlySuffix: ' · только просмотр',
       searchPlaceholder: 'Поиск уведомлений…',
       confirmDeleteOne: 'Удалить уведомление?',

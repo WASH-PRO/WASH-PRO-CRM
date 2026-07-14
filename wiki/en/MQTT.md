@@ -68,8 +68,11 @@ mosquitto_pub -h localhost -p 1883 -u system -P 'PASS' -q 1 \
 
 ## MQTT log in Dashboard
 
-- Above the table: **Load more (100 records)** — next page from API
-- Table footer: **Per page** 20/40/60/80/100, **Back/Next**, **Load more**
+- Above the table: **Load more (100 records)** — server-side pages via `usePolling`
+- Subtitle: shown count, total, last refresh time
+- Same pattern on **post state history** *(v1.1.51)* and **Notifications** page *(v1.1.52)*
+
+See [Dashboard — server-side Load more](en-Dashboard).
 
 ## Migration from RabbitMQ
 

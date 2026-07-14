@@ -52,7 +52,7 @@ docker compose up -d --build dynamic-api dynamic-api-panel
 
 > In-app updater в панели `:8080` **отключён** в WASH (`UPDATE_EXECUTOR_ENABLED=false`). Используйте скрипт обновления.
 
-### PyOrchestrator (vendored v0.1.10, опционально)
+### PyOrchestrator (vendored v0.1.13, опционально)
 
 ```bash
 ./scripts/update-pyorchestrator.sh

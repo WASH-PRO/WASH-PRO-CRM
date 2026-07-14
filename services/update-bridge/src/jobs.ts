@@ -219,6 +219,10 @@ export async function startUpdate(componentId: UpdateComponentId, targetTag?: st
   if (!executor.ok) throw new Error(executor.reason || 'Executor unavailable');
 
   await loadState();
+  const cached = getCachedComponents();
+  if (cached.length && reconcileActiveJob(withLiveVersions(cached))) {
+    await saveState();
+  }
   if (getActiveJob()) throw new Error('Уже выполняется другое обновление');
 
   const def = getComponent(componentId);

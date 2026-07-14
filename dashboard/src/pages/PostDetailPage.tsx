@@ -54,11 +54,7 @@ export function PostDetailPage() {
   const [saved, setSaved] = useState('');
   const [historyDateFrom, setHistoryDateFrom] = useState('');
   const [historyDateTo, setHistoryDateTo] = useState('');
-  const [stateHistory, setStateHistory] = useState<PostStateHistoryRow[]>([]);
-  const [historyHasMore, setHistoryHasMore] = useState(false);
-  const [historyPage, setHistoryPage] = useState(1);
-  const [historyLoading, setHistoryLoading] = useState(true);
-  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
+  const [historyPages, setHistoryPages] = useState(1);
   const formHydrated = useRef(false);
   const [form, setForm] = useState({
     name: '',
@@ -101,66 +97,46 @@ export function PostDetailPage() {
     intervalMs: LIVE_INTERVAL_FAST_MS,
   });
 
+  const postSerial = data?.post.serialNumber ?? '';
+
+  const fetchHistory = useCallback(
+    async (signal: AbortSignal) => {
+      if (!postSerial) return { rows: [] as PostStateHistoryRow[], hasMore: false };
+
+      const receivedAtFrom = historyDateFrom ? `${historyDateFrom}T00:00:00.000Z` : undefined;
+      const receivedAtTo = historyDateTo ? `${historyDateTo}T23:59:59.999Z` : undefined;
+
+      const all: PostStateHistoryRow[] = [];
+      let hasMore = false;
+      for (let page = 1; page <= historyPages; page++) {
+        const { rows, hasMore: pageHasMore } = await fetchPostStateHistoryPage(postSerial, page, {
+          signal,
+          receivedAtFrom,
+          receivedAtTo,
+        });
+        all.push(...rows);
+        hasMore = pageHasMore;
+      }
+
+      return { rows: all, hasMore };
+    },
+    [postSerial, historyPages, historyDateFrom, historyDateTo]
+  );
+
+  const {
+    data: historyData,
+    loading: historyLoading,
+  } = usePolling(fetchHistory, [postSerial, historyPages, historyDateFrom, historyDateTo], {
+    intervalMs: LIVE_INTERVAL_FAST_MS,
+    enabled: Boolean(postSerial),
+  });
+
+  const stateHistory = historyData?.rows ?? [];
+  const historyHasMore = historyData?.hasMore ?? false;
+
   useEffect(() => {
-    if (!data?.post.serialNumber) {
-      setStateHistory([]);
-      setHistoryHasMore(false);
-      setHistoryPage(1);
-      setHistoryLoading(false);
-      return;
-    }
-
-    const controller = new AbortController();
-    setHistoryLoading(true);
-    setHistoryPage(1);
-
-    const receivedAtFrom = historyDateFrom ? `${historyDateFrom}T00:00:00.000Z` : undefined;
-    const receivedAtTo = historyDateTo ? `${historyDateTo}T23:59:59.999Z` : undefined;
-
-    fetchPostStateHistoryPage(data.post.serialNumber, 1, {
-      signal: controller.signal,
-      receivedAtFrom,
-      receivedAtTo,
-    })
-      .then(({ rows, hasMore }) => {
-        if (controller.signal.aborted) return;
-        setStateHistory(rows);
-        setHistoryHasMore(hasMore);
-      })
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        if (err instanceof DOMException && err.name === 'AbortError') return;
-        setStateHistory([]);
-        setHistoryHasMore(false);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setHistoryLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [data?.post.serialNumber, historyDateFrom, historyDateTo]);
-
-  const loadMoreHistory = async () => {
-    if (!data?.post.serialNumber || historyLoadingMore || !historyHasMore) return;
-    setHistoryLoadingMore(true);
-    const nextPage = historyPage + 1;
-    const receivedAtFrom = historyDateFrom ? `${historyDateFrom}T00:00:00.000Z` : undefined;
-    const receivedAtTo = historyDateTo ? `${historyDateTo}T23:59:59.999Z` : undefined;
-    try {
-      const { rows, hasMore } = await fetchPostStateHistoryPage(data.post.serialNumber, nextPage, {
-        receivedAtFrom,
-        receivedAtTo,
-      });
-      setStateHistory((prev) => {
-        const seen = new Set(prev.map((r) => r.id));
-        return [...prev, ...rows.filter((r) => !seen.has(r.id))];
-      });
-      setHistoryPage(nextPage);
-      setHistoryHasMore(hasMore);
-    } finally {
-      setHistoryLoadingMore(false);
-    }
-  };
+    setHistoryPages(1);
+  }, [postSerial, historyDateFrom, historyDateTo]);
 
   useBreadcrumbLastLabel(data?.post.serialNumber);
 
@@ -433,79 +409,69 @@ export function PostDetailPage() {
       />
 
       <h2 className="mb-3 font-semibold">{t('pages.postDetail.history.title')}</h2>
-      {historyHasMore && !historyLoading && (
-        <p className="mb-3 text-sm text-panel-muted dark:text-panel-muted-dark">
-          {t('pages.postDetail.history.truncatedHint')}
-        </p>
-      )}
-      {historyLoading ? (
+      {historyLoading && !historyData?.rows ? (
         <Loading />
       ) : (
-      <>
-      <DataTable
-        tableId="post-state-history"
-        columns={stateColumns}
-        data={stateHistory}
-        rowKey={(r) => r.id}
-        pageSize={POST_HISTORY_PAGE_SIZE}
-        disableLoadMore
-        emptyMessage={
-          historyDateFrom || historyDateTo
-            ? t('pages.postDetail.history.emptyFiltered')
-            : t('pages.postDetail.history.empty')
-        }
-        defaultSortKey="receivedAt"
-        defaultSortDir="desc"
-        searchPlaceholder={t('pages.postDetail.history.searchPlaceholder')}
-        toolbarPlacement="start"
-        bulkActions={historyBulkActions}
-        toolbar={
-          <div className="toolbar-cluster">
-            <input
-              type="date"
-              className="input-inline"
-              value={historyDateFrom}
-              onChange={(e) => setHistoryDateFrom(e.target.value)}
-              aria-label={t('pages.postDetail.history.from')}
-            />
-            <span className="text-sm text-panel-muted">{t('common.notAvailable')}</span>
-            <input
-              type="date"
-              className="input-inline"
-              value={historyDateTo}
-              onChange={(e) => setHistoryDateTo(e.target.value)}
-              aria-label={t('pages.postDetail.history.to')}
-            />
-            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(null)}>
-              {t('common.all')}
-            </button>
-            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(0)}>
-              {t('pages.postDetail.history.today')}
-            </button>
-            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(7)}>
-              {t('pages.postDetail.history.days7')}
-            </button>
-            <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(30)}>
-              {t('pages.postDetail.history.days30')}
-            </button>
-          </div>
-        }
-      />
-      {historyHasMore && (
-        <div className="mt-3 flex justify-center">
-          <button
-            type="button"
-            className="btn-secondary btn-sm"
-            disabled={historyLoadingMore}
-            onClick={() => void loadMoreHistory()}
-          >
-            {historyLoadingMore
-              ? t('pages.postDetail.history.loadingMore')
-              : t('pages.postDetail.history.loadMore')}
-          </button>
-        </div>
-      )}
-      </>
+        <>
+          {historyHasMore && (
+            <div className="mb-4">
+              <button
+                type="button"
+                className="btn-secondary btn-sm"
+                onClick={() => setHistoryPages((p) => p + 1)}
+              >
+                {t('pages.mqtt.loadMore', { count: POST_HISTORY_PAGE_SIZE })}
+              </button>
+            </div>
+          )}
+          <DataTable
+            tableId="post-state-history"
+            columns={stateColumns}
+            data={stateHistory}
+            rowKey={(r) => r.id}
+            emptyMessage={
+              historyDateFrom || historyDateTo
+                ? t('pages.postDetail.history.emptyFiltered')
+                : t('pages.postDetail.history.empty')
+            }
+            defaultSortKey="receivedAt"
+            defaultSortDir="desc"
+            searchPlaceholder={t('pages.postDetail.history.searchPlaceholder')}
+            toolbarPlacement="start"
+            bulkActions={historyBulkActions}
+            toolbar={
+              <div className="toolbar-cluster">
+                <input
+                  type="date"
+                  className="input-inline"
+                  value={historyDateFrom}
+                  onChange={(e) => setHistoryDateFrom(e.target.value)}
+                  aria-label={t('pages.postDetail.history.from')}
+                />
+                <span className="text-sm text-panel-muted">{t('common.notAvailable')}</span>
+                <input
+                  type="date"
+                  className="input-inline"
+                  value={historyDateTo}
+                  onChange={(e) => setHistoryDateTo(e.target.value)}
+                  aria-label={t('pages.postDetail.history.to')}
+                />
+                <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(null)}>
+                  {t('common.all')}
+                </button>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(0)}>
+                  {t('pages.postDetail.history.today')}
+                </button>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(7)}>
+                  {t('pages.postDetail.history.days7')}
+                </button>
+                <button type="button" className="btn-secondary btn-sm" onClick={() => applyHistoryPeriod(30)}>
+                  {t('pages.postDetail.history.days30')}
+                </button>
+              </div>
+            }
+          />
+        </>
       )}
 
     </div>

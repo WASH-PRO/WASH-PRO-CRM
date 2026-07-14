@@ -1,7 +1,7 @@
 import { apiListPage } from '../api/client';
 
 const STATE_MESSAGE_TYPES = new Set(['process', 'state']);
-export const POST_HISTORY_PAGE_SIZE = 50;
+export const POST_HISTORY_PAGE_SIZE = 100;
 
 export interface TelemetryStateRow {
   id: string;

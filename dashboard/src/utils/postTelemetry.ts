@@ -45,18 +45,42 @@ export function mapTelemetryToStateRow(row: TelemetryStateRow): PostStateHistory
   };
 }
 
-/** Последние записи состояния поста из телеметрии (без полной выгрузки архива). */
+function buildTelemetryHistoryPath(
+  postSerial: string,
+  options?: {
+    receivedAtFrom?: string;
+    receivedAtTo?: string;
+  }
+): string {
+  const params = new URLSearchParams({
+    postSerial,
+    messageType: 'state,process',
+    sort: 'receivedAt',
+    sortDir: 'desc',
+  });
+  if (options?.receivedAtFrom) params.set('receivedAtFrom', options.receivedAtFrom);
+  if (options?.receivedAtTo) params.set('receivedAtTo', options.receivedAtTo);
+  return `/crm/telemetry?${params.toString()}`;
+}
+
+/** Последние записи состояния поста из телеметрии (фильтр на сервере по postSerial). */
 export async function fetchPostStateHistory(
   postSerial: string,
   options?: {
     signal?: AbortSignal;
     pageSize?: number;
     maxPages?: number;
-    stopBefore?: number;
+    receivedAtFrom?: string;
+    receivedAtTo?: string;
   }
 ): Promise<{ rows: PostStateHistoryRow[]; truncated: boolean }> {
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const maxPages = options?.maxPages ?? DEFAULT_MAX_PAGES;
+  const path = buildTelemetryHistoryPath(postSerial, {
+    receivedAtFrom: options?.receivedAtFrom,
+    receivedAtTo: options?.receivedAtTo,
+  });
+
   const rows: PostStateHistoryRow[] = [];
   let page = 1;
   let totalPages = 1;
@@ -66,7 +90,7 @@ export async function fetchPostStateHistory(
     if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
     const { data, pagination } = await apiListPage<TelemetryStateRow>(
-      '/crm/telemetry',
+      path,
       page,
       pageSize,
       options?.signal
@@ -75,25 +99,15 @@ export async function fetchPostStateHistory(
 
     if (data.length === 0) break;
 
-    let pageOlderThanStop = options?.stopBefore != null;
-
     for (const row of data) {
-      const receivedAt = row.receivedAt ? new Date(row.receivedAt).getTime() : 0;
-      if (options?.stopBefore != null && receivedAt >= options.stopBefore) {
-        pageOlderThanStop = false;
-      }
-      if (row.postSerial !== postSerial || !STATE_MESSAGE_TYPES.has(row.messageType)) continue;
+      if (!STATE_MESSAGE_TYPES.has(row.messageType)) continue;
       rows.push(mapTelemetryToStateRow(row));
     }
 
-    if (pageOlderThanStop) break;
     page += 1;
   }
 
   if (page <= totalPages) truncated = true;
 
-  const sorted = rows.sort(
-    (a, b) => new Date(b.receivedAt || 0).getTime() - new Date(a.receivedAt || 0).getTime()
-  );
-  return { rows: sorted, truncated };
+  return { rows, truncated };
 }

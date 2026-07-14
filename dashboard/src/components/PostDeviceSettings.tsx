@@ -83,13 +83,12 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         messageType: string;
         payload: Record<string, unknown>;
         receivedAt?: string;
-      }>('/crm/telemetry', 1, 200);
-      const row = data.find(
-        (r) =>
-          r.postSerial === serialNumber &&
-          r.messageType === 'prices' &&
-          r.payload?.direction !== 'outbound'
+      }>(
+        `/crm/telemetry?postSerial=${encodeURIComponent(serialNumber)}&messageType=prices&sort=receivedAt&sortDir=desc`,
+        1,
+        20
       );
+      const row = data.find((r) => r.messageType === 'prices' && r.payload?.direction !== 'outbound');
       if (!row) {
         setPricesErr(
           t('postDevice.mqttPricesMissing')

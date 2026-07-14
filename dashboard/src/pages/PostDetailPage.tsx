@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { api, apiListBounded } from '../api/client';
+import { api, apiListPage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Loading, ErrorMessage } from '../components/UI';
 import { PostOnlineStatus } from '../components/PostOnlineStatus';
@@ -14,7 +14,6 @@ import { useLocale } from '../i18n/LocaleContext';
 import { LIVE_INTERVAL_FAST_MS } from '../constants/live';
 import { formatPause, formatDateTime, formatMoney } from '../utils/format';
 import { refId } from '../utils/refs';
-import { latestPostStateByPost } from '../utils/statsAggregation';
 import { createExportBulkAction } from '../utils/export';
 import { useBreadcrumbLastLabel } from '../context/BreadcrumbContext';
 import type { Post, PostSettings, PostState, Wash } from '../types';
@@ -22,12 +21,10 @@ import { parseModePrices } from '../utils/postDevice';
 
 import { fetchPostStateHistory, type PostStateHistoryRow } from '../utils/postTelemetry';
 
-interface PostDetailData {
+interface PostLiveData {
   post: Post;
   wash: Wash;
   currentState: PostState | null;
-  stateHistory: PostStateHistoryRow[];
-  historyTruncated: boolean;
 }
 
 function parseSettings(raw?: PostSettings | Record<string, unknown>): PostSettings {
@@ -57,6 +54,9 @@ export function PostDetailPage() {
   const [saved, setSaved] = useState('');
   const [historyDateFrom, setHistoryDateFrom] = useState('');
   const [historyDateTo, setHistoryDateTo] = useState('');
+  const [stateHistory, setStateHistory] = useState<PostStateHistoryRow[]>([]);
+  const [historyTruncated, setHistoryTruncated] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const formHydrated = useRef(false);
   const [form, setForm] = useState({
     name: '',
@@ -68,22 +68,21 @@ export function PostDetailPage() {
     features: '',
   });
 
-  const fetchData = useCallback(async (signal: AbortSignal): Promise<PostDetailData | null> => {
+  const fetchLiveData = useCallback(async (signal: AbortSignal): Promise<PostLiveData | null> => {
     let post: Post;
     try {
-      post = await api<Post>(`/crm/posts/${postId}?populate=washId`);
+      post = await api<Post>(`/crm/posts/${postId}?populate=washId`, { signal });
     } catch {
       return null;
     }
 
-    const stopBefore = historyDateFrom ? new Date(historyDateFrom).getTime() : undefined;
-    const [stateHistoryResult, states] = await Promise.all([
-      fetchPostStateHistory(post.serialNumber, { signal, stopBefore }),
-      apiListBounded<PostState>('/crm/post-states', signal, 5),
-    ]);
-    const { rows: stateHistory, truncated } = stateHistoryResult;
-    const currentState =
-      latestPostStateByPost(states).find((s) => refId(s.postId) === post.id) ?? null;
+    const { data: states } = await apiListPage<PostState>(
+      `/crm/post-states?postId=${encodeURIComponent(postId)}&sort=lastMessageAt&sortDir=desc`,
+      1,
+      20,
+      signal
+    );
+    const currentState = states[0] ?? null;
 
     const washId = refId(post.washId);
     const wash =
@@ -95,14 +94,49 @@ export function PostDetailPage() {
       post,
       wash,
       currentState,
-      stateHistory,
-      historyTruncated: truncated,
     };
-  }, [postId, historyDateFrom]);
+  }, [postId]);
 
-  const { data, loading, refresh, lastUpdatedAt } = usePolling(fetchData, [postId, historyDateFrom], {
+  const { data, loading, refresh, lastUpdatedAt } = usePolling(fetchLiveData, [postId], {
     intervalMs: LIVE_INTERVAL_FAST_MS,
   });
+
+  useEffect(() => {
+    if (!data?.post.serialNumber) {
+      setStateHistory([]);
+      setHistoryTruncated(false);
+      setHistoryLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setHistoryLoading(true);
+
+    const receivedAtFrom = historyDateFrom ? `${historyDateFrom}T00:00:00.000Z` : undefined;
+    const receivedAtTo = historyDateTo ? `${historyDateTo}T23:59:59.999Z` : undefined;
+
+    fetchPostStateHistory(data.post.serialNumber, {
+      signal: controller.signal,
+      receivedAtFrom,
+      receivedAtTo,
+    })
+      .then(({ rows, truncated }) => {
+        if (controller.signal.aborted) return;
+        setStateHistory(rows);
+        setHistoryTruncated(truncated);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        setStateHistory([]);
+        setHistoryTruncated(false);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setHistoryLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [data?.post.serialNumber, historyDateFrom, historyDateTo]);
 
   useBreadcrumbLastLabel(data?.post.serialNumber);
 
@@ -130,19 +164,6 @@ export function PostDetailPage() {
       document.getElementById('device-settings')?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [data]);
-
-  const filteredStateHistory = useMemo(() => {
-    let rows = data?.stateHistory ?? [];
-    if (historyDateFrom) {
-      const from = new Date(historyDateFrom).getTime();
-      rows = rows.filter((r) => new Date(r.receivedAt || 0).getTime() >= from);
-    }
-    if (historyDateTo) {
-      const to = new Date(historyDateTo).getTime() + 86400000;
-      rows = rows.filter((r) => new Date(r.receivedAt || 0).getTime() <= to);
-    }
-    return rows;
-  }, [data?.stateHistory, historyDateFrom, historyDateTo]);
 
   const applyHistoryPeriod = (days: number | null) => {
     if (days === null) {
@@ -410,15 +431,18 @@ export function PostDetailPage() {
       />
 
       <h2 className="mb-3 font-semibold">{t('pages.postDetail.history.title')}</h2>
-      {data.historyTruncated && (
+      {historyTruncated && (
         <p className="mb-3 text-sm text-panel-muted dark:text-panel-muted-dark">
           {t('pages.postDetail.history.truncatedHint')}
         </p>
       )}
+      {historyLoading ? (
+        <Loading />
+      ) : (
       <DataTable
         tableId="post-state-history"
         columns={stateColumns}
-        data={filteredStateHistory}
+        data={stateHistory}
         rowKey={(r) => r.id}
         emptyMessage={
           historyDateFrom || historyDateTo
@@ -462,6 +486,7 @@ export function PostDetailPage() {
           </div>
         }
       />
+      )}
 
     </div>
   );

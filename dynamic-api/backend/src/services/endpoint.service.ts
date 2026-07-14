@@ -34,6 +34,7 @@ import { userService, groupService } from './user.service';
 import { handlerRuntime } from './handler-runtime.service';
 import { webhookService } from './webhook.service';
 import { dispatchTelegram, notifyCrmMutation } from './wash-notify.service';
+import { parseListQueryFilters } from '../utils/data-query';
 
 function assertAnyPermission(user: JwtPayload | undefined, ...permissions: Permission[]): asserts user is JwtPayload {
   if (!user) throw new Error('Unauthorized');
@@ -647,7 +648,12 @@ export class DynamicEngine {
         {
           const page = parseInt(String(req.query?.page || '1'), 10);
           const limit = parseInt(String(req.query?.limit || '20'), 10);
-          const result = await endpointDataRepository.findByPath(collectionPath, page, limit);
+          const { dataFilter, sortField, sortDir } = parseListQueryFilters(req.query || {});
+          const result = await endpointDataRepository.findByPath(collectionPath, page, limit, {
+            dataFilter,
+            sortField,
+            sortDir,
+          });
           const data = await Promise.all(
             result.data.map((item) =>
               this.populateReferences(this.formatRecord(item, schemaFields), schemaFields, populate)

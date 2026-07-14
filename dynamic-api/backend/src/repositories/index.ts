@@ -1,6 +1,7 @@
 import { User, IUser, Group, IGroup, Endpoint, IEndpoint, EndpointGroup, IEndpointGroup, EndpointData, IEndpointData, Log, ILog } from '../models';
 import { PaginatedResult } from '../types';
 import { buildTextSearchFilter } from '../utils';
+import { buildDataMongoFilter } from '../utils/data-query';
 import { compactLogEntry } from '../utils/auditLog';
 import { FilterQuery } from 'mongoose';
 
@@ -176,11 +177,29 @@ export class EndpointDataRepository {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async findByPath(resourcePath: string, page = 1, limit = 20): Promise<PaginatedResult<IEndpointData>> {
+  async findByPath(
+    resourcePath: string,
+    page = 1,
+    limit = 20,
+    options?: {
+      dataFilter?: Record<string, unknown>;
+      sortField?: string;
+      sortDir?: 'asc' | 'desc';
+    }
+  ): Promise<PaginatedResult<IEndpointData>> {
     const skip = (page - 1) * limit;
+    const dataFilter = options?.dataFilter ?? {};
+    const mongoFilter = {
+      resourcePath,
+      ...(Object.keys(dataFilter).length > 0 ? buildDataMongoFilter(dataFilter) : {}),
+    };
+    const sortKey = options?.sortField ? `data.${options.sortField}` : 'createdAt';
+    const sortDir = options?.sortDir === 'asc' ? 1 : -1;
+    const sort: Record<string, 1 | -1> = { [sortKey]: sortDir };
+
     const [data, total] = await Promise.all([
-      EndpointData.find({ resourcePath }).skip(skip).limit(limit).sort({ createdAt: -1 }),
-      EndpointData.countDocuments({ resourcePath }),
+      EndpointData.find(mongoFilter).skip(skip).limit(limit).sort(sort),
+      EndpointData.countDocuments(mongoFilter),
     ]);
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
@@ -216,24 +235,9 @@ export class EndpointDataRepository {
     resourcePath: string,
     dataFilter: Record<string, unknown>
   ): Promise<number> {
-    const buildQuery = (filter: Record<string, unknown>): Record<string, unknown> => {
-      if ('$or' in filter && Array.isArray(filter.$or)) {
-        return { $or: filter.$or.map((item) => buildQuery(item as Record<string, unknown>)) };
-      }
-      const query: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(filter)) {
-        if (key.startsWith('$')) {
-          query[key] = value;
-          continue;
-        }
-        query[`data.${key}`] = value;
-      }
-      return query;
-    };
-
     const result = await EndpointData.deleteMany({
       resourcePath,
-      ...buildQuery(dataFilter),
+      ...buildDataMongoFilter(dataFilter),
     });
     return result.deletedCount ?? 0;
   }

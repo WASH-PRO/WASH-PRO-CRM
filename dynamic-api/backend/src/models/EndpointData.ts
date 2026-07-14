@@ -22,6 +22,12 @@ const EndpointDataSchema = new Schema<IEndpointData>(
 EndpointDataSchema.index({ resourcePath: 1, createdAt: -1 });
 EndpointDataSchema.index({ endpointId: 1, createdAt: -1 });
 EndpointDataSchema.index({ resourcePath: 1, 'data.postSerial': 1, 'data.receivedAt': -1 });
+EndpointDataSchema.index({
+  resourcePath: 1,
+  'data.postSerial': 1,
+  'data.messageType': 1,
+  'data.receivedAt': -1,
+});
 EndpointDataSchema.index({ resourcePath: 1, 'data.postId': 1, 'data.lastMessageAt': -1 });
 EndpointDataSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 

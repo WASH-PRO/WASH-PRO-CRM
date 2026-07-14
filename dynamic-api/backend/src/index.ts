@@ -1,5 +1,6 @@
 import { createApp } from './app';
 import { connectDatabase } from './config/database';
+import { scheduleDatabaseIndexSync } from './config/indexes';
 import { env } from './config/env';
 import { seedDatabase } from './seed';
 import { settingsService } from './services/settings.service';
@@ -21,6 +22,7 @@ async function main(): Promise<void> {
     console.log(`Dynamic API Platform backend running on port ${env.port}`);
     console.log(`Environment: ${env.nodeEnv}`);
     console.log(`Admin login: ${env.adminLogin}`);
+    scheduleDatabaseIndexSync();
   });
 }
 

@@ -185,6 +185,7 @@ export class EndpointDataRepository {
       dataFilter?: Record<string, unknown>;
       sortField?: string;
       sortDir?: 'asc' | 'desc';
+      skipCount?: boolean;
     }
   ): Promise<PaginatedResult<IEndpointData>> {
     const skip = (page - 1) * limit;
@@ -197,10 +198,19 @@ export class EndpointDataRepository {
     const sortDir = options?.sortDir === 'asc' ? 1 : -1;
     const sort: Record<string, 1 | -1> = { [sortKey]: sortDir };
 
-    const [data, total] = await Promise.all([
-      EndpointData.find(mongoFilter).skip(skip).limit(limit).sort(sort),
-      EndpointData.countDocuments(mongoFilter),
-    ]);
+    const data = await EndpointData.find(mongoFilter).skip(skip).limit(limit).sort(sort);
+    if (options?.skipCount) {
+      const hasMore = data.length >= limit;
+      return {
+        data,
+        total: -1,
+        page,
+        limit,
+        totalPages: hasMore ? page + 1 : page,
+      };
+    }
+
+    const total = await EndpointData.countDocuments(mongoFilter);
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 

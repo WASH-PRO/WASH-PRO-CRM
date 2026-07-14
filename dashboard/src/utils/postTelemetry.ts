@@ -1,8 +1,7 @@
 import { apiListPage } from '../api/client';
 
 const STATE_MESSAGE_TYPES = new Set(['process', 'state']);
-const DEFAULT_PAGE_SIZE = 100;
-const DEFAULT_MAX_PAGES = 25;
+export const POST_HISTORY_PAGE_SIZE = 50;
 
 export interface TelemetryStateRow {
   id: string;
@@ -63,51 +62,36 @@ function buildTelemetryHistoryPath(
   return `/crm/telemetry?${params.toString()}`;
 }
 
-/** Последние записи состояния поста из телеметрии (фильтр на сервере по postSerial). */
-export async function fetchPostStateHistory(
+/** Одна страница истории состояния поста (без count для скорости). */
+export async function fetchPostStateHistoryPage(
   postSerial: string,
+  page: number,
   options?: {
     signal?: AbortSignal;
     pageSize?: number;
-    maxPages?: number;
     receivedAtFrom?: string;
     receivedAtTo?: string;
   }
-): Promise<{ rows: PostStateHistoryRow[]; truncated: boolean }> {
-  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
-  const maxPages = options?.maxPages ?? DEFAULT_MAX_PAGES;
+): Promise<{ rows: PostStateHistoryRow[]; hasMore: boolean }> {
+  const pageSize = options?.pageSize ?? POST_HISTORY_PAGE_SIZE;
   const path = buildTelemetryHistoryPath(postSerial, {
     receivedAtFrom: options?.receivedAtFrom,
     receivedAtTo: options?.receivedAtTo,
   });
 
+  const { data } = await apiListPage<TelemetryStateRow>(
+    path,
+    page,
+    pageSize,
+    options?.signal,
+    { count: false }
+  );
+
   const rows: PostStateHistoryRow[] = [];
-  let page = 1;
-  let totalPages = 1;
-  let truncated = false;
-
-  while (page <= totalPages && page <= maxPages) {
-    if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-
-    const { data, pagination } = await apiListPage<TelemetryStateRow>(
-      path,
-      page,
-      pageSize,
-      options?.signal
-    );
-    totalPages = pagination.totalPages;
-
-    if (data.length === 0) break;
-
-    for (const row of data) {
-      if (!STATE_MESSAGE_TYPES.has(row.messageType)) continue;
-      rows.push(mapTelemetryToStateRow(row));
-    }
-
-    page += 1;
+  for (const row of data) {
+    if (!STATE_MESSAGE_TYPES.has(row.messageType)) continue;
+    rows.push(mapTelemetryToStateRow(row));
   }
 
-  if (page <= totalPages) truncated = true;
-
-  return { rows, truncated };
+  return { rows, hasMore: data.length >= pageSize };
 }

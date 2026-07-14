@@ -540,7 +540,9 @@ export const en = {
       },
       history: {
         title: 'State history',
-        truncatedHint: 'Latest records are shown. For older period, set the "From" date.',
+        truncatedHint: 'Showing the latest records. Click "Load more" or set a date range.',
+        loadMore: 'Load more',
+        loadingMore: 'Loading…',
         emptyFiltered: 'No records for selected period',
         empty: 'No state records from this post',
         searchPlaceholder: 'Search by mode or time...',

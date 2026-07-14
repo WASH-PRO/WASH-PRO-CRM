@@ -19,7 +19,7 @@ import { useBreadcrumbLastLabel } from '../context/BreadcrumbContext';
 import type { Post, PostSettings, PostState, Wash } from '../types';
 import { parseModePrices } from '../utils/postDevice';
 
-import { fetchPostStateHistory, type PostStateHistoryRow } from '../utils/postTelemetry';
+import { fetchPostStateHistoryPage, type PostStateHistoryRow } from '../utils/postTelemetry';
 
 interface PostLiveData {
   post: Post;
@@ -55,8 +55,10 @@ export function PostDetailPage() {
   const [historyDateFrom, setHistoryDateFrom] = useState('');
   const [historyDateTo, setHistoryDateTo] = useState('');
   const [stateHistory, setStateHistory] = useState<PostStateHistoryRow[]>([]);
-  const [historyTruncated, setHistoryTruncated] = useState(false);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const formHydrated = useRef(false);
   const [form, setForm] = useState({
     name: '',
@@ -102,32 +104,34 @@ export function PostDetailPage() {
   useEffect(() => {
     if (!data?.post.serialNumber) {
       setStateHistory([]);
-      setHistoryTruncated(false);
+      setHistoryHasMore(false);
+      setHistoryPage(1);
       setHistoryLoading(false);
       return;
     }
 
     const controller = new AbortController();
     setHistoryLoading(true);
+    setHistoryPage(1);
 
     const receivedAtFrom = historyDateFrom ? `${historyDateFrom}T00:00:00.000Z` : undefined;
     const receivedAtTo = historyDateTo ? `${historyDateTo}T23:59:59.999Z` : undefined;
 
-    fetchPostStateHistory(data.post.serialNumber, {
+    fetchPostStateHistoryPage(data.post.serialNumber, 1, {
       signal: controller.signal,
       receivedAtFrom,
       receivedAtTo,
     })
-      .then(({ rows, truncated }) => {
+      .then(({ rows, hasMore }) => {
         if (controller.signal.aborted) return;
         setStateHistory(rows);
-        setHistoryTruncated(truncated);
+        setHistoryHasMore(hasMore);
       })
       .catch((err) => {
         if (controller.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         setStateHistory([]);
-        setHistoryTruncated(false);
+        setHistoryHasMore(false);
       })
       .finally(() => {
         if (!controller.signal.aborted) setHistoryLoading(false);
@@ -135,6 +139,28 @@ export function PostDetailPage() {
 
     return () => controller.abort();
   }, [data?.post.serialNumber, historyDateFrom, historyDateTo]);
+
+  const loadMoreHistory = async () => {
+    if (!data?.post.serialNumber || historyLoadingMore || !historyHasMore) return;
+    setHistoryLoadingMore(true);
+    const nextPage = historyPage + 1;
+    const receivedAtFrom = historyDateFrom ? `${historyDateFrom}T00:00:00.000Z` : undefined;
+    const receivedAtTo = historyDateTo ? `${historyDateTo}T23:59:59.999Z` : undefined;
+    try {
+      const { rows, hasMore } = await fetchPostStateHistoryPage(data.post.serialNumber, nextPage, {
+        receivedAtFrom,
+        receivedAtTo,
+      });
+      setStateHistory((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...rows.filter((r) => !seen.has(r.id))];
+      });
+      setHistoryPage(nextPage);
+      setHistoryHasMore(hasMore);
+    } finally {
+      setHistoryLoadingMore(false);
+    }
+  };
 
   useBreadcrumbLastLabel(data?.post.serialNumber);
 
@@ -407,7 +433,7 @@ export function PostDetailPage() {
       />
 
       <h2 className="mb-3 font-semibold">{t('pages.postDetail.history.title')}</h2>
-      {historyTruncated && (
+      {historyHasMore && !historyLoading && (
         <p className="mb-3 text-sm text-panel-muted dark:text-panel-muted-dark">
           {t('pages.postDetail.history.truncatedHint')}
         </p>
@@ -415,6 +441,7 @@ export function PostDetailPage() {
       {historyLoading ? (
         <Loading />
       ) : (
+      <>
       <DataTable
         tableId="post-state-history"
         columns={stateColumns}
@@ -462,6 +489,21 @@ export function PostDetailPage() {
           </div>
         }
       />
+      {historyHasMore && (
+        <div className="mt-3 flex justify-center">
+          <button
+            type="button"
+            className="btn-secondary btn-sm"
+            disabled={historyLoadingMore}
+            onClick={() => void loadMoreHistory()}
+          >
+            {historyLoadingMore
+              ? t('pages.postDetail.history.loadingMore')
+              : t('pages.postDetail.history.loadMore')}
+          </button>
+        </div>
+      )}
+      </>
       )}
 
     </div>

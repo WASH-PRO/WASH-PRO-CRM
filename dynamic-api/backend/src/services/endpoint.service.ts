@@ -648,11 +648,13 @@ export class DynamicEngine {
         {
           const page = parseInt(String(req.query?.page || '1'), 10);
           const limit = parseInt(String(req.query?.limit || '20'), 10);
+          const skipCount = req.query?.count === '0' || req.query?.count === 'false';
           const { dataFilter, sortField, sortDir } = parseListQueryFilters(req.query || {});
           const result = await endpointDataRepository.findByPath(collectionPath, page, limit, {
             dataFilter,
             sortField,
             sortDir,
+            skipCount,
           });
           const data = await Promise.all(
             result.data.map((item) =>

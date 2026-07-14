@@ -18,7 +18,7 @@ export function buildDataMongoFilter(dataFilter: Record<string, unknown>): Recor
   return buildQuery(dataFilter);
 }
 
-const RESERVED_QUERY_KEYS = new Set(['page', 'limit', 'populate', 'search']);
+const RESERVED_QUERY_KEYS = new Set(['page', 'limit', 'populate', 'search', 'count']);
 
 export interface ParsedListQueryFilters {
   dataFilter: Record<string, unknown>;

@@ -148,12 +148,14 @@ export async function apiListPage<T>(
   path: string,
   page = 1,
   limit = 100,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options?: { count?: boolean }
 ): Promise<{ data: T[]; pagination: NonNullable<ApiResult<T[]>['pagination']> }> {
   const [basePath, queryString] = path.split('?');
   const params = new URLSearchParams(queryString || '');
   params.set('page', String(page));
   params.set('limit', String(limit));
+  if (options?.count === false) params.set('count', '0');
   const json = await fetchApi<T[]>(`${basePath}?${params.toString()}`, { signal });
   const data = Array.isArray(json.data) ? json.data : [];
   const pagination = json.pagination ?? { total: data.length, page, limit, totalPages: 1 };

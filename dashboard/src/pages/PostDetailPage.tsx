@@ -62,8 +62,6 @@ export function PostDetailPage() {
     name: '',
     address: '',
     serialNumber: '',
-    firmwareVersion: '',
-    warrantyUntil: '',
     maintenance: '',
     features: '',
   });
@@ -151,8 +149,6 @@ export function PostDetailPage() {
       name: data.post.name,
       address: data.wash?.address || '',
       serialNumber: data.post.serialNumber,
-      firmwareVersion: settings.firmwareVersion || '',
-      warrantyUntil: settings.warrantyUntil || '',
       maintenance: settings.maintenance || '',
       features: settings.features || '',
     });
@@ -367,26 +363,6 @@ export function PostDetailPage() {
             <input
               className="input font-mono"
               value={form.serialNumber}
-              disabled
-              readOnly
-            />
-          </div>
-          <div>
-            <label className="label">{t('pages.postDetail.fields.firmwareVersion')}</label>
-            <input
-              className="input font-mono"
-              value={form.firmwareVersion}
-              disabled
-              readOnly
-              placeholder={t('common.notAvailable')}
-            />
-          </div>
-          <div>
-            <label className="label">{t('pages.postDetail.fields.warrantyUntil')}</label>
-            <input
-              className="input"
-              type="date"
-              value={form.warrantyUntil}
               disabled
               readOnly
             />

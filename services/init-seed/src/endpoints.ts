@@ -119,6 +119,25 @@ async function writeDeleteLog(db, recordsAffected) {
   } catch (ignoreErr) {}
 }`;
 
+/** Удаление телеметрии старше receivedBefore (bulk, для автоархива). */
+export const TELEMETRY_PURGE_HANDLER: EndpointHandler = {
+  name: 'Purge expired telemetry',
+  type: 'javascript',
+  enabled: true,
+  code: `${CASCADE_JS_HELPERS}
+
+async function handler(req, db) {
+  const before = req.body && req.body.receivedBefore;
+  if (!before) {
+    return { status: 400, data: { success: false, error: 'receivedBefore required (ISO date)' } };
+  }
+  const deleted = await db.at('/api/crm/telemetry').deleteMany({
+    receivedAt: { $lt: String(before) },
+  });
+  return { success: true, data: { deleted: Number(deleted) || 0 } };
+}`,
+};
+
 /** Каскадное удаление поста: состояния, карты, статистика, уведомления, телеметрия. */
 export const POST_DELETE_CASCADE_HANDLER: EndpointHandler = {
   name: 'Cascade delete post data',
@@ -590,6 +609,7 @@ export const CRM_ENDPOINTS: EndpointDef[] = [
 
   { name: 'Телеметрия (внутр.)', slug: 'crm-telemetry-create', path: '/api/crm/telemetry', method: 'POST', schema: telemetryFields, accessType: 'group', groupKey: 'telemetry', description: 'Приём телеметрии от processor' },
   { name: 'Список телеметрии', slug: 'crm-telemetry-list', path: '/api/crm/telemetry', method: 'GET', schema: [], accessType: 'authenticated', groupKey: 'telemetry', description: 'Список входящих MQTT-сообщений' },
+  { name: 'Очистка телеметрии', slug: 'crm-telemetry-purge', path: '/api/crm/telemetry/purge-expired', method: 'POST', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Массовое удаление телеметрии старше receivedBefore', handlers: [TELEMETRY_PURGE_HANDLER] },
   { name: 'Удалить телеметрию', slug: 'crm-telemetry-delete', path: '/api/crm/telemetry/:id', method: 'DELETE', schema: [], accessType: 'group', groupKey: 'telemetry', description: 'Удаление при архивировании' },
 
   { name: 'MQTT outbox (внутр.)', slug: 'crm-mqtt-outbox-create', path: '/api/crm/mqtt-outbox', method: 'POST', schema: mqttOutboxFields, accessType: 'group', groupKey: 'telemetry', description: 'Исходящие MQTT-команды с подтверждением доставки' },
@@ -631,10 +651,11 @@ export const DEFAULT_SETTINGS = [
       retentionDays: 90,
       autoArchive: true,
       autoDelete: false,
-      cards: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard' },
-      postStates: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard' },
-      usageStats: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard' },
-      financeStats: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard' },
+      cron: '0 3 * * *',
+      cards: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard', cron: '0 3 * * *' },
+      postStates: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard', cron: '0 3 * * *' },
+      usageStats: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard', cron: '0 3 * * *' },
+      financeStats: { enabled: true, autoRun: false, saveArchive: true, deleteAfter: false, retentionDays: 90, policy: 'standard', cron: '0 3 * * *' },
     },
   },
   {

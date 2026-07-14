@@ -11,44 +11,71 @@ import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
 import { executeArchiveGroup, type ArchiveGroupKey } from '../utils/archive';
 import { archiveFilenameLabel, resolveArchiveFilename } from '../utils/archiveLog';
+import {
+  ARCHIVE_GROUPS,
+  DEFAULT_ARCHIVE_CRON,
+  normalizeArchiveSettings,
+  resolveArchiveGroupLabel,
+} from '../utils/archiveSettings';
 import { deleteArchiveFile, downloadArchiveFile, downloadJson } from '../utils/download';
 import { useLocale } from '../i18n/LocaleContext';
 
 const RETENTION_OPTIONS = [30, 90, 180, 365];
 
-const ARCHIVE_GROUPS: Array<keyof Pick<ArchiveSettings, 'cards' | 'postStates' | 'usageStats' | 'financeStats'>> = [
-  'cards',
-  'postStates',
-  'usageStats',
-  'financeStats',
-];
-
-const defaultGroup = (): ArchiveGroupSettings => ({
-  enabled: true,
-  autoRun: false,
-  saveArchive: true,
-  deleteAfter: false,
-  retentionDays: 90,
-  policy: 'standard',
-});
-
-function normalizeArchiveSettings(raw: Record<string, unknown>): ArchiveSettings {
-  const base: ArchiveSettings = {
-    retentionDays: (raw.retentionDays as number) ?? 90,
-    autoArchive: (raw.autoArchive as boolean) ?? true,
-    autoDelete: (raw.autoDelete as boolean) ?? false,
-  };
-  for (const g of ARCHIVE_GROUPS) {
-    const existing = raw[g] as ArchiveGroupSettings | undefined;
-    base[g] = existing ? { ...defaultGroup(), ...existing } : defaultGroup();
-  }
-  return base;
-}
-
 interface ArchivePageData {
   logs: ArchiveLog[];
   setting: ArchiveSettings;
   settingId: string | null;
+}
+
+function RetentionSelect({
+  value,
+  disabled,
+  onChange,
+  t,
+}: {
+  value: number;
+  disabled: boolean;
+  onChange: (days: number) => void;
+  t: ReturnType<typeof useLocale>['t'];
+}) {
+  return (
+    <select className="select" value={value} onChange={(e) => onChange(Number(e.target.value))} disabled={disabled}>
+      {RETENTION_OPTIONS.map((d) => (
+        <option key={d} value={d}>
+          {t('pages.archive.daysLabel', { days: d })}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function CronField({
+  value,
+  disabled,
+  onChange,
+  t,
+}: {
+  value: string;
+  disabled: boolean;
+  onChange: (cron: string) => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div>
+      <label className="label">{t('pages.archive.settings.cron')}</label>
+      <input
+        className="input font-mono"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        placeholder={DEFAULT_ARCHIVE_CRON}
+      />
+      <p className="mt-1 text-xs text-panel-muted dark:text-panel-muted-dark">
+        {t('pages.archive.settings.cronHint')}
+      </p>
+    </div>
+  );
 }
 
 export function ArchivePage() {
@@ -125,6 +152,7 @@ export function ArchivePage() {
           details: {
             manual: true,
             group: groupKey,
+            groupKey,
             deleteAfter: group.deleteAfter,
             saveArchive: group.saveArchive,
             ...(result.filename ? { filename: result.filename } : {}),
@@ -151,7 +179,7 @@ export function ArchivePage() {
     }
   };
 
-  const updateGroup = (key: keyof ArchiveSettings, patch: Partial<ArchiveGroupSettings>) => {
+  const updateGroup = (key: ArchiveGroupKey, patch: Partial<ArchiveGroupSettings>) => {
     setSetting((prev) => ({
       ...prev,
       [key]: { ...(prev[key] as ArchiveGroupSettings), ...patch },
@@ -214,7 +242,7 @@ export function ArchivePage() {
         throw new Error(t('pages.archive.errors.deletedWithErrors', { deleted, total: selected.length, errors: parts.join(', ') }));
       }
     },
-    [refresh]
+    [refresh, t]
   );
 
   const deleteLog = async (log: ArchiveLog) => {
@@ -254,7 +282,7 @@ export function ArchivePage() {
     {
       key: 'group',
       header: t('pages.archive.columns.group'),
-      render: (l) => (l.details?.group as string) || t('common.notAvailable'),
+      render: (l) => resolveArchiveGroupLabel(l.details, t),
     },
     {
       key: 'records',
@@ -325,7 +353,7 @@ export function ArchivePage() {
     const actions: DataTableBulkAction<ArchiveLog>[] = [
       createExportBulkAction('archive-logs.csv', [
         { header: t('pages.archive.columns.action'), value: (l) => l.action },
-        { header: t('pages.archive.columns.group'), value: (l) => (l.details?.group as string) || '' },
+        { header: t('pages.archive.columns.group'), value: (l) => resolveArchiveGroupLabel(l.details, t) },
         { header: t('pages.archive.columns.records'), value: (l) => String(l.recordsAffected ?? '') },
         { header: t('pages.archive.columns.retention'), value: (l) => String(l.policyDays ?? '') },
         { header: t('pages.archive.columns.filename'), value: (l) => archiveFilenameLabel(l) },
@@ -365,13 +393,51 @@ export function ArchivePage() {
       <form onSubmit={savePolicy} className="card mb-6 space-y-6">
         <h2 className="font-semibold">{t('pages.archive.settingsTitle')}</h2>
 
+        <div className="space-y-3 border-t border-panel-border pt-5 first:border-t-0 first:pt-0 dark:border-panel-border-dark">
+          <h3 className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">
+            {t('pages.archive.groups.telemetry')}
+          </h3>
+          <p className="text-xs text-panel-muted dark:text-panel-muted-dark">
+            {t('pages.archive.settings.telemetryHint')}
+          </p>
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+            <label className="flex items-start gap-2 text-sm leading-snug">
+              <input
+                type="checkbox"
+                className="mt-0.5 shrink-0"
+                checked={setting.autoArchive !== false}
+                onChange={(e) => setSetting((prev) => ({ ...prev, autoArchive: e.target.checked }))}
+                disabled={!canEdit}
+              />
+              {t('pages.archive.settings.enableAutoRun')}
+            </label>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <label className="label">{t('pages.archive.settings.retentionDays')}</label>
+              <RetentionSelect
+                value={setting.retentionDays ?? 90}
+                disabled={!canEdit}
+                onChange={(days) => setSetting((prev) => ({ ...prev, retentionDays: days }))}
+                t={t}
+              />
+            </div>
+            <CronField
+              value={setting.cron ?? DEFAULT_ARCHIVE_CRON}
+              disabled={!canEdit}
+              onChange={(cron) => setSetting((prev) => ({ ...prev, cron }))}
+              t={t}
+            />
+          </div>
+        </div>
+
         {ARCHIVE_GROUPS.map((key) => {
           const group = setting[key] as ArchiveGroupSettings;
           const label = t(`pages.archive.groups.${key}`);
           return (
             <div
               key={key}
-              className="space-y-3 border-t border-panel-border pt-5 first:border-t-0 first:pt-0 dark:border-panel-border-dark"
+              className="space-y-3 border-t border-panel-border pt-5 dark:border-panel-border-dark"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-medium text-panel-ink dark:text-panel-ink-dark">{label}</h3>
@@ -407,10 +473,6 @@ export function ArchivePage() {
                   />
                   {t('pages.archive.settings.enableAutoRun')}
                 </label>
-                <p className="text-xs text-panel-muted dark:text-panel-muted-dark md:col-span-2">
-                  {t('pages.archive.settings.autoRunHintPrefix')} <span className="font-mono">wash-backup</span>{' '}
-                  {t('pages.archive.settings.autoRunHintSuffix')}
-                </p>
                 <label className="flex items-start gap-2 text-sm leading-snug">
                   <input
                     type="checkbox"
@@ -432,21 +494,15 @@ export function ArchivePage() {
                   {t('pages.archive.settings.deleteSource')}
                 </label>
               </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div>
                   <label className="label">{t('pages.archive.settings.retentionDays')}</label>
-                  <select
-                    className="select"
+                  <RetentionSelect
                     value={group.retentionDays}
-                    onChange={(e) => updateGroup(key, { retentionDays: Number(e.target.value) })}
                     disabled={!canEdit}
-                  >
-                    {RETENTION_OPTIONS.map((d) => (
-                      <option key={d} value={d}>
-                        {t('pages.archive.daysLabel', { days: d })}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(days) => updateGroup(key, { retentionDays: days })}
+                    t={t}
+                  />
                 </div>
                 <div>
                   <label className="label">{t('pages.archive.settings.policy')}</label>
@@ -461,6 +517,12 @@ export function ArchivePage() {
                     <option value="cold">{t('pages.archive.policy.cold')}</option>
                   </select>
                 </div>
+                <CronField
+                  value={group.cron ?? DEFAULT_ARCHIVE_CRON}
+                  disabled={!canEdit}
+                  onChange={(cron) => updateGroup(key, { cron })}
+                  t={t}
+                />
               </div>
             </div>
           );

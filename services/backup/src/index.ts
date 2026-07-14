@@ -7,7 +7,13 @@ import fetch from 'node-fetch';
 import { pino } from 'pino';
 
 import { startBackupHttpServer } from './http.js';
-import { runScheduledArchives } from './archive-runner.js';
+import {
+  runGroupArchiveJob,
+  runScheduledArchives,
+  runTelemetryArchiveJob,
+} from './archive-runner.js';
+import { fetchArchiveSettings, normalizeArchiveSettings } from './archive-settings.js';
+import { syncArchiveSchedules } from './archive-scheduler.js';
 import { createFullBundleExtras, isFullBundleEnabled } from './bundle.js';
 import {
   channelsFromSettings,
@@ -206,6 +212,66 @@ export async function restoreBackup(filename: string): Promise<void> {
   logger.info({ filename }, 'Restore completed');
 }
 
+async function refreshArchiveSchedules(): Promise<void> {
+  try {
+    const token = await getToken();
+    const settings = (await fetchArchiveSettings(token, API_URL)) ?? normalizeArchiveSettings({});
+    syncArchiveSchedules(settings, {
+      telemetry: async () => {
+        try {
+          const jobToken = await getToken();
+          const latest = (await fetchArchiveSettings(jobToken, API_URL)) ?? normalizeArchiveSettings({});
+          await runTelemetryArchiveJob(jobToken, latest);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unknown archive error';
+          logger.error({ err }, 'Scheduled telemetry archive failed');
+          try {
+            const notifyToken = await getToken();
+            await notifyCrm(notifyToken, 'archive_error', `Ошибка автоархивирования (телеметрия): ${message}`, 'error');
+          } catch {
+            // best effort
+          }
+        }
+      },
+      cards: async () => {
+        await runScheduledGroupArchive('cards');
+      },
+      postStates: async () => {
+        await runScheduledGroupArchive('postStates');
+      },
+      usageStats: async () => {
+        await runScheduledGroupArchive('usageStats');
+      },
+      financeStats: async () => {
+        await runScheduledGroupArchive('financeStats');
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, 'Failed to refresh archive schedules');
+  }
+}
+
+async function runScheduledGroupArchive(
+  groupKey: 'cards' | 'postStates' | 'usageStats' | 'financeStats'
+): Promise<void> {
+  try {
+    const token = await getToken();
+    const settings = (await fetchArchiveSettings(token, API_URL)) ?? normalizeArchiveSettings({});
+    const group = settings[groupKey];
+    if (!group) return;
+    await runGroupArchiveJob(token, groupKey, group);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Archive group failed';
+    logger.error({ err, groupKey }, 'Scheduled group archive failed');
+    try {
+      const token = await getToken();
+      await notifyCrm(token, 'archive_error', `Ошибка автоархивирования (${groupKey}): ${message}`, 'error');
+    } catch {
+      // best effort
+    }
+  }
+}
+
 async function runArchiveJob(): Promise<void> {
   try {
     const token = await getToken();
@@ -254,11 +320,10 @@ async function main(): Promise<void> {
     cron.schedule(CRON, () => runBackup('auto'));
   }
 
-  if (cron.validate(ARCHIVE_CRON)) {
-    cron.schedule(ARCHIVE_CRON, () => {
-      void runArchiveJob();
-    });
-  }
+  void refreshArchiveSchedules();
+  setInterval(() => {
+    void refreshArchiveSchedules();
+  }, 60_000);
   void checkManualBackups();
   setInterval(() => checkManualBackups(), 15000);
 }

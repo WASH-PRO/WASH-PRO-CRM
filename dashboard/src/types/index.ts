@@ -133,12 +133,14 @@ export interface ArchiveGroupSettings {
   deleteAfter: boolean;
   retentionDays: number;
   policy: string;
+  cron?: string;
 }
 
 export interface ArchiveSettings {
   retentionDays?: number;
   autoArchive?: boolean;
   autoDelete?: boolean;
+  cron?: string;
   cards?: ArchiveGroupSettings;
   postStates?: ArchiveGroupSettings;
   usageStats?: ArchiveGroupSettings;

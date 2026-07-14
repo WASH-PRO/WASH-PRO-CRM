@@ -1157,6 +1157,7 @@ export const en = {
       searchPlaceholder: 'Search log...',
       daysLabel: '{{days}} days',
       groups: {
+        telemetry: 'MQTT telemetry archive',
         cards: 'Cards archive',
         postStates: 'Post states archive',
         usageStats: 'Usage stats archive',
@@ -1180,10 +1181,13 @@ export const en = {
         enableAutoRun: 'Enable auto-run',
         autoRunHintPrefix: 'Auto-run is executed by',
         autoRunHintSuffix: 'service by schedule (default 03:00).',
+        telemetryHint: 'Deletes inbound MQTT messages older than the retention period. Does not affect current post state.',
         saveArchive: 'Save archive file',
         deleteSource: 'Delete source data after archiving',
         retentionDays: 'Data retention period',
         policy: 'Retention policy',
+        cron: 'Schedule (cron)',
+        cronHint: 'Cron format: min hour day month weekday. Example: 0 3 * * * — daily at 03:00. wash-backup picks up changes within about a minute.',
       },
       policy: {
         standard: 'Standard',

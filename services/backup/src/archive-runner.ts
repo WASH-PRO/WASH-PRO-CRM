@@ -9,32 +9,21 @@ import {
   isNotificationTypeEnabled,
   normalizeNotificationSettings,
 } from './notification-settings.js';
+import {
+  ArchiveGroupKey,
+  ArchiveGroupSettings,
+  ArchiveSettings,
+  fetchArchiveSettings,
+  normalizeArchiveSettings,
+} from './archive-settings.js';
 
 const logger = pino({ level: 'info' });
 
 const API_URL = process.env.API_URL || 'http://dynamic-api:3001';
 const ARCHIVE_DIR = join(process.env.BACKUP_DIR || '/backups', 'archives');
 
-export type ArchiveGroupKey = 'cards' | 'postStates' | 'usageStats' | 'financeStats';
-
-export interface ArchiveGroupSettings {
-  enabled: boolean;
-  autoRun: boolean;
-  saveArchive: boolean;
-  deleteAfter: boolean;
-  retentionDays: number;
-  policy: string;
-}
-
-export interface ArchiveSettings {
-  retentionDays?: number;
-  autoArchive?: boolean;
-  autoDelete?: boolean;
-  cards?: ArchiveGroupSettings;
-  postStates?: ArchiveGroupSettings;
-  usageStats?: ArchiveGroupSettings;
-  financeStats?: ArchiveGroupSettings;
-}
+export type { ArchiveGroupKey, ArchiveGroupSettings, ArchiveSettings };
+export { fetchArchiveSettings, normalizeArchiveSettings };
 
 const GROUP_CONFIG: Record<ArchiveGroupKey, { path: string; dateField: string }> = {
   cards: { path: '/api/crm/cards', dateField: 'createdAt' },
@@ -223,128 +212,114 @@ export async function runTelemetryArchive(
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - retentionDays);
 
-  const items = await apiListAll<{ id: string; receivedAt?: string }>(token, '/api/crm/telemetry');
-  let affected = 0;
-  for (const record of items) {
-    if (record.receivedAt && new Date(record.receivedAt) < cutoff) {
-      await fetch(`${API_URL}/api/crm/telemetry/${record.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      affected += 1;
-    }
+  const res = await fetch(`${API_URL}/api/crm/telemetry/purge-expired`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ receivedBefore: cutoff.toISOString() }),
+  });
+  const json = (await res.json()) as {
+    success?: boolean;
+    data?: { deleted?: number };
+    error?: string;
+  };
+  if (!res.ok || json.success === false) {
+    throw new Error(json.error || `Telemetry purge failed (${res.status})`);
   }
-  return affected;
+  return Number(json.data?.deleted ?? 0);
 }
 
-function defaultGroup(): ArchiveGroupSettings {
-  return {
-    enabled: true,
-    autoRun: false,
-    saveArchive: true,
-    deleteAfter: false,
-    retentionDays: 90,
-    policy: 'standard',
-  };
+export async function runTelemetryArchiveJob(token: string, settings: ArchiveSettings): Promise<void> {
+  if (settings.autoArchive === false) return;
+  const retentionDays = settings.retentionDays ?? 90;
+  const affected = await runTelemetryArchive(token, retentionDays);
+  if (affected <= 0) return;
+
+  await fetch(`${API_URL}/api/crm/archive-logs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      action: 'archive',
+      recordsAffected: affected,
+      policyDays: retentionDays,
+      createdAt: new Date().toISOString(),
+      details: { entity: 'telemetry', groupKey: 'telemetry' },
+    }),
+  });
+  logger.info({ affected, retentionDays }, 'Telemetry archive completed');
+  await notifyCrm(
+    token,
+    'auto_archive',
+    `Автоархивирование: удалено ${affected} записей телеметрии (политика ${retentionDays} дн.)`
+  );
 }
 
-function normalizeArchiveSettings(raw: Record<string, unknown>): ArchiveSettings {
-  const base: ArchiveSettings = {
-    retentionDays: Number(raw.retentionDays) || 90,
-    autoArchive: raw.autoArchive !== false,
-    autoDelete: raw.autoDelete === true,
-  };
-  for (const key of ['cards', 'postStates', 'usageStats', 'financeStats'] as ArchiveGroupKey[]) {
-    const existing = raw[key] as ArchiveGroupSettings | undefined;
-    base[key] = existing ? { ...defaultGroup(), ...existing } : defaultGroup();
-  }
-  return base;
+export async function runGroupArchiveJob(
+  token: string,
+  groupKey: ArchiveGroupKey,
+  group: ArchiveGroupSettings
+): Promise<void> {
+  if (!group.enabled || !group.autoRun) return;
+
+  const result = await runArchiveGroup(token, groupKey, group);
+  if (result.affected <= 0) return;
+
+  await fetch(`${API_URL}/api/crm/archive-logs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      action: 'archive',
+      recordsAffected: result.affected,
+      policyDays: group.retentionDays,
+      groupKey,
+      filename: result.filename,
+      createdAt: new Date().toISOString(),
+      details: {
+        groupKey,
+        group: groupKey,
+        filename: result.filename,
+        saveArchive: group.saveArchive,
+        deleteAfter: group.deleteAfter,
+        autoRun: true,
+      },
+    }),
+  });
+
+  const label = GROUP_LABELS[groupKey];
+  const filePart = result.filename ? `, файл ${result.filename}` : '';
+  const deletePart = group.deleteAfter ? ', исходные данные удалены' : '';
+  logger.info({ groupKey, affected: result.affected }, 'Group archive completed');
+  await notifyCrm(
+    token,
+    'auto_archive',
+    `Автоархивирование (${label}): ${result.affected} записей${filePart}${deletePart}`
+  );
 }
 
 export async function runScheduledArchives(token: string): Promise<void> {
-  const settingsRes = await fetch(`${API_URL}/api/crm/settings`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const settingsJson = (await settingsRes.json()) as {
-    success: boolean;
-    data?: Array<{ key: string; id: string }>;
-  };
-  const archiveRow = settingsJson.data?.find((s) => s.key === 'archive');
-  if (!archiveRow) return;
+  const settings = (await fetchArchiveSettings(token, API_URL)) ?? normalizeArchiveSettings({});
 
-  const detailRes = await fetch(`${API_URL}/api/crm/settings/${archiveRow.id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const detail = (await detailRes.json()) as { data?: { value?: Record<string, unknown> } };
-  const settings = normalizeArchiveSettings(detail.data?.value ?? {});
-
-  if (settings.autoArchive) {
-    const retentionDays = settings.retentionDays ?? 90;
-    const affected = await runTelemetryArchive(token, retentionDays);
-    if (affected > 0) {
-      await fetch(`${API_URL}/api/crm/archive-logs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: 'archive',
-          recordsAffected: affected,
-          policyDays: retentionDays,
-          createdAt: new Date().toISOString(),
-          details: { entity: 'telemetry' },
-        }),
-      });
-      logger.info({ affected, retentionDays }, 'Telemetry archive completed');
-      await notifyCrm(
-        token,
-        'auto_archive',
-        `Автоархивирование: удалено ${affected} записей телеметрии (политика ${retentionDays} дн.)`
-      );
-    }
+  try {
+    await runTelemetryArchiveJob(token, settings);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Telemetry archive failed';
+    logger.error({ err }, 'Telemetry archive failed');
+    await notifyCrm(token, 'archive_error', `Ошибка автоархивирования (телеметрия): ${message}`, 'error');
   }
 
   for (const groupKey of ['cards', 'postStates', 'usageStats', 'financeStats'] as ArchiveGroupKey[]) {
     const group = settings[groupKey]!;
     if (!group.enabled || !group.autoRun) continue;
-
     try {
-      const result = await runArchiveGroup(token, groupKey, group);
-      if (result.affected <= 0) continue;
-
-      await fetch(`${API_URL}/api/crm/archive-logs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: 'archive',
-          recordsAffected: result.affected,
-          policyDays: group.retentionDays,
-          groupKey,
-          filename: result.filename,
-          createdAt: new Date().toISOString(),
-          details: {
-            groupKey,
-            filename: result.filename,
-            saveArchive: group.saveArchive,
-            deleteAfter: group.deleteAfter,
-            autoRun: true,
-          },
-        }),
-      });
-
-      const label = GROUP_LABELS[groupKey];
-      const filePart = result.filename ? `, файл ${result.filename}` : '';
-      const deletePart = group.deleteAfter ? ', исходные данные удалены' : '';
-      logger.info({ groupKey, affected: result.affected }, 'Group archive completed');
-      await notifyCrm(
-        token,
-        'auto_archive',
-        `Автоархивирование (${label}): ${result.affected} записей${filePart}${deletePart}`
-      );
+      await runGroupArchiveJob(token, groupKey, group);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Archive group failed';
       logger.error({ err, groupKey }, 'Group archive failed');

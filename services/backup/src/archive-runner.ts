@@ -167,7 +167,7 @@ export async function runArchiveGroup(
   token: string,
   groupKey: ArchiveGroupKey,
   group: ArchiveGroupSettings
-): Promise<{ affected: number; filename?: string }> {
+): Promise<{ affected: number; scanned: number; filename?: string }> {
   const config = GROUP_CONFIG[groupKey];
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - group.retentionDays);

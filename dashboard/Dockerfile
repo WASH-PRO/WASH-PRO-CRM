@@ -1,4 +1,6 @@
-FROM node:20-alpine AS builder
+# bookworm (glibc): Vite 8 / rolldown optional native bindings are unreliable on Alpine musl
+# ("Cannot find module '@rolldown/binding-linux-x64-musl'" during npm run build).
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 ARG VITE_APP_VERSION=1.0.0
 ENV VITE_APP_VERSION=$VITE_APP_VERSION

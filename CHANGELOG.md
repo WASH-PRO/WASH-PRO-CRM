@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [1.1.55] — 2026-07-15
+
+### Исправлено
+
+- **Dashboard Docker build** — builder на `node:20-bookworm-slim` вместо Alpine, чтобы Vite 8 / rolldown ставил native binding (`linux-x64-gnu`) и сборка на сервере не падала с `@rolldown/binding-linux-x64-musl`
+
+### Документация
+
+- **releases/v1.1.55.md** — v1.1.55
+
 ## [1.1.54] — 2026-07-15
 
 ### Исправлено

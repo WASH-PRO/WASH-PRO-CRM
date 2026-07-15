@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## История изменений
 
-Последний релиз: **[v1.1.54](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.54)** — Сохранение MQTT-учёток поста при сохранении форм.
+Последний релиз: **[v1.1.55](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.55)** — Сборка dashboard в Docker на Linux (rolldown).
 
 См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) и [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

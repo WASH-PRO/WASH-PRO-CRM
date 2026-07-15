@@ -134,7 +134,7 @@ If these hang or fail with `DeadlineExceeded`, the issue is Docker Hub access, n
 
 ```bash
 cd /path/to/WASH-PRO-CRM
-git fetch origin && git checkout v1.1.53
+git fetch origin && git checkout v1.1.54
 docker compose up -d --build dashboard update-bridge
 ```
 
@@ -223,6 +223,7 @@ Script recreates `system` in passwd. **Post** accounts — via "Sync MQTT" in wi
 2. Publish topic: `washpro/{serial}/state/...`, where `{serial}` = `posts.serialNumber`.
 3. After MQTT data change in CRM — MQTT sync.
 4. `./scripts/fix-mqtt.sh` — if `system` for CRM is broken.
+5. *(before v1.1.54)* saving the post **name** on the post detail page could wipe MQTT credentials from `posts.settings`; after restart/`sync-users` Mosquitto kept only `system`. Upgrade to **v1.1.54+**, restore login/password on the post card, then sync MQTT again.
 
 ### ACL / foreign serial in topic
 

@@ -8,6 +8,7 @@
 
 - Брокер: `mqtt://<mqttLogin>:<mqttPassword>@<IP-CRM>:1883`
 - Логин/пароль — из карточки поста в CRM (`settings.mqttLogin` / `settings.mqttPassword`)
+- Меняйте учётки в **списке постов** (форма create/edit). Сохранение названия на странице поста **не трогает** MQTT-пароль *(v1.1.54)*
 - По умолчанию логин = `serialNumber`
 - Нативный протокол: `{dt_pref}/{serial}/state/{suffix}`
 - По умолчанию `dt_pref` = `washpro`

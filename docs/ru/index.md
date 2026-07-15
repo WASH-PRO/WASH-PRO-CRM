@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## История изменений
 
-Последний релиз: **[v1.1.53](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.53)** — поле суммы очищается после успешного «Зачисление баланса».
+Последний релиз: **[v1.1.54](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.54)** — Сохранение MQTT-учёток поста при сохранении форм.
 
 См. [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) и [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

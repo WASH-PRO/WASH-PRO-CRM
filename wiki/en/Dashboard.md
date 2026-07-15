@@ -64,7 +64,7 @@ On the post page (`/posts/:id#device-settings`) or via **⚙** in the posts list
 - **Mode prices** — work-modes 0–9, MQTT `set/prices`
 - **Commands** — reboots, credit, service modes → `set/command`
 - **MQTT prefix** (`dt_pref`, usually `washpro`)
-- **MQTT login/password** — in the post create/edit form
+- **MQTT login/password** — in the post create/edit form (**Posts list**). Saving name/description on the post detail page does **not** change MQTT credentials *(v1.1.54)*
 
 ## Resources (sidebar)
 

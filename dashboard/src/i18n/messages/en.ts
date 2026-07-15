@@ -476,6 +476,7 @@ export const en = {
       editTitle: 'Edit post',
       selectObject: 'Select...',
       mqttSyncFailed: 'Failed to apply MQTT credentials',
+      mqttPasswordRequired: 'Enter an MQTT password or generate a new one — empty password is not allowed',
       confirmDeleteOne: 'Delete post and all related data (state, cards, stats, finance, MQTT)?',
       confirmDeleteMany: 'Delete {{count}} posts and all related data?',
       deleteError: 'Delete error',

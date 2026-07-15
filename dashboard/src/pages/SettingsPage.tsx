@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import {
@@ -171,6 +171,14 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const notificationEventGroups = useMemo(() => getNotificationEventGroups(t), [t]);
+  /** Последние сохранённые секреты — пустое поле при Save не затирает пароль. */
+  const secretsRef = useRef({
+    telegramToken: '',
+    pyorchPassword: '',
+    dapPassword: '',
+    mqttSystemPassword: '',
+  });
+  const mqttBrokerSnapshotRef = useRef('');
 
   const applySettings = useCallback((rows: CrmSetting[]) => {
     const idMap: Record<string, string | null> = {
@@ -184,26 +192,51 @@ export function SettingsPage() {
     };
 
     let legacyPyOrchRaw: Record<string, unknown> | null = null;
+    let nextTelegram = DEFAULT_TELEGRAM;
+    let nextPyorch = DEFAULT_PYORCH;
+    let nextDap = DEFAULT_DAP;
+    let nextMqtt = DEFAULT_MQTT;
 
     for (const row of rows) {
       idMap[row.key] = row.id;
       const v = row.value;
       if (row.key === 'backup') setBackup({ ...DEFAULT_BACKUP, ...(v as unknown as BackupSettings) });
       if (row.key === 'notifications') setNotifications(parseNotifications(v));
-      if (row.key === 'telegram') setTelegram(parseTelegram(v));
+      if (row.key === 'telegram') {
+        nextTelegram = parseTelegram(v);
+        setTelegram(nextTelegram);
+      }
       if (row.key === 'pyorchestrator') {
         legacyPyOrchRaw = v;
-        setPyorch(parsePyOrch(v));
+        nextPyorch = parsePyOrch(v);
+        setPyorch(nextPyorch);
       }
-      if (row.key === 'dynamic-api') setDynamicApi(parseDynamicApi(v));
-      if (row.key === 'mqtt-broker') setMqttBroker(parseMqttBrokerSettings(v));
+      if (row.key === 'dynamic-api') {
+        nextDap = parseDynamicApi(v);
+        setDynamicApi(nextDap);
+      }
+      if (row.key === 'mqtt-broker') {
+        nextMqtt = parseMqttBrokerSettings(v);
+        setMqttBroker(nextMqtt);
+      }
       if (row.key === 'branding') setBranding(parseBranding(v));
     }
 
     if (!idMap['dynamic-api'] && legacyPyOrchRaw) {
       const legacy = legacyDynamicApiFromPyOrch(legacyPyOrchRaw);
-      if (legacy) setDynamicApi(legacy);
+      if (legacy) {
+        nextDap = legacy;
+        setDynamicApi(legacy);
+      }
     }
+
+    secretsRef.current = {
+      telegramToken: nextTelegram.token,
+      pyorchPassword: nextPyorch.password,
+      dapPassword: nextDap.servicePassword,
+      mqttSystemPassword: nextMqtt.systemPassword,
+    };
+    mqttBrokerSnapshotRef.current = JSON.stringify(nextMqtt);
 
     setIds(idMap);
   }, []);
@@ -224,28 +257,50 @@ export function SettingsPage() {
     if (!canEdit) return;
     setSaving(true);
     try {
+      const secrets = secretsRef.current;
+      const telegramToSave = {
+        ...telegram,
+        token: telegram.token.trim() || secrets.telegramToken,
+      };
+      const pyorchToSave = {
+        ...pyorch,
+        password: pyorch.password.trim() || secrets.pyorchPassword,
+      };
+      const dapToSave = {
+        ...dynamicApi,
+        servicePassword: dynamicApi.servicePassword.trim() || secrets.dapPassword,
+      };
+      const mqttToSave = {
+        ...mqttBroker,
+        systemPassword: mqttBroker.systemPassword.trim() || secrets.mqttSystemPassword,
+      };
+      const mqttChanged = JSON.stringify(mqttToSave) !== mqttBrokerSnapshotRef.current;
+
       await Promise.all([
         saveCrmSetting('backup', backup as unknown as Record<string, unknown>, ids.backup ?? null),
         saveCrmSetting('notifications', notifications as unknown as Record<string, unknown>, ids.notifications ?? null),
-        saveCrmSetting('telegram', telegram as unknown as Record<string, unknown>, ids.telegram ?? null),
-        saveCrmSetting('pyorchestrator', pyorch as unknown as Record<string, unknown>, ids.pyorchestrator ?? null),
-        saveCrmSetting('dynamic-api', dynamicApi as unknown as Record<string, unknown>, ids['dynamic-api'] ?? null),
-        saveCrmSetting('mqtt-broker', mqttBroker as unknown as Record<string, unknown>, ids['mqtt-broker'] ?? null),
+        saveCrmSetting('telegram', telegramToSave as unknown as Record<string, unknown>, ids.telegram ?? null),
+        saveCrmSetting('pyorchestrator', pyorchToSave as unknown as Record<string, unknown>, ids.pyorchestrator ?? null),
+        saveCrmSetting('dynamic-api', dapToSave as unknown as Record<string, unknown>, ids['dynamic-api'] ?? null),
+        saveCrmSetting('mqtt-broker', mqttToSave as unknown as Record<string, unknown>, ids['mqtt-broker'] ?? null),
         saveCrmSetting('branding', branding as unknown as Record<string, unknown>, ids.branding ?? null),
       ]);
-      try {
-        await syncMqttUsers();
-      } catch (syncErr) {
-        console.error(syncErr);
-        showToast(
-          syncErr instanceof Error
-            ? `${t('api.mqttSyncFailed')}: ${syncErr.message}`
-            : t('api.mqttSyncFailed'),
-          'error'
-        );
-        const rows = await listCrmSettings();
-        applySettings(rows);
-        return;
+      // Mosquitto passwd пересобирается целиком — только при реальном изменении mqtt-broker.
+      if (mqttChanged) {
+        try {
+          await syncMqttUsers();
+        } catch (syncErr) {
+          console.error(syncErr);
+          showToast(
+            syncErr instanceof Error
+              ? `${t('api.mqttSyncFailed')}: ${syncErr.message}`
+              : t('api.mqttSyncFailed'),
+            'error'
+          );
+          const rows = await listCrmSettings();
+          applySettings(rows);
+          return;
+        }
       }
       const rows = await listCrmSettings();
       applySettings(rows);

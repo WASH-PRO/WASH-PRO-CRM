@@ -4,7 +4,7 @@
 
 Локальная CRM/SCADA для автомоек на базе [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** и опционально [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **1.1.53** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
+**WASH PRO version:** **v1.1.54** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/ru/  
 Языки: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Возможности
@@ -21,7 +21,7 @@
 - **Полный пакет бэкапа** — MongoDB + настройки + data модулей *(v1.1.44)*
 - **Диагностика** — JSON-отчёт на странице «Информация» *(v1.1.44)*
 - SCADA: MQTT, телеметрия, команды и цены постов
-- Автомойки, посты, **учётные записи MQTT**, настройки устройства
+- Автомойки, посты, **учётные записи MQTT**, настройки устройства; сохранение названия поста не затирает MQTT-пароль *(v1.1.54)*
 - Карты (regular/service/VIP), журнал применений NFC
 - Аналитика до/после инкассации, архив, бэкапы MongoDB
 - Уведомления web + Telegram, настраиваемые типы событий
@@ -74,6 +74,15 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` в `.env`
 - [MCP для AI-агентов](ru-MCP)
 - [Встроенные сервисы](ru-Embedded-Services)
 - [Схема данных](ru-Database-Schema)
+
+## Changelog v1.1.54
+
+- **Страница поста** — сохранение названия/описания больше не затирает MQTT логин/пароль в `posts.settings`
+- **Список постов** — при edit не генерируется новый MQTT-пароль молча; пустой пароль недопустим
+- **Настройки** — пустые секреты сохраняют прежние значения; sync Mosquitto только при изменении `mqtt-broker`
+- **message-processor** — входящие `settings` мержатся, а не заменяются целиком
+
+Заметки релиза: [v1.1.54](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.54)
 
 ## Changelog v1.1.53
 

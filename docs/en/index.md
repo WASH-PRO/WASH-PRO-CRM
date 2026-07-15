@@ -131,6 +131,6 @@ Dynamic API Platform — Apache 2.0 · PyOrchestrator — MIT.
 
 ## Changelog
 
-Latest release: **[v1.1.53](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.53)** — Credit balance amount field clears after a successful command.
+Latest release: **[v1.1.54](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.54)** — Preserve MQTT post credentials on form save.
 
 See [CHANGELOG.md](https://github.com/WASH-PRO/WASH-PRO-CRM/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/WASH-PRO/WASH-PRO-CRM/releases).

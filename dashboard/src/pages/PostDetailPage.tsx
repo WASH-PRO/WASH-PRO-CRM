@@ -27,14 +27,18 @@ interface PostLiveData {
   currentState: PostState | null;
 }
 
+/** Нормализует известные поля, но сохраняет остальные (в т.ч. mqttLogin/mqttPassword). */
 function parseSettings(raw?: PostSettings | Record<string, unknown>): PostSettings {
   if (!raw) return {};
   return {
+    ...(raw as PostSettings),
     firmwareVersion: raw.firmwareVersion != null ? String(raw.firmwareVersion) : undefined,
     warrantyUntil: raw.warrantyUntil != null ? String(raw.warrantyUntil) : undefined,
     maintenance: raw.maintenance != null ? String(raw.maintenance) : undefined,
     features: raw.features != null ? String(raw.features) : undefined,
     mqttPrefix: raw.mqttPrefix != null ? String(raw.mqttPrefix) : undefined,
+    mqttLogin: raw.mqttLogin != null ? String(raw.mqttLogin) : undefined,
+    mqttPassword: raw.mqttPassword != null ? String(raw.mqttPassword) : undefined,
     modePrices: parseModePrices(raw.modePrices),
     pricesUpdatedAt: raw.pricesUpdatedAt != null ? String(raw.pricesUpdatedAt) : undefined,
     pricesSyncedAt: raw.pricesSyncedAt != null ? String(raw.pricesSyncedAt) : undefined,
@@ -254,9 +258,9 @@ export function PostDetailPage() {
     setError('');
     setSaved('');
     try {
-      const settings = parseSettings(data.post.settings);
+      // База — сырые settings поста: иначе whitelist parseSettings мог бы затереть mqttLogin/mqttPassword.
       const nextSettings: PostSettings = {
-        ...settings,
+        ...(data.post.settings || {}),
         maintenance: form.maintenance || undefined,
         features: form.features || undefined,
       };

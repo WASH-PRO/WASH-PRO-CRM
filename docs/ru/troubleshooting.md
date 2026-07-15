@@ -134,7 +134,7 @@ docker pull nginx:alpine
 
 ```bash
 cd /path/to/WASH-PRO-CRM   # или каталог с docker-compose.yml
-git fetch origin && git checkout v1.1.53   # нужный тег
+git fetch origin && git checkout v1.1.54   # нужный тег
 docker compose up -d --build dashboard update-bridge
 ```
 
@@ -223,6 +223,7 @@ docker compose up -d message-processor
 2. Топик публикации: `washpro/{serial}/state/...`, где `{serial}` = `posts.serialNumber`.
 3. После смены MQTT-данных в CRM — синхронизация MQTT.
 4. `./scripts/fix-mqtt.sh` — если сбился `system` для CRM.
+5. *(до v1.1.54)* сохранение названия на **странице поста** могло стереть MQTT-учётки из `posts.settings`; после рестарта/`sync-users` Mosquitto оставался только `system`. Обновитесь до **v1.1.54+**, восстановите логин/пароль в карточке поста и снова синхронизируйте MQTT.
 
 ### ACL / чужой serial в топике
 

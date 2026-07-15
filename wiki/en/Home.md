@@ -4,7 +4,7 @@
 
 Local CRM/SCADA for car washes built on [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13** and optionally [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) **v0.1.13**.
 
-**WASH PRO version:** **1.1.53** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
+**WASH PRO version:** **v1.1.54** · **Documentation:** https://wash-pro.github.io/WASH-PRO-CRM/en/  
 Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://wash-pro.github.io/WASH-PRO-CRM/ru/)
 
 ## Features
@@ -21,7 +21,7 @@ Languages: [EN](https://wash-pro.github.io/WASH-PRO-CRM/en/) · [RU](https://was
 - **Full backup bundle** — MongoDB + settings + module data *(v1.1.44)*
 - **Support diagnostics** — JSON report on System page *(v1.1.44)*
 - SCADA: MQTT, telemetry, commands, and post prices
-- Car washes, posts, **MQTT accounts**, device settings
+- Car washes, posts, **MQTT accounts**, device settings; saving post name does not wipe MQTT password *(v1.1.54)*
 - Cards (regular/service/VIP), NFC application log
 - Analytics before/after collection, archive, MongoDB backups
 - Web + Telegram notifications, configurable event types
@@ -74,6 +74,15 @@ PyOrchestrator: `PYORCHESTRATOR_ENABLED=true` in `.env`
 - [MCP for AI agents](en-MCP)
 - [Embedded services](en-Embedded-Services)
 - [Database schema](en-Database-Schema)
+
+## Changelog v1.1.54
+
+- **Post detail** — saving name/description no longer wipes MQTT login/password in `posts.settings`
+- **Posts list** — no silent MQTT password regeneration on edit; empty password rejected
+- **Settings** — blank secrets keep previous values; Mosquitto sync only when `mqtt-broker` changes
+- **message-processor** — inbound `settings` merged, not replaced
+
+Release notes: [v1.1.54](https://github.com/WASH-PRO/WASH-PRO-CRM/releases/tag/v1.1.54)
 
 ## Changelog v1.1.53
 

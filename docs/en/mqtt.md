@@ -14,7 +14,7 @@ description: Post controller integration via MQTT
 | QoS | 1 (recommended) |
 | Port | `1883` (default on all host interfaces) |
 | Address | `<CRM-server-IP>:1883` from local network |
-| User (post) | `settings.mqttLogin` / `settings.mqttPassword` from post card in CRM |
+| User (post) | `settings.mqttLogin` / `settings.mqttPassword` from post card in CRM (edit via **Posts list** form; saving the name on the post detail page does not clear the password since *v1.1.54*) |
 | User (CRM) | `system` — password in **Settings → MQTT (CRM)**; on first launch also `MQTT_PASSWORD` in `.env` |
 
 Inside Docker: `mosquitto:1883` (CRM connects as `system`).  

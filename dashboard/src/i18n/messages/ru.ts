@@ -476,6 +476,7 @@ export const ru = {
       editTitle: 'Редактировать пост',
       selectObject: 'Выберите...',
       mqttSyncFailed: 'Не удалось применить учётные записи MQTT',
+      mqttPasswordRequired: 'Укажите MQTT-пароль или сгенерируйте новый — пустой пароль недопустим',
       confirmDeleteOne: 'Удалить пост и все связанные данные (состояние, карты, статистика, финансы, MQTT)?',
       confirmDeleteMany: 'Удалить {{count}} постов и все связанные данные?',
       deleteError: 'Ошибка удаления',

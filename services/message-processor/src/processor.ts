@@ -1,5 +1,6 @@
 import { apiRequest, createNotification, findPostBySerial, findPostState, setCachedPostState, logger } from './api-client.js';
 import { resolveTrustedPostSerial } from './mqtt-post-bindings.js';
+import { mergePostSettings } from './post-settings.js';
 
 export interface WashMessage {
   washSerial?: string;
@@ -49,9 +50,8 @@ export async function processMessage(msg: WashMessage, mqttTopic?: string): Prom
         await handleEvent(post.id, post.washId, msg.payload);
         break;
       case 'settings':
-        await apiRequest('PUT', `/api/crm/posts/${post.id}`, {
-          settings: msg.payload,
-        });
+        // Merge: wholesale PUT wiped mqttLogin/mqttPassword and other post settings.
+        await mergePostSettings(postSerial, msg.payload);
         break;
       default:
         logger.info({ messageType: msg.messageType }, 'Unknown message type, skipped CRM write');

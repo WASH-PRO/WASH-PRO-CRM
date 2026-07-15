@@ -44,9 +44,17 @@ function emptyForm(): PostFormState {
   };
 }
 
-function buildSettings(prev: PostSettings | undefined, form: PostFormState): PostSettings {
+function buildSettings(
+  prev: PostSettings | undefined,
+  form: PostFormState,
+  options: { isEdit: boolean }
+): PostSettings {
   const mqttLogin = form.mqttLogin.trim() || defaultMqttLogin(form.serialNumber);
-  const mqttPassword = form.mqttPassword.trim() || prev?.mqttPassword || generateMqttPassword();
+  // На edit никогда не генерируем новый пароль «втихую» — только явный ввод или прежний.
+  const mqttPassword =
+    form.mqttPassword.trim() ||
+    prev?.mqttPassword ||
+    (options.isEdit ? '' : generateMqttPassword());
 
   return {
     ...(prev || {}),
@@ -292,7 +300,11 @@ export function PostsPage() {
     e.preventDefault();
     try {
       const existing = editId ? data?.posts.find((p) => p.id === editId) : undefined;
-      const settings = buildSettings(existing?.settings, form);
+      const settings = buildSettings(existing?.settings, form, { isEdit: Boolean(editId) });
+      if (!settings.mqttPassword?.trim()) {
+        setError(t('pages.posts.mqttPasswordRequired'));
+        return;
+      }
       const body = {
         washId: form.washId,
         postNumber: Number(form.postNumber),

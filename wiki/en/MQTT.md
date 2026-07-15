@@ -8,6 +8,7 @@ Full documentation: [docs/mqtt.md](https://wash-pro.github.io/WASH-PRO-CRM/en/mq
 
 - Broker: `mqtt://<mqttLogin>:<mqttPassword>@<CRM-IP>:1883`
 - Login/password — from the post card in CRM (`settings.mqttLogin` / `settings.mqttPassword`)
+- Change credentials in the **Posts list** create/edit form. Saving the post name on the detail page does **not** clear the MQTT password *(v1.1.54)*
 - Default login = `serialNumber`
 - Native protocol: `{dt_pref}/{serial}/state/{suffix}`
 - Default `dt_pref` = `washpro`

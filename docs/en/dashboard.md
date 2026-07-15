@@ -184,7 +184,7 @@ Actions column — **⚙** icon (device settings) → post page. On create/edit 
 | Block | Description |
 |-------|-------------|
 | Header | **Online/offline status**, name, serial number |
-| Post description | Name, site address, serial number, maintenance, features *(firmware/warranty fields are legacy JSON only — not shown in UI)* |
+| Post description | Name, site address, serial number, maintenance, features *(firmware/warranty fields are legacy JSON only — not shown in UI)*; saving does **not** wipe `mqttLogin`/`mqttPassword` *(v1.1.54)* |
 | **Device settings** | Mode prices, MQTT commands, `dt_pref` prefix — see [MQTT](mqtt.md) |
 | State history | Telemetry `state/process` with date filter; **Load more (100 rows)** above table; server-side pages via `usePolling` *(v1.1.51)* |
 

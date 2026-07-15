@@ -161,6 +161,7 @@ export function PostDeviceSettings({ serialNumber, settings, canEdit, onSaved }:
         mqttPrefix: mqttPrefix.trim() || 'washpro',
       });
       setCommandMsg(t('postDevice.commandSent', { topic: result.topic }));
+      if (commandNeedsAmount(command)) setCreditAmount('');
       onSaved?.();
     } catch (err) {
       setCommandErr(err instanceof Error ? err.message : t('postDevice.errors.sendCommand'));

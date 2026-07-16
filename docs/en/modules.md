@@ -57,7 +57,17 @@ Running modules requires PyOrchestrator: `PYORCHESTRATOR_ENABLED=true ./scripts/
 | Usage Stats Collector | `GET /api/crm/usage-stats` | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
 | Starter (template) | heartbeat | [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter) |
 | VK Publisher | CRM Publications → **text** on VK wall (no images) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
-| Washes Nearby | CRM washes → Washes Nearby site (prices, posts, news) | [wash-module-washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby) |
+| Washes Nearby | CRM washes → Washes Nearby site (prices, posts, news); linked via `mapsExternalId` (UUID) | [wash-module-washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby) |
+
+## Washes Nearby and wash UUID
+
+Each CRM wash has **`mapsExternalId`** (UUID v4):
+
+1. CRM assigns the UUID on wash create (Dashboard) or during `init-seed` (backfill for older rows).
+2. The **Washes Nearby** module reads `mapsExternalId` and sends it to the site as Owner API **`external_id`**.
+3. Later patch/telemetry calls use `ext:{uuid}` — CRM does not depend on the site’s numeric wash id.
+
+After upgrading CRM: wait for `init-seed` (or **Integrity → init-seed**), then **Modules → Washes Nearby → Update → Start**.
 
 ## VK Publisher *(v1.1.42, module v1.2.0)*
 

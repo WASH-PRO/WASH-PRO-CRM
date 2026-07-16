@@ -437,6 +437,9 @@ export const ru = {
       editTitle: 'Редактировать автомойку',
       description: 'Описание',
       address: 'Адрес',
+      mapsExternalId: 'UUID (Автомойки рядом)',
+      mapsExternalIdHint:
+        'Стабильный идентификатор для сайта «Автомойки рядом» (Owner API external_id). Назначается автоматически при создании.',
       mqttSyncFailed: 'Не удалось применить учётные записи MQTT',
       confirmDeleteOne:
         'Удалить объект и все связанные данные?\n\nБудут удалены посты, состояния, карты, статистика, телеметрия и уведомления.',
@@ -463,6 +466,7 @@ export const ru = {
         name: 'Название',
         address: 'Адрес',
         description: 'Описание',
+        mapsExternalId: 'UUID (maps)',
         posts: 'Постов',
         createdAt: 'Дата создания',
       },

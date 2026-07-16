@@ -47,6 +47,8 @@ export interface Wash {
   registeredAt?: string;
   createdAt?: string;
   cloudEnabled?: boolean;
+  /** UUID for external maps / Washes Nearby (Owner API external_id). */
+  mapsExternalId?: string;
 }
 
 export type WashRef = string | Wash;

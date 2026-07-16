@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { randomUUID } from 'node:crypto';
 import {
   CRM_ENDPOINTS,
   CRM_GROUPS,
@@ -688,6 +689,80 @@ async function ensureDefaultWorkModes(token: string): Promise<void> {
   }
 }
 
+async function ensureWashMapsExternalIds(token: string): Promise<void> {
+  type WashRow = {
+    id?: string;
+    _id?: string;
+    name?: string;
+    description?: string;
+    address?: string;
+    registeredAt?: string;
+    cloudEnabled?: boolean;
+    mapsExternalId?: string;
+  };
+
+  let page = 1;
+  let totalPatched = 0;
+  for (;;) {
+    const res = await fetch(`${API_URL}/api/crm/washes?limit=100&page=${page}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 404) {
+      console.log('  CRM washes endpoint not ready yet, skipping mapsExternalId backfill');
+      return;
+    }
+    const json = (await res.json()) as ApiResponse<WashRow[]> & {
+      pagination?: { totalPages?: number; page?: number };
+    };
+    if (!res.ok || !json.success || !Array.isArray(json.data)) {
+      throw new Error(`Failed to list washes for UUID backfill: ${json.error || res.statusText}`);
+    }
+
+    for (const wash of json.data) {
+      const id = String(wash.id || wash._id || '');
+      if (!id) continue;
+      const existing = String(wash.mapsExternalId || '').trim();
+      if (existing) continue;
+
+      const mapsExternalId = randomUUID();
+      const body = {
+        name: wash.name,
+        description: wash.description || '',
+        address: wash.address,
+        registeredAt: wash.registeredAt || new Date().toISOString(),
+        cloudEnabled: wash.cloudEnabled ?? false,
+        mapsExternalId,
+      };
+      const patchRes = await fetch(`${API_URL}/api/crm/washes/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const patchJson = (await patchRes.json()) as ApiResponse;
+      if (!patchRes.ok || !patchJson.success) {
+        throw new Error(
+          `Failed to set mapsExternalId for wash ${id}: ${patchJson.error || patchRes.statusText}`
+        );
+      }
+      totalPatched++;
+      console.log(`  Assigned mapsExternalId for wash ${id}: ${mapsExternalId}`);
+    }
+
+    const totalPages = json.pagination?.totalPages ?? page;
+    if (page >= totalPages || json.data.length === 0) break;
+    page += 1;
+  }
+
+  if (totalPatched === 0) {
+    console.log('  mapsExternalId backfill: all washes already have UUID');
+  } else {
+    console.log(`  mapsExternalId backfill: assigned ${totalPatched} UUID(s)`);
+  }
+}
+
 async function ensureDemoSite(token: string): Promise<void> {
   let washes: Array<{ id: string }> = [];
   try {
@@ -716,6 +791,7 @@ async function ensureDemoSite(token: string): Promise<void> {
     body: JSON.stringify({
       ...DEFAULT_DEMO_WASH,
       registeredAt: new Date().toISOString(),
+      mapsExternalId: randomUUID(),
     }),
   });
   const washJson = (await washRes.json()) as ApiResponse<{ id: string }>;
@@ -779,6 +855,7 @@ async function main(): Promise<void> {
   await ensureDefaultDiscountTypes(token);
   await ensureDefaultWorkModes(token);
   await ensureDemoSite(token);
+  await ensureWashMapsExternalIds(token);
   await verifyServiceLogin();
 
   console.log('WASH PRO CRM Init Seed — complete (exit 0 is normal for this one-shot container)');

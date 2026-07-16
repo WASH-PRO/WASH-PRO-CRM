@@ -353,6 +353,13 @@ const washFields: SchemaField[] = [
   { name: 'address', type: 'string', required: true, order: 2, description: 'Адрес' },
   { name: 'registeredAt', type: 'datetime', order: 3, description: 'Дата создания' },
   { name: 'cloudEnabled', type: 'boolean', order: 4, description: 'Подключение к облаку' },
+  {
+    name: 'mapsExternalId',
+    type: 'string',
+    order: 5,
+    description:
+      'UUID мойки для внешних площадок (Автомойки рядом / Owner API external_id). Генерируется автоматически.',
+  },
 ];
 
 const postFields: SchemaField[] = [

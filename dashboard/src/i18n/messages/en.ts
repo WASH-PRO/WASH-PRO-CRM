@@ -437,6 +437,9 @@ export const en = {
       editTitle: 'Edit wash',
       description: 'Description',
       address: 'Address',
+      mapsExternalId: 'UUID (Washes Nearby)',
+      mapsExternalIdHint:
+        'Stable id for the Washes Nearby site (Owner API external_id). Assigned automatically on create.',
       mqttSyncFailed: 'Failed to apply MQTT credentials',
       confirmDeleteOne:
         'Delete object and all related data?\n\nPosts, states, cards, statistics, telemetry, and notifications will be deleted.',
@@ -463,6 +466,7 @@ export const en = {
         name: 'Name',
         address: 'Address',
         description: 'Description',
+        mapsExternalId: 'UUID (maps)',
         posts: 'Posts',
         createdAt: 'Created at',
       },

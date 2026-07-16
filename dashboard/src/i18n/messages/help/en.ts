@@ -71,12 +71,14 @@ export const helpEn = {
     },
     washes: {
       title: 'Car washes',
-      summary: 'Site directory: name, address, linked posts.',
-      howItWorks: 'CRUD via Dynamic API → MongoDB. Posts reference a wash. Delete only when no active posts.',
-      example: 'Add “Wash on Main St” — then create posts with serials for controllers on that site.',
+      summary: 'Site directory: name, address, UUID for external maps, linked posts.',
+      howItWorks:
+        'CRUD via Dynamic API → MongoDB. mapsExternalId (UUID) is assigned automatically and used by the Washes Nearby module as Owner API external_id. Posts reference a wash.',
+      example:
+        'Add “Wash on Main St” — CRM assigns a UUID; the module publishes the wash to мойка-про.рф with that UUID.',
       regions: {
         toolbar: 'Create, refresh, search',
-        table: 'Wash table',
+        table: 'Wash table (UUID under the name)',
         pager: 'Pagination',
       },
     },

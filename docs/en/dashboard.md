@@ -169,7 +169,9 @@ Charts (Recharts): post status, **pie charts** for "Usage" (clients / service / 
 
 ### Car washes (`/washes`)
 
-Site reference: name, description, address, creation date, cloud. "Post count" column.
+Site reference: name, description, address, creation date, cloud, **UUID** (`mapsExternalId`) for external maps. "Post count" column.
+
+**UUID (`mapsExternalId`):** assigned automatically on create (and by `init-seed` for existing washes missing the field). The **Washes Nearby** module sends it to the Washes Nearby site as Owner API `external_id`, so the platform identifies the wash without CRM Mongo ids or the site’s numeric id.
 
 ### Posts (`/posts`)
 

@@ -13,7 +13,34 @@ import { refId } from '../utils/refs';
 import { formatDateTime } from '../utils/format';
 import { createExportBulkAction } from '../utils/export';
 
-const emptyForm = { name: '', description: '', address: '', registeredAt: undefined as string | undefined, cloudEnabled: false };
+type WashForm = {
+  name: string;
+  description: string;
+  address: string;
+  registeredAt?: string;
+  cloudEnabled: boolean;
+  mapsExternalId: string;
+};
+
+function newMapsExternalId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+const emptyForm = (): WashForm => ({
+  name: '',
+  description: '',
+  address: '',
+  registeredAt: undefined,
+  cloudEnabled: false,
+  mapsExternalId: newMapsExternalId(),
+});
 
 export function WashesPage() {
   const { hasPermission } = useAuth();
@@ -23,7 +50,7 @@ export function WashesPage() {
   const [notice, setNotice] = useState('');
   const [deleteProgress, setDeleteProgress] = useState('');
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<WashForm>(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -55,7 +82,7 @@ export function WashesPage() {
   };
 
   const openCreate = () => {
-    setForm(emptyForm);
+    setForm(emptyForm());
     setEditId(null);
     setModal(true);
   };
@@ -67,6 +94,7 @@ export function WashesPage() {
       address: w.address,
       registeredAt: w.registeredAt,
       cloudEnabled: w.cloudEnabled ?? false,
+      mapsExternalId: w.mapsExternalId?.trim() || newMapsExternalId(),
     });
     setEditId(w.id);
     setModal(true);
@@ -128,12 +156,15 @@ export function WashesPage() {
         key: 'name',
         header: t('pages.washes.columns.objectName'),
         sortable: true,
-        searchValue: (w) => `${w.name} ${w.description || ''}`,
+        searchValue: (w) => `${w.name} ${w.description || ''} ${w.mapsExternalId || ''}`,
         sortValue: (w) => w.name,
         render: (w) => (
           <div>
             <div className="font-medium">{w.name}</div>
             {w.description && <div className="text-xs text-slate-500">{w.description}</div>}
+            {w.mapsExternalId && (
+              <div className="mt-0.5 font-mono text-[11px] text-slate-400">{w.mapsExternalId}</div>
+            )}
           </div>
         ),
       },
@@ -198,6 +229,7 @@ export function WashesPage() {
         { header: t('pages.washes.export.name'), value: (w) => w.name },
         { header: t('pages.washes.export.address'), value: (w) => w.address },
         { header: t('pages.washes.export.description'), value: (w) => w.description || '' },
+        { header: t('pages.washes.export.mapsExternalId'), value: (w) => w.mapsExternalId || '' },
         { header: t('pages.washes.export.posts'), value: (w) => String(postCountByWash[w.id] || 0) },
         { header: t('pages.washes.export.createdAt'), value: (w) => w.createdAt || w.registeredAt || '' },
       ]),
@@ -234,15 +266,15 @@ export function WashesPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const body = editId
-        ? {
-            name: form.name,
-            description: form.description,
-            address: form.address,
-            registeredAt: form.registeredAt || new Date().toISOString(),
-            cloudEnabled: form.cloudEnabled ?? false,
-          }
-        : { ...form, registeredAt: new Date().toISOString(), cloudEnabled: false };
+      const mapsExternalId = form.mapsExternalId.trim() || newMapsExternalId();
+      const body = {
+        name: form.name,
+        description: form.description,
+        address: form.address,
+        registeredAt: form.registeredAt || new Date().toISOString(),
+        cloudEnabled: form.cloudEnabled ?? false,
+        mapsExternalId,
+      };
       if (editId) {
         await api(`/crm/washes/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
       } else {
@@ -292,6 +324,11 @@ export function WashesPage() {
           <div><label className="label">{t('common.title')}</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div><label className="label">{t('pages.washes.description')}</label><input className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div><label className="label">{t('pages.washes.address')}</label><input className="input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required /></div>
+          <div>
+            <label className="label">{t('pages.washes.mapsExternalId')}</label>
+            <input className="input font-mono text-sm" value={form.mapsExternalId} readOnly />
+            <p className="mt-1 text-xs text-slate-500">{t('pages.washes.mapsExternalIdHint')}</p>
+          </div>
           <button type="submit" className="btn-primary w-full">{t('common.save')}</button>
         </form>
       </Modal>

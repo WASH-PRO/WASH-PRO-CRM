@@ -57,6 +57,7 @@ Running modules requires PyOrchestrator: `PYORCHESTRATOR_ENABLED=true ./scripts/
 | Usage Stats Collector | `GET /api/crm/usage-stats` | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
 | Starter (template) | heartbeat | [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter) |
 | VK Publisher | CRM Publications → **text** on VK wall (no images) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+| Washes Nearby | CRM washes → Washes Nearby site (prices, posts, news) | [wash-module-washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby) |
 
 ## VK Publisher *(v1.1.42, module v1.2.0)*
 

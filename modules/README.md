@@ -15,7 +15,7 @@ Documentation: [GitHub Pages — Modules](https://wash-pro.github.io/WASH-PRO-CR
 
 Catalog: `registry.json`. Module icons without a GitHub repo live in `modules/icons/{id}.svg`, served via `/api/crm/modules/icon/{id}`.
 
-Repositories: [post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy), [usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats), [starter](https://github.com/WASH-PRO/wash-module-starter), [vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) (v1.2.0 — **text only** to VK; images for CRM/Telegram).
+Repositories: [post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy), [usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats), [starter](https://github.com/WASH-PRO/wash-module-starter), [vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) (v1.2.0 — **text only** to VK; images for CRM/Telegram), [washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby).
 
 ## Localization
 

@@ -15,7 +15,7 @@
 
 Каталог: `registry.json`. Иконки модулей без GitHub-репозитория — в `modules/icons/{id}.svg`, отдаются через `/api/crm/modules/icon/{id}`.
 
-Репозитории: [post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy), [usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats), [starter](https://github.com/WASH-PRO/wash-module-starter), [vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) (v1.2.0 — **только текст** во VK; картинки для CRM/Telegram).
+Репозитории: [post-occupancy](https://github.com/WASH-PRO/wash-module-post-occupancy), [usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats), [starter](https://github.com/WASH-PRO/wash-module-starter), [vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) (v1.2.0 — **только текст** во VK; картинки для CRM/Telegram), [washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby).
 
 ## Локализация
 

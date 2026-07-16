@@ -57,6 +57,7 @@ Dashboard  →  /api/crm/modules/*  →  modules-bridge  →  git clone / lifecy
 | Сборщик загруженности | `GET /api/crm/usage-stats` | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
 | Стартер (шаблон) | heartbeat | [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter) |
 | VK публикатор | Публикации CRM → **текст** на стене VK (без картинок) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
+| Автомойки рядом | CRM мойки → сайт «Автомойки рядом» (цены, посты, новости) | [wash-module-washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby) |
 
 ## VK публикатор *(v1.1.42, модуль v1.2.0)*
 

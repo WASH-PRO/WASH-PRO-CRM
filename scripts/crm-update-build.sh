@@ -36,12 +36,13 @@ fi
 
 if [ "${PYORCHESTRATOR_ENABLED:-false}" = "true" ]; then
   if docker compose $COMPOSE_FILES config --services 2>/dev/null | grep -qx 'pyorch-backend'; then
-    echo "[crm-update-build] Building pyorch-backend (run queue stability)…"
-    if docker compose $COMPOSE_FILES build pyorch-backend; then
-      docker compose $COMPOSE_FILES up -d --no-deps pyorch-backend || \
-        echo "[crm-update-build] WARN: pyorch-backend up failed" >&2
+    echo "[crm-update-build] Building pyorch-backend + pyorch-runtime + pyorch-bridge…"
+    if docker compose $COMPOSE_FILES build pyorch-backend pyorch-runtime pyorch-bridge; then
+      docker compose $COMPOSE_FILES up -d --no-deps --force-recreate \
+        pyorch-backend pyorch-runtime pyorch-bridge || \
+        echo "[crm-update-build] WARN: pyorch services up failed" >&2
     else
-      echo "[crm-update-build] WARN: pyorch-backend build failed" >&2
+      echo "[crm-update-build] WARN: pyorch build failed" >&2
     fi
   fi
 fi

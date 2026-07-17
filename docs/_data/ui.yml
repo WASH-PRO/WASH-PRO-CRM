@@ -14,6 +14,13 @@ ru:
   hero_lead: "Локальная CRM/SCADA-система для автомоек самообслуживания на базе"
   hero_optional: "и опционально"
   hero_summary: "Локальная система управления автомойками — SCADA в реальном времени, карты клиентов, аналитика, RBAC, встроенные платформы Dynamic API и PyOrchestrator."
+  support_thanks: "Спасибо, что используете этот проект."
+  support_invite: "Если проект оказался полезен, пожалуйста, поддержите его развитие."
+  support_help: "Ваше пожертвование помогает поддерживать проект, исправлять ошибки, разрабатывать новые функции и сохранять его открытым."
+  support_copy: "Копировать адрес"
+  support_copied: "Скопировано!"
+  support_open_wallet: "Открыть кошелёк"
+  support_qr_label: "QR-код для оплаты"
 en:
   tagline: SCADA / CRM
   resources: Resources
@@ -30,3 +37,10 @@ en:
   hero_lead: "Local CRM/SCADA for self-service car washes powered by"
   hero_optional: "and optionally"
   hero_summary: "Local car wash management — real-time SCADA, customer cards, analytics, RBAC, and embedded Dynamic API and PyOrchestrator platforms."
+  support_thanks: "Thank you for using this project."
+  support_invite: "If this project has helped you, please consider supporting its development."
+  support_help: "Your donation helps maintain the project, fix bugs, develop new features and keep the project open source."
+  support_copy: "Copy Address"
+  support_copied: "Copied!"
+  support_open_wallet: "Open Wallet"
+  support_qr_label: "Payment QR code"

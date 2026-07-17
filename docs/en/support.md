@@ -1,0 +1,7 @@
+---
+layout: default
+title: Support Project
+description: Support the development of WASH PRO CRM
+---
+
+{% include support-donate.html %}

@@ -29,6 +29,8 @@ ru:
     title: Безопасность
   - slug: troubleshooting
     title: Устранение неполадок
+  - slug: support
+    title: Поддержать проект
 en:
   - slug: ""
     title: Home
@@ -60,3 +62,5 @@ en:
     title: Security
   - slug: troubleshooting
     title: Troubleshooting
+  - slug: support
+    title: Support Project

@@ -1,4 +1,10 @@
 (function () {
+  var QR_CDN_FALLBACKS = [
+    'https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js',
+    'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+    'https://unpkg.com/qrcode@1.5.3/build/qrcode.js'
+  ];
+
   function whenReady(fn) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', fn);
@@ -7,15 +13,39 @@
     }
   }
 
-  function waitForQrCode(attempt) {
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var existing = document.querySelector('script[data-support-qr="' + src + '"]');
+      if (existing) {
+        existing.addEventListener('load', function () { resolve(); });
+        existing.addEventListener('error', function () { reject(new Error('load failed')); });
+        return;
+      }
+      var script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.dataset.supportQr = src;
+      script.onload = function () { resolve(); };
+      script.onerror = function () { reject(new Error('load failed')); };
+      document.head.appendChild(script);
+    });
+  }
+
+  function ensureQrLibrary() {
     if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
-      renderQrCodes();
-      return;
+      return Promise.resolve();
     }
-    if (attempt > 40) return;
-    setTimeout(function () {
-      waitForQrCode(attempt + 1);
-    }, 50);
+    var chain = Promise.reject(new Error('missing'));
+    QR_CDN_FALLBACKS.forEach(function (src) {
+      chain = chain.catch(function () {
+        return loadScript(src).then(function () {
+          if (typeof QRCode === 'undefined' || !QRCode.toCanvas) {
+            throw new Error('QRCode API missing');
+          }
+        });
+      });
+    });
+    return chain;
   }
 
   function renderQrCodes() {
@@ -34,9 +64,7 @@
           },
           errorCorrectionLevel: 'M'
         },
-        function () {
-          /* ignore render errors — address + buttons remain usable */
-        }
+        function () { /* keep address usable if render fails */ }
       );
     });
   }
@@ -81,9 +109,7 @@
             btn.classList.remove('is-copied');
             btn.textContent = labelCopy;
           }, 2000);
-        }).catch(function () {
-          /* keep original label if copy fails */
-        });
+        }).catch(function () { /* keep original label */ });
       });
     });
   }
@@ -91,6 +117,8 @@
   whenReady(function () {
     if (!document.querySelector('.support-page')) return;
     bindCopyButtons();
-    waitForQrCode(0);
+    ensureQrLibrary()
+      .then(renderQrCodes)
+      .catch(function () { /* addresses + copy remain available */ });
   });
 })();

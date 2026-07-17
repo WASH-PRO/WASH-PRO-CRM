@@ -1,13 +1,11 @@
 {%- assign ui = site.data.ui[page.lang | default: 'en'] -%}
 <link rel="stylesheet" href="{{ '/assets/css/support.css' | relative_url }}">
-
 <section class="support-page" aria-label="{{ page.title }}">
   <div class="support-message">
     <p class="support-thanks">{{ ui.support_thanks }}</p>
     <p>{{ ui.support_invite }}</p>
     <p class="support-help">{{ ui.support_help }}</p>
   </div>
-
   <div class="donate-grid">
     <article class="donate-card" data-network="btc">
       <div class="donate-card-header">
@@ -21,13 +19,12 @@
       <div class="donate-qr" role="img" aria-label="{{ ui.support_qr_label }}">
         <canvas class="donate-qr-canvas" width="160" height="160" data-qr="bc1qljt4yy6ek7qemnlyt8wpnlt7wf4fhvl8glq7h3"></canvas>
       </div>
-      <code class="donate-address" data-address="bc1qljt4yy6ek7qemnlyt8wpnlt7wf4fhvl8glq7h3">bc1qljt4yy6ek7qemnlyt8wpnlt7wf4fhvl8glq7h3</code>
+      <code class="donate-address">bc1qljt4yy6ek7qemnlyt8wpnlt7wf4fhvl8glq7h3</code>
       <div class="donate-actions">
         <button type="button" class="donate-btn donate-btn-copy" data-copy="bc1qljt4yy6ek7qemnlyt8wpnlt7wf4fhvl8glq7h3" data-label-copy="{{ ui.support_copy }}" data-label-copied="{{ ui.support_copied }}">{{ ui.support_copy }}</button>
         <a class="donate-btn donate-btn-wallet" href="bitcoin:bc1qljt4yy6ek7qemnlyt8wpnlt7wf4fhvl8glq7h3">{{ ui.support_open_wallet }}</a>
       </div>
     </article>
-
     <article class="donate-card" data-network="eth">
       <div class="donate-card-header">
         <span class="donate-icon donate-icon-eth" aria-hidden="true">
@@ -40,13 +37,12 @@
       <div class="donate-qr" role="img" aria-label="{{ ui.support_qr_label }}">
         <canvas class="donate-qr-canvas" width="160" height="160" data-qr="0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA"></canvas>
       </div>
-      <code class="donate-address" data-address="0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA">0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA</code>
+      <code class="donate-address">0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA</code>
       <div class="donate-actions">
         <button type="button" class="donate-btn donate-btn-copy" data-copy="0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA" data-label-copy="{{ ui.support_copy }}" data-label-copied="{{ ui.support_copied }}">{{ ui.support_copy }}</button>
         <a class="donate-btn donate-btn-wallet" href="ethereum:0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA">{{ ui.support_open_wallet }}</a>
       </div>
     </article>
-
     <article class="donate-card" data-network="sol">
       <div class="donate-card-header">
         <span class="donate-icon donate-icon-sol" aria-hidden="true">
@@ -59,13 +55,12 @@
       <div class="donate-qr" role="img" aria-label="{{ ui.support_qr_label }}">
         <canvas class="donate-qr-canvas" width="160" height="160" data-qr="Gd6K6HVNDXPZgSzC3j64ugMfHRxKRhjUcKhzv3Zt4USw"></canvas>
       </div>
-      <code class="donate-address" data-address="Gd6K6HVNDXPZgSzC3j64ugMfHRxKRhjUcKhzv3Zt4USw">Gd6K6HVNDXPZgSzC3j64ugMfHRxKRhjUcKhzv3Zt4USw</code>
+      <code class="donate-address">Gd6K6HVNDXPZgSzC3j64ugMfHRxKRhjUcKhzv3Zt4USw</code>
       <div class="donate-actions">
         <button type="button" class="donate-btn donate-btn-copy" data-copy="Gd6K6HVNDXPZgSzC3j64ugMfHRxKRhjUcKhzv3Zt4USw" data-label-copy="{{ ui.support_copy }}" data-label-copied="{{ ui.support_copied }}">{{ ui.support_copy }}</button>
         <a class="donate-btn donate-btn-wallet" href="solana:Gd6K6HVNDXPZgSzC3j64ugMfHRxKRhjUcKhzv3Zt4USw">{{ ui.support_open_wallet }}</a>
       </div>
     </article>
-
     <article class="donate-card" data-network="usdt">
       <div class="donate-card-header">
         <span class="donate-icon donate-icon-usdt" aria-hidden="true">
@@ -78,7 +73,7 @@
       <div class="donate-qr" role="img" aria-label="{{ ui.support_qr_label }}">
         <canvas class="donate-qr-canvas" width="160" height="160" data-qr="0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA"></canvas>
       </div>
-      <code class="donate-address" data-address="0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA">0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA</code>
+      <code class="donate-address">0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA</code>
       <div class="donate-actions">
         <button type="button" class="donate-btn donate-btn-copy" data-copy="0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA" data-label-copy="{{ ui.support_copy }}" data-label-copied="{{ ui.support_copied }}">{{ ui.support_copy }}</button>
         <a class="donate-btn donate-btn-wallet" href="ethereum:0x222a759C0CaEFa58dc8b7e3d561C298BAcAAD5eA">{{ ui.support_open_wallet }}</a>
@@ -86,6 +81,5 @@
     </article>
   </div>
 </section>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
 <script src="{{ '/assets/js/support-donate.js' | relative_url }}" defer></script>

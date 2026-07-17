@@ -269,6 +269,8 @@ export async function registerModuleScript(input: {
         description: input.description,
         code,
         metadata,
+        // 0 = unlimited wall/CPU (daemon modules must not die after 1h default)
+        max_runtime_seconds: 0,
       }),
     });
     await applyModuleSecrets(existing.id, input.settings, input.dataDir);
@@ -288,6 +290,11 @@ export async function registerModuleScript(input: {
   });
 
   await applyModuleSecrets(script.id, input.settings, input.dataDir);
+  // Enforce unlimited runtime (create defaults to 3600 on older PyOrch).
+  await pyorchFetch(`/scripts/${script.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ max_runtime_seconds: 0 }),
+  }).catch(() => undefined);
   return script;
 }
 
@@ -304,6 +311,12 @@ async function applyModuleSecrets(
 }
 
 export async function startModuleScript(scriptId: string): Promise<PyorchScript> {
+  // Ensure existing module scripts get unlimited runtime (legacy default was 3600s).
+  await pyorchFetch(`/scripts/${scriptId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ max_runtime_seconds: 0 }),
+  }).catch(() => undefined);
+
   const runOnce = () => pyorchFetch(`/runs/scripts/${scriptId}/run`, { method: 'POST' });
   try {
     await runOnce();

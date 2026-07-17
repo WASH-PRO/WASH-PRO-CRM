@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [1.1.56] — 2026-07-17
+
+### Исправлено
+
+- **Боты и daemon-модули** — безлимитный runtime (`max_runtime_seconds: 0`): больше не падают по wall-clock timeout 1 ч / 24 ч
+- **PyOrchestrator sandbox** — `0` = без `asyncio.wait_for` и с `RLIM_INFINITY` для CPU
+- **modules-bridge / pyorch-bridge** — выставляют `0` при create/start
+
+### Документация
+
+- **releases/v1.1.56.md** — v1.1.56
+
 ## [1.1.55] — 2026-07-15
 
 ### Исправлено

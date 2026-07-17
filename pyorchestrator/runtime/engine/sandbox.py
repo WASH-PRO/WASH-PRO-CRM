@@ -61,7 +61,11 @@ class Sandbox:
         cpu = self.config.max_cpu_seconds
         try:
             resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
-            resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))
+            # 0 / negative = unlimited (bots & daemon modules)
+            if cpu > 0:
+                resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))
+            else:
+                resource.setrlimit(resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
             resource.setrlimit(resource.RLIMIT_NOFILE, (1024, 1024))
         except (ValueError, resource.error) as e:
             logger.warning("rlimit: %s", e)
@@ -115,15 +119,17 @@ class Sandbox:
                 if on_line:
                     await on_line(level, line.rstrip())
 
+        gather_task = asyncio.gather(
+            stream(self._process.stdout, "info", stdout_chunks),
+            stream(self._process.stderr, "error", stderr_chunks),
+            asyncio.get_event_loop().run_in_executor(None, self._process.wait),
+        )
         try:
-            await asyncio.wait_for(
-                asyncio.gather(
-                    stream(self._process.stdout, "info", stdout_chunks),
-                    stream(self._process.stderr, "error", stderr_chunks),
-                    asyncio.get_event_loop().run_in_executor(None, self._process.wait),
-                ),
-                timeout=self.config.wall_timeout_sec,
-            )
+            # wall_timeout_sec <= 0 → unlimited (bots & daemon modules)
+            if self.config.wall_timeout_sec > 0:
+                await asyncio.wait_for(gather_task, timeout=self.config.wall_timeout_sec)
+            else:
+                await gather_task
         except asyncio.TimeoutError:
             timed_out = True
             self.stop()

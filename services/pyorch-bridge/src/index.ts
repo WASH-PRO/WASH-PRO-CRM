@@ -302,6 +302,11 @@ async function startWashBotRun(bot: PyorchScript, token?: string | null): Promis
     await stopBotsWithToken(resolvedToken, bot.id);
     await clearTelegramWebhook(resolvedToken);
   }
+  // Legacy bots had 86400s / 3600s caps — force unlimited on every start.
+  await pyorchFetch(`/scripts/${bot.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ max_runtime_seconds: 0 }),
+  }).catch(() => undefined);
   await pyorchFetch(`/scripts/${bot.id}/enable`, { method: 'POST' }).catch(() => undefined);
   await pyorchFetch(`/runs/scripts/${bot.id}/run`, { method: 'POST' });
 }
@@ -411,7 +416,8 @@ async function createWashBot(input: CreateWashBotInput): Promise<PyorchScript> {
     await pyorchFetch(`/scripts/${script.id}`, {
       method: 'PUT',
       body: JSON.stringify({
-        max_runtime_seconds: 86400,
+        // 0 = unlimited (bots must not die after 24h / 1h defaults)
+        max_runtime_seconds: 0,
         max_concurrent_runs: 1,
         metadata: botMeta,
       }),

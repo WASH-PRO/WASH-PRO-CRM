@@ -172,6 +172,8 @@ async def create_script(
     files: dict[str, str] | None = None,
     metadata: dict | None = None,
 ) -> Script:
+    # Bots and long-running daemon modules must not inherit the 1h one-shot default.
+    long_running = script_type in {"bot", "daemon"}
     script = Script(
         name=name,
         slug=await slugify(name, db),
@@ -180,6 +182,7 @@ async def create_script(
         script_type=script_type,
         entrypoint=entrypoint,
         metadata_=metadata or {},
+        max_runtime_seconds=0 if long_running else 3600,
     )
     db.add(script)
     await db.flush()
@@ -278,11 +281,13 @@ async def queue_run(
     for sec in result.scalars():
         secrets_env[f"SECRET_{sec.key}"] = decrypt_secret(sec.ciphertext, sec.nonce)
 
-    max_runtime = (
-        max_runtime_seconds
-        or (schedule.max_runtime_seconds if schedule and schedule.max_runtime_seconds else None)
-        or script.max_runtime_seconds
-    )
+    # 0 = unlimited wall/CPU (bots & daemon modules). Do not use `or` — 0 is falsy.
+    if max_runtime_seconds is not None:
+        max_runtime = max_runtime_seconds
+    elif schedule is not None and schedule.max_runtime_seconds is not None:
+        max_runtime = schedule.max_runtime_seconds
+    else:
+        max_runtime = script.max_runtime_seconds
 
     job = {
         "script_id": str(script.id),

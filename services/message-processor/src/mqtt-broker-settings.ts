@@ -1,7 +1,10 @@
-import { apiRequest } from './api-client.js';
+import { apiRequest, logger } from './api-client.js';
 
 /** Учётная запись CRM в Mosquitto (фиксированная). */
 export const MQTT_CRM_LOGIN = 'system';
+
+/** Legacy seed default — must not stay when .env MQTT_PASSWORD was rotated. */
+export const MQTT_SEED_DEFAULT_PASSWORD = 'washpro';
 
 export interface MqttDeliverySettings {
   /** Срок хранения исходящих сообщений в outbox (часы). По умолчанию 168 (7 суток). */
@@ -78,6 +81,51 @@ export async function loadMqttBrokerSettings(): Promise<MqttBrokerSettingsValue>
   }
   expiresAt = Date.now() + 60_000;
   return cached;
+}
+
+/**
+ * If CRM still has the seed password `washpro` (or empty) while `.env` has a real
+ * MQTT_PASSWORD, upgrade settings so Mosquitto passwd sync and the processor agree.
+ * Custom passwords set in Settings → MQTT are left alone.
+ */
+export async function reconcileMqttSystemPasswordFromEnv(): Promise<boolean> {
+  const envPass = process.env.MQTT_PASSWORD?.trim() || '';
+  if (!envPass) return false;
+
+  let rows: Array<{ id: string; key: string; value: unknown }>;
+  try {
+    rows = await apiRequest('GET', '/api/crm/settings?limit=50');
+  } catch {
+    return false;
+  }
+
+  const row = rows.find((s) => s.key === 'mqtt-broker');
+  if (!row?.id) return false;
+
+  const value = normalizeSettings(row.value);
+  const current = value.systemPassword?.trim() || '';
+  if (current === envPass) return false;
+
+  if (current && current !== MQTT_SEED_DEFAULT_PASSWORD) {
+    logger.warn(
+      {
+        settingsLen: current.length,
+        envLen: envPass.length,
+      },
+      'mqtt-broker.systemPassword differs from MQTT_PASSWORD — CRM settings take precedence'
+    );
+    return false;
+  }
+
+  const next: MqttBrokerSettingsValue = {
+    ...value,
+    systemLogin: value.systemLogin || MQTT_CRM_LOGIN,
+    systemPassword: envPass,
+  };
+  await apiRequest('PUT', `/api/crm/settings/${row.id}`, { key: 'mqtt-broker', value: next });
+  invalidateMqttBrokerSettingsCache();
+  logger.info('Healed mqtt-broker.systemPassword from MQTT_PASSWORD (replaced empty/seed default)');
+  return true;
 }
 
 export async function loadMqttBrokerCredentials(): Promise<{ user: string; password: string }> {

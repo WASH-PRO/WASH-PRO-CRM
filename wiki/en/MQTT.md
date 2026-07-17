@@ -17,6 +17,7 @@ Full documentation: [docs/mqtt.md](https://wash-pro.github.io/WASH-PRO-CRM/en/mq
 ## CRM (inside Docker)
 
 - User: `system` (password — **Settings → MQTT (CRM)**; bootstrap — `MQTT_PASSWORD` in `.env`)
+- From **v1.1.57**: seed `washpro` is healed to `MQTT_PASSWORD` on processor start; `mosquitto-init` does not overwrite an existing passwd on every reboot
 - Do not use `system` on post panels
 
 ## Post isolation

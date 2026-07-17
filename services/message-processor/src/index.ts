@@ -1,10 +1,11 @@
 import { convertDeviceMessage, inferMqttLogEntry, isLegacyEnvelope } from './device-adapter.js';
 import { processMessage, WashMessage } from './processor.js';
 import { apiRequest, logger } from './api-client.js';
-import { connectMqtt, DLQ_TOPIC, getMqttClient, reconnectMqttBroker } from './mqtt-client.js';
+import { connectMqtt, DLQ_TOPIC, getMqttClient } from './mqtt-client.js';
 import { incDlqLogged, incMessagesProcessed } from './metrics.js';
 import { startProcessorHttpServer } from './http.js';
 import { syncMqttUsersFromPosts } from './mqtt-users.js';
+import { reconcileMqttSystemPasswordFromEnv } from './mqtt-broker-settings.js';
 import { syncPricesFromDevice } from './post-settings.js';
 import { extractNativeTopicSerial, getBindingBySerial, resolveTrustedPostSerial, bindingsBySerialSize } from './mqtt-post-bindings.js';
 import { handleDeliveryAck, startOutboxMaintenance, type DeliveryAckPayload } from './mqtt-outbox.js';
@@ -155,18 +156,23 @@ async function handleMessage(topic: string, payload: Buffer): Promise<void> {
 
 function main(): void {
   logger.info('Message Processor starting...');
-  connectMqtt((topic, payload) => {
-    void handleMessage(topic, payload);
-  });
   startProcessorHttpServer();
   startOutboxMaintenance();
-  setTimeout(() => {
-    void syncMqttUsersFromPosts()
-      .then(() => reconnectMqttBroker())
-      .catch((err) => {
-        logger.warn({ err }, 'Startup MQTT user sync failed (non-fatal)');
-      });
-  }, 8000);
+
+  const onMessage = (topic: string, payload: Buffer) => {
+    void handleMessage(topic, payload);
+  };
+
+  // Heal seed password → sync passwd → connect (avoids CRM offline while ETH is MQTT-OK).
+  void (async () => {
+    try {
+      await reconcileMqttSystemPasswordFromEnv();
+      await syncMqttUsersFromPosts();
+    } catch (err) {
+      logger.warn({ err }, 'Startup MQTT user sync failed (non-fatal)');
+    }
+    connectMqtt(onMessage);
+  })();
 }
 
 main();

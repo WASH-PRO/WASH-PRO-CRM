@@ -694,7 +694,8 @@ export const DEFAULT_SETTINGS = [
     key: 'mqtt-broker',
     value: {
       systemLogin: 'system',
-      systemPassword: 'washpro',
+      // Match Mosquitto bootstrap (.env); hardcoded washpro caused CRM offline after reboot.
+      systemPassword: process.env.MQTT_PASSWORD?.trim() || 'washpro',
       outboundRetentionHours: 168,
       requireDeliveryConfirmation: false,
       redeliverOnNoAck: false,

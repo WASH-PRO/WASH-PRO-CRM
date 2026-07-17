@@ -134,7 +134,7 @@ If these hang or fail with `DeadlineExceeded`, the issue is Docker Hub access, n
 
 ```bash
 cd /path/to/WASH-PRO-CRM
-git fetch origin && git checkout v1.1.55
+git fetch origin && git checkout v1.1.57
 docker compose up -d --build dashboard update-bridge
 ```
 
@@ -212,10 +212,10 @@ Details: [MQTT](mqtt.md).
 
 ```bash
 ./scripts/fix-mqtt.sh
-docker compose up -d message-processor
+docker compose up -d --build message-processor
 ```
 
-Script recreates `system` in passwd. **Post** accounts — via "Sync MQTT" in wizard or post save.
+Script refreshes Mosquitto conf; an **existing passwd is not overwritten from `.env`** (so post sync is not wiped). **Post** accounts — via "Sync MQTT" or processor startup. Force-reset `system` from `.env`: `FORCE_MQTT_SYSTEM_PASS=1 ./scripts/fix-mqtt.sh`.
 
 ### Post cannot connect / "not authorised"
 
@@ -380,6 +380,23 @@ Post is **online** if `lastMessageAt` in `/api/crm/post-states` is not older tha
 1. Telemetry arrives on topic `washpro/{serial}/state/process` (or other suffix).
 2. `docker logs wash-message-processor` — processing errors.
 3. Serial in topic = `serialNumber` in CRM.
+
+### ETH “MQTT OK”, CRM “Offline” (v1.1.57+)
+
+Often **not** the post password — a mismatch of the CRM `system` password:
+
+- ETH authenticates with its own `mqttLogin`/`mqttPassword` and publishes telemetry.
+- CRM (`message-processor`) connects as `system`. If **Settings → MQTT** still has the seed password `washpro` while `.env` / Mosquitto use another `MQTT_PASSWORD`, the processor gets `Not authorized` and never refreshes `lastMessageAt`.
+
+From v1.1.57: on startup the processor heals seed/`washpro` to `MQTT_PASSWORD` and syncs the passwd **before** connecting; `mosquitto-init` no longer overwrites an existing passwd from `.env` on every restart.
+
+Check:
+
+```bash
+docker logs wash-message-processor --tail 50 | grep -E 'Connected|Not authorized|Healed|passwd synced'
+./scripts/fix-mqtt.sh
+docker compose up -d --build message-processor
+```
 
 ## Telemetry not updating
 

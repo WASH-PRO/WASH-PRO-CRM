@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [1.1.57] — 2026-07-17
+
+### Исправлено
+
+- **MQTT пароль `system`** — `mosquitto-init` больше не перезаписывает существующий passwd из `.env` на каждый рестарт (раньше конфликтовал с seed `washpro` в Настройках → MQTT)
+- **message-processor** — при старте лечит пустой/`washpro` → `MQTT_PASSWORD`, синхронизирует passwd **до** подключения к брокеру (ETH MQTT OK + CRM офлайн)
+- **init-seed** — `mqtt-broker.systemPassword` из `MQTT_PASSWORD`, если задан в окружении
+
+### Документация
+
+- **releases/v1.1.57.md**, troubleshooting — ETH «MQTT OK» / CRM «Офлайн»
+
 ## [1.1.56] — 2026-07-17
 
 ### Исправлено

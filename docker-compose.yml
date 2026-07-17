@@ -104,6 +104,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
       SERVICE_LOGIN: ${SERVICE_LOGIN:-service}
       SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
     depends_on:
       dynamic-api:
         condition: service_healthy

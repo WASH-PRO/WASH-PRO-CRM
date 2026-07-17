@@ -8,10 +8,15 @@ ACL_FILE="/mosquitto/config/acl"
 
 cp /mosquitto-conf/mosquitto.conf /mosquitto/config/mosquitto.conf
 
-# Не затираем passwd/ACL после sync постов — только bootstrap при первом запуске.
-if [ -f "$PASSWD_FILE" ]; then
+# Bootstrap only: do not overwrite an existing passwd on every restart.
+# Otherwise .env MQTT_PASSWORD fights CRM settings mqtt-broker.systemPassword
+# (message-processor sync is the source of truth after first boot).
+# Emergency reset from .env: FORCE_MQTT_SYSTEM_PASS=1
+if [ -f "$PASSWD_FILE" ] && [ "${FORCE_MQTT_SYSTEM_PASS:-}" != "1" ]; then
+  echo "MQTT passwd exists — leaving users intact (not overwriting from .env)."
+elif [ "${FORCE_MQTT_SYSTEM_PASS:-}" = "1" ] && [ -f "$PASSWD_FILE" ]; then
   mosquitto_passwd -b "$PASSWD_FILE" "$USER" "$PASS"
-  echo "MQTT user '$USER' password refreshed (post users preserved)."
+  echo "MQTT user '$USER' password force-refreshed from .env (post users preserved)."
 else
   mosquitto_passwd -b -c "$PASSWD_FILE" "$USER" "$PASS"
   echo "MQTT user '$USER' created."

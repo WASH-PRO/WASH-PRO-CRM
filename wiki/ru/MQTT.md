@@ -17,6 +17,7 @@
 ## CRM (внутри Docker)
 
 - Пользователь: `system` (пароль — **Настройки → MQTT (CRM)**; bootstrap — `MQTT_PASSWORD` в `.env`)
+- С **v1.1.57**: seed `washpro` лечится до `MQTT_PASSWORD` при старте processor; `mosquitto-init` не перезаписывает существующий passwd на каждый рестарт
 - Не используйте `system` на панелях постов
 
 ## Изоляция постов

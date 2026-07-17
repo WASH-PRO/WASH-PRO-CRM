@@ -134,7 +134,7 @@ docker pull nginx:alpine
 
 ```bash
 cd /path/to/WASH-PRO-CRM   # или каталог с docker-compose.yml
-git fetch origin && git checkout v1.1.55   # нужный тег
+git fetch origin && git checkout v1.1.57   # нужный тег
 docker compose up -d --build dashboard update-bridge
 ```
 
@@ -212,10 +212,10 @@ docker compose up -d --build message-processor
 
 ```bash
 ./scripts/fix-mqtt.sh
-docker compose up -d message-processor
+docker compose up -d --build message-processor
 ```
 
-Скрипт пересоздаёт `system` в passwd. Учётные записи **постов** — через «Синхронизировать MQTT» в мастере или сохранение поста.
+Скрипт обновляет conf Mosquitto; **существующий passwd не перезаписывается из `.env`** (чтобы не ломать sync постов). Учётки **постов** — через «Синхронизировать MQTT» или старт processor. Принудительно сбросить пароль `system` из `.env`: `FORCE_MQTT_SYSTEM_PASS=1 ./scripts/fix-mqtt.sh`.
 
 ### Пост не может подключиться / «not authorised»
 
@@ -380,6 +380,23 @@ curl -s http://localhost:8000/api/v1/mcp/info -H "Authorization: Bearer TOKEN" |
 1. Телеметрия приходит в топик `washpro/{serial}/state/process` (или другой suffix).
 2. `docker logs wash-message-processor` — ошибки обработки.
 3. Серийный номер в топике = `serialNumber` в CRM.
+
+### ETH «MQTT OK», CRM «Офлайн» (v1.1.57+)
+
+Частая причина — **не пароль поста**, а рассинхрон пароля CRM `system`:
+
+- ETH подключается своим `mqttLogin`/`mqttPassword` и публикует телеметрию.
+- CRM (`message-processor`) входит как `system`. Если в **Настройки → MQTT** остался seed-пароль `washpro`, а в `.env` / Mosquitto — другой `MQTT_PASSWORD`, процессор получает `Not authorized` и не обновляет `lastMessageAt`.
+
+С v1.1.57: при старте processor подтягивает seed/`washpro` к `MQTT_PASSWORD`, синхронизирует passwd **до** подключения; `mosquitto-init` больше не перезаписывает существующий passwd из `.env` на каждый рестарт.
+
+Проверка:
+
+```bash
+docker logs wash-message-processor --tail 50 | grep -E 'Connected|Not authorized|Healed|passwd synced'
+./scripts/fix-mqtt.sh
+docker compose up -d --build message-processor
+```
 
 ## Телеметрия не обновляется
 

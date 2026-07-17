@@ -1,34 +1,20 @@
 /* Support Project — donation cards (scoped; does not alter global docs styles) */
 
+/* Docs site is light-only — keep support colors fixed so OS dark mode
+   cannot flip text to light-on-light against the parchment background. */
 .support-page {
-  --donate-surface: rgba(255, 255, 255, 0.72);
-  --donate-surface-solid: #ffffff;
-  --donate-border: var(--hairline, #d2d2d7);
+  --donate-surface: #ffffff;
+  --donate-border: #d2d2d7;
   --donate-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   --donate-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.1);
-  --donate-text: var(--ink, #1d1d1f);
-  --donate-muted: var(--ink-muted-48, #6e6e73);
-  --donate-btn-bg: var(--ink, #1d1d1f);
+  --donate-text: #1d1d1f;
+  --donate-muted: #6e6e73;
+  --donate-btn-bg: #1d1d1f;
   --donate-btn-fg: #ffffff;
   --donate-btn-secondary-bg: rgba(0, 0, 0, 0.04);
   --donate-qr-bg: #ffffff;
+  color: var(--donate-text);
   margin: 0 0 2rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .support-page {
-    --donate-surface: rgba(44, 44, 46, 0.72);
-    --donate-surface-solid: #2c2c2e;
-    --donate-border: #48484a;
-    --donate-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-    --donate-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.45);
-    --donate-text: #f5f5f7;
-    --donate-muted: #a1a1a6;
-    --donate-btn-bg: #f5f5f7;
-    --donate-btn-fg: #1d1d1f;
-    --donate-btn-secondary-bg: rgba(255, 255, 255, 0.08);
-    --donate-qr-bg: #ffffff;
-  }
 }
 
 .support-message {
@@ -44,7 +30,7 @@
 
 .support-message p {
   margin: 0 0 0.75rem;
-  color: var(--donate-muted);
+  color: #6e6e73 !important;
   font-size: 1.0625rem;
   line-height: 1.55;
 }
@@ -54,7 +40,7 @@
 }
 
 .support-thanks {
-  color: var(--donate-text) !important;
+  color: #1d1d1f !important;
   font-size: 1.25rem !important;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -128,7 +114,7 @@
   font-size: 1.125rem !important;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--donate-text);
+  color: #1d1d1f !important;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -173,7 +159,7 @@
   background: var(--donate-btn-secondary-bg);
   border: 1px solid var(--donate-border);
   border-radius: 10px;
-  color: var(--donate-text);
+  color: #1d1d1f !important;
   font-size: 0.75rem;
   line-height: 1.45;
   word-break: break-all;
@@ -230,7 +216,7 @@
 
 .donate-btn-wallet {
   background: var(--donate-btn-secondary-bg);
-  color: var(--donate-text) !important;
+  color: #1d1d1f !important;
   border-color: var(--donate-border);
 }
 

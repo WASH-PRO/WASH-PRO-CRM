@@ -7,9 +7,6 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-# PyOrchestrator: недостающие импорты в main.py (пример — удалите, когда исправлено upstream)
-PYORCH_MAIN="$ROOT/pyorchestrator/backend/app/main.py"
-if [ -f "$PYORCH_MAIN" ] && ! grep -q 'from app.services.script_service import create_script, storage_service' "$PYORCH_MAIN"; then
-  sed -i '/from app.services.update_scheduler import update_scheduler/a from app.services.script_service import create_script, storage_service' "$PYORCH_MAIN"
-  echo "Applied PyOrchestrator main.py import patch"
-fi
+# Пример: сюда добавляйте только временные серверные правки.
+# Импорт create_script / storage_service в pyorchestrator/backend/app/main.py
+# уже в дереве с v1.1.58 — отдельный sed-патч больше не нужен.

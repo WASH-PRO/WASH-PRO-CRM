@@ -1,5 +1,6 @@
 ---
 layout: default
+description: Local CRM/SCADA for self-service car washes — real-time monitoring, customer cards, analytics, RBAC, Docker stack with Dynamic API and PyOrchestrator.
 ---
 
 {% assign ui = site.data.ui[page.lang] %}

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Dashboard
-description: CRM web interface modules
+description: WASH PRO CRM web interface — washes, customers, analytics, live SCADA, settings, modules, and administration screens.
 ---
 
 React application with **light**, **dark**, and **system** themes (follows OS settings without reload), fixed sidebar, **live data refresh**, and a two-column login page (layout like PyOrchestrator, custom background).

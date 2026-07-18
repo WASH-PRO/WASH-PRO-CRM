@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Telegram bots
-description: Bot types, information feed, QR links, RBAC, and private chat isolation
+description: Telegram bots for WASH PRO CRM — bot types, information feed, QR deep links, RBAC permissions, and private chat isolation.
 ---
 
 WASH PRO CRM Telegram bots run through **PyOrchestrator** and the **`pyorch-bridge`** service. Management — **Dashboard → Automation → Telegram** (Administrator role required).

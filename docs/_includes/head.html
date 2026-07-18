@@ -1,7 +1,18 @@
+{%- assign current_lang = page.lang | default: site.lang | default: 'en' -%}
+{%- assign path_no_ext = page.path | replace: '.md', '' | replace: '.html', '' -%}
+{%- assign lang_prefix = current_lang | append: '/' -%}
+{%- assign page_slug = path_no_ext | replace: lang_prefix, '' -%}
+{%- if page_slug == 'index' -%}{%- assign page_slug = '' -%}{%- endif -%}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
-<meta name="description" content="{{ page.description | default: site.description }}">
 <link rel="icon" href="{{ '/assets/favicon.svg' | relative_url }}" type="image/svg+xml">
 <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
 {% seo %}
+{%- if page.lang -%}
+{%- for lang in site.data.languages -%}
+{%- capture alt_href -%}{% include lhref.html lang=lang.code slug=page_slug %}{%- endcapture -%}
+<link rel="alternate" hreflang="{{ lang.locale }}" href="{{ alt_href | strip }}" />
+{%- endfor -%}
+{%- capture default_href -%}{% include lhref.html lang='en' slug=page_slug %}{%- endcapture -%}
+<link rel="alternate" hreflang="x-default" href="{{ default_href | strip }}" />
+{%- endif -%}

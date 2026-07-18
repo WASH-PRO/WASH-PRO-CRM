@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Database schema
-description: CRM endpoints and MongoDB collections
+description: WASH PRO CRM data model — key MongoDB collections and Dynamic API endpoints for washes, customers, sessions, and related entities.
 ---
 
 Data is stored in **MongoDB** via [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13**.

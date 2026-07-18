@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Modules
-description: WASH PRO CRM extension catalog — install, PyOrchestrator, settings UI
+description: WASH PRO CRM extension catalog — install modules, configure PyOrchestrator packages, and manage settings in the Dashboard UI.
 ---
 
 Modules are CRM extensions from **separate GitHub repositories**. Manage them in **Dashboard → Automation → Modules** (Administrator role).

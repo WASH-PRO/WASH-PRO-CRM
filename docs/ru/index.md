@@ -1,5 +1,6 @@
 ---
 layout: default
+description: Локальная CRM/SCADA для автомоек самообслуживания — мониторинг в реальном времени, карты клиентов, аналитика, RBAC, Docker-стек с Dynamic API и PyOrchestrator.
 ---
 
 {% assign ui = site.data.ui[page.lang] %}

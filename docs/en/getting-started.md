@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Quick start
-description: Installation and first launch of WASH PRO CRM
+description: Install WASH PRO CRM with Docker Compose: clone the repo, configure .env, start services, and open the dashboard for first login.
 ---
 
 ## Requirements

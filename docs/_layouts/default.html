@@ -1,9 +1,11 @@
+{%- assign current_lang = page.lang | default: 'en' -%}
+{%- assign ui = site.data.ui[current_lang] -%}
 <!DOCTYPE html>
-<html lang="{{ page.lang | default: 'en' }}">
+<html lang="{{ current_lang }}">
 <head>
   {% include head.html %}
 </head>
-<body data-menu-open="{{ site.data.ui[page.lang | default: 'en'].menu_open }}" data-menu-close="{{ site.data.ui[page.lang | default: 'en'].menu_close }}">
+<body data-menu-open="{{ ui.menu_open }}" data-menu-close="{{ ui.menu_close }}">
   <div class="site">
     {% include mobile-header.html %}
     {% include sidebar.html %}

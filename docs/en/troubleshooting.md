@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Troubleshooting
-description: Common problems and solutions
+description: Fix common WASH PRO CRM problems — Docker startup, login, MQTT connectivity, ports, DATA_DIR paths, and service health checks.
 ---
 
 ## Updating Dynamic API Platform

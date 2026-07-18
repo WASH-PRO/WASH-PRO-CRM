@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Конфигурация
-description: Переменные окружения .env
+description: Конфигурация WASH PRO CRM через .env — секреты, порты, MQTT, Telegram, PyOrchestrator, DATA_DIR и другие переменные окружения.
 ---
 
 Все настройки задаются в `.env` (шаблон — `.env.example`).

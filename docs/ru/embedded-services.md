@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Встроенные сервисы
-description: Dynamic API Platform и PyOrchestrator в составе WASH PRO CRM
+description: Как Dynamic API Platform и PyOrchestrator работают в составе WASH PRO CRM — порты, роли, общие данные и когда включать сервисы.
 ---
 
 WASH PRO CRM включает две платформы как **vendored-копии** с отдельными панелями управления. Основной интерфейс для операторов — **Dashboard** (`:80`). Платформы доступны администраторам через блок **Resources** в сайдбаре и по прямым URL.

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: MQTT
-description: Post controller integration via MQTT
+description: Connect self-service post controllers to WASH PRO CRM over MQTT — topics, status updates, commands, and live SCADA integration.
 ---
 
 ## Connection parameters

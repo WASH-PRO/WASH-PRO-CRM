@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Security
-description: RBAC, network, and recommendations
+description: Secure WASH PRO CRM deployments — RBAC roles, network exposure, secrets management, and production hardening recommendations.
 ---
 
 ## Principles

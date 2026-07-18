@@ -1,11 +1,13 @@
 title: WASH PRO CRM
-description: Local CRM/SCADA for self-service car washes on Dynamic API Platform
+tagline: Local CRM/SCADA for self-service car washes
+description: Local CRM/SCADA for self-service car washes — real-time monitoring, customer cards, analytics, RBAC, Docker stack with Dynamic API and PyOrchestrator.
 url: https://wash-pro.github.io
 baseurl: /WASH-PRO-CRM
+lang: en
+logo: /assets/banner.png
 
 markdown: GFM
 permalink: pretty
-lang: en
 
 plugins:
   - jekyll-relative-links
@@ -22,6 +24,10 @@ exclude:
 
 defaults:
   - scope:
+      path: ""
+    values:
+      image: /assets/banner.png
+  - scope:
       path: "en"
       type: "pages"
     values:
@@ -31,3 +37,8 @@ defaults:
       type: "pages"
     values:
       lang: ru
+  - scope:
+      path: "legacy"
+      type: "pages"
+    values:
+      robots: noindex

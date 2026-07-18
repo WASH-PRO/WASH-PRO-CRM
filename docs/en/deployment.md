@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Deployment
-description: Production, updates, and recovery
+description: Deploy WASH PRO CRM in production — updates, backups, restore procedures, host paths, and recommended Docker Compose setup.
 ---
 
 ## Production checklist

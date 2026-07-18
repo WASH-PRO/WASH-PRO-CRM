@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Архитектура
-description: Компоненты и потоки данных WASH PRO CRM
+description: Архитектура WASH PRO CRM: Dashboard, Dynamic API, MongoDB, MQTT-контроллеры, Telegram-боты и опциональный PyOrchestrator.
 ---
 
 ## Общая схема

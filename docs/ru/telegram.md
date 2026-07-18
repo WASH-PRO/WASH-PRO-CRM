@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Telegram-боты
-description: Типы ботов, информационная лента, QR-ссылки, RBAC и изоляция личных чатов
+description: Telegram-боты для WASH PRO CRM — типы ботов, информационная лента, QR-ссылки, права RBAC и изоляция личных чатов.
 ---
 
 Telegram-боты WASH PRO CRM работают через **PyOrchestrator** и сервис **`pyorch-bridge`**. Управление — в **Dashboard → Автоматизация → Telegram** (требуется роль Administrator).

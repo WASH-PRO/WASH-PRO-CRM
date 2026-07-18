@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Configuration
-description: .env environment variables
+description: WASH PRO CRM .env configuration — secrets, ports, MQTT, Telegram, PyOrchestrator, DATA_DIR, and other environment variables.
 ---
 
 All settings are defined in `.env` (template — `.env.example`).

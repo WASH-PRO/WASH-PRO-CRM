@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Устранение неполадок
-description: Типичные проблемы и решения
+description: Типичные проблемы WASH PRO CRM и решения — запуск Docker, вход, MQTT, порты, пути DATA_DIR и проверка состояния сервисов.
 ---
 
 ## Обновление Dynamic API Platform

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Setup wizard
-description: Initial CRM configuration after installation
+description: First-run setup wizard for WASH PRO CRM — company profile, washes, posts, users, and integrations after installation.
 ---
 
 After the first Dashboard login, you are redirected to the **setup wizard** (`/setup`) until the CRM flag `settings.setup.complete = true` is set.

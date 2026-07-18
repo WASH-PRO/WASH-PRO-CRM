@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Схема данных
-description: CRM endpoints и коллекции MongoDB
+description: Модель данных WASH PRO CRM — основные коллекции MongoDB и endpoints Dynamic API для моек, клиентов, сессий и связанных сущностей.
 ---
 
 Данные хранятся в **MongoDB** через [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) **v1.5.13**.

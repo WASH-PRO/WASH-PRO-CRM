@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Быстрый старт
-description: Установка и первый запуск WASH PRO CRM
+description: Установка WASH PRO CRM через Docker Compose: клонирование, настройка .env, запуск сервисов и первый вход в Dashboard.
 ---
 
 ## Требования

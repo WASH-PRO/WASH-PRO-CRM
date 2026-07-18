@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Развёртывание
-description: Production, обновление и восстановление
+description: Развёртывание WASH PRO CRM в production — обновления, резервные копии, восстановление, пути на хосте и рекомендации по Docker Compose.
 ---
 
 ## Production checklist

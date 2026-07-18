@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Модули
-description: Каталог расширений WASH PRO CRM — установка, PyOrchestrator, UI настроек
+description: Каталог расширений WASH PRO CRM — установка модулей, пакеты PyOrchestrator и управление настройками в интерфейсе Dashboard.
 ---
 
 Модули — расширения CRM из **отдельных GitHub-репозиториев**. Управление: **Dashboard → Автоматизация → Модули** (роль Administrator).

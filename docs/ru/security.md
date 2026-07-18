@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Безопасность
-description: RBAC, сеть и рекомендации
+description: Безопасность WASH PRO CRM — роли RBAC, сетевой доступ, управление секретами и рекомендации по hardening для production.
 ---
 
 ## Принципы

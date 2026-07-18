@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wash-pro.github.io/WASH-PRO-CRM/sitemap.xml

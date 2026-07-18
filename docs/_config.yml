@@ -13,6 +13,7 @@ plugins:
   - jekyll-relative-links
   - jekyll-seo-tag
   - jekyll-redirect-from
+  - jekyll-sitemap
 
 relative_links:
   enabled: true
@@ -42,3 +43,4 @@ defaults:
       type: "pages"
     values:
       robots: noindex
+      sitemap: false

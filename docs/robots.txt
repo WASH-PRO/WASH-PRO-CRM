@@ -1,4 +1,8 @@
+---
+layout: null
+permalink: /robots.txt
+---
 User-agent: *
 Allow: /
 
-Sitemap: https://wash-pro.github.io/WASH-PRO-CRM/sitemap.xml
+Sitemap: {{ site.url }}{{ site.baseurl }}/sitemap.xml

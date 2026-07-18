@@ -67,6 +67,8 @@ Each CRM wash has **`mapsExternalId`** (UUID v4):
 2. The **Washes Nearby** module reads `mapsExternalId` and sends it to the site as Owner API **`external_id`**.
 3. Later patch/telemetry calls use `ext:{uuid}` — CRM does not depend on the site’s numeric wash id.
 
+Module settings: shared fields (token, site URL, interval, news/promo limit) plus a **dynamic list of CRM washes** — each with its own coordinates, city and type. Address comes from the CRM wash card.
+
 After upgrading CRM: wait for `init-seed` (or **Integrity → init-seed**), then **Modules → Washes Nearby → Update → Start**.
 
 ## VK Publisher *(v1.1.42, module v1.2.0)*

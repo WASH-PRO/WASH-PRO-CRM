@@ -114,6 +114,13 @@ async function getBotsGroupId(): Promise<string | null> {
   return groups.find((g) => g.name === 'bots')?.id ?? null;
 }
 
+
+const TELEGRAM_BOT_TOKEN_RE = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
+
+function isValidTelegramBotToken(token: string | undefined | null): boolean {
+  return TELEGRAM_BOT_TOKEN_RE.test((token ?? '').trim());
+}
+
 async function setSecret(scriptId: string, key: string, value: string): Promise<void> {
   await pyorchFetch(`/scripts/${scriptId}/secrets`, {
     method: 'POST',
@@ -121,64 +128,105 @@ async function setSecret(scriptId: string, key: string, value: string): Promise<
   });
 }
 
-async function fetchTelegramBotUsername(token: string): Promise<string | null> {
+async function telegramUpstream(
+  token: string,
+  method: string,
+  options: {
+    params?: Record<string, string | number | boolean>;
+    json?: Record<string, unknown>;
+    timeoutMs?: number;
+  } = {}
+): Promise<{ status: number; body: unknown }> {
   const trimmed = token.trim();
-  if (!isValidTelegramBotToken(trimmed)) return null;
+  if (!isValidTelegramBotToken(trimmed)) {
+    return { status: 400, body: { ok: false, description: 'Invalid bot token' } };
+  }
+  const timeoutMs = options.timeoutMs ?? 35000;
+  const qs = options.params
+    ? `?${new URLSearchParams(
+        Object.entries(options.params).map(([k, v]) => [k, String(v)])
+      ).toString()}`
+    : '';
+  const url = `https://api.telegram.org/bot${trimmed}/${method}${qs}`;
 
-  const url = `https://api.telegram.org/bot${trimmed}/getMe`;
-  const parseUsername = async (res: Response | { ok: boolean; json: () => Promise<unknown> }) => {
-    if (!res.ok) return null;
-    const data = (await res.json()) as { ok?: boolean; result?: { username?: string } };
-    const username = data.result?.username?.trim();
-    return username || null;
+  const viaFetch = async (): Promise<{ status: number; body: unknown }> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method: options.json ? 'POST' : 'GET',
+        headers: options.json ? { 'Content-Type': 'application/json' } : undefined,
+        body: options.json ? JSON.stringify(options.json) : undefined,
+        signal: controller.signal,
+      });
+      const text = await res.text();
+      let body: unknown = text;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        /* raw */
+      }
+      return { status: res.status, body };
+    } finally {
+      clearTimeout(timeoutId);
+    }
   };
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    const username = await parseUsername(res);
-    if (username) return username;
-  } catch (err) {
-    logger.warn({ err }, 'Telegram getMe via fetch failed, trying IPv4 HTTPS');
-  }
-
-  // Fallback: force IPv4 — common fix when AAAA is broken in container DNS.
-  try {
-    const username = await new Promise<string | null>((resolve, reject) => {
-      const req = https.get(
+  const viaIpv4 = async (): Promise<{ status: number; body: unknown }> =>
+    new Promise((resolve, reject) => {
+      const payload = options.json ? JSON.stringify(options.json) : undefined;
+      const req = https.request(
         url,
-        { family: 4, timeout: 15000, servername: 'api.telegram.org' },
+        {
+          method: options.json ? 'POST' : 'GET',
+          family: 4,
+          servername: 'api.telegram.org',
+          timeout: timeoutMs,
+          headers: payload
+            ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+            : undefined,
+        },
         (res) => {
           const chunks: Buffer[] = [];
           res.on('data', (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
           res.on('end', () => {
+            const text = Buffer.concat(chunks).toString('utf8');
+            let body: unknown = text;
             try {
-              const data = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {
-                ok?: boolean;
-                result?: { username?: string };
-              };
-              if (!res.statusCode || res.statusCode >= 400 || !data.ok) {
-                resolve(null);
-                return;
-              }
-              resolve(data.result?.username?.trim() || null);
-            } catch (parseErr) {
-              reject(parseErr);
+              body = JSON.parse(text);
+            } catch {
+              /* raw */
             }
+            resolve({ status: res.statusCode ?? 502, body });
           });
         }
       );
       req.on('error', reject);
       req.on('timeout', () => {
         req.destroy();
-        reject(new Error('Telegram getMe IPv4 timeout'));
+        reject(new Error('Telegram upstream timeout'));
       });
+      if (payload) req.write(payload);
+      req.end();
     });
-    return username;
+
+  try {
+    return await viaFetch();
   } catch (err) {
-    logger.warn({ err }, 'Telegram getMe IPv4 fallback failed');
+    logger.warn({ err, method }, 'Telegram upstream fetch failed, trying IPv4');
+    return await viaIpv4();
+  }
+}
+
+async function fetchTelegramBotUsername(token: string): Promise<string | null> {
+  try {
+    const { status, body } = await telegramUpstream(token, 'getMe', { timeoutMs: 15000 });
+    if (status >= 400) return null;
+    const data = body as { ok?: boolean; result?: { username?: string } };
+    if (!data?.ok) return null;
+    return data.result?.username?.trim() || null;
+  } catch (err) {
+    logger.warn({ err }, 'Telegram getMe failed');
     return null;
   }
 }
@@ -200,12 +248,6 @@ function botTelegramUrl(script: PyorchScript, username?: string | null): string 
     (typeof fromMeta === 'string' ? fromMeta.trim().replace(/^@/, '') : '');
   if (!resolved) return null;
   return `https://t.me/${resolved}`;
-}
-
-const TELEGRAM_BOT_TOKEN_RE = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
-
-function isValidTelegramBotToken(token: string | undefined | null): boolean {
-  return TELEGRAM_BOT_TOKEN_RE.test((token ?? '').trim());
 }
 
 async function getBotTelegramToken(scriptId: string): Promise<string | null> {
@@ -709,6 +751,41 @@ export function startServer(): void {
         logger.error({ err, url }, 'Internal username registration failed');
         const message = err instanceof Error ? err.message : 'Internal error';
         json(res, 500, { success: false, error: message });
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && url === '/internal/telegram/call') {
+      const internalKey = req.headers['x-internal-key'];
+      if (internalKey !== INTERNAL_API_KEY) {
+        json(res, 401, { success: false, error: 'Unauthorized' });
+        return;
+      }
+      try {
+        const body = JSON.parse(await readBody(req)) as {
+          token?: string;
+          method?: string;
+          params?: Record<string, string | number | boolean>;
+          json?: Record<string, unknown>;
+          timeoutSec?: number;
+        };
+        const method = body.method?.trim();
+        if (!body.token?.trim() || !method || !/^[A-Za-z0-9_]+$/.test(method)) {
+          json(res, 400, { success: false, error: 'token and method required' });
+          return;
+        }
+        const timeoutSec = Math.min(Math.max(Number(body.timeoutSec) || 35, 5), 90);
+        const upstream = await telegramUpstream(body.token, method, {
+          params: body.params,
+          json: body.json,
+          timeoutMs: timeoutSec * 1000,
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify(upstream.body));
+      } catch (err) {
+        logger.error({ err }, 'Internal telegram proxy failed');
+        const message = err instanceof Error ? err.message : 'Internal error';
+        json(res, 502, { ok: false, description: message });
       }
       return;
     }

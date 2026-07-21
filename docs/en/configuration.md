@@ -29,7 +29,7 @@ The **Integrity and repair** wizard *(v1.1.19+)* warns only when `DATA_DIR` mist
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DASHBOARD_PORT` | `80` | CRM Dashboard port |
-| `APP_VERSION` | `1.1.61` | Application version |
+| `APP_VERSION` | `1.1.62` | Application version |
 
 ## Dynamic API
 

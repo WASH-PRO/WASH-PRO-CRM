@@ -11,9 +11,20 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import socket
 from datetime import datetime
 
-BOT_VERSION = "3.2"
+BOT_VERSION = "3.3.0"
+
+# Docker/sandbox often has no IPv6 route → Errno 101 Network is unreachable to api.telegram.org.
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _getaddrinfo_ipv4(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
+socket.getaddrinfo = _getaddrinfo_ipv4  # type: ignore[assignment]
 
 TELEGRAM_TOKEN = os.environ.get("SECRET_TELEGRAM_TOKEN", "")
 API_BASE = os.environ.get("SECRET_API_BASE_URL", "http://dynamic-api:3001").rstrip("/")
@@ -79,12 +90,59 @@ _LAST_SENT: dict[int, tuple[str, float]] = {}
 _SEND_DEDUP_SEC = 3.0
 
 
+def telegram_call(
+    method: str,
+    *,
+    params: dict | None = None,
+    json_body: dict | None = None,
+    timeout: int = 35,
+) -> dict:
+    """Call Telegram Bot API via pyorch-bridge when sandbox has no egress HTTPS."""
+    if PYORCH_BRIDGE_URL and BRIDGE_INTERNAL_KEY and TELEGRAM_TOKEN:
+        payload = {
+            "token": TELEGRAM_TOKEN,
+            "method": method,
+            "params": params or {},
+            "timeoutSec": timeout,
+        }
+        if json_body is not None:
+            payload["json"] = json_body
+        req = urllib.request.Request(
+            f"{PYORCH_BRIDGE_URL}/internal/telegram/call",
+            data=json.dumps(payload).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-Key": BRIDGE_INTERNAL_KEY,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout + 15) as resp:
+            return json.loads(resp.read().decode())
+
+    if json_body is not None:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/{method}"
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(json_body).encode(),
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode())
+
+    qs = urllib.parse.urlencode(params or {})
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/{method}"
+    if qs:
+        url = f"{url}?{qs}"
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
+        return json.loads(resp.read().decode())
+
+
 def register_bot_username() -> None:
     if not PYORCH_SCRIPT_ID or not TELEGRAM_TOKEN:
         return
     try:
-        with urllib.request.urlopen(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getMe", timeout=15) as resp:
-            payload = json.loads(resp.read().decode())
+        payload = telegram_call("getMe", timeout=15)
         username = str((payload.get("result") or {}).get("username") or "").strip()
         if not username:
             return
@@ -284,12 +342,7 @@ def get_flow(chat_id: int) -> dict | None:
 
 
 def telegram_api(method: str, body: dict) -> dict:
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/{method}"
-    payload = json.dumps(body).encode()
-    req = urllib.request.Request(url, data=payload, method="POST", headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        raw = resp.read().decode()
-        return json.loads(raw) if raw else {}
+    return telegram_call(method, json_body=body, timeout=30)
 
 
 def load_update_offset() -> int:
@@ -1829,14 +1882,12 @@ def main() -> None:
     offset = bootstrap_polling()
     while not _SHUTDOWN:
         try:
-            params = urllib.parse.urlencode({
+            params = {
                 "offset": offset,
                 "timeout": 25,
                 "allowed_updates": json.dumps(["message", "callback_query"]),
-            })
-            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates?{params}"
-            with urllib.request.urlopen(url, timeout=35) as resp:
-                payload = json.loads(resp.read().decode())
+            }
+            payload = telegram_call("getUpdates", params=params, timeout=35)
             if not payload.get("ok"):
                 time.sleep(3)
                 continue

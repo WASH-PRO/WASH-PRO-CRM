@@ -853,6 +853,8 @@ export const ru = {
       pyorchDisabledHelp:
         'PyOrchestrator не запущен. Убедитесь, что в .env стоит PYORCHESTRATOR_ENABLED=true, затем выполните: ./scripts/start.sh',
       tokenRequired: 'Укажите токен бота от @BotFather',
+      tokenInvalid:
+        'Неверный токен. Вставьте токен от @BotFather в формате 123456789:AA… (не текст ошибки из окна ссылки).',
       tokenSaved: 'Токен сохранён',
       tokenConfigured: 'Токен задан (в целях безопасности не отображается)',
       tokenMissing: 'Токен не задан — вставьте токен от @BotFather',

@@ -17,6 +17,7 @@ import {
   type TelegramBot,
   type TelegramBotLink,
   type TelegramBotType,
+  isValidTelegramBotToken,
 } from '../api/telegramBots';
 import { PasswordInput } from '../components/PasswordInput';
 import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader } from '../components/UI';
@@ -234,6 +235,10 @@ export function TelegramPage() {
           setFormError(t('pages.telegram.tokenRequired'));
           return;
         }
+        if (tokenValue && !isValidTelegramBotToken(tokenValue)) {
+          setFormError(t('pages.telegram.tokenInvalid'));
+          return;
+        }
         const updated = await updateTelegramBot(editing.id, {
           name: form.name,
           description: form.description,
@@ -250,6 +255,10 @@ export function TelegramPage() {
       } else {
         if (!tokenValue) {
           setFormError(t('pages.telegram.tokenRequired'));
+          return;
+        }
+        if (!isValidTelegramBotToken(tokenValue)) {
+          setFormError(t('pages.telegram.tokenInvalid'));
           return;
         }
         const created = await createTelegramBot({

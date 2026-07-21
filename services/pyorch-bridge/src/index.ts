@@ -118,7 +118,7 @@ async function setSecret(scriptId: string, key: string, value: string): Promise<
 
 async function fetchTelegramBotUsername(token: string): Promise<string | null> {
   const trimmed = token.trim();
-  if (!trimmed) return null;
+  if (!isValidTelegramBotToken(trimmed)) return null;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -153,6 +153,12 @@ function botTelegramUrl(script: PyorchScript, username?: string | null): string 
   return `https://t.me/${resolved}`;
 }
 
+const TELEGRAM_BOT_TOKEN_RE = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
+
+function isValidTelegramBotToken(token: string | undefined | null): boolean {
+  return TELEGRAM_BOT_TOKEN_RE.test((token ?? '').trim());
+}
+
 async function getBotTelegramToken(scriptId: string): Promise<string | null> {
   try {
     const data = await pyorchFetch<{ key: string; value: string }>(
@@ -168,7 +174,7 @@ type BotWithTokenFlag = PyorchScript & { has_token: boolean };
 
 async function withTokenFlag(bot: PyorchScript): Promise<BotWithTokenFlag> {
   const token = await getBotTelegramToken(bot.id);
-  return { ...bot, has_token: Boolean(token) };
+  return { ...bot, has_token: isValidTelegramBotToken(token) };
 }
 
 async function withTokenFlags(bots: PyorchScript[]): Promise<BotWithTokenFlag[]> {
@@ -213,7 +219,13 @@ async function applySecrets(
   kind: WashBotType = 'management'
 ): Promise<void> {
   if (updateToken && input.token?.trim()) {
-    await setSecret(scriptId, 'TELEGRAM_TOKEN', input.token.trim());
+    const token = input.token.trim();
+    if (!isValidTelegramBotToken(token)) {
+      throw new Error(
+        'Invalid Telegram bot token. Expected format 123456789:AA… from @BotFather (not an error message).'
+      );
+    }
+    await setSecret(scriptId, 'TELEGRAM_TOKEN', token);
   }
   await setSecret(scriptId, 'API_BASE_URL', CRM_API_BASE);
   await setSecret(scriptId, 'PROCESSOR_API_BASE_URL', PROCESSOR_API_BASE);
@@ -394,6 +406,11 @@ async function createWashBot(input: CreateWashBotInput): Promise<PyorchScript> {
 
   if (!isDemo && !token) {
     throw new Error('token required');
+  }
+  if (token && !isValidTelegramBotToken(token)) {
+    throw new Error(
+      'Invalid Telegram bot token. Paste the token from @BotFather (123456789:AA…), not an error text.'
+    );
   }
 
   const groupId = await getBotsGroupId();
@@ -691,6 +708,14 @@ export function startServer(): void {
           json(res, 400, { success: false, error: 'token required' });
           return;
         }
+        if (!isValidTelegramBotToken(body.token)) {
+          json(res, 400, {
+            success: false,
+            error:
+              'Invalid Telegram bot token. Paste the token from @BotFather (123456789:AA…), not an error text.',
+          });
+          return;
+        }
 
         const kind: WashBotType = body.botType ?? 'management';
         const created = await createWashBot({
@@ -724,10 +749,22 @@ export function startServer(): void {
           }
           const link = botTelegramUrl(existing, username);
           if (!link) {
+            const token = await getBotTelegramToken(botId);
+            let error =
+              'Ссылка на бота недоступна. Запустите бота (он зарегистрирует username) или сохраните токен в настройках.';
+            if (!token) {
+              error =
+                'Токен бота не задан. Откройте «Настройки бота» и вставьте токен от @BotFather (формат 123456789:AA…).';
+            } else if (!isValidTelegramBotToken(token)) {
+              error =
+                'В настройках сохранён не токен BotFather, а другой текст. Откройте «Настройки бота» и вставьте настоящий токен (123456789:AA…).';
+            } else {
+              error =
+                'Не удалось получить @username бота через Telegram API. Проверьте токен в @BotFather и доступ сервера к api.telegram.org, затем сохраните токен снова и перезапустите бота.';
+            }
             json(res, 404, {
               success: false,
-              error:
-                'Ссылка на бота недоступна. Запустите бота (он зарегистрирует username) или сохраните токен в настройках.',
+              error,
             });
             return;
           }
@@ -832,11 +869,12 @@ export function startServer(): void {
             return;
           }
           const token = await getBotTelegramToken(botId);
-          if (!token) {
+          if (!isValidTelegramBotToken(token)) {
             json(res, 400, {
               success: false,
-              error:
-                'Токен бота не задан. Откройте «Настройки бота», вставьте токен от @BotFather и сохраните.',
+              error: !token
+                ? 'Токен бота не задан. Откройте «Настройки бота», вставьте токен от @BotFather и сохраните.'
+                : 'В настройках сохранён неверный токен. Вставьте токен от @BotFather (123456789:AA…), не текст ошибки.',
             });
             return;
           }

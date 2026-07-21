@@ -65,6 +65,13 @@ export const TELEGRAM_BOT_TYPE_LABELS: Record<TelegramBotType, string> = {
   informational: tGlobal('telegram.botTypes.informational'),
 };
 
+/** BotFather token shape: 123456789:AA... */
+export const TELEGRAM_BOT_TOKEN_RE = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
+
+export function isValidTelegramBotToken(token: string | undefined | null): boolean {
+  return TELEGRAM_BOT_TOKEN_RE.test((token ?? '').trim());
+}
+
 export interface TelegramBot {
   id: string;
   name: string;

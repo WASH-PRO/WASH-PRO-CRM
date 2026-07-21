@@ -853,6 +853,8 @@ export const en = {
       pyorchDisabledHelp:
         'PyOrchestrator is not running. Ensure PYORCHESTRATOR_ENABLED=true in .env and run ./scripts/start.sh',
       tokenRequired: 'Specify bot token from @BotFather',
+      tokenInvalid:
+        'Invalid token. Paste the @BotFather token as 123456789:AA… (not an error message from the link dialog).',
       tokenSaved: 'Token saved',
       tokenConfigured: 'Token is set (hidden for security)',
       tokenMissing: 'Token not set — paste token from @BotFather',

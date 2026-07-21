@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-17",
+  "updatedAt": "2026-07-21",
   "catalogUrl": "https://raw.githubusercontent.com/WASH-PRO/WASH-PRO-CRM/main/modules/registry.json",
   "modules": [
     {
@@ -296,6 +296,108 @@
             "type": "string",
             "label": { "ru": "Параметры моек (JSON, заполняется UI)", "en": "Per-wash params (JSON, filled by UI)" },
             "default": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2raytun",
+      "repository": "WASH-PRO/wash-module-v2raytun",
+      "defaultBranch": "main",
+      "manifest": {
+        "id": "v2raytun",
+        "name": { "ru": "Клиент v2RayTun (VLESS)", "en": "v2RayTun Client (VLESS)" },
+        "description": {
+          "ru": "VLESS-клиент на Xray-core: ссылка подписки или vless://, локальный SOCKS/HTTP-прокси, проверка канала и логи.",
+          "en": "VLESS client on Xray-core: subscription or vless:// link, local SOCKS/HTTP proxy, health checks and logs."
+        },
+        "version": "1.0.0",
+        "author": "WASH-PRO",
+        "license": "MIT",
+        "category": "networking",
+        "icon": "assets/icon.svg",
+        "repository": "https://github.com/WASH-PRO/wash-module-v2raytun",
+        "dependencies": [],
+        "minCrmVersion": "1.1.58",
+        "entrypoint": "src/main.py",
+        "helpPage": "ui/help.html",
+        "scriptType": "daemon",
+        "settingsSchema": [
+          {
+            "key": "share_link_secret",
+            "type": "string",
+            "label": {
+              "ru": "Ссылка подписки или VLESS",
+              "en": "Subscription or VLESS link"
+            },
+            "default": ""
+          },
+          {
+            "key": "socks_port",
+            "type": "number",
+            "label": { "ru": "Порт SOCKS5", "en": "SOCKS5 port" },
+            "default": 10808,
+            "min": 1024,
+            "max": 65535
+          },
+          {
+            "key": "http_port",
+            "type": "number",
+            "label": { "ru": "Порт HTTP-прокси", "en": "HTTP proxy port" },
+            "default": 10809,
+            "min": 1024,
+            "max": 65535
+          },
+          {
+            "key": "server_index",
+            "type": "number",
+            "label": {
+              "ru": "Индекс сервера (0 = первый)",
+              "en": "Server index (0 = first)"
+            },
+            "default": 0,
+            "min": 0,
+            "max": 99
+          },
+          {
+            "key": "refresh_interval",
+            "type": "number",
+            "label": {
+              "ru": "Обновление подписки (сек)",
+              "en": "Subscription refresh (sec)"
+            },
+            "default": 3600,
+            "min": 300,
+            "max": 86400
+          },
+          {
+            "key": "healthcheck_interval",
+            "type": "number",
+            "label": {
+              "ru": "Интервал проверки (сек)",
+              "en": "Health check interval (sec)"
+            },
+            "default": 60,
+            "min": 15,
+            "max": 3600
+          },
+          {
+            "key": "healthcheck_url",
+            "type": "string",
+            "label": {
+              "ru": "URL проверки через прокси",
+              "en": "Health check URL via proxy"
+            },
+            "default": "https://cp.cloudflare.com/"
+          },
+          {
+            "key": "xray_version",
+            "type": "string",
+            "label": {
+              "ru": "Версия Xray (тег релиза)",
+              "en": "Xray version (release tag)"
+            },
+            "default": "v26.3.27"
           }
         ]
       }

@@ -34,5 +34,6 @@ publish_repo wash-module-usage-stats
 publish_repo wash-module-starter
 publish_repo wash-module-vk-publisher
 publish_repo wash-module-dynamic-pricing
+publish_repo wash-module-v2raytun
 
 echo "Done."

@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [1.1.64] — 2026-07-21
+
+### Исправлено
+
+- **Деплой Telegram egress** — rolldown binding в Dockerfile dashboard; pyorch/telegram-egress собираются до dashboard
+
+### Документация
+
+- **releases/v1.1.64.md** — v1.1.64
+
 ## [1.1.63] — 2026-07-21
 
 ### Исправлено

@@ -10,7 +10,7 @@ if [ "${PYORCHESTRATOR_ENABLED:-false}" != "true" ]; then
 fi
 
 echo "==> Перезапуск PyOrchestrator (Redis, backend, runtime, scheduler, bridge, telegram-egress)..."
-$COMPOSE up -d telegram-egress pyorch-redis pyorch-postgres pyorch-minio pyorch-backend pyorch-runtime pyorch-scheduler pyorch-bridge
+$COMPOSE up -d --build telegram-egress pyorch-redis pyorch-postgres pyorch-minio pyorch-backend pyorch-runtime pyorch-scheduler pyorch-bridge
 
 echo "==> Ожидание health backend..."
 for i in 1 2 3 4 5 6 7 8 9 10; do

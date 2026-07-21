@@ -22,6 +22,8 @@ const CRM_API_BASE = process.env.CRM_API_BASE_URL || 'http://dynamic-api:3001';
 const PROCESSOR_API_BASE = process.env.PROCESSOR_API_BASE_URL || 'http://message-processor:3022';
 const INTERNAL_API_KEY = process.env.PYORCH_INTERNAL_API_KEY || process.env.INTERNAL_API_KEY || 'internal-dev-key';
 const BRIDGE_PUBLIC_URL = (process.env.PYORCH_BRIDGE_URL || 'http://pyorch-bridge:3021').replace(/\/$/, '');
+/** Optional host-network egress proxy (http://host.docker.internal:3987) when Docker cannot reach api.telegram.org. */
+const TELEGRAM_API_BASE = (process.env.TELEGRAM_API_BASE_URL || 'https://api.telegram.org').replace(/\/$/, '');
 /** PyOrchestrator помечает run остановленным раньше, чем sandbox отпускает polling lock. */
 const BOT_STOP_GRACE_MS = 6000;
 const BOT_RESTART_STAGGER_MS = 2500;
@@ -147,7 +149,8 @@ async function telegramUpstream(
         Object.entries(options.params).map(([k, v]) => [k, String(v)])
       ).toString()}`
     : '';
-  const url = `https://api.telegram.org/bot${trimmed}/${method}${qs}`;
+  const url = `${TELEGRAM_API_BASE}/bot${trimmed}/${method}${qs}`;
+  const useHttp = url.startsWith('http://');
 
   const viaFetch = async (): Promise<{ status: number; body: unknown }> => {
     const controller = new AbortController();
@@ -172,15 +175,15 @@ async function telegramUpstream(
     }
   };
 
-  const viaIpv4 = async (): Promise<{ status: number; body: unknown }> =>
+  const viaDirect = async (): Promise<{ status: number; body: unknown }> =>
     new Promise((resolve, reject) => {
       const payload = options.json ? JSON.stringify(options.json) : undefined;
-      const req = https.request(
+      const lib = useHttp ? http : https;
+      const req = lib.request(
         url,
         {
           method: options.json ? 'POST' : 'GET',
-          family: 4,
-          servername: 'api.telegram.org',
+          ...(useHttp ? {} : { family: 4 as const, servername: 'api.telegram.org' }),
           timeout: timeoutMs,
           headers: payload
             ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
@@ -210,11 +213,12 @@ async function telegramUpstream(
       req.end();
     });
 
+  // Prefer direct socket (IPv4 for real Telegram; plain HTTP for host egress proxy).
   try {
-    return await viaFetch();
+    return await viaDirect();
   } catch (err) {
-    logger.warn({ err, method }, 'Telegram upstream fetch failed, trying IPv4');
-    return await viaIpv4();
+    logger.warn({ err, method, base: TELEGRAM_API_BASE }, 'Telegram direct upstream failed, trying fetch');
+    return await viaFetch();
   }
 }
 

@@ -113,7 +113,7 @@ function stepCommand(component: UpdateComponentId, stepId: string, targetTag: st
       return `cd ${root} && PYORCHESTRATOR_REF=${tag} ./scripts/update-pyorchestrator.sh`;
     }
     if (stepId === 'build') {
-      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES up -d --build pyorch-redis pyorch-postgres pyorch-minio pyorch-backend pyorch-runtime pyorch-scheduler pyorch-bridge pyorchestrator-panel`;
+      return `cd ${root} && ${composeSetup()} && docker compose $COMPOSE_FILES up -d --build telegram-egress pyorch-redis pyorch-postgres pyorch-minio pyorch-backend pyorch-runtime pyorch-scheduler pyorch-bridge pyorchestrator-panel`;
     }
     if (stepId === 'health') {
       return `wget -qO- http://pyorch-backend:8000/health >/dev/null || wget -qO- http://pyorch-backend:8000/api/v1/health >/dev/null`;

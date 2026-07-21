@@ -97,14 +97,37 @@ services:
       SERVICE_PASSWORD: ${SERVICE_PASSWORD:-ServiceInternal123!}
       PYORCH_INTERNAL_API_KEY: ${PYORCH_INTERNAL_API_KEY:-internal-dev-key}
       PYORCH_BRIDGE_URL: http://pyorch-bridge:3021
+      NODE_OPTIONS: --dns-result-order=ipv4first
+      # Host-network egress when Docker bridge cannot reach api.telegram.org
+      TELEGRAM_API_BASE_URL: ${TELEGRAM_API_BASE_URL:-http://host.docker.internal:3987}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "api.telegram.org:149.154.166.110"
     depends_on:
       pyorch-backend:
         condition: service_healthy
       dynamic-api:
         condition: service_healthy
+      telegram-egress:
+        condition: service_started
     networks:
       - wash-internal
       - wash-external
+
+  # Host stack → Telegram (Docker bridge NAT often cannot reach api.telegram.org).
+  telegram-egress:
+    build:
+      context: ./services/telegram-egress
+      dockerfile: Dockerfile
+    container_name: wash-telegram-egress
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TELEGRAM_EGRESS_PORT: "3987"
+      TELEGRAM_EGRESS_BIND: "0.0.0.0"
 
   pyorch-runtime:
     build:
@@ -140,6 +163,11 @@ services:
         aliases:
           - runtime
       wash-external: {}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    extra_hosts:
+      - "api.telegram.org:149.154.166.110"
     cgroup: host
     privileged: false
     healthcheck:

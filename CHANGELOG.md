@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [1.1.63] — 2026-07-21
+
+### Исправлено
+
+- **Telegram из Docker** — host-network `telegram-egress` + DNS/IPv4 (бот не отвечал: 502 к api.telegram.org из bridge)
+
+### Документация
+
+- **releases/v1.1.63.md** — v1.1.63
+
 ## [1.1.62] — 2026-07-21
 
 ### Исправлено

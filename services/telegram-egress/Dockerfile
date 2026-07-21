@@ -1,0 +1,7 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY server.mjs ./
+ENV TELEGRAM_EGRESS_PORT=3987
+ENV TELEGRAM_EGRESS_BIND=0.0.0.0
+EXPOSE 3987
+CMD ["node", "server.mjs"]

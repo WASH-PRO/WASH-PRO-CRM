@@ -17,7 +17,7 @@ import zlib
 import socket
 from datetime import datetime
 
-BOT_VERSION = "2.4.1"
+BOT_VERSION = "2.4.2"
 
 # Docker/sandbox often has no IPv6 route → Errno 101 Network is unreachable to api.telegram.org.
 _orig_getaddrinfo = socket.getaddrinfo
@@ -103,10 +103,16 @@ def register_bot_username() -> None:
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=10):
+        with urllib.request.urlopen(req, timeout=5):
             print(f"Registered Telegram username @{username}")
     except Exception as exc:
         print(f"register username skipped: {exc}")
+
+
+def register_bot_username_async() -> None:
+    import threading
+
+    threading.Thread(target=register_bot_username, name="tg-register-username", daemon=True).start()
 
 _CHAT_FLOW: dict[int, dict] = {}
 _SUBSCRIBED_CHATS: set[int] = set()
@@ -1137,8 +1143,8 @@ def main() -> None:
         print("SECRET_TELEGRAM_TOKEN not configured")
         return
     print(f"WASH PRO informational bot v{BOT_VERSION} started")
-    register_bot_username()
-    time.sleep(2)
+    register_bot_username_async()
+    time.sleep(0.5)
     if not acquire_poll_lock():
         print("Another bot instance is already polling this Telegram token. Exit.")
         return

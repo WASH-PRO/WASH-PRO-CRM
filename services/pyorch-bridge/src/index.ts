@@ -24,8 +24,8 @@ const INTERNAL_API_KEY = process.env.PYORCH_INTERNAL_API_KEY || process.env.INTE
 const BRIDGE_PUBLIC_URL = (process.env.PYORCH_BRIDGE_URL || 'http://pyorch-bridge:3021').replace(/\/$/, '');
 /** Optional host-network egress proxy (http://host.docker.internal:3987) when Docker cannot reach api.telegram.org. */
 const TELEGRAM_API_BASE = (process.env.TELEGRAM_API_BASE_URL || 'https://api.telegram.org').replace(/\/$/, '');
-/** PyOrchestrator помечает run остановленным раньше, чем sandbox отпускает polling lock. */
-const BOT_STOP_GRACE_MS = 6000;
+/** PyOrchestrator marks the run stopped before the sandbox releases the polling lock. */
+const BOT_STOP_GRACE_MS = 2000;
 const BOT_RESTART_STAGGER_MS = 2500;
 
 interface PyorchScript {
@@ -377,10 +377,13 @@ async function waitForBotStopped(botId: string, timeoutMs = 30000): Promise<bool
   return false;
 }
 
-async function waitForBotFullyStopped(botId: string, timeoutMs = 45000): Promise<boolean> {
+async function waitForBotFullyStopped(botId: string, timeoutMs = 20000): Promise<boolean> {
+  const before = await getWashBot(botId);
+  const wasRunning = !!before && isBotRunning(before);
   const stopped = await waitForBotStopped(botId, timeoutMs);
   if (!stopped) return false;
-  await sleep(BOT_STOP_GRACE_MS);
+  // Grace only when we actually stopped a live run (sandbox may hold the poll lock briefly).
+  if (wasRunning) await sleep(BOT_STOP_GRACE_MS);
   const bot = await getWashBot(botId);
   return !bot || !isBotRunning(bot);
 }
@@ -389,14 +392,20 @@ async function clearTelegramWebhook(token: string): Promise<void> {
   const trimmed = token.trim();
   if (!trimmed) return;
   try {
-    // Must go through TELEGRAM_API_BASE (host egress). Direct fetch hangs when Docker has no Telegram route.
+    // Must go through TELEGRAM_API_BASE (host egress). Keep this short — never block Start/Stop.
     await telegramUpstream(trimmed, 'deleteWebhook', {
       params: { drop_pending_updates: false },
-      timeoutMs: 5000,
+      timeoutMs: 2500,
     });
   } catch (err) {
     logger.warn({ err }, 'Telegram deleteWebhook failed');
   }
+}
+
+/** Non-blocking webhook clear so Start/Stop stay fast when Telegram is unreachable. */
+function clearTelegramWebhookBackground(token: string | null | undefined): void {
+  if (!token?.trim()) return;
+  void clearTelegramWebhook(token).catch(() => undefined);
 }
 
 async function stopBotsWithToken(token: string, exceptBotId?: string): Promise<void> {
@@ -417,7 +426,7 @@ async function startWashBotRun(bot: PyorchScript, token?: string | null): Promis
   const resolvedToken = token ?? (await getBotTelegramToken(bot.id));
   if (resolvedToken?.trim()) {
     await stopBotsWithToken(resolvedToken, bot.id);
-    await clearTelegramWebhook(resolvedToken);
+    clearTelegramWebhookBackground(resolvedToken);
   }
   // Legacy bots had 86400s / 3600s caps — force unlimited on every start.
   await pyorchFetch(`/scripts/${bot.id}`, {
@@ -455,8 +464,8 @@ async function stopLegacyDuplicateBots(): Promise<void> {
 async function stopWashBot(bot: PyorchScript): Promise<PyorchScript> {
   const token = await getBotTelegramToken(bot.id);
   await pyorchFetch(`/runs/scripts/${bot.id}/stop`, { method: 'POST' }).catch(() => undefined);
-  await waitForBotFullyStopped(bot.id);
-  if (token?.trim()) await clearTelegramWebhook(token);
+  await waitForBotFullyStopped(bot.id, 15000);
+  clearTelegramWebhookBackground(token);
   await pyorchFetch(`/scripts/${bot.id}/disable`, { method: 'POST' }).catch(() => undefined);
   return (await getWashBot(bot.id)) ?? bot;
 }
@@ -475,8 +484,21 @@ async function stopAllWashBots(): Promise<PyorchScript[]> {
 async function restartWashBot(bot: PyorchScript, commands?: string[], type?: WashBotType): Promise<void> {
   await stopLegacyDuplicateBots();
   const token = await getBotTelegramToken(bot.id);
-  await stopWashBot(bot);
+  if (isBotRunning(bot) || bot.status === 'enabled') {
+    await stopWashBot(bot);
+  }
   await syncBotCode(bot, commands, type);
+  await startWashBotRun(bot, token);
+}
+
+/** Start path used by UI: code already synced — avoid double stop/sync and Telegram waits. */
+async function startWashBotFromUi(bot: PyorchScript): Promise<void> {
+  await stopLegacyDuplicateBots();
+  const token = await getBotTelegramToken(bot.id);
+  if (isBotRunning(bot)) {
+    await pyorchFetch(`/runs/scripts/${bot.id}/stop`, { method: 'POST' }).catch(() => undefined);
+    await waitForBotFullyStopped(bot.id, 12000);
+  }
   await startWashBotRun(bot, token);
 }
 
@@ -1012,7 +1034,7 @@ export function startServer(): void {
           const kind = botType(existing);
           await syncBotCode(existing, commands, kind);
           await applySecrets(botId, { adminIds, commands }, false, kind);
-          await restartWashBot(existing, commands, kind);
+          await startWashBotFromUi(existing);
           const updated = (await getWashBot(botId)) ?? existing;
           json(res, 200, { success: true, data: await withTokenFlag(updated) });
           return;

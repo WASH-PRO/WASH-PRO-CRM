@@ -389,12 +389,11 @@ async function clearTelegramWebhook(token: string): Promise<void> {
   const trimmed = token.trim();
   if (!trimmed) return;
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    await fetch(`https://api.telegram.org/bot${trimmed}/deleteWebhook?drop_pending_updates=false`, {
-      signal: controller.signal,
+    // Must go through TELEGRAM_API_BASE (host egress). Direct fetch hangs when Docker has no Telegram route.
+    await telegramUpstream(trimmed, 'deleteWebhook', {
+      params: { drop_pending_updates: false },
+      timeoutMs: 5000,
     });
-    clearTimeout(timeoutId);
   } catch (err) {
     logger.warn({ err }, 'Telegram deleteWebhook failed');
   }

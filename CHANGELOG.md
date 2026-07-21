@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [1.1.65] — 2026-07-21
+
+### Исправлено
+
+- **Долгий старт Telegram-бота** — deleteWebhook через host egress (5с); probe `/health/telegram`
+
+### Документация
+
+- **releases/v1.1.65.md** — v1.1.65
+
 ## [1.1.64] — 2026-07-21
 
 ### Исправлено

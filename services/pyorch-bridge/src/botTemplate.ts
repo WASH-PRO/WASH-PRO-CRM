@@ -142,7 +142,7 @@ def register_bot_username() -> None:
     if not PYORCH_SCRIPT_ID or not TELEGRAM_TOKEN:
         return
     try:
-        payload = telegram_call("getMe", timeout=15)
+        payload = telegram_call("getMe", timeout=5)
         username = str((payload.get("result") or {}).get("username") or "").strip()
         if not username:
             return

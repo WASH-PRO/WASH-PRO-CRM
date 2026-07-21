@@ -18,9 +18,11 @@ import {
   type TelegramBotLink,
   type TelegramBotType,
 } from '../api/telegramBots';
+import { PasswordInput } from '../components/PasswordInput';
 import { Badge, Empty, ErrorMessage, Loading, Modal, PageHeader } from '../components/UI';
 import { DataTable, type DataTableBulkAction, type DataTableColumn, type DataTableFilter } from '../components/DataTable';
 import { LIVE_INTERVAL_SLOW_MS } from '../constants/live';
+import { useToast } from '../context/ToastContext';
 import { usePolling } from '../hooks/usePolling';
 import { createExportBulkAction } from '../utils/export';
 import { formatDateTime } from '../utils/format';
@@ -94,6 +96,7 @@ function applyTelegramBotPatches(base: TelegramBot[], patches: Map<string, Teleg
 
 export function TelegramPage() {
   const { t } = useLocale();
+  const { showToast } = useToast();
   const [pageState, setPageState] = useState<PageState>('loading');
   const [serviceError, setServiceError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -224,29 +227,41 @@ export function TelegramPage() {
     setFormError(null);
     setSaving(true);
     try {
+      const tokenValue = form.token.trim();
       if (editing) {
+        const needsToken = !editing.has_token;
+        if (needsToken && !tokenValue) {
+          setFormError(t('pages.telegram.tokenRequired'));
+          return;
+        }
         const updated = await updateTelegramBot(editing.id, {
           name: form.name,
           description: form.description,
-          token: form.token.trim() || undefined,
+          token: tokenValue || undefined,
           commands: form.commands,
           botType: form.botType,
         });
         rememberBot(updated);
+        if (tokenValue) {
+          showToast(t('pages.telegram.tokenSaved'), 'success');
+        } else {
+          showToast(t('api.saved'), 'success');
+        }
       } else {
-        if (!form.token.trim()) {
+        if (!tokenValue) {
           setFormError(t('pages.telegram.tokenRequired'));
           return;
         }
         const created = await createTelegramBot({
           name: form.name,
           description: form.description,
-          token: form.token.trim(),
+          token: tokenValue,
           commands: form.commands,
           botType: form.botType,
           start: form.startAfterCreate,
         });
         rememberBot(created);
+        showToast(t('api.saved'), 'success');
       }
 
       setModalOpen(false);
@@ -710,14 +725,28 @@ export function TelegramPage() {
 
           <div>
             <label className="label">
-              Token {editing ? t('pages.telegram.tokenEditHint') : ''}
+              Token{editing?.has_token ? ` ${t('pages.telegram.tokenEditHint')}` : ''}
             </label>
-            <input
-              className="input font-mono text-xs"
+            {editing && (
+              <p
+                className={`mb-1.5 text-xs ${
+                  editing.has_token
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-amber-700 dark:text-amber-400'
+                }`}
+              >
+                {editing.has_token
+                  ? t('pages.telegram.tokenConfigured')
+                  : t('pages.telegram.tokenMissing')}
+              </p>
+            )}
+            <PasswordInput
+              className="font-mono text-xs"
               value={form.token}
               onChange={(e) => setForm({ ...form, token: e.target.value })}
               placeholder="123456789:ABCdefGHI..."
-              required={!editing}
+              autoComplete="off"
+              required={!editing || !editing.has_token}
             />
           </div>
 

@@ -164,6 +164,17 @@ async function getBotTelegramToken(scriptId: string): Promise<string | null> {
   }
 }
 
+type BotWithTokenFlag = PyorchScript & { has_token: boolean };
+
+async function withTokenFlag(bot: PyorchScript): Promise<BotWithTokenFlag> {
+  const token = await getBotTelegramToken(bot.id);
+  return { ...bot, has_token: Boolean(token) };
+}
+
+async function withTokenFlags(bots: PyorchScript[]): Promise<BotWithTokenFlag[]> {
+  return Promise.all(bots.map(withTokenFlag));
+}
+
 async function persistBotUsername(bot: PyorchScript, username: string): Promise<PyorchScript> {
   const normalized = username.trim().replace(/^@/, '');
   if (!normalized) return bot;
@@ -644,20 +655,20 @@ export function startServer(): void {
 
     try {
       if (req.method === 'GET' && url === '/bots') {
-        const bots = await listWashBots();
+        const bots = await withTokenFlags(await listWashBots());
         json(res, 200, { success: true, data: bots });
         return;
       }
 
       if (req.method === 'POST' && url === '/bots/stop-all') {
-        const bots = await stopAllWashBots();
+        const bots = await withTokenFlags(await stopAllWashBots());
         json(res, 200, { success: true, data: bots });
         return;
       }
 
       if (req.method === 'POST' && url === '/bots/refresh') {
         await refreshAllWashBots(true);
-        const bots = await listWashBots();
+        const bots = await withTokenFlags(await listWashBots());
         json(res, 200, { success: true, data: bots });
         return;
       }
@@ -692,7 +703,7 @@ export function startServer(): void {
           start: body.start !== false,
         });
         void notifyCrm('telegram_bot_created', `Создан Telegram-бот: ${created.name}`);
-        json(res, 201, { success: true, data: created });
+        json(res, 201, { success: true, data: await withTokenFlag(created) });
         return;
       }
 
@@ -751,8 +762,25 @@ export function startServer(): void {
             body.botType ??
             (existing.metadata.bot_type as WashBotType | undefined) ??
             'management';
-          const telegramUsername = body.token?.trim()
-            ? await resolveTelegramUsername(body.token)
+          const tokenToSave = body.token?.trim() || '';
+          const updateToken = Boolean(tokenToSave);
+
+          // Token must be persisted before code sync — sync failures previously skipped secrets.
+          await applySecrets(
+            botId,
+            { token: tokenToSave || undefined, adminIds, commands },
+            updateToken,
+            kind
+          );
+          if (updateToken) {
+            const stored = await getBotTelegramToken(botId);
+            if (stored !== tokenToSave) {
+              throw new Error('Failed to persist TELEGRAM_TOKEN in PyOrchestrator');
+            }
+          }
+
+          const telegramUsername = tokenToSave
+            ? await resolveTelegramUsername(tokenToSave)
             : await ensureBotTelegramUsername(existing);
           await pyorchFetch(`/scripts/${botId}`, {
             method: 'PUT',
@@ -772,12 +800,6 @@ export function startServer(): void {
             }),
           });
           await syncBotCode(existing, commands, kind);
-          await applySecrets(
-            botId,
-            { token: body.token, adminIds, commands },
-            Boolean(body.token?.trim()),
-            kind
-          );
           const wasRunning = isBotRunning(existing);
           if (wasRunning) {
             await restartWashBot(
@@ -787,7 +809,7 @@ export function startServer(): void {
             );
           }
           const updated = (await getWashBot(botId)) ?? existing;
-          json(res, 200, { success: true, data: updated });
+          json(res, 200, { success: true, data: await withTokenFlag(updated) });
           return;
         }
 
@@ -809,6 +831,15 @@ export function startServer(): void {
             json(res, 404, { success: false, error: 'Bot not found' });
             return;
           }
+          const token = await getBotTelegramToken(botId);
+          if (!token) {
+            json(res, 400, {
+              success: false,
+              error:
+                'Токен бота не задан. Откройте «Настройки бота», вставьте токен от @BotFather и сохраните.',
+            });
+            return;
+          }
           const adminIds = (existing.metadata.admin_ids as number[]) ?? [];
           const commands = botCommands(existing);
           const kind = botType(existing);
@@ -816,7 +847,7 @@ export function startServer(): void {
           await applySecrets(botId, { adminIds, commands }, false, kind);
           await restartWashBot(existing, commands, kind);
           const updated = (await getWashBot(botId)) ?? existing;
-          json(res, 200, { success: true, data: updated });
+          json(res, 200, { success: true, data: await withTokenFlag(updated) });
           return;
         }
 
@@ -827,7 +858,7 @@ export function startServer(): void {
             return;
           }
           const updated = await stopWashBot(existing);
-          json(res, 200, { success: true, data: updated });
+          json(res, 200, { success: true, data: await withTokenFlag(updated) });
           return;
         }
       }

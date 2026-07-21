@@ -853,6 +853,10 @@ export const en = {
       pyorchDisabledHelp:
         'PyOrchestrator is not running. Ensure PYORCHESTRATOR_ENABLED=true in .env and run ./scripts/start.sh',
       tokenRequired: 'Specify bot token from @BotFather',
+      tokenSaved: 'Token saved',
+      tokenConfigured: 'Token is set (hidden for security)',
+      tokenMissing: 'Token not set — paste token from @BotFather',
+      tokenEditHint: '(leave empty to keep unchanged)',
       startFailed: 'Failed to start',
       stopFailed: 'Failed to stop',
       deleteFailed: 'Failed to delete',
@@ -873,7 +877,6 @@ export const en = {
       editBot: 'Bot settings',
       newBot: 'New Telegram bot',
       namePlaceholder: 'Bot for wash station',
-      tokenEditHint: '(leave empty to keep unchanged)',
       infoBotMenu: 'Informational bot menu',
       infoBotHintStart: 'Public access content is configured in',
       allowedCommands: 'Allowed commands',

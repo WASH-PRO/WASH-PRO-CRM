@@ -853,6 +853,10 @@ export const ru = {
       pyorchDisabledHelp:
         'PyOrchestrator не запущен. Убедитесь, что в .env стоит PYORCHESTRATOR_ENABLED=true, затем выполните: ./scripts/start.sh',
       tokenRequired: 'Укажите токен бота от @BotFather',
+      tokenSaved: 'Токен сохранён',
+      tokenConfigured: 'Токен задан (в целях безопасности не отображается)',
+      tokenMissing: 'Токен не задан — вставьте токен от @BotFather',
+      tokenEditHint: '(оставьте пустым, чтобы не менять)',
       startFailed: 'Не удалось запустить',
       stopFailed: 'Не удалось остановить',
       deleteFailed: 'Не удалось удалить',
@@ -873,7 +877,6 @@ export const ru = {
       editBot: 'Настройки бота',
       newBot: 'Новый Telegram-бот',
       namePlaceholder: 'Бот для мойки',
-      tokenEditHint: '(оставьте пустым, чтобы не менять)',
       infoBotMenu: 'Меню информационного бота',
       infoBotHintStart: 'Контент публичного бота настраивается в разделе',
       allowedCommands: 'Разрешенные команды',

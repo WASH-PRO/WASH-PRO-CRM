@@ -72,6 +72,8 @@ export interface TelegramBot {
   script_type: string;
   status: string;
   created_at?: string;
+  /** True when TELEGRAM_TOKEN secret is stored in PyOrchestrator (token value never returned). */
+  has_token?: boolean;
   metadata: {
     wash_telegram_bot?: boolean;
     admin_ids?: number[];

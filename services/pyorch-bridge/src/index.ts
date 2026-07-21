@@ -1,8 +1,13 @@
 import http from 'node:http';
+import https from 'node:https';
+import dns from 'node:dns';
 import { pino } from 'pino';
 import { BOT_COMMAND_PRESETS, DEFAULT_DEMO_BOTS } from './botPresets.js';
 import { generateBotMain, type WashBotType } from './botTemplate.js';
 import { notifyCrm } from './notify.js';
+
+// Docker/Node often prefer IPv6 AAAA that has no outbound route — Telegram getMe then fails.
+dns.setDefaultResultOrder('ipv4first');
 
 const logger = pino({ level: 'info' });
 
@@ -119,17 +124,61 @@ async function setSecret(scriptId: string, key: string, value: string): Promise<
 async function fetchTelegramBotUsername(token: string): Promise<string | null> {
   const trimmed = token.trim();
   if (!isValidTelegramBotToken(trimmed)) return null;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch(`https://api.telegram.org/bot${trimmed}/getMe`, { signal: controller.signal });
-    clearTimeout(timeoutId);
+
+  const url = `https://api.telegram.org/bot${trimmed}/getMe`;
+  const parseUsername = async (res: Response | { ok: boolean; json: () => Promise<unknown> }) => {
     if (!res.ok) return null;
     const data = (await res.json()) as { ok?: boolean; result?: { username?: string } };
     const username = data.result?.username?.trim();
     return username || null;
+  };
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    const username = await parseUsername(res);
+    if (username) return username;
   } catch (err) {
-    logger.warn({ err }, 'Telegram getMe failed');
+    logger.warn({ err }, 'Telegram getMe via fetch failed, trying IPv4 HTTPS');
+  }
+
+  // Fallback: force IPv4 — common fix when AAAA is broken in container DNS.
+  try {
+    const username = await new Promise<string | null>((resolve, reject) => {
+      const req = https.get(
+        url,
+        { family: 4, timeout: 15000, servername: 'api.telegram.org' },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
+          res.on('end', () => {
+            try {
+              const data = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {
+                ok?: boolean;
+                result?: { username?: string };
+              };
+              if (!res.statusCode || res.statusCode >= 400 || !data.ok) {
+                resolve(null);
+                return;
+              }
+              resolve(data.result?.username?.trim() || null);
+            } catch (parseErr) {
+              reject(parseErr);
+            }
+          });
+        }
+      );
+      req.on('error', reject);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Telegram getMe IPv4 timeout'));
+      });
+    });
+    return username;
+  } catch (err) {
+    logger.warn({ err }, 'Telegram getMe IPv4 fallback failed');
     return null;
   }
 }

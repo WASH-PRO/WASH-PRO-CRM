@@ -311,7 +311,7 @@
           "ru": "Создаёт мойки на сайте «Автомойки рядом» по UUID; синхронизирует цены, занятость, новости/акции и кассу (finance).",
           "en": "Creates washes on Washes Nearby by UUID; syncs prices, occupancy, news/promos and cash register (finance)."
         },
-        "version": "1.2.3",
+        "version": "1.2.4",
         "author": "WASH-PRO",
         "license": "MIT",
         "category": "publishing",

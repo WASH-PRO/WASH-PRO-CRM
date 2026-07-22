@@ -9,7 +9,10 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "post-occupancy-monitor",
-        "name": { "ru": "Монитор занятости постов", "en": "Post Occupancy Monitor" },
+        "name": {
+          "ru": "Монитор занятости постов",
+          "en": "Post Occupancy Monitor"
+        },
         "description": {
           "ru": "Отслеживает занятость постов через API post-states и сохраняет снимки.",
           "en": "Tracks post occupancy via post-states API and stores snapshots."
@@ -28,7 +31,10 @@
           {
             "key": "poll_interval",
             "type": "number",
-            "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+            "label": {
+              "ru": "Интервал опроса (сек)",
+              "en": "Poll interval (sec)"
+            },
             "default": 60,
             "min": 15,
             "max": 3600
@@ -42,7 +48,10 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "usage-stats-collector",
-        "name": { "ru": "Сборщик загруженности", "en": "Usage Stats Collector" },
+        "name": {
+          "ru": "Сборщик загруженности",
+          "en": "Usage Stats Collector"
+        },
         "description": {
           "ru": "Собирает статистику загруженности постов через API usage-stats.",
           "en": "Collects post workload statistics via usage-stats API."
@@ -61,7 +70,10 @@
           {
             "key": "poll_interval",
             "type": "number",
-            "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+            "label": {
+              "ru": "Интервал опроса (сек)",
+              "en": "Poll interval (sec)"
+            },
             "default": 120,
             "min": 30,
             "max": 3600
@@ -69,7 +81,10 @@
           {
             "key": "lookback_hours",
             "type": "number",
-            "label": { "ru": "Глубина выборки (часы)", "en": "Lookback (hours)" },
+            "label": {
+              "ru": "Глубина выборки (часы)",
+              "en": "Lookback (hours)"
+            },
             "default": 24,
             "min": 1,
             "max": 168
@@ -83,7 +98,10 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "module-starter",
-        "name": { "ru": "Стартер модуля", "en": "Module Starter" },
+        "name": {
+          "ru": "Стартер модуля",
+          "en": "Module Starter"
+        },
         "description": {
           "ru": "Шаблон для разработки модулей WASH PRO CRM. Записывает heartbeat в data/.",
           "en": "Template for building WASH PRO CRM modules. Writes heartbeat to data/."
@@ -102,7 +120,10 @@
           {
             "key": "poll_interval",
             "type": "number",
-            "label": { "ru": "Интервал heartbeat (сек)", "en": "Heartbeat interval (sec)" },
+            "label": {
+              "ru": "Интервал heartbeat (сек)",
+              "en": "Heartbeat interval (sec)"
+            },
             "default": 30,
             "min": 10,
             "max": 600
@@ -110,7 +131,10 @@
           {
             "key": "greeting",
             "type": "string",
-            "label": { "ru": "Приветствие", "en": "Greeting" },
+            "label": {
+              "ru": "Приветствие",
+              "en": "Greeting"
+            },
             "default": "Hello from WASH module"
           }
         ]
@@ -122,7 +146,10 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "dynamic-pricing",
-        "name": { "ru": "Динамические цены", "en": "Dynamic Pricing" },
+        "name": {
+          "ru": "Динамические цены",
+          "en": "Dynamic Pricing"
+        },
         "description": {
           "ru": "Отправляет коэффициент списания в MQTT при высокой занятости (до обнуления баланса). Прайс-лист не меняется.",
           "en": "Sends MQTT debit coefficient when busy (until balance zero). Price list unchanged."
@@ -142,13 +169,19 @@
           {
             "key": "wash_id",
             "type": "string",
-            "label": { "ru": "Автомойка", "en": "Car wash" },
+            "label": {
+              "ru": "Автомойка",
+              "en": "Car wash"
+            },
             "default": ""
           },
           {
             "key": "busy_threshold",
             "type": "number",
-            "label": { "ru": "Порог занятости (постов)", "en": "Occupancy threshold (posts)" },
+            "label": {
+              "ru": "Порог занятости (постов)",
+              "en": "Occupancy threshold (posts)"
+            },
             "default": 1,
             "min": 1,
             "max": 100
@@ -156,7 +189,10 @@
           {
             "key": "price_increase_percent",
             "type": "number",
-            "label": { "ru": "Повышение списания (%)", "en": "Debit increase (%)" },
+            "label": {
+              "ru": "Повышение списания (%)",
+              "en": "Debit increase (%)"
+            },
             "default": 10,
             "min": 0,
             "max": 300
@@ -164,7 +200,10 @@
           {
             "key": "poll_interval",
             "type": "number",
-            "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+            "label": {
+              "ru": "Интервал опроса (сек)",
+              "en": "Poll interval (sec)"
+            },
             "default": 60,
             "min": 5,
             "max": 3600,
@@ -173,13 +212,19 @@
           {
             "key": "api_login",
             "type": "string",
-            "label": { "ru": "Логин CRM API", "en": "CRM API login" },
+            "label": {
+              "ru": "Логин CRM API",
+              "en": "CRM API login"
+            },
             "default": "service"
           },
           {
             "key": "api_password",
             "type": "string",
-            "label": { "ru": "Пароль CRM API", "en": "CRM API password" },
+            "label": {
+              "ru": "Пароль CRM API",
+              "en": "CRM API password"
+            },
             "default": ""
           }
         ]
@@ -191,7 +236,10 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "vk-publisher",
-        "name": { "ru": "VK публикатор", "en": "VK Publisher" },
+        "name": {
+          "ru": "VK публикатор",
+          "en": "VK Publisher"
+        },
         "description": {
           "ru": "Публикует текст из раздела «Публикации» CRM в сообщество ВКонтакте. Картинки во VK не передаются.",
           "en": "Publishes text from CRM Publications to a VK community. Images are not sent to VK."
@@ -220,13 +268,19 @@
           {
             "key": "vk_group_id",
             "type": "string",
-            "label": { "ru": "ID сообщества (без минуса)", "en": "Community ID (without minus)" },
+            "label": {
+              "ru": "ID сообщества (без минуса)",
+              "en": "Community ID (without minus)"
+            },
             "default": ""
           },
           {
             "key": "poll_interval",
             "type": "number",
-            "label": { "ru": "Интервал проверки (сек)", "en": "Check interval (sec)" },
+            "label": {
+              "ru": "Интервал проверки (сек)",
+              "en": "Check interval (sec)"
+            },
             "default": 60,
             "min": 30,
             "max": 3600
@@ -234,7 +288,10 @@
           {
             "key": "publish_categories",
             "type": "string",
-            "label": { "ru": "Категории (news,promotion,general)", "en": "Categories (news,promotion,general)" },
+            "label": {
+              "ru": "Категории (news,promotion,general)",
+              "en": "Categories (news,promotion,general)"
+            },
             "default": "news,promotion,general"
           }
         ]
@@ -246,12 +303,15 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "washesnearby",
-        "name": { "ru": "Автомойки рядом", "en": "Washes Nearby" },
+        "name": {
+          "ru": "Автомойки рядом",
+          "en": "Washes Nearby"
+        },
         "description": {
           "ru": "Создаёт мойки на сайте «Автомойки рядом» по UUID; синхронизирует цены, занятость, новости/акции и кассу (finance).",
           "en": "Creates washes on Washes Nearby by UUID; syncs prices, occupancy, news/promos and cash register (finance)."
         },
-        "version": "1.2.2",
+        "version": "1.2.3",
         "author": "WASH-PRO",
         "license": "MIT",
         "category": "publishing",
@@ -266,19 +326,28 @@
           {
             "key": "owner_api_token",
             "type": "string",
-            "label": { "ru": "Owner API токен", "en": "Owner API token" },
+            "label": {
+              "ru": "Owner API токен",
+              "en": "Owner API token"
+            },
             "default": ""
           },
           {
             "key": "maps_api_base",
             "type": "string",
-            "label": { "ru": "Адрес сайта / API Автомойки рядом", "en": "Washes Nearby site / API URL" },
+            "label": {
+              "ru": "Адрес сайта / API Автомойки рядом",
+              "en": "Washes Nearby site / API URL"
+            },
             "default": "https://мойка-про.рф"
           },
           {
             "key": "poll_interval",
             "type": "number",
-            "label": { "ru": "Интервал отправки (сек)", "en": "Send interval (sec)" },
+            "label": {
+              "ru": "Интервал отправки (сек)",
+              "en": "Send interval (sec)"
+            },
             "default": 60,
             "min": 60,
             "max": 120
@@ -286,7 +355,10 @@
           {
             "key": "news_limit",
             "type": "number",
-            "label": { "ru": "Лимит новостей и акций", "en": "News & promotions limit" },
+            "label": {
+              "ru": "Лимит новостей и акций",
+              "en": "News & promotions limit"
+            },
             "default": 5,
             "min": 1,
             "max": 50
@@ -294,13 +366,19 @@
           {
             "key": "finance_timezone",
             "type": "string",
-            "label": { "ru": "Часовой пояс кассы (IANA)", "en": "Finance timezone (IANA)" },
+            "label": {
+              "ru": "Часовой пояс кассы (IANA)",
+              "en": "Finance timezone (IANA)"
+            },
             "default": "Asia/Yekaterinburg"
           },
           {
             "key": "washes",
             "type": "string",
-            "label": { "ru": "Параметры моек (JSON, заполняется UI)", "en": "Per-wash params (JSON, filled by UI)" },
+            "label": {
+              "ru": "Параметры моек (JSON, заполняется UI)",
+              "en": "Per-wash params (JSON, filled by UI)"
+            },
             "default": ""
           }
         ]
@@ -312,7 +390,10 @@
       "defaultBranch": "main",
       "manifest": {
         "id": "v2raytun",
-        "name": { "ru": "Клиент v2RayTun (VLESS)", "en": "v2RayTun Client (VLESS)" },
+        "name": {
+          "ru": "Клиент v2RayTun (VLESS)",
+          "en": "v2RayTun Client (VLESS)"
+        },
         "description": {
           "ru": "VLESS-клиент на Xray-core: ссылка подписки или vless://, локальный SOCKS/HTTP-прокси, проверка канала и логи.",
           "en": "VLESS client on Xray-core: subscription or vless:// link, local SOCKS/HTTP proxy, health checks and logs."
@@ -341,7 +422,10 @@
           {
             "key": "socks_port",
             "type": "number",
-            "label": { "ru": "Порт SOCKS5", "en": "SOCKS5 port" },
+            "label": {
+              "ru": "Порт SOCKS5",
+              "en": "SOCKS5 port"
+            },
             "default": 10808,
             "min": 1024,
             "max": 65535
@@ -349,7 +433,10 @@
           {
             "key": "http_port",
             "type": "number",
-            "label": { "ru": "Порт HTTP-прокси", "en": "HTTP proxy port" },
+            "label": {
+              "ru": "Порт HTTP-прокси",
+              "en": "HTTP proxy port"
+            },
             "default": 10809,
             "min": 1024,
             "max": 65535

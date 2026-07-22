@@ -305,6 +305,11 @@ async function applyModuleSecrets(
 ): Promise<void> {
   await setSecret(scriptId, 'API_BASE_URL', CRM_API_BASE);
   await setSecret(scriptId, 'MODULE_DATA_DIR', dataDir);
+  // Service account for authenticated CRM endpoints (e.g. finance-stats).
+  const serviceLogin = process.env.SERVICE_LOGIN || 'service';
+  const servicePassword = process.env.SERVICE_PASSWORD || 'ServiceInternal123!';
+  await setSecret(scriptId, 'SERVICE_LOGIN', serviceLogin);
+  await setSecret(scriptId, 'SERVICE_PASSWORD', servicePassword);
   for (const [key, value] of Object.entries(settings)) {
     await setSecret(scriptId, key.toUpperCase(), String(value));
   }

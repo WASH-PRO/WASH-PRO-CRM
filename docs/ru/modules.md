@@ -57,7 +57,7 @@ Dashboard  →  /api/crm/modules/*  →  modules-bridge  →  git clone / lifecy
 | Сборщик загруженности | `GET /api/crm/usage-stats` | [wash-module-usage-stats](https://github.com/WASH-PRO/wash-module-usage-stats) |
 | Стартер (шаблон) | heartbeat | [wash-module-starter](https://github.com/WASH-PRO/wash-module-starter) |
 | VK публикатор | Публикации CRM → **текст** на стене VK (без картинок) | [wash-module-vk-publisher](https://github.com/WASH-PRO/wash-module-vk-publisher) |
-| Автомойки рядом | CRM мойки → сайт «Автомойки рядом» (цены, посты, новости); связка через `mapsExternalId` (UUID) | [wash-module-washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby) |
+| Автомойки рядом | CRM мойки → сайт «Автомойки рядом» (цены, посты, новости, касса/finance); связка через `mapsExternalId` (UUID) | [wash-module-washesnearby](https://github.com/WASH-PRO/wash-module-washesnearby) |
 
 ## Автомойки рядом и UUID мойки
 
@@ -67,7 +67,7 @@ Dashboard  →  /api/crm/modules/*  →  modules-bridge  →  git clone / lifecy
 2. Модуль **Автомойки рядом** читает `mapsExternalId` и передаёт его на сайт как Owner API **`external_id`**.
 3. Дальнейшие patch/telemetry идут как `ext:{uuid}` — CRM не зависит от числового id мойки на сайте.
 
-В настройках модуля: общие поля (токен, URL сайта, интервал, лимит новостей/акций) и **динамический список моек CRM** — у каждой свои координаты, город и тип. Адрес берётся из карточки мойки в CRM.
+В настройках модуля: общие поля (токен, URL сайта, интервал, лимит новостей/акций, таймзона кассы) и **динамический список моек CRM** — у каждой свои координаты, город и тип. Адрес берётся из карточки мойки в CRM. Касса уходит в telemetry из `/api/crm/finance-stats` (7д/30д считает сайт).
 
 После обновления CRM: дождитесь `init-seed` (или **Целостность → init-seed**), затем **Модули → Автомойки рядом → Обновить → Запустить**.
 

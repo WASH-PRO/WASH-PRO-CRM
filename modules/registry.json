@@ -248,10 +248,10 @@
         "id": "washesnearby",
         "name": { "ru": "Автомойки рядом", "en": "Washes Nearby" },
         "description": {
-          "ru": "Создаёт мойки и адрес на сайте «Автомойки рядом», синхронизирует цены (макс. по постам), занятость, новости и акции.",
-          "en": "Creates washes on Washes Nearby, syncs max mode prices, post occupancy, news and promotions."
+          "ru": "Создаёт мойки на сайте «Автомойки рядом» по UUID; синхронизирует цены, занятость, новости/акции и кассу (finance).",
+          "en": "Creates washes on Washes Nearby by UUID; syncs prices, occupancy, news/promos and cash register (finance)."
         },
-        "version": "1.1.0",
+        "version": "1.2.0",
         "author": "WASH-PRO",
         "license": "MIT",
         "category": "publishing",
@@ -290,6 +290,12 @@
             "default": 5,
             "min": 1,
             "max": 50
+          },
+          {
+            "key": "finance_timezone",
+            "type": "string",
+            "label": { "ru": "Часовой пояс кассы (IANA)", "en": "Finance timezone (IANA)" },
+            "default": "Asia/Yekaterinburg"
           },
           {
             "key": "washes",

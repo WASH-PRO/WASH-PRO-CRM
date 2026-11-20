@@ -224,3 +224,7 @@ More: [docs/en/troubleshooting.md](https://wash-pro.github.io/WASH-PRO-CRM/en/tr
 WASH PRO CRM is a proprietary project.  
 [Dynamic API Platform](https://github.com/Dynamic-API-Platform/Dynamic-API-Platform) — Apache License 2.0.  
 [PyOrchestrator](https://github.com/PyOrchestrator/PyOrchestrator) — Apache License 2.0.
+
+---
+
+**Website:** [wash-pro.tech](https://wash-pro.tech) · **GitHub:** [WASH-PRO](https://github.com/WASH-PRO)
